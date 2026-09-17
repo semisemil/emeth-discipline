@@ -1,6 +1,6 @@
 ---
 name: scope-integrity
-description: Use when multiple requirements or stages risk losing approved scope or completion criteria. Not for ordinary low-risk work.
+description: Use when work involves satisfying multiple requirements together, applying requested behavior across multiple execution paths, or implementing changes in multiple stages. Preserve the user's requirements, constraints, and completion criteria so they are not omitted or arbitrarily reduced during the work.
 ---
 
 # Scope Integrity
