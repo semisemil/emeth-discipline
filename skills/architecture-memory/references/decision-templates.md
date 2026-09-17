@@ -1,8 +1,6 @@
 # Architecture memory decision templates
 
-Use the manifest language and replace every angle-bracket placeholder.
-
-Create an ADR for a significant explicit choice whose rationale will affect later decisions. Put the active effect in its current context section and keep the ADR as historical evidence. Use [recording](recording.md) for provenance and routing; mark an ADR section `confirmed/historical` only for an explicitly established choice, or `proposed/planned` for an actual proposal. Existing ADR documents remain excluded from ordinary search regardless of their local formatting.
+Create an ADR for a significant explicit choice whose rationale will affect later decisions. Put the active effect in its current context section and keep the ADR as historical evidence. Use [record format](record-format.md) for routing; mark an established choice `confirmed/historical` or a proposal `proposed/planned`.
 
 ## `decisions/ADR-<number>-<slug>.md`
 
@@ -42,4 +40,4 @@ In one write, create the ADR, add `[ADR-<number>](ADR-<number>-<slug>.md)` to `d
 
 An accepted ADR's Context, Decision, Consequences, Alternatives, and Evidence are immutable history. Only Status, Supersedes, Superseded by, Current document, and clear typographical errors may change. A new direction gets a new ADR pointing `Supersedes` to the old ADR; the old ADR points `Superseded by` to the new one.
 
-Keep the choice, conditions, consequences, and evidence within one retrievable level-2 section (use level-3 headings for its parts), or declare required `links` between their stable section IDs. A decision retrieved alone must not lose the reasons or limits that qualify it. Include only alternatives actually considered.
+Keep the choice, conditions, consequences, and evidence within one retrievable level-2 section (use level-3 headings for its parts), or declare required `links` between their stable section IDs.

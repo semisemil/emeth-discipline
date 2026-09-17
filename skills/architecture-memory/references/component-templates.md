@@ -1,8 +1,6 @@
 # Architecture memory component templates
 
-Use the manifest language. Replace every angle-bracket placeholder and omit empty conditional sections.
-
-Use [recording](recording.md) for stable section IDs, affected source paths, aliases, and explicit state/evidence. Unmarked legacy content is unclassified. Keep mixed table claims' evidence beside their rows.
+Use [record format](record-format.md) for section routing and state labels.
 
 ## `components/README.md`
 

@@ -1,8 +1,6 @@
 # Architecture memory base templates
 
-Use the manifest language. Replace every angle-bracket placeholder and omit empty conditional sections or rows.
-
-Use [recording](recording.md) for section routing and evidence. Mark confidence and lifecycle explicitly; unmarked existing content is unclassified. For mixed structural tables, put each exceptional state and its evidence beside the affected row. Keep a section's conditions and exceptions together.
+Use [record format](record-format.md) for section routing and state labels.
 
 ## `README.md`
 
@@ -113,7 +111,7 @@ Use [recording](recording.md) for section routing and evidence. Mark confidence 
 
 ## <Operating environment>
 
-<Actual users, physical setting, devices, connectivity, and operating procedures that affect design. Attribute conversation facts and distinguish unknown conditions. Split independent constraints into titled level-2 records with their own scope and evidence.>
+<Actual users, physical setting, devices, connectivity, and operating procedures that affect design.>
 
 ## <Quality criteria>
 
@@ -153,8 +151,6 @@ Use [recording](recording.md) for section routing and evidence. Mark confidence 
 
 - <Relative link to the authoritative Design>
 ~~~
-
-Keep only architecture-affecting summaries. Link detailed product plans instead of copying them.
 
 ## `decisions/README.md`
 
