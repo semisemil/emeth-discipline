@@ -114,6 +114,7 @@ function baseline(manifest, sources) {
 }
 function candidate(project, directory, requireBaseline = true) {
   const draft = draftDirectory(directory);
+  if (S.jsonFile(S.safePath(draft, `${S.WORK}/record.json`), 128 * 1024 * 1024)) S.fail('memory-record-pending', 'Resume author.js recover before applying the draft.');
   const manifest = parseManifest(S.textFile(S.safePath(draft, MANIFEST), 256 * 1024) || '');
   const sources = new Map(manifest.documents.map((document) => [document.path, S.textFile(S.safePath(draft, document.path))]));
   if (requireBaseline) baseline(manifest, sources);
@@ -399,4 +400,4 @@ function main(args = process.argv.slice(2)) {
   }
 }
 if (require.main === module) main();
-module.exports = { begin, inspect, classify, source, apply, parseArgs, candidate, baseline, BASE, MANIFEST };
+module.exports = { begin, inspect, classify, source, apply, parseArgs, candidate, baseline, BASE, MANIFEST, locate, loadState, draftDirectory };

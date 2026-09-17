@@ -2,30 +2,38 @@
 
 Memory body content describes project conditions, architecture, decisions, or evidence needed to assess them. Authoring directions govern the work; session activity belongs in the completion report. Organize current-state records by architectural subject rather than conversation or investigation order.
 
-Reuse the canonical section or search the concept before adding one. Each independently useful item belongs in a routed level-2 section under [record format](record-format.md). Keep its reasons and limits together. Detailed contracts remain in their Design; link them rather than copying their requirements.
+Reuse the canonical section or search the concept before adding one. Keep each independently useful item's reasons and limits together. Detailed contracts remain in their Design; link them rather than copying their requirements.
 
 Use the manifest language and omit empty conditional sections or rows. Template placeholders specify content, not sentence form; labeled phrases are valid.
 
-## Patch relevant sections
+## Author documents and sections
 
-Use the `receipt` returned by `memory.js read` as the expected value for each existing section. For a new section use `expected: null`. Send only changed sections on stdin:
+Run commands with UTF-8 JSON on stdin, except `scaffold` and `recover`:
 
 ```text
-node <skill-root>/scripts/record.js patch --project-root <project> --document <registered-document-ID>
+node <skill-root>/scripts/author.js <command> --project-root <project>
 ```
+
+Use `--root <relative-root>` for an unconnected custom-root draft. Commands target the pending init/update draft, or live Memory otherwise. `target: draft` still needs workflow `apply`.
+
+| Command | Input |
+|---|---|
+| `scaffold` | Create missing base files and their index; preserve existing content. |
+| `document` | `kind` (`context`, `system-context`, `containers`), `title`, optional `sections`. |
+| `component` | `title`, existing `container` (`CNT-…`), `reason`, optional `sections`. |
+| `section` | `document` (ID or unique kind) and section fields below. |
+| `decision` | `title`, `status` (`accepted` or `proposed`), Markdown `body`, `current` section update; optional `date` and `supersedes` ADR ID. |
+| `read` | `ids`, with optional `seen`, `cursor`, `maxChars` for paged reads. |
+| `recover` | Resume interrupted authoring before retrying. |
+
+The writer allocates document/section IDs and ADR numbers, registers files, and maintains indexes and decision links. Results return created documents and section IDs. A decision's date defaults to `unknown`; supply an established date as `YYYY-MM-DD`.
+
+Section fields: `title`, Markdown `body`, `confidence` (`confirmed`, `inferred`, `proposed`, `unknown`), and `lifecycle` (`current`, `planned`, `historical`). Optional `paths` are repository-relative scopes, `terms` are search aliases, `links` are required section IDs, and `always: true` marks a shared prerequisite. Use level-3 or deeper body headings; the writer supplies the level-2 heading and metadata.
+
+To revise a section, use `author.js read` for its current target, then supply `id` and its `receipt` as `expected`. `title` and routing fields may be omitted to preserve them. `current` uses these update fields without `document`, and describes the complete revised current effect with `current` or `planned` lifecycle. On conflict, reread and reconcile before retrying.
 
 ```json
-{"edits":[{"id":"AM-example","expected":null,"text":"## Topic\n<!-- am: {\"id\":\"AM-example\"} -->\n\n**confirmed/planned**\n\nAccepted target with its actual source, scope, reasons and conditions.\n"}]}
+{"document":"context","title":"Offline operation","body":"Requests remain available during network outages.","confidence":"confirmed","lifecycle":"planned","paths":["src/terminal"]}
 ```
 
-Use `text: null` to retire a resolved temporary section only when its reasons need not remain.
-
-For a new document add `--path <relative-markdown-path> --kind <manifest-kind>` with a unique `--document` ID.
-
-For related changes across documents, omit `--document` and send `{"documents":[{"document":"context","edits":[...]},{"document":"adr-001","path":"decisions/ADR-001-choice.md","kind":"decision","edits":[...]}]}`. A document item may include `"intro":{"before":"<exact trimmed current preamble>","after":"<replacement preamble>"}` for its title or allowed ADR lifecycle fields; use `before: null` for a new document and `edits: []` for an introduction-only change.
-
-On a section conflict, reread and reconcile that section before retrying. Resume interrupted publication with `record.js ensure --project-root <project>` before another patch, retrieval, or init/update.
-
-During init/update, edit the returned operation draft and publish with `apply`. Use this patch helper for ordinary capture.
-
-Load [base templates](base-templates.md) only for a requested structural survey, [component templates](component-templates.md) when a responsibility requires L3, or [decision templates](decision-templates.md) to create or revise an ADR.
+Load [base templates](base-templates.md) for a structural survey, [component guidance](component-templates.md) when L3 is needed, or [decision guidance](decision-templates.md) for ADR content. For section retirement or exact lifecycle/metadata edits, use [low-level patches](patching.md).

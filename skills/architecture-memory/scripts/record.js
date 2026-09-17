@@ -82,6 +82,66 @@ function ensureMemory(project, options = {}) {
   });
 }
 
+function preparePatch(state, sources, options, payload) {
+  const directory = state.architectureRoot;
+  const project = state.projectRoot;
+  const corpus = recordsFromSources(state, new Map([...sources].map(([file, body]) => [file, body ?? ''])));
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) S.fail('memory-patch-invalid', 'Supply a patch object');
+  if (payload.documents && (payload.edits || payload.intro || options.document || options.path || options.kind)) S.fail('memory-patch-invalid', 'Use either documents or a single-document patch');
+  const patches = payload.documents || [{ ...options, ...payload }];
+  if (!Array.isArray(patches) || !patches.length) S.fail('memory-patch-invalid', 'Supply nonempty documents');
+  const documents = new Set();
+  const touched = new Set();
+  const entries = [];
+  for (const item of patches) {
+    if (!item || typeof item.document !== 'string' || documents.has(item.document)) S.fail('memory-patch-invalid', 'Each document needs a unique ID');
+    documents.add(item.document);
+    let document = state.manifest.documents.find(doc => doc.id === item.document);
+    if (!document) {
+      if (!item.path || !item.kind) S.fail('memory-document-required', 'A new document needs path and kind');
+      document = { id: item.document, path: item.path, kind: item.kind, order: state.manifest.documents.length * 10, verified_at: null, source_revision: null };
+      state.manifest.documents.push(document);
+      parseManifest(JSON.stringify(state.manifest));
+      if (S.textFile(S.safePath(directory, document.path)) !== null) S.fail('memory-target-exists', 'Preserve the existing unregistered file');
+    } else if (item.path && item.path !== document.path || item.kind && item.kind !== document.kind) S.fail('memory-patch-invalid', 'Patch does not move or reclassify an existing document');
+    if (!Array.isArray(item.edits) || (!item.edits.length && !item.intro)) S.fail('memory-patch-invalid', 'Supply edits or an intro change');
+    const before = sources.get(document.path) ?? null;
+    let after = before || '';
+    for (const edit of item.edits) {
+      if (!edit || typeof edit.id !== 'string' || touched.has(edit.id) || (edit.text !== null && typeof edit.text !== 'string')) S.fail('memory-patch-invalid', 'Each edit needs a unique id and text or null');
+      if (edit.text !== null && (!/^## /u.test(edit.text.trim()) || sections(edit.text.trim()).sections.length !== 1)) S.fail('memory-patch-invalid', 'Each replacement contains one routed level-2 section');
+      touched.add(edit.id);
+      const record = corpus.byId.get(edit.id);
+      if (record) {
+        const recordPath = path.relative(project, path.join(directory, document.path)).split(path.sep).join('/');
+        if (record.path !== recordPath || edit.expected !== receiptFor(record)) S.fail('memory-record-changed', `Read the current record before editing: ${edit.id}`);
+        after = after.replace(record.text, () => edit.text?.trim() || '');
+      } else {
+        if (edit.expected !== null || edit.text === null) S.fail('memory-record-changed', `Record is absent: ${edit.id}`);
+        after = `${after.trimEnd()}\n\n${edit.text.trim()}\n`.trimStart();
+      }
+    }
+    if (item.intro) {
+      const parsed = sections(before || '');
+      const intro = before === null ? null : parsed.intro || (parsed.sections.length === 1 && !/^## /u.test(parsed.sections[0].text) ? before.trim() : '');
+      if (item.intro.before !== intro) S.fail('memory-record-changed', `Read the current document introduction: ${document.id}`);
+      const replacement = item.intro.after;
+      if (typeof replacement !== 'string' || sections(`${replacement.trim()}\n\n## sentinel\n`).intro !== replacement.trim()
+          || replacement.includes('<!-- am:')) S.fail('memory-patch-invalid', 'Introduction must precede routed sections');
+      after = intro ? after.replace(intro, () => replacement.trim()) : `${replacement.trim()}\n\n${after.trimStart()}`;
+    }
+    if (Buffer.byteLength(after) > 2 * 1024 * 1024) S.fail('memory-file-invalid', 'Document exceeds 2 MiB');
+    sources.set(document.path, after);
+    entries.push({ path: document.path, before: S.hash(before), after });
+  }
+  const next = recordsFromSources(state, new Map([...sources].map(([file, body]) => [file, body ?? ''])));
+  for (const item of patches) for (const edit of item.edits) {
+    if (edit.replacement_id && (corpus.byId.get(edit.id)?.stable !== false || corpus.byId.has(edit.replacement_id))) S.fail('memory-patch-invalid', 'Only unannotated sections can receive a new routed ID.');
+    if (edit.text === null ? next.byId.has(edit.id) : next.byId.get(edit.replacement_id || edit.id)?.text !== edit.text.trim()) S.fail('memory-patch-invalid', `Replacement must retain its routed ID: ${edit.id}`);
+  }
+  return { entries, documents: [...documents], ids: [...touched] };
+}
+
 function patch(project, options, payload) {
   const binding = S.binding(project);
   if (!binding || binding.enabled === false) S.fail('memory-disabled', 'Memory is not connected');
@@ -93,64 +153,12 @@ function patch(project, options, payload) {
     const state = loadArchitecture({ root: project });
     const manifestBefore = S.textFile(S.safePath(directory, MANIFEST), 256 * 1024);
     const sources = new Map(state.manifest.documents.map(doc => [doc.path, readArchitectureDocument(state, doc.id).content]));
-    const corpus = recordsFromSources(state, sources);
-    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) S.fail('memory-patch-invalid', 'Supply a patch object');
-    if (payload.documents && (payload.edits || payload.intro || options.document || options.path || options.kind)) S.fail('memory-patch-invalid', 'Use either documents or a single-document patch');
-    const patches = payload.documents || [{ ...options, ...payload }];
-    if (!Array.isArray(patches) || !patches.length) S.fail('memory-patch-invalid', 'Supply nonempty documents');
-    const documents = new Set();
-    const touched = new Set();
-    const entries = [];
-    for (const item of patches) {
-      if (!item || typeof item.document !== 'string' || documents.has(item.document)) S.fail('memory-patch-invalid', 'Each document needs a unique ID');
-      documents.add(item.document);
-      let document = state.manifest.documents.find(doc => doc.id === item.document);
-      if (!document) {
-        if (!item.path || !item.kind) S.fail('memory-document-required', 'A new document needs path and kind');
-        document = { id: item.document, path: item.path, kind: item.kind, order: state.manifest.documents.length * 10, verified_at: null, source_revision: null };
-        state.manifest.documents.push(document);
-        parseManifest(JSON.stringify(state.manifest));
-        if (S.textFile(S.safePath(directory, document.path)) !== null) S.fail('memory-target-exists', 'Preserve the existing unregistered file');
-      } else if (item.path && item.path !== document.path || item.kind && item.kind !== document.kind) S.fail('memory-patch-invalid', 'Patch does not move or reclassify an existing document');
-      if (!Array.isArray(item.edits) || (!item.edits.length && !item.intro)) S.fail('memory-patch-invalid', 'Supply edits or an intro change');
-      const before = sources.get(document.path) ?? null;
-      let after = before || '';
-      for (const edit of item.edits) {
-        if (!edit || typeof edit.id !== 'string' || touched.has(edit.id) || (edit.text !== null && typeof edit.text !== 'string')) S.fail('memory-patch-invalid', 'Each edit needs a unique id and text or null');
-        if (edit.text !== null && (!/^## /u.test(edit.text.trim()) || sections(edit.text.trim()).sections.length !== 1)) S.fail('memory-patch-invalid', 'Each replacement contains one routed level-2 section');
-        touched.add(edit.id);
-        const record = corpus.byId.get(edit.id);
-        if (record) {
-          const recordPath = path.relative(project, path.join(directory, document.path)).split(path.sep).join('/');
-          if (record.path !== recordPath || edit.expected !== receiptFor(record)) S.fail('memory-record-changed', `Read the current record before editing: ${edit.id}`);
-          after = after.replace(record.text, () => edit.text?.trim() || '');
-        } else {
-          if (edit.expected !== null || edit.text === null) S.fail('memory-record-changed', `Record is absent: ${edit.id}`);
-          after = `${after.trimEnd()}\n\n${edit.text.trim()}\n`.trimStart();
-        }
-      }
-      if (item.intro) {
-        const parsed = sections(before || '');
-        const intro = before === null ? null : parsed.intro || (parsed.sections.length === 1 && !/^## /u.test(parsed.sections[0].text) ? before.trim() : '');
-        if (item.intro.before !== intro) S.fail('memory-record-changed', `Read the current document introduction: ${document.id}`);
-        const replacement = item.intro.after;
-        if (typeof replacement !== 'string' || sections(`${replacement.trim()}\n\n## sentinel\n`).intro !== replacement.trim()
-            || replacement.includes('<!-- am:')) S.fail('memory-patch-invalid', 'Introduction must precede routed sections');
-        after = intro ? after.replace(intro, () => replacement.trim()) : `${replacement.trim()}\n\n${after.trimStart()}`;
-      }
-      if (Buffer.byteLength(after) > 2 * 1024 * 1024) S.fail('memory-file-invalid', 'Document exceeds 2 MiB');
-      sources.set(document.path, after);
-      entries.push({ path: document.path, before: S.hash(before), after });
-    }
-    const next = recordsFromSources(state, sources);
-    for (const item of patches) for (const edit of item.edits) {
-      if (edit.text === null ? next.byId.has(edit.id) : next.byId.get(edit.id)?.text !== edit.text.trim()) S.fail('memory-patch-invalid', `Replacement must retain its routed ID: ${edit.id}`);
-    }
+    const prepared = preparePatch(state, sources, options, payload);
     const changed = publish(directory, [
-      ...entries,
+      ...prepared.entries,
       { path: MANIFEST, before: S.hash(manifestBefore), after: JSON.stringify(state.manifest, null, 2) + '\n' },
     ]);
-    return { status: changed ? 'updated' : 'no-op', documents: [...documents], ids: [...touched] };
+    return { status: changed ? 'updated' : 'no-op', documents: prepared.documents, ids: prepared.ids };
   });
 }
 function main() {
@@ -169,4 +177,4 @@ function main() {
   } catch (error) { process.stderr.write(JSON.stringify({ error: { code: error.code || 'memory-record-failed', message: error.message } }) + '\n'); process.exitCode = 1; }
 }
 if (require.main === module) main();
-module.exports = { ensureMemory, patch };
+module.exports = { ensureMemory, patch, preparePatch, publish };

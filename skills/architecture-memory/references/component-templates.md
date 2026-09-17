@@ -1,46 +1,5 @@
-# Architecture memory component templates
+# Component content
 
-Use [record format](record-format.md) for section routing and state labels.
+Use L3 where a container's responsibilities or risk boundaries need further explanation. The `component` command in [recording](recording.md) takes the parent container and this reason, creates the document and updates its indexes.
 
-## `components/README.md`
-
-~~~markdown
-# <Components>
-
-| <Container> | <Document> | <Why L3 is needed> |
-|---|---|---|
-| <Container> | [<Component document>](<container-slug>.md) | <Why L3 is needed> |
-~~~
-
-## `components/<container-slug>.md`
-
-~~~markdown
-# <Container name> <components>
-
-## <Scope>
-
-- <Container>: `CNT-<number>`
-- <Why L3 is needed>: <Responsibility or risk boundary not explained at L2>
-
-## <Components>
-
-| ID | <Component> | <Responsibility> |
-|---|---|---|
-
-## <Relationships>
-
-| <From> | <To> | <Interaction> |
-|---|---|---|
-
-## <Diagram>
-
-```mermaid
-<Optional C4 L3 relationships from the tables>
-```
-
-## <Open questions>
-
-- <Question> — `unknown/current` — <Evidence needed>
-~~~
-
-First L3: create `components/README.md`, add its architecture `README.md` row, and register the index as `component-index` and the L3 document as `component` in the same write. Later L3: update the index and register the document as `component` in the same write.
+Describe component responsibilities, interactions and consequential open questions. Use C4 component IDs in tables and diagrams; diagrams follow the evidenced relationships. Keep the detail local to the parent container.

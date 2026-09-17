@@ -1,6 +1,6 @@
 # Architecture memory base templates
 
-Use [record format](record-format.md) for section routing and state labels.
+Use [authoring commands](recording.md) for scaffolding and section edits. These templates describe content; document registration, headings and routing metadata are supplied by the writer.
 
 ## `README.md`
 
@@ -160,5 +160,3 @@ Use [record format](record-format.md) for section routing and state labels.
 | ADR | <Decision> | <Status> | <Current document> |
 |---|---|---|---|
 ~~~
-
-Register kinds: `README.md` as `index`, `01-system-context.md` as `system-context`, `02-containers.md` as `containers`, `04-context.md` as `context`, and `decisions/README.md` as `decision-index`.
