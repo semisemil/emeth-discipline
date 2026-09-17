@@ -19,7 +19,7 @@ node <plugin-root>/skills/architecture-memory/scripts/workflow.js apply --projec
 
 `apply` validates the collection, publishes it with resumable file checks, then enables `.proofline/architecture.json`. Report completion only for `applied`; the check establishes structure, not factual accuracy. For custom roots, conflicts or interrupted work, use [workflow recovery](../architecture-memory/references/workflow.md).
 
-After successful initialization, register the project:
+After successful initialization, follow [dashboard sandbox setup](../dashboard-server/references/sandbox-setup.md) before first registration or when dashboard state is missing, then register the project. Use the same reference for `registry-lock-failed` with `EPERM` or `EACCES`:
 
 ```text
 node <plugin-root>/dashboard/register-project.js register --project-root <project>

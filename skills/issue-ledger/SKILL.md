@@ -11,6 +11,8 @@ Record durable work with an origin, current state, next action, or completion cr
 
 Store one v2 JSON file per issue under `.proofline/issues/`. If `.proofline/` is absent, copy `assets/state-starter/`.
 
+Before a write that first registers the project or when dashboard state is missing, follow [dashboard sandbox setup](../dashboard-server/references/sandbox-setup.md). Use its recovery procedure for registration failures with `registry-lock-failed` and `EPERM` or `EACCES`.
+
 Resolve bundled paths relative to this SKILL.md. Run the CLI from the project root as `node <skill-dir>/scripts/issue-ledger.js ...` so its default root is the project's `.proofline/issues`. Avoid only obvious title duplicates. Create from `assets/templates/issue-claim.json` for `bug | research` or `issue-objective.json` for other types. Replace every `REPLACE:` value and adapt the ID, type, mode, risk, arrays, and timestamps, then use the CLI `create` command. Infer available fields, but ask when identity or scope cannot be stated accurately. Cite the ID in the final report.
 
 The CLI registers the project after a successful `create`, `update`, or changed `link-work` write. It does not register after reads, validation, `no-op`, or failed writes. Report the registration result separately; registration failure does not change or roll back the completed Issue write. After an approved direct repair write, run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-project-root>` under the same result-separation rule.

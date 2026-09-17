@@ -1,5 +1,7 @@
 # Design document operations
 
+Before a write that first registers the project or when dashboard state is missing, follow [dashboard sandbox setup](../../dashboard-server/references/sandbox-setup.md). Use its recovery procedure for registration failures with `registry-lock-failed` and `EPERM` or `EACCES`.
+
 Use `.proofline/designs/<DESIGN-ID>-<slug>/DESIGN.md`. For a new Design, choose an unused ID following the project convention: `DESIGN-` followed by at least four digits. Use the same ID in the directory name and frontmatter. For an existing Design, preserve its ID and location. Never overwrite an ID collision. The body is free-form. Frontmatter is JSON between Markdown `---` delimiters; replace `<DESIGN-ID>` and `<design-title>` with the document's values:
 
 ```json

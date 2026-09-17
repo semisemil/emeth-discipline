@@ -64,6 +64,8 @@ Codex가 열리면 다음 순서로 마무리합니다.
 2. Emeth Discipline의 `SessionStart`, `SubagentStart`, `UserPromptSubmit` 훅을 확인하고 승인합니다.
 3. 새 작업을 시작합니다.
 
+대시보드 최초 등록에는 프로젝트 밖의 저장 폴더에 쓰기 권한이 필요합니다. [저장 위치와 권한 설정](#대시보드-저장-위치와-권한-설정)을 참고하세요.
+
 ## 🚀 빠르게 사용하기
 
 ### 공통 기준과 응답 모드
@@ -247,6 +249,18 @@ $emeth-discipline:architecture-memory-update
 | `$emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
 
 프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `add`를 호출하세요. 이 명령은 프로젝트 파일을 새로 만들거나 다른 폴더를 검색하지 않습니다.
+
+### 대시보드 저장 위치와 권한 설정
+
+프로젝트 목록과 서버 상태는 공용 폴더에 저장합니다.
+Windows에서는 `%APPDATA%\proofline\dashboard`를 사용합니다.
+다른 운영체제에서는 `$XDG_CONFIG_HOME/proofline/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/proofline/dashboard`를 사용합니다.
+
+최초 등록 시 Codex가 쓰기 권한을 확인하고, 필요하면 안내 후 사용자 `config.toml` 또는 권한 프로필을 수정합니다.
+변경된 권한이 현재 작업에 반영되지 않으면 새 Codex 작업에서 등록을 재시도하세요.
+권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
+
+권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](skills/dashboard-server/references/sandbox-setup.md)를 참고하세요.
 
 
 
