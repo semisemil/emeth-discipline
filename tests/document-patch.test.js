@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -30,12 +29,11 @@ function fixture(t, { bom = false, newline = '\n' } = {}) {
     return { ...result, value: JSON.parse(result.status === 0 ? result.stdout : result.stderr) };
   };
   const read = () => run('read').value;
-  const patch = (edits, extra = ['--change-kind', 'major', '--memory', 'off'], hash = read().sha256) =>
-    run('patch', { expected_sha256: hash, edits }, extra);
+  const patch = (edits, extra = ['--change-kind', 'major', '--memory', 'off']) =>
+    run('patch', { edits }, extra);
   return { project, file, snapshot, original, env, run, read, patch };
 }
 const changes = [
-  { old: '"revision": 1', new: '"revision": 2' },
   { old: '성공하면 ID를 반환한다.', new: '성공하면 접수 ID를 반환한다.' },
 ];
 
@@ -43,7 +41,7 @@ for (const options of [{}, { bom: true, newline: '\r\n' }]) {
   test(`read and patch preserve unrelated bytes (${JSON.stringify(options)})`, t => {
     const f = fixture(t, options);
     const read = f.read();
-    assert.equal(read.sha256, crypto.createHash('sha256').update(f.original).digest('hex'));
+    assert.equal(Object.hasOwn(read, 'sha256'), false);
     assert.equal(read.text, f.original.toString('utf8').replace(/^\ufeff/, ''));
     assert.equal(fs.existsSync(getRegistryPath({ env: f.env })), false);
     assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
@@ -56,24 +54,20 @@ for (const options of [{}, { bom: true, newline: '\r\n' }]) {
     const expected = Buffer.from(f.original.toString('utf8').replace('"revision": 1', '"revision": 2')
       .replace('성공하면 ID를 반환한다.', '성공하면 접수 ID를 반환한다.'));
     assert.deepEqual(fs.readFileSync(f.file), expected);
-    assert.equal(result.value.sha256, crypto.createHash('sha256').update(expected).digest('hex'));
+    assert.equal(Object.hasOwn(result.value, 'sha256'), false);
     assert.equal(Object.hasOwn(result.value, 'text'), false);
   });
 }
 
-test('stale hash rejects changes outside the edited region, including a repeated submission', t => {
+test('patch preserves intervening changes outside matched spans without requiring a hash', t => {
   const f = fixture(t);
-  const hash = f.read().sha256;
+  f.read();
   fs.appendFileSync(f.file, '\n다른 작성자의 변경\n');
-  const concurrent = fs.readFileSync(f.file);
-  const stale = f.patch(changes, undefined, hash);
-  assert.equal(stale.value.error.code, 'document-changed');
-  assert.deepEqual(fs.readFileSync(f.file), concurrent);
-  assert.equal(fs.existsSync(f.snapshot), false);
-  assert.equal(fs.existsSync(getRegistryPath({ env: f.env })), false);
-  const currentHash = f.read().sha256;
-  assert.equal(f.patch(changes, undefined, currentHash).status, 0);
-  assert.equal(f.patch(changes, undefined, currentHash).value.error.code, 'document-changed');
+  const current = fs.readFileSync(f.file);
+  assert.equal(f.patch(changes).status, 0);
+  assert.deepEqual(fs.readFileSync(f.snapshot), current);
+  assert.ok(fs.readFileSync(f.file, 'utf8').endsWith('\n다른 작성자의 변경\n'));
+  assert.equal(f.patch(changes).value.error.code, 'document-patch-match');
 });
 
 test('all edits are checked before saving; absent and ambiguous matches leave no partial changes', t => {
@@ -89,8 +83,7 @@ test('all edits are checked before saving; absent and ambiguous matches leave no
 test('patch uses existing revision, identity, body and snapshot checks', t => {
   const f = fixture(t);
   for (const [edits, args, error] of [
-    [[changes[1]], ['--change-kind', 'major'], 'spec-revision-invalid'],
-    [[changes[1]], ['--change-kind', 'operational'], 'contract-revision-required'],
+    [[changes[0]], ['--change-kind', 'operational'], 'contract-revision-required'],
     [[{ old: '부분 수정', new: '다른 제목' }], ['--change-kind', 'operational'], 'document-identity-changed'],
     [[{ old: '"status": "draft"', new: '"status": "unknown"' }], ['--change-kind', 'operational'], 'record-metadata-invalid'],
     [[{ old: '"supersedes": []', new: '"supersedes": ["DESIGN-0099"]' }], ['--change-kind', 'operational'], 'contract-unavailable'],
@@ -116,7 +109,7 @@ test('operational and no-op patches preserve revision and skip snapshots', t => 
   assert.equal(same.value.write.status, 'no-op');
   assert.equal(same.value.registration, null);
   assert.equal(fs.statSync(f.file).mtimeMs, before);
-  const followup = f.patch(changes, undefined, same.value.sha256);
+  const followup = f.patch(changes);
   assert.equal(followup.status, 0, followup.stderr);
 });
 
@@ -135,9 +128,9 @@ test('patch retains Memory connection and separates registration failure from sa
 
 test('malformed patches, active locks and missing IDs do not save', t => {
   const f = fixture(t);
-  for (const input of ['{', {}, { expected_sha256: f.read().sha256, edits: [] },
-    { expected_sha256: f.read().sha256, edits: [{ old: '', new: 'x' }] },
-    { expected_sha256: f.read().sha256, edits: [{ old: 'x', new: 1 }] }]) {
+  for (const input of ['{', {}, { edits: [] },
+    { edits: [{ old: '', new: 'x' }] },
+    { edits: [{ old: 'x', new: 1 }] }]) {
     assert.equal(f.run('patch', input).value.error.code, 'document-patch-invalid');
     assert.deepEqual(fs.readFileSync(f.file), f.original);
   }
@@ -151,7 +144,7 @@ test('malformed patches, active locks and missing IDs do not save', t => {
 
 test('sequential insertion and deletion apply once and preserve untouched text', t => {
   const f = fixture(t);
-  const result = f.patch([changes[0],
+  const result = f.patch([
     { old: '# 요구사항', new: '# 요구사항\n\n새 조건.' },
     { old: '새 조건.', new: '확정된 조건.' },
     { old: '성공하면 ID를 반환한다.\n\n', new: '' },

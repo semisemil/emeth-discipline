@@ -233,6 +233,8 @@ $emeth-discipline:architecture-memory-update
 
 마지막으로 확인한 커밋 이후의 변경을 반영합니다.
 
+Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화를 재시도하지 않습니다. 초기화 실패를 해결한 뒤 Design을 다시 저장하거나 Memory 초기화를 명시적으로 실행하면 연결을 재시도할 수 있습니다.
+
 훅을 지원하지 않는 환경에서는 `architecture-memory`를 직접 호출할 수 있습니다.
 
 ## 🖥️ 통합 대시보드
@@ -256,7 +258,9 @@ $emeth-discipline:architecture-memory-update
 Windows에서는 `%APPDATA%\proofline\dashboard`를 사용합니다.
 다른 운영체제에서는 `$XDG_CONFIG_HOME/proofline/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/proofline/dashboard`를 사용합니다.
 
-최초 등록 시 Codex가 쓰기 권한을 확인하고, 필요하면 안내 후 사용자 `config.toml` 또는 권한 프로필을 수정합니다.
+등록 코드는 필요한 저장소를 자동으로 만들고, 이미 등록된 프로젝트는 `no-op`으로 처리합니다.
+등록 결과가 `registered` 또는 `no-op`이면 추가 설정 확인 없이 완료합니다.
+실제 권한 오류가 발생하면 Codex가 쓰기 권한을 확인하고, 필요하면 안내 후 사용자 `config.toml` 또는 권한 프로필을 수정합니다.
 변경된 권한이 현재 작업에 반영되지 않으면 새 Codex 작업에서 등록을 재시도하세요.
 권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
 

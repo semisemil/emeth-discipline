@@ -59,6 +59,25 @@ test('the first Design is saved, indexed and executable with a minimal connected
   assert.equal(save(f).value.write.status, 'no-op');
 });
 
+test('contract CLI reports Memory state without initializing it or blocking the ready contract', t => {
+  const f = fixture(t);
+  assert.equal(save(f, document(), ['--memory', 'off']).status, 0);
+  const read = () => {
+    const result = spawnSync(process.execPath, [path.join(repo, 'dashboard/records/development-contracts.js'), '--project-root', f.project, '--id', 'DESIGN-0001'], { encoding: 'utf8', env: f.env, windowsHide: true });
+    assert.equal(result.status, 0, result.stderr);
+    const value = JSON.parse(result.stdout);
+    assert.equal(value.id, 'DESIGN-0001');
+    assert.equal(value.status, 'ready');
+    return value.memory;
+  };
+  assert.equal(read().status, 'not-connected');
+  assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
+  recording.ensureMemory(f.project);
+  assert.equal(read().status, 'connected');
+  f.write('.proofline/architecture.json', '{broken');
+  assert.equal(read().status, 'failed');
+});
+
 test('Design revision snapshots the old contract and rejects body changes under an operational revision', t => {
   const f = fixture(t);
   const original = document();

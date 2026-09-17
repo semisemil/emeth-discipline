@@ -83,8 +83,10 @@ if (require.main === module) {
       if (!['--project-root', '--id'].includes(args[i]) || Object.hasOwn(options, args[i]) || !args[i + 1]) fail('contract-argument-invalid', 'Supply --project-root and --id once');
       options[args[i]] = args[i + 1];
     }
-    const record = resolveContract(fs.realpathSync(options['--project-root']), options['--id']);
+    const root = fs.realpathSync(options['--project-root']);
+    const record = resolveContract(root, options['--id']);
     process.stdout.write(JSON.stringify({ id: record.id, title: record.title, path: record.relativePath,
-      revision: record.revision, status: record.status, metadata: record.metadata, body: record.body }) + '\n');
+      revision: record.revision, status: record.status, metadata: record.metadata, body: record.body,
+      memory: require('../../lib/architecture-memory.js').connectionStatus(root) }) + '\n');
   } catch (error) { process.stderr.write(JSON.stringify({ error: { code: error.code || 'contract-unavailable', message: error.message } }) + '\n'); process.exitCode = 1; }
 }

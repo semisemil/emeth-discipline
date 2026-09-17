@@ -9,7 +9,7 @@ Accept exactly one action: `add`, `open`, `status`, or `stop`.
 
 Resolve `<plugin-root>` from this SKILL.md; do not substitute a project-local script.
 
-- `add`: Treat the current working directory as the project root. If it does not contain a `.proofline` directory, report that it is not an initialized Emeth Discipline project and stop without creating state. Otherwise follow [sandbox setup](references/sandbox-setup.md) before first registration or when dashboard state is missing, then run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-current-working-directory>` and report its JSON result. For `registry-lock-failed` with `EPERM` or `EACCES`, follow the same reference's recovery procedure. Do not search parent, child, sibling, or other filesystem paths.
+- `add`: Treat the current working directory as the project root. If it does not contain a `.proofline` directory, report that it is not an initialized Emeth Discipline project and stop without creating state. Otherwise run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-current-working-directory>`; the helper initializes dashboard storage as needed. Accept `registered` or `no-op` as complete and report the JSON result. For a registration failure reporting `EPERM` or `EACCES`, follow [sandbox recovery](references/sandbox-setup.md). Do not search parent, child, sibling, or other filesystem paths.
 - `open`: Open the verified running server with the current plugin version in `expected_version`. If stopped, report `stopped`; do not start it.
 - `status`: Report the verified running URL and identity, or the stopped reason.
 - `stop`: Stop only the process whose PID and health `instance_id` match the current server state.

@@ -17,7 +17,7 @@ function fixture(t, kind='design', pretty=false, newline='\n') {
   const text='---'+newline+JSON.stringify(metadata,null,pretty?2:undefined).replace(/\n/g,newline)+newline+'---'+newline+body;
   fs.writeFileSync(file,text);
   const env={...process.env,APPDATA:path.join(root,'config'),XDG_CONFIG_HOME:path.join(root,'config')};
-  const run=(extra=[])=>spawnSync(process.execPath,[cli,'status','--project-root',project,'--id',id,'--status','completed','--memory','off',...extra],{env,encoding:'utf8',input:'Not document stdin',timeout:10000,windowsHide:true});
+  const run=(extra=[],memory='off')=>spawnSync(process.execPath,[cli,'status','--project-root',project,'--id',id,'--status','completed',...(memory ? ['--memory',memory] : []),...extra],{env,encoding:'utf8',input:'Not document stdin',timeout:10000,windowsHide:true});
   return {root,project,id,file,metadata,body,text,run};
 }
 for(const kind of ['design','spec']) for(const pretty of [false,true]) test(`${kind} status handles ${pretty?'pretty CRLF':'compact LF'} JSON without document input`,t=>{
@@ -47,4 +47,50 @@ test('missing and ambiguous IDs fail without changing a document',t=>{
 test('status respects an active Design lock',t=>{
  const f=fixture(t),lock=path.join(f.project,'.proofline','.design-write.lock');fs.writeFileSync(lock,String(process.pid));
  const r=f.run();assert.notEqual(r.status,0);assert.match(r.stderr,/document-locked/);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);assert.equal(fs.readFileSync(lock,'utf8'),String(process.pid));
+});
+
+test('status and repeated status do not initialize an absent Memory', t => {
+  const f = fixture(t);
+  for (const expected of ['updated', 'no-op']) {
+    const result = f.run([], null);
+    assert.equal(result.status, 0, result.stderr);
+    const value = JSON.parse(result.stdout);
+    assert.equal(value.write.status, expected);
+    assert.equal(value.memory.status, 'not-connected');
+    assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
+    assert.equal(fs.existsSync(path.join(f.project, '.proofline/architecture.json')), false);
+  }
+});
+
+test('status reports a connected Memory without rewriting its files', t => {
+  const f = fixture(t);
+  require('../skills/architecture-memory/scripts/record.js').ensureMemory(f.project);
+  const names = ['.proofline/architecture.json', 'docs/architecture/.architecture-memory/manifest.json', 'docs/architecture/04-context.md'];
+  const before = names.map(name => ({ bytes: fs.readFileSync(path.join(f.project, name)), time: fs.statSync(path.join(f.project, name)).mtimeMs }));
+  const result = f.run([], null);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).memory.status, 'connected');
+  names.forEach((name, index) => {
+    assert.deepEqual(fs.readFileSync(path.join(f.project, name)), before[index].bytes);
+    assert.equal(fs.statSync(path.join(f.project, name)).mtimeMs, before[index].time);
+  });
+});
+
+test('status preserves disabled or broken Memory and completes the document independently', t => {
+  for (const [binding, expected] of [
+    [JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }), 'disabled'],
+    [JSON.stringify({ schema_version: 1, root: 'docs/architecture' }), 'unavailable'],
+    ['{broken', 'failed'],
+  ]) {
+    const f = fixture(t);
+    const file = path.join(f.project, '.proofline/architecture.json');
+    fs.writeFileSync(file, binding);
+    const result = f.run([], null);
+    assert.equal(result.status, 0, result.stderr);
+    const value = JSON.parse(result.stdout);
+    assert.equal(value.document_status, 'completed');
+    assert.equal(value.memory.status, expected);
+    assert.equal(fs.readFileSync(file, 'utf8'), binding);
+    assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
+  }
 });

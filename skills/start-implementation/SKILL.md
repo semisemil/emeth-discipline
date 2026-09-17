@@ -5,7 +5,7 @@ description: Select model and reasoning and launch a local implementation sessio
 
 # Start Implementation
 
-Use [model routing](assets/model-routing.md) to select model and reasoning for the requested Design or unsuperseded ready legacy Spec. Respect user settings and limits; resolve material ambiguity instead of substituting another contract.
+Use the model and reasoning already specified by the user or owning workflow within its authority. Read [model routing](assets/model-routing.md) only to select unspecified settings. Respect user limits; resolve material ambiguity instead of substituting another contract.
 
 Resolve the saved project matching the current folder. Check runtime support and authorization for the selected settings. When the creation tool requires an explicit user model choice, obtain it before dispatch. Explain the settings and task-based reason in one sentence.
 

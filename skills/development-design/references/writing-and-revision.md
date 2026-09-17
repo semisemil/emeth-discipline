@@ -2,58 +2,54 @@
 
 ## Normalize the design
 
-Normalize design information from conversation and source material into the currently valid system design. A discussion summary preserves the course of discussion; normalization resolves it into current decisions, unresolved choices, reasons, and constraints, preserving their meaning and scope. Express past events through their current effects on the design.
+Normalize source material into current decisions, open choices, reasons, and constraints. A discussion summary preserves the discussion's course; a Design records its currently valid result. Express past events through their current design effects.
 
-Separate directions to the author from information about the system. Apply directions to the work; every body statement specifies the system, a design decision, or actual evidence needed to assess that decision. Let headings identify section roles, and begin each section with its design content. State acceptance criteria as conditions paired with observable system results. Keep measurement conditions and limits beside the actual findings they qualify. Document status belongs in metadata; authoring and execution results belong in the completion report.
+Apply authoring directions to the work; the body records the system, design decisions, and supporting evidence. Pair acceptance conditions with observable results, and findings with their measurement conditions and limits. Keep document status in metadata and execution results in the completion report.
 
 ## Build the reading order
 
 Use this default progression, with headings in the project's terminology:
 
-- Definition: what the feature or change is.
-- Behavior: supported actions, observable results, and their conditions.
-- Change design: where and how the system changes, with responsibilities, data flow, affected contracts, and the reasons for the chosen structure.
-- Open decisions: unresolved choices, candidates, consequences, and what is needed to decide.
+- Definition: the feature or change.
+- Behavior: actions, observable results, and conditions.
+- Change design: where and how, responsibilities, data flow, affected contracts, and structural reasons.
+- Open decisions: choices, candidates, consequences, and needed resolution.
 
-Make these relationships visible through the document's hierarchy. Give purpose and scope their own named subsections. A broader heading can group subjects only when each has a visible subheading; paragraph breaks alone do not distinguish them. Keep simple properties under descriptive labels. Place detailed investigation and lengthy comparisons after the design they support. Scale the depth to the change.
+Scale depth to the change. Give each subsection one coherent subject rather than combining distinct topics. Repeat content only where needed for understanding; otherwise reference its primary location. Place detailed investigation and comparisons after the design they support.
 
-Anchor changes to existing systems in inspected code: identify each affected file and symbol or section, its current role, and the intended change. Mark new locations as proposals and unresolved locations as open choices.
+For existing systems, identify each affected file and symbol/section from inspected code, its current role, and intended change. Mark new locations as proposed and unresolved locations as open choices.
 
 ## State the contract locally
 
-Keep each behavior's actor, applicability, action, final result, defaults, exceptions, and preserved state together. Introduce terms where used. A shared mechanism may be explained elsewhere, but the premise and branch result needed to interpret a local rule belong beside it.
+Keep each behavior's actor, conditions, defaults, exceptions, final result, and preserved state together. Define terms where used. Explain shared mechanisms once and link to them, retaining the premises and branch outcomes needed to interpret each local rule.
 
-Give each rule or decision one full explanation. Elsewhere, retain necessary local qualifications, consequences, or differences and link to fuller context. Shared conditions must have clear scope; distinct obligations and exceptions stay distinct.
+Verification sections reference behavior rules and add concrete inputs, conditions, expected observations, and interaction boundaries. Retain user/project verification obligations with their source and applicability; leave other verification methods open.
 
-Distinguish required behavior, proposed structure, and implementation choices. Keep decisive reasons, qualifying assumptions, meaningful alternatives, accepted costs, and conditions for revisiting a choice beside that choice. Required rules remain understandable independently of optional implementation discussion.
+Keep decisive reasons, assumptions, alternatives, accepted costs, and revisit conditions beside each choice. Required behavior remains interpretable independently of proposed structure and optional implementation details.
 
-For interactions whose final result can differ from locally correct steps, use a concrete input/state and expected final observations, including unaffected data. Derive expectations independently of the candidate implementation. Preserve requested examples; additional examples should clarify a distinct boundary or likely misinterpretation.
+Where locally correct steps may combine into a wrong result, include a concrete input/state and final observations, including unaffected data. Preserve requested examples; add others for distinct boundaries or likely misinterpretations.
 
 ## Choose the expression
 
-Apply Focus at the level of each content block. Use labeled noun phrases for definitions, attributes, scope items, and named states. Use sentences for explanations or relationships that phrases would obscure, preserving actors, conditions, exceptions, and obligation strength.
+Use labeled phrases for definitions, attributes, scope, and states; sentences for explanations or relationships needing them.
 
-In prose, put each sentence on its own line using an ordinary newline. Use blank lines between paragraphs, with related sentences kept in the same paragraph. Keep each rule's conditions and exceptions together. Prioritize readable grouping and spacing over fewer lines or tokens.
+Use newlines after sentences and blank lines between paragraphs. Group related sentences; favor readability over line/token savings.
 
-Use **bold** for a decision-critical rule or outcome and *italics* for a brief secondary nuance. Emphasize the shortest meaningful phrase, keeping surrounding text plain; wording must carry meaning, status, and obligation without relying on styling.
+Use **bold** and *italics* for emphasis.
 
-Make comparisons and flows visible in the forms below. Use prose for context, reasons, and relationships that these forms would obscure:
+Use each applicable form below, showing its relevant conditions and outcomes:
 
 | Relationship | Form |
 |---|---|
-| Peer items | Concise bullets, one point per item. |
-| Comparable cases or change sites | A table with a named subject and shared comparison dimensions. |
-| Execution order or branching | Numbered steps for a simple sequence; a flowchart with conditions and final outcomes for alternate or repeated paths. |
-| Cross-component calls or data flow | A flowchart or sequence diagram connecting the existing entry point, handoffs, and final effects, with roles and direction labels. Mark unresolved connections at their actual position in the flow. |
-| State transitions | A state diagram showing states, triggering events, and transition conditions. |
-| Precise ordered logic | Short pseudocode, identifying mandatory behavior versus an illustrative implementation. |
+| Peer items | Bullets, one point each. |
+| Comparable cases/change sites | Table with shared comparison dimensions. |
+| Sequence/branching | Numbered steps for simple sequences; flowchart for branches/repetition, with conditions and final outcomes. |
+| Calls/data flow | Flowchart or sequence diagram from entry through handoffs to final effects; mark roles, directions, and unresolved connections in place. |
+| State transitions | State diagram with triggers and conditions. |
+| Ordered logic | Short pseudocode separating required behavior from implementation examples. |
 
-Use the chosen form as the explanation itself, carrying the relevant conditions and outcomes. Add prose for information it does not convey. Write Markdown diagrams in fenced Mermaid blocks, using flowchart, sequenceDiagram, or stateDiagram-v2 for the corresponding relationships.
+Add prose only for information the form cannot convey. Use fenced Mermaid diagrams: `flowchart`, `sequenceDiagram`, or `stateDiagram-v2`.
 
 ## Complete the revision
 
-Changed terms, scope, and decisions apply consistently to every affected rule, example, and diagram. Superseded statements are replaced by the normalized contract, with references pointing to actual sections or links.
-
-The normalized design preserves the system's requested outcomes at their original strength and scope, including exact identifiers, fields, paths, commands, quantities, examples, and verification obligations. All representations agree. Preserve each actual claim's status as proposed, agreed, authorized, expected, or observed.
-
-A first read establishes what is being designed, what it does, where and how it changes the system, and what remains unresolved. Local rules are interpretable without assembling scattered qualifications. Each retained block belongs to the normalized design; repeated meanings are consolidated without losing distinct conditions or decision states.
+Integrate changed terms, scope, and decisions into every affected rule, example, and diagram. Replace superseded statements with the current contract and update references to actual sections or links.

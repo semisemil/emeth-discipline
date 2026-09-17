@@ -37,15 +37,16 @@ function writerError(code, message, cause) {
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  if (!['write', 'status', 'read', 'patch'].includes(command)) {
+  if (!['create', 'write', 'status', 'read', 'patch'].includes(command)) {
     throw writerError(
       'invalid-command',
-      'Usage: document-writer.js write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read|patch --project-root DIR --id DESIGN-ID'
+      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read|patch --project-root DIR --id DESIGN-ID'
     );
   }
 
   const options = command === 'write' ? {} : { command };
-  const allowed = new Set(command === 'read' ? ['project_root', 'id']
+  const allowed = new Set(command === 'create' ? ['project_root', 'id', 'title', 'slug', 'kind', 'status', 'memory', 'language']
+    : command === 'read' ? ['project_root', 'id']
     : command === 'patch' ? ['project_root', 'id', 'change_kind', 'memory', 'language']
     : command === 'status'
     ? ['project_root', 'id', 'status', 'memory', 'language']
@@ -79,6 +80,14 @@ function parseArgs(argv) {
   if (command === 'read' || command === 'patch') {
     if (!/^DESIGN-\d{4,}$/.test(options.id || '')) throw writerError('invalid-argument', 'Supply --id DESIGN-ID');
     options.kind = 'design';
+  }
+  if (command === 'create') {
+    options.design_kind = options.kind || 'feature';
+    options.kind = 'design';
+    if (!options.title || !options.slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(options.slug)
+        || (options.id !== undefined && !/^DESIGN-\d{4,}$/.test(options.id))) {
+      throw writerError('invalid-argument', 'Supply --title and --slug (lowercase words separated by hyphens); optional --id DESIGN-ID');
+    }
   }
   if (!new Set(['design', 'plan', 'spec']).has(options.kind)) {
     throw writerError('document-kind-invalid', '--kind는 design, plan 또는 spec이어야 합니다.');
@@ -412,6 +421,7 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource) {
 
 function memoryResult(projectRoot, options) {
   if (options.memory === 'off') return { status: 'disabled' };
+  if (options.command === 'status') return require('../lib/architecture-memory.js').connectionStatus(projectRoot);
   try { return require('../skills/architecture-memory/scripts/record.js').ensureMemory(projectRoot, { language: options.language }); }
   catch (error) { return { status: 'failed', error: { code: error.code || 'memory-start-failed', message: error.message } }; }
 }
@@ -438,6 +448,25 @@ function writeDocument(options, sourceBuffer) {
   return withDocumentLock(options, () => writeDocumentUnlocked(options, sourceBuffer));
 }
 
+function createDocument(options, sourceBuffer) {
+  const body = decodeContent(sourceBuffer);
+  return withDocumentLock({ ...options, kind: 'design' }, () => {
+    const root = canonicalProjectRoot(options.project_root);
+    const { nextDocumentId, DOCUMENT_SKILLS } = require('../lib/document-number.js');
+    const id = options.id || nextDocumentId(root, DOCUMENT_SKILLS['$emeth-discipline:development-design']);
+    const relativePath = `.proofline/designs/${id}-${options.slug}/DESIGN.md`;
+    const { target } = resolveTarget(root, 'design', relativePath);
+    if (readExisting(root, target)) throw writerError('document-exists', 'Design already exists');
+    const metadata = {
+      schema_version: 2, id, title: options.title, kind: options.design_kind || 'feature',
+      status: options.status || 'draft', revision: 1,
+      supersedes: [], superseded_by: null, related_issues: [],
+    };
+    const content = Buffer.from(`---\n${JSON.stringify(metadata, null, 2)}\n---\n\n${body}`, 'utf8');
+    return writeDocumentUnlocked({ ...options, kind: 'design', relative_path: relativePath }, content);
+  });
+}
+
 function readDesignSource(options) {
   const root = canonicalProjectRoot(options.project_root);
   const record = readDevelopmentRecord(root, options.id);
@@ -446,12 +475,26 @@ function readDesignSource(options) {
   if (!source) throw writerError('contract-unavailable', 'Document not found');
   const text = decodeContent(source);
   metadataFor('design', text, options.id);
-  return { record, source, text, sha256: crypto.createHash('sha256').update(source).digest('hex') };
+  return { record, source, text };
 }
 
 function readDocument(options) {
-  const { record, text, sha256 } = readDesignSource(options);
-  return { id: options.id, path: record.relativePath, sha256, text };
+  const { record, text } = readDesignSource(options);
+  return { id: options.id, path: record.relativePath, text };
+}
+
+function withRevision(content, revision) {
+  const { metadataText } = parseFrontmatter(content);
+  const metadata = JSON.parse(metadataText);
+  if (metadata.revision === revision) return content;
+  let serialized = metadataText.replace(/("revision"\s*:\s*)\d+/, (_, prefix) => `${prefix}${revision}`);
+  if (JSON.parse(serialized).revision !== revision) {
+    metadata.revision = revision;
+    const newline = content.startsWith('---\r\n') ? '\r\n' : '\n';
+    serialized = JSON.stringify(metadata, null, 2).replace(/\n/g, newline);
+  }
+  const start = /^---\r?\n/.exec(content)[0].length;
+  return content.slice(0, start) + serialized + content.slice(start + metadataText.length);
 }
 
 function patchDocument(options, buffer) {
@@ -459,20 +502,18 @@ function patchDocument(options, buffer) {
   try { patch = JSON.parse(decodeContent(buffer)); }
   catch (error) {
     if (error instanceof DocumentWriterError) throw error;
-    throw writerError('document-patch-invalid', 'Supply UTF-8 JSON with expected_sha256 and edits');
+    throw writerError('document-patch-invalid', 'Supply UTF-8 JSON with edits');
   }
   if (!patch || typeof patch !== 'object' || Array.isArray(patch)
-      || Object.keys(patch).some(key => !['expected_sha256', 'edits'].includes(key))
-      || typeof patch.expected_sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(patch.expected_sha256)
+      || Object.keys(patch).some(key => key !== 'edits')
       || !Array.isArray(patch.edits) || !patch.edits.length
       || patch.edits.some(edit => !edit || typeof edit !== 'object' || Array.isArray(edit)
         || Object.keys(edit).some(key => !['old', 'new'].includes(key))
         || typeof edit.old !== 'string' || !edit.old.length || typeof edit.new !== 'string')) {
-    throw writerError('document-patch-invalid', 'Supply expected_sha256 and nonempty edits containing old/new strings');
+    throw writerError('document-patch-invalid', 'Supply nonempty edits containing old/new strings');
   }
   return withDocumentLock(options, () => {
-    const { record, source, text, sha256 } = readDesignSource(options);
-    if (sha256 !== patch.expected_sha256) throw writerError('document-changed', 'Read the changed document and reconcile before patching');
+    const { record, source, text } = readDesignSource(options);
     let updated = text;
     for (const edit of patch.edits) {
       const start = updated.indexOf(edit.old);
@@ -482,10 +523,12 @@ function patchDocument(options, buffer) {
       updated = updated.slice(0, start) + edit.new + updated.slice(start + edit.old.length);
       if (Buffer.byteLength(updated, 'utf8') > MAX_RECORD_BYTES) throw writerError('document-too-large', 'Patched document exceeds 2 MiB');
     }
+    const revision = metadataFor('design', text, options.id).revision;
+    updated = withRevision(updated, revision);
+    if (updated !== text && options.change_kind === 'major') updated = withRevision(updated, revision + 1);
     const bom = source.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])) ? source.subarray(0, 3) : Buffer.alloc(0);
     const next = Buffer.concat([bom, Buffer.from(updated, 'utf8')]);
-    const result = writeDocumentUnlocked({ ...options, relative_path: record.relativePath }, next, source);
-    return { ...result, sha256: crypto.createHash('sha256').update(next).digest('hex') };
+    return writeDocumentUnlocked({ ...options, relative_path: record.relativePath }, next, source);
   });
 }
 
@@ -514,7 +557,7 @@ function updateDocumentStatus(options) {
       const bom = existing.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])) ? existing.subarray(0, 3) : Buffer.alloc(0);
       source = Buffer.concat([bom, Buffer.from(updated, 'utf8')]);
     }
-    const result = writeDocumentUnlocked({ ...options, kind, relative_path: record.relativePath, change_kind: 'operational' }, source, existing);
+    const result = writeDocumentUnlocked({ ...options, command: 'status', kind, relative_path: record.relativePath, change_kind: 'operational' }, source, existing);
     return { ...result, document_status: options.status };
   });
 }
@@ -531,7 +574,8 @@ function formatError(error) {
 function main(argv = process.argv.slice(2), sourceBuffer) {
   try {
     const options = parseArgs(argv);
-    const result = options.command === 'read' ? readDocument(options)
+    const result = options.command === 'create' ? createDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer)
+      : options.command === 'read' ? readDocument(options)
       : options.command === 'patch' ? patchDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer)
       : options.command === 'status'
       ? updateDocumentStatus(options)
@@ -554,6 +598,7 @@ module.exports = {
   main,
   parseArgs,
   writeDocument,
+  createDocument,
   updateDocumentStatus,
   readDocument,
   patchDocument,

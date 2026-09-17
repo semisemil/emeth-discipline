@@ -1,10 +1,10 @@
 # Dashboard sandbox setup
 
-Apply before first dashboard registration or initialization, when the dashboard directory or registry is missing, or when registration reports `registry-lock-failed` with `EPERM` or `EACCES`. This also applies to writers that register after saving a project document.
+Use for a registration failure reporting `EPERM` or `EACCES`, or an explicit manual setup request. Normal registration initializes missing storage and returns `registered` or `no-op`; those results complete registration. This also applies to writers that register after saving a project document.
 
 ## Resolve the required directory
 
-Resolve `<plugin-root>` from this reference and obtain the actual directory with the bundled resolver:
+Reuse the resolved dashboard directory from the failed operation when available. Otherwise resolve `<plugin-root>` from this reference and obtain the actual directory with the bundled resolver:
 
 ```text
 node -e "console.log(require(process.argv[1]).getDashboardConfigDir())" <plugin-root>/dashboard/registry.js
@@ -22,6 +22,6 @@ If `default_permissions` selects a permission profile, configure the same direct
 
 ## Recover a failed registration
 
-For `registry-lock-failed` with `EPERM` or `EACCES`, check sandbox access to the resolved directory before retrying. If access already covers it, report the remaining error for filesystem permission or lock diagnosis; the error alone does not prove a sandbox cause. Preserve a completed Issue, Design, or Memory write and retry only `dashboard/register-project.js register --project-root <absolute-project-root>` after access is available. Report the document write and registration outcomes separately.
+For registration errors reporting `EPERM` or `EACCES`, including `registry-lock-failed`, check sandbox access to the resolved directory before retrying. If access already covers it, report the remaining error for filesystem permission or lock diagnosis; the error alone does not prove a sandbox cause. Preserve a completed Issue, Design, or Memory write and retry only `dashboard/register-project.js register --project-root <absolute-project-root>` after access is available. Report the document write and registration outcomes separately.
 
 Configuration reference: [Codex config.toml](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml).
