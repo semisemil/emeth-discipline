@@ -49,6 +49,6 @@ Action Fusion: when the available tools support it, combine actions in one call 
 
 ## Code
 
-Tests: when writing or updating test cases, derive expected results from requirements and existing contracts; cover required observable behavior and relevant failure cases in each independent implementation; reuse existing coverage; use representative cases for callers sharing an enforcement path
+If writing or updating tests, derive expected results from requirements and existing contracts, cover required observable behavior and relevant failure cases, reuse existing coverage, and use representative cases for callers sharing an enforcement path.
 
 Once required checks pass, broaden or repeat verification only for new changes, failures, or unresolved concerns.

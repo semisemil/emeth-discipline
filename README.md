@@ -15,7 +15,7 @@ Emeth Discipline은 Codex가 요청받은 작업 범위를 끝까지 지키고, 
 
 ## 📊 벤치마크
 
-SuperJSON Error 스택 직렬화 / 2026-09-14 갱신 / 조건별 1회
+SuperJSON Error 스택 직렬화 / Astra Workflow는 2026-09-18 갱신, 나머지는 2026-09-14 기록 / 조건별 1회
 
 None은 플러그인 미사용, Core는 공통 기준 적용, Workflow는 설계 문서 작성과 검토부터 구현 및 검증까지 수행합니다. Core와 Workflow의 응답 모드는 normal입니다.
 
@@ -24,7 +24,8 @@ None은 플러그인 미사용, Core는 공통 기준 적용, Workflow는 설계
 | Astra / low | None | 196/196 | 4분 57초 | $0.973 | 3/14 |
 | Astra / low | Core | 196/196 | 4분 23초 | $0.929 | 5/14 |
 | Astra / low | Core · focus | 196/196 | 5분 51초 | $1.098 | 5/14 |
-| Astra / low | Workflow | 196/196 | 8분 31초 | $2.126 | 7/14 |
+| Astra / low | Workflow | 196/196 | 7분 54초 | $1.990 | 7/14 |
+| Astra / low | Workflow: 한 세션 | 196/196 | 6분 43초 | $1.611 | 4/14 |
 | Astra / low | Workflow · focus | 196/196 | 7분 36초 | $1.808 | 5/14 |
 | Sol / medium | None | 196/196 | 14분 55초 | $1.396 | 5/14 |
 | Sol / medium | Core | 196/196 | 8분 36초 | $1.027 | 4/14 |
@@ -146,7 +147,7 @@ $emeth-discipline:webagent
 | --- | --- | --- |
 | `$emeth-discipline:development-design` | 현재 아이디어를 설계로 발전시키거나 설계를 수정할 때 | 설명·구조 비교·초안·질문으로 기획과 기술 설계를 함께 완성 |
 | `$emeth-discipline:tenet-me` | 선택한 설계와 계약을 검토할 때 | 근거, 시스템 경계, 실패 경로와 기대 결과의 누락·모순 확인 |
-| `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성 |
+| `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성, 요청하면 현재 세션에서 구현 |
 | `$emeth-discipline:implementation-slice` | 독립적인 구현 작업을 나눌 때 | 필요한 경우에만 `PARALLEL.md`에 작업 범위와 연결 방식 정리 |
 | `$emeth-discipline:start-implementation` | 준비된 설계의 구현을 새 작업에서 시작할 때 | 모델과 추론 수준을 정하고 현재 프로젝트 폴더에 새 작업 생성 |
 | `$emeth-discipline:implement` | 준비된 설계를 현재 작업에서 구현할 때 | 구현·검증 후 현재 계약의 완료 처리 |
@@ -183,6 +184,28 @@ $emeth-discipline:implement DESIGN-0001
 ```
 
 모델은 [모델 선택 기준](skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
+
+### 한 세션에서 진행하기
+
+별도 구현 작업을 만들지 않고 현재 세션에서 끝내려면 최초 요청에 진행 방식을 명시합니다.
+
+```text
+$emeth-discipline:figure-it-out
+사용자 알림 설정 개선을 설계부터 구현까지 완료해줘.
+Design을 준비하고 검토한 뒤, 준비된 Design에 $emeth-discipline:implement를 사용해
+현재 세션에서 구현부터 완료 처리와 결과 보고까지 진행해줘.
+새 세션이나 하위 에이전트는 만들지 마.
+```
+
+`development-design`만 요청하면 설계에서 끝납니다. 설계부터 같은 세션의 구현까지 원한다면 후속 스킬도 함께 명시할 수 있습니다.
+
+```text
+$emeth-discipline:development-design
+사용자 알림 설정 개선을 설계해줘.
+Design이 준비되면 $emeth-discipline:tenet-me로 검토하고,
+중요한 결정이 해결되면 $emeth-discipline:implement로 현재 세션에서 구현과 완료 처리까지 진행해줘.
+새 세션이나 하위 에이전트는 만들지 마.
+```
 
 
 ## 🗂️ 이슈 기록

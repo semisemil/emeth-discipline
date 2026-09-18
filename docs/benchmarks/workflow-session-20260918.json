@@ -1,0 +1,373 @@
+{
+  "date": "2026-09-18",
+  "task": "superjson-error-stack-serialization",
+  "model": "gpt-6-astra",
+  "reasoning": "low",
+  "repetitions": 1,
+  "cost_kind": "recorded_api_equivalent_usd",
+  "prompt_only_session_override": "For this run, prepare and review the Design, then use $emeth-discipline:implement for that ready Design in this same session through implementation, verification, completion, and delivery. This overrides the workflow handoff: do not use start-implementation or create another session or agent.",
+  "scope": "Figure It Out same-session execution through the initial user prompt; Development Design same-session operation also confirmed by the user.",
+  "runs": [
+    {
+      "session_mode": "separate",
+      "source_run_id": "2026-09-18T00-28-54-677Z-59720",
+      "source_summary_sha256": "4cf43050acec76839fab1c4ad7d1cb5084c74530cce11d7b01d3d20cda177c88",
+      "bundle_sha256": "b27ffc2988fbed6f6894c3e743948bbd5ce9b3cc7ef2784a4876235b7e842581",
+      "source_snapshot_commit": "db3e132289a5aa44d8e14db64f5c923292552354",
+      "source_probe_results_sha256": "1e8099232b6ec4fb9716360dfc8da5516e710e0607c01e6fcb1823c68c533718",
+      "measurement_valid": true,
+      "tests": {
+        "reward": 1,
+        "f2p_total": 80,
+        "f2p_passed": 80,
+        "p2p_total": 116,
+        "p2p_passed": 116,
+        "f2p": 1,
+        "p2p": 1,
+        "partial": 1
+      },
+      "usage": {
+        "input_tokens": 626333,
+        "cached_input_tokens": 543104,
+        "uncached_input_tokens": 83229,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12299,
+        "reasoning_output_tokens": 737,
+        "total_tokens": 638632
+      },
+      "estimated_api_cost_usd": 1.990344,
+      "elapsed_ms": 474427,
+      "request_count": 19,
+      "topology_passed": true,
+      "descendants": 1,
+      "snapshot_hashes": {
+        "baseline": "22f76e858bc4456c18212d696e552a0b6a9e4aba7c70ae6d4761a29b6aa3400a",
+        "figure_it_out": "e262aa67988148d4956c993975acd4c2c31b758514eca136472306fddbc16e35",
+        "plugin_tree": "2dd0eb10dd8d07fd5a79d552a1feeeb5b9558ce1e7362f8995f6170e961d5d30",
+        "benchmark_sources": "f19b224c6ff5f4a9fb0b0bb1a28343cd1c7471c0468e01d6f98d35fdda5c698c",
+        "harness": "b2729231367266973495f7d39ef62beaa6a8b8c4878b69a3568b957697099e50",
+        "cases": "0b5a6446202cf3a6b4feeb712aba4f063986254a4629aa26223556f37691cdad",
+        "verifier_toolchains": {
+          "suite-v2/runtime/web/package.json": "380478404ea7b528e1669e1b3f550ee706e81a06e04c347453064ba76d1be198",
+          "suite-v2/runtime/web/bun.lock": "6676d7255ca80ce831a128c60d43815a43ca5d7449e6af708423cb1912a36b18",
+          "suite-v2/runtime/web/frontend/package.json": "94981168097d8cf5d2b436bf2f3b58e93b9b82c1f1b45642a1fd35ec443746bb",
+          "benchmarks/deepswe-superjson/runtime/reporters/package.json": "3eae0ce2180e0da1a2b85a9e823a8b3b5f1914495cc21eb7f385b55b08316adc",
+          "benchmarks/deepswe-superjson/runtime/reporters/package-lock.json": "6e113453f63f2f2f22d2a56c02b74445b7b9332e5f3c8e7c710c6f6b7b8889b1"
+        },
+        "verifiers": {
+          "deepswe-superjson": "b94b5f545f6a003c51feec451c3b5ae6699cc99079c26563bfd0e80f0969538b",
+          "greeting": "8e0e6c685711b0368bbed03b3d760134333806846dc71f0645eef9e373562d68",
+          "ponytail-items-archive": "2f33c90a5ded068b7b29ebad716be9abb837da52d6fd4510708dce29ca414299",
+          "ponytail-todo-null": "31f8205dd21392b731230660f9d5dee6f7272589a1e574a3a18e3be2aec92c6f",
+          "ponytail-wizard": "3f38aa2fa5365a3482b133bd91fddaf7253dbfedbcf598fa158c0490e33cef7a",
+          "ponytail-wizard-v2": "cdb00f8bee63a7a2878e0452fe6201b4aa33bd65fa3b274d07b9f27e7e80a281",
+          "skillsbench-llm-prefix-cache-replay": "92770118c56afe6d27f4149b96f685c175cbf66080b8125289e22ac5e0a9293b"
+        }
+      },
+      "probes": [
+        {
+          "id": "basename-root",
+          "passed": true,
+          "observed": "header\nat app.ts:1:2"
+        },
+        {
+          "id": "basename-relative",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (src/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+          "actual": "header\nat fn (src/app.ts:1:2)",
+          "expected": "header\nat fn (app.ts:1:2)"
+        },
+        {
+          "id": "basename-spaces",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (Jane Doe/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+          "actual": "header\nat fn (Jane Doe/app.ts:1:2)",
+          "expected": "header\nat fn (app.ts:1:2)"
+        },
+        {
+          "id": "cwd-prefix-boundary",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /otherapp.ts:1:2'\n- 'header\\nat /other/repo/app.ts:1:2'\n                    ^\n",
+          "actual": "header\nat /otherapp.ts:1:2",
+          "expected": "header\nat /other/repo/app.ts:1:2"
+        },
+        {
+          "id": "carriage-return-frames",
+          "passed": true,
+          "observed": [
+            {
+              "raw": "header"
+            },
+            {
+              "raw": "frame"
+            }
+          ]
+        },
+        {
+          "id": "legacy-receiver-allowances",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ [\n+   1\n+ ]\n- undefined\n",
+          "actual": [
+            1
+          ]
+        },
+        {
+          "id": "legacy-aggregate",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n\ntrue !== false\n",
+          "actual": true,
+          "expected": false
+        },
+        {
+          "id": "configured-allowed-errors",
+          "passed": true,
+          "observed": [
+            1
+          ]
+        },
+        {
+          "id": "registered-cause",
+          "passed": true,
+          "observed": {
+            "classPreserved": true,
+            "code": 42
+          }
+        },
+        {
+          "id": "shared-cause-identity",
+          "passed": false,
+          "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
+          "actual": {
+            "name": "Error"
+          },
+          "expected": {
+            "name": "Error"
+          }
+        },
+        {
+          "id": "hook-object-cross-call",
+          "passed": true,
+          "observed": {
+            "plainObject": true
+          }
+        },
+        {
+          "id": "box-shared-identity",
+          "passed": true,
+          "observed": true
+        },
+        {
+          "id": "registered-primitive-policy",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '[object Object]'\n- '[redacted]'\n",
+          "actual": "[object Object]",
+          "expected": "[redacted]"
+        },
+        {
+          "id": "cross-instance-cause-type",
+          "passed": true,
+          "observed": {
+            "off": {
+              "child": true,
+              "grandchild": true
+            },
+            "string": {
+              "child": true,
+              "grandchild": true
+            },
+            "frames": {
+              "child": true,
+              "grandchild": true
+            }
+          }
+        }
+      ],
+      "probes_passed": 7,
+      "probe_count": 14
+    },
+    {
+      "session_mode": "same",
+      "source_run_id": "2026-09-18T00-28-48-191Z-36336",
+      "source_summary_sha256": "e46f5a763c21b631a536ebc9cd9c35f7ab926aa864308ee42ab53fe7e9c9f1f7",
+      "bundle_sha256": "e43d0c57124c3d429ea8a69ca4ac6ae9fc20e3637102e608c72344ed2cca4e0e",
+      "source_snapshot_commit": "1c4f9c444e48d4e37a77bf8970c93b3585e2653a",
+      "source_probe_results_sha256": "7db8a697ff6280a80c5ccf2629f3cba065c27c1fd4eb69ea52499030dd4eff7a",
+      "measurement_valid": true,
+      "tests": {
+        "reward": 1,
+        "f2p_total": 80,
+        "f2p_passed": 80,
+        "p2p_total": 116,
+        "p2p_passed": 116,
+        "f2p": 1,
+        "p2p": 1,
+        "partial": 1
+      },
+      "usage": {
+        "input_tokens": 429205,
+        "cached_input_tokens": 360448,
+        "uncached_input_tokens": 68757,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11263,
+        "reasoning_output_tokens": 1037,
+        "total_tokens": 440468
+      },
+      "estimated_api_cost_usd": 1.611168,
+      "elapsed_ms": 402834,
+      "request_count": 12,
+      "topology_passed": true,
+      "descendants": 0,
+      "snapshot_hashes": {
+        "baseline": "22f76e858bc4456c18212d696e552a0b6a9e4aba7c70ae6d4761a29b6aa3400a",
+        "figure_it_out": "e262aa67988148d4956c993975acd4c2c31b758514eca136472306fddbc16e35",
+        "plugin_tree": "2dd0eb10dd8d07fd5a79d552a1feeeb5b9558ce1e7362f8995f6170e961d5d30",
+        "benchmark_sources": "f19b224c6ff5f4a9fb0b0bb1a28343cd1c7471c0468e01d6f98d35fdda5c698c",
+        "harness": "b2729231367266973495f7d39ef62beaa6a8b8c4878b69a3568b957697099e50",
+        "cases": "0b5a6446202cf3a6b4feeb712aba4f063986254a4629aa26223556f37691cdad",
+        "verifier_toolchains": {
+          "suite-v2/runtime/web/package.json": "380478404ea7b528e1669e1b3f550ee706e81a06e04c347453064ba76d1be198",
+          "suite-v2/runtime/web/bun.lock": "6676d7255ca80ce831a128c60d43815a43ca5d7449e6af708423cb1912a36b18",
+          "suite-v2/runtime/web/frontend/package.json": "94981168097d8cf5d2b436bf2f3b58e93b9b82c1f1b45642a1fd35ec443746bb",
+          "benchmarks/deepswe-superjson/runtime/reporters/package.json": "3eae0ce2180e0da1a2b85a9e823a8b3b5f1914495cc21eb7f385b55b08316adc",
+          "benchmarks/deepswe-superjson/runtime/reporters/package-lock.json": "6e113453f63f2f2f22d2a56c02b74445b7b9332e5f3c8e7c710c6f6b7b8889b1"
+        },
+        "verifiers": {
+          "deepswe-superjson": "b94b5f545f6a003c51feec451c3b5ae6699cc99079c26563bfd0e80f0969538b",
+          "greeting": "8e0e6c685711b0368bbed03b3d760134333806846dc71f0645eef9e373562d68",
+          "ponytail-items-archive": "2f33c90a5ded068b7b29ebad716be9abb837da52d6fd4510708dce29ca414299",
+          "ponytail-todo-null": "31f8205dd21392b731230660f9d5dee6f7272589a1e574a3a18e3be2aec92c6f",
+          "ponytail-wizard": "3f38aa2fa5365a3482b133bd91fddaf7253dbfedbcf598fa158c0490e33cef7a",
+          "ponytail-wizard-v2": "cdb00f8bee63a7a2878e0452fe6201b4aa33bd65fa3b274d07b9f27e7e80a281",
+          "skillsbench-llm-prefix-cache-replay": "92770118c56afe6d27f4149b96f685c175cbf66080b8125289e22ac5e0a9293b"
+        }
+      },
+      "probes": [
+        {
+          "id": "basename-root",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /app.ts:1:2'\n- 'header\\nat app.ts:1:2'\n              ^\n",
+          "actual": "header\nat /app.ts:1:2",
+          "expected": "header\nat app.ts:1:2"
+        },
+        {
+          "id": "basename-relative",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (src/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+          "actual": "header\nat fn (src/app.ts:1:2)",
+          "expected": "header\nat fn (app.ts:1:2)"
+        },
+        {
+          "id": "basename-spaces",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (Jane Doe/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+          "actual": "header\nat fn (Jane Doe/app.ts:1:2)",
+          "expected": "header\nat fn (app.ts:1:2)"
+        },
+        {
+          "id": "cwd-prefix-boundary",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /otherapp.ts:1:2'\n- 'header\\nat /other/repo/app.ts:1:2'\n                    ^\n",
+          "actual": "header\nat /otherapp.ts:1:2",
+          "expected": "header\nat /other/repo/app.ts:1:2"
+        },
+        {
+          "id": "carriage-return-frames",
+          "passed": true,
+          "observed": [
+            {
+              "raw": "header"
+            },
+            {
+              "raw": "frame"
+            }
+          ]
+        },
+        {
+          "id": "legacy-receiver-allowances",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ [\n+   1\n+ ]\n- undefined\n",
+          "actual": [
+            1
+          ]
+        },
+        {
+          "id": "legacy-aggregate",
+          "passed": true,
+          "observed": [
+            "name",
+            "message"
+          ]
+        },
+        {
+          "id": "configured-allowed-errors",
+          "passed": false,
+          "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ undefined\n- [\n-   1\n- ]\n",
+          "expected": [
+            1
+          ]
+        },
+        {
+          "id": "registered-cause",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n\nfalse !== true\n",
+          "actual": false,
+          "expected": true
+        },
+        {
+          "id": "shared-cause-identity",
+          "passed": false,
+          "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
+          "actual": {
+            "name": "Error"
+          },
+          "expected": {
+            "name": "Error"
+          }
+        },
+        {
+          "id": "hook-object-cross-call",
+          "passed": false,
+          "error": "Expected values to be strictly equal:\n\ntrue !== false\n",
+          "actual": true,
+          "expected": false
+        },
+        {
+          "id": "box-shared-identity",
+          "passed": false,
+          "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
+          "actual": {
+            "name": "Error"
+          },
+          "expected": {
+            "name": "Error"
+          }
+        },
+        {
+          "id": "registered-primitive-policy",
+          "passed": true,
+          "observed": "[redacted]"
+        },
+        {
+          "id": "cross-instance-cause-type",
+          "passed": true,
+          "observed": {
+            "off": {
+              "child": true,
+              "grandchild": true
+            },
+            "string": {
+              "child": true,
+              "grandchild": true
+            },
+            "frames": {
+              "child": true,
+              "grandchild": true
+            }
+          }
+        }
+      ],
+      "probes_passed": 4,
+      "probe_count": 14
+    }
+  ]
+}

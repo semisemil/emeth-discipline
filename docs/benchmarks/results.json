@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-14",
+  "date": "2026-09-18",
   "task": "superjson-error-stack-serialization",
   "cost_kind": "api_equivalent_estimate_usd",
   "selection_notes": "Latest completed original submissions for each model and condition. Astra Core display cost is normalized to the preceding Astra Core cache hit rate; observed usage and cost remain recorded separately. Diagnostic repair copies are excluded.",
@@ -729,10 +729,11 @@
         },
         {
           "condition": "workflow",
+          "session_mode": "separate",
           "response_mode": "normal",
-          "source_run_id": "2026-09-13T17-26-46-693Z-37320",
-          "source_summary_sha256": "279a97185eebbb32e88a8386f8fc185d4c67bbd752e02c252ab1429824e08b39",
-          "source_probe_results_sha256": "26d10e20bcd4ca084641ff3a69cbf6ddeed5a25a067ccd5d447711a2947853b1",
+          "source_run_id": "2026-09-18T00-28-54-677Z-59720",
+          "source_summary_sha256": "4cf43050acec76839fab1c4ad7d1cb5084c74530cce11d7b01d3d20cda177c88",
+          "source_probe_results_sha256": "1e8099232b6ec4fb9716360dfc8da5516e710e0607c01e6fcb1823c68c533718",
           "measurement_valid": true,
           "task_success": true,
           "tests": {
@@ -746,28 +747,29 @@
             "partial": 1
           },
           "usage": {
-            "input_tokens": 673930,
-            "cached_input_tokens": 587136,
-            "uncached_input_tokens": 86794,
-            "output_tokens": 13424,
-            "reasoning_output_tokens": 1884,
-            "total_tokens": 687354
+            "input_tokens": 626333,
+            "cached_input_tokens": 543104,
+            "uncached_input_tokens": 83229,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 12299,
+            "reasoning_output_tokens": 737,
+            "total_tokens": 638632
           },
-          "request_count": 20,
-          "api_estimate_usd": 2.126276,
-          "display_api_estimate_usd": 2.126276,
+          "request_count": 19,
+          "api_estimate_usd": 1.990344,
+          "display_api_estimate_usd": 1.990344,
           "display_cost_basis": "observed_usage",
-          "elapsed_ms": 510561,
+          "elapsed_ms": 474427,
           "artifact": {
             "schema_version": 2,
             "kind": "git-bundle",
             "bundle": "superjson-workflow-r01.workspace.bundle",
-            "bytes": 1095075,
-            "sha256": "b8865d54b9cb33ec206c7e433512c48dba88866a4f1db106e069c6eb1f6cf30d",
+            "bytes": 1095000,
+            "sha256": "b27ffc2988fbed6f6894c3e743948bbd5ce9b3cc7ef2784a4876235b7e842581",
             "base_commit": "0d919d375f0125c0cc735b6ccdf2235f5f79100d",
             "root": {
               "ref": "refs/benchmark-artifacts/superjson-workflow-r01/root",
-              "snapshot_commit": "d301167f8486a19db150962c4d046fd23491c683",
+              "snapshot_commit": "db3e132289a5aa44d8e14db64f5c923292552354",
               "changed_paths": [
                 ".proofline/designs/DESIGN-0001-error-stack/DESIGN.md",
                 "src/accessDeep.ts",
@@ -791,239 +793,215 @@
           },
           "threads": [
             {
-              "thread_id": "01a09bcf-0bce-7391-9b5f-fb240166185e",
+              "thread_id": "01a0b1eb-0854-7a90-8145-230d7d269d2c",
               "parent_thread_id": null,
               "role": "coordinator",
               "role_source": "benchmark_root",
               "model": "gpt-6-astra",
               "reasoning_effort": "low",
-              "request_count": 9,
+              "request_count": 8,
               "request_deltas": [
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 18597,
+                    "input_tokens": 18823,
                     "cached_input_tokens": 0,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 18597,
-                    "output_tokens": 179,
+                    "uncached_input_tokens": 18823,
+                    "output_tokens": 305,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 18776
+                    "total_tokens": 19128
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.18597,
+                    "uncached_input_usd": 0.18823,
                     "cached_input_usd": 0,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.00895,
-                    "total_usd": 0.19492
+                    "output_usd": 0.01525,
+                    "total_usd": 0.20348
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 19177,
-                    "cached_input_tokens": 18432,
+                    "input_tokens": 20938,
+                    "cached_input_tokens": 18688,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 745,
-                    "output_tokens": 222,
+                    "uncached_input_tokens": 2250,
+                    "output_tokens": 268,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 19399
+                    "total_tokens": 21206
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.00745,
-                    "cached_input_usd": 0.018432,
+                    "uncached_input_usd": 0.0225,
+                    "cached_input_usd": 0.018688,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.0111,
-                    "total_usd": 0.036982
+                    "output_usd": 0.0134,
+                    "total_usd": 0.054588
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 26174,
-                    "cached_input_tokens": 18944,
+                    "input_tokens": 29963,
+                    "cached_input_tokens": 20736,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 7230,
-                    "output_tokens": 250,
+                    "uncached_input_tokens": 9227,
+                    "output_tokens": 215,
+                    "reasoning_output_tokens": 15,
+                    "total_tokens": 30178
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.09227,
+                    "cached_input_usd": 0.020736,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.01075,
+                    "total_usd": 0.123756
+                  }
+                },
+                {
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 31789,
+                    "cached_input_tokens": 29824,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 1965,
+                    "output_tokens": 2146,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 26424
+                    "total_tokens": 33935
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.0723,
-                    "cached_input_usd": 0.018944,
+                    "uncached_input_usd": 0.01965,
+                    "cached_input_usd": 0.029824,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.0125,
-                    "total_usd": 0.103744
+                    "output_usd": 0.1073,
+                    "total_usd": 0.156774
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 32335,
-                    "cached_input_tokens": 25984,
+                    "input_tokens": 34316,
+                    "cached_input_tokens": 31616,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 6351,
-                    "output_tokens": 217,
-                    "reasoning_output_tokens": 9,
-                    "total_tokens": 32552
+                    "uncached_input_tokens": 2700,
+                    "output_tokens": 186,
+                    "reasoning_output_tokens": 10,
+                    "total_tokens": 34502
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.06351,
-                    "cached_input_usd": 0.025984,
+                    "uncached_input_usd": 0.027,
+                    "cached_input_usd": 0.031616,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.01085,
-                    "total_usd": 0.100344
+                    "output_usd": 0.0093,
+                    "total_usd": 0.067916
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 35094,
-                    "cached_input_tokens": 32128,
+                    "input_tokens": 35302,
+                    "cached_input_tokens": 34176,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 2966,
-                    "output_tokens": 2144,
+                    "uncached_input_tokens": 1126,
+                    "output_tokens": 133,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 37238
+                    "total_tokens": 35435
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.02966,
-                    "cached_input_usd": 0.032128,
+                    "uncached_input_usd": 0.01126,
+                    "cached_input_usd": 0.034176,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.1072,
-                    "total_usd": 0.168988
+                    "output_usd": 0.00665,
+                    "total_usd": 0.052086
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 37616,
-                    "cached_input_tokens": 34944,
+                    "input_tokens": 35511,
+                    "cached_input_tokens": 35072,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 2672,
-                    "output_tokens": 231,
-                    "reasoning_output_tokens": 11,
-                    "total_tokens": 37847
-                  },
-                  "cost": {
-                    "model": "gpt-6-astra",
-                    "context_band": "short",
-                    "currency": "USD",
-                    "kind": "api_equivalent",
-                    "uncached_input_usd": 0.02672,
-                    "cached_input_usd": 0.034944,
-                    "cache_write_input_usd": 0,
-                    "output_usd": 0.01155,
-                    "total_usd": 0.073214
-                  }
-                },
-                {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
-                  "model": "gpt-6-astra",
-                  "usage": {
-                    "input_tokens": 37991,
-                    "cached_input_tokens": 37376,
-                    "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 615,
-                    "output_tokens": 30,
+                    "uncached_input_tokens": 439,
+                    "output_tokens": 55,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 38021
+                    "total_tokens": 35566
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.00615,
-                    "cached_input_usd": 0.037376,
+                    "uncached_input_usd": 0.00439,
+                    "cached_input_usd": 0.035072,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.0015,
-                    "total_usd": 0.045026
+                    "output_usd": 0.00275,
+                    "total_usd": 0.042212
                   }
                 },
                 {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
+                  "turn_id": "01a0b1eb-0942-7742-a17d-c3bbce5e332d",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 38096,
-                    "cached_input_tokens": 37760,
+                    "input_tokens": 35632,
+                    "cached_input_tokens": 35328,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 336,
-                    "output_tokens": 54,
+                    "uncached_input_tokens": 304,
+                    "output_tokens": 70,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 38150
+                    "total_tokens": 35702
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.00336,
-                    "cached_input_usd": 0.03776,
+                    "uncached_input_usd": 0.00304,
+                    "cached_input_usd": 0.035328,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.0027,
-                    "total_usd": 0.04382
-                  }
-                },
-                {
-                  "turn_id": "01a09bcf-0d1b-7aa2-a999-1b0994cbb0a8",
-                  "model": "gpt-6-astra",
-                  "usage": {
-                    "input_tokens": 38215,
-                    "cached_input_tokens": 37888,
-                    "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 327,
-                    "output_tokens": 82,
-                    "reasoning_output_tokens": 0,
-                    "total_tokens": 38297
-                  },
-                  "cost": {
-                    "model": "gpt-6-astra",
-                    "context_band": "short",
-                    "currency": "USD",
-                    "kind": "api_equivalent",
-                    "uncached_input_usd": 0.00327,
-                    "cached_input_usd": 0.037888,
-                    "cache_write_input_usd": 0,
-                    "output_usd": 0.0041,
-                    "total_usd": 0.045258
+                    "output_usd": 0.0035,
+                    "total_usd": 0.041868
                   }
                 }
               ],
               "usage": {
-                "input_tokens": 283295,
-                "cached_input_tokens": 243456,
+                "input_tokens": 242274,
+                "cached_input_tokens": 205440,
                 "cache_write_input_tokens": 0,
-                "uncached_input_tokens": 39839,
-                "output_tokens": 3409,
-                "reasoning_output_tokens": 20,
-                "total_tokens": 286704
+                "uncached_input_tokens": 36834,
+                "output_tokens": 3378,
+                "reasoning_output_tokens": 25,
+                "total_tokens": 245652
               },
               "cumulative_baseline": {
                 "input_tokens": 0,
@@ -1035,13 +1013,13 @@
                 "total_tokens": 0
               },
               "cumulative_end": {
-                "input_tokens": 283295,
-                "cached_input_tokens": 243456,
+                "input_tokens": 242274,
+                "cached_input_tokens": 205440,
                 "cache_write_input_tokens": 0,
-                "uncached_input_tokens": 39839,
-                "output_tokens": 3409,
-                "reasoning_output_tokens": 20,
-                "total_tokens": 286704
+                "uncached_input_tokens": 36834,
+                "output_tokens": 3378,
+                "reasoning_output_tokens": 25,
+                "total_tokens": 245652
               },
               "terminal": true,
               "terminal_status": "completed",
@@ -1049,7 +1027,7 @@
               "changed_paths": [],
               "item_counts": {
                 "agentMessage": 4,
-                "commandExecution": 6,
+                "commandExecution": 7,
                 "dynamicToolCall": 3,
                 "reasoning": 2,
                 "userMessage": 1
@@ -1062,16 +1040,16 @@
                 "turn/started"
               ],
               "cost": {
-                "uncached_input_usd": 0.39839,
-                "cached_input_usd": 0.243456,
+                "uncached_input_usd": 0.36834,
+                "cached_input_usd": 0.20544,
                 "cache_write_input_usd": 0,
-                "output_usd": 0.17045,
-                "total_usd": 0.812296
+                "output_usd": 0.1689,
+                "total_usd": 0.74268
               }
             },
             {
-              "thread_id": "01a09bd0-ff26-7ed0-bee0-00f2e4f865d2",
-              "parent_thread_id": "01a09bcf-0bce-7391-9b5f-fb240166185e",
+              "thread_id": "01a0b1ec-f473-7a93-8c2f-6c51eb2c579f",
+              "parent_thread_id": "01a0b1eb-0854-7a90-8145-230d7d269d2c",
               "role": "implementation-session",
               "role_source": "benchmark_task_transport",
               "model": "gpt-6-astra",
@@ -1079,278 +1057,278 @@
               "request_count": 11,
               "request_deltas": [
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 17749,
+                    "input_tokens": 17680,
                     "cached_input_tokens": 0,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 17749,
-                    "output_tokens": 227,
+                    "uncached_input_tokens": 17680,
+                    "output_tokens": 152,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 17976
+                    "total_tokens": 17832
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.17749,
+                    "uncached_input_usd": 0.1768,
                     "cached_input_usd": 0,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.01135,
-                    "total_usd": 0.18884
+                    "output_usd": 0.0076,
+                    "total_usd": 0.1844
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 21228,
+                    "input_tokens": 20954,
                     "cached_input_tokens": 17536,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 3692,
-                    "output_tokens": 69,
+                    "uncached_input_tokens": 3418,
+                    "output_tokens": 106,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 21297
+                    "total_tokens": 21060
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.03692,
+                    "uncached_input_usd": 0.03418,
                     "cached_input_usd": 0.017536,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.00345,
-                    "total_usd": 0.057906
+                    "output_usd": 0.0053,
+                    "total_usd": 0.057016
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 29979,
-                    "cached_input_tokens": 20992,
+                    "input_tokens": 28136,
+                    "cached_input_tokens": 20736,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 8987,
-                    "output_tokens": 3041,
-                    "reasoning_output_tokens": 252,
-                    "total_tokens": 33020
+                    "uncached_input_tokens": 7400,
+                    "output_tokens": 2464,
+                    "reasoning_output_tokens": 90,
+                    "total_tokens": 30600
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.08987,
-                    "cached_input_usd": 0.020992,
+                    "uncached_input_usd": 0.074,
+                    "cached_input_usd": 0.020736,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.15205,
-                    "total_usd": 0.262912
+                    "output_usd": 0.1232,
+                    "total_usd": 0.217936
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 33477,
-                    "cached_input_tokens": 29824,
+                    "input_tokens": 31150,
+                    "cached_input_tokens": 27904,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 3653,
-                    "output_tokens": 3335,
-                    "reasoning_output_tokens": 183,
-                    "total_tokens": 36812
+                    "uncached_input_tokens": 3246,
+                    "output_tokens": 998,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 32148
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.03653,
-                    "cached_input_usd": 0.029824,
+                    "uncached_input_usd": 0.03246,
+                    "cached_input_usd": 0.027904,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.16675,
-                    "total_usd": 0.233104
+                    "output_usd": 0.0499,
+                    "total_usd": 0.110264
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 37732,
-                    "cached_input_tokens": 33280,
+                    "input_tokens": 33763,
+                    "cached_input_tokens": 30976,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 4452,
-                    "output_tokens": 453,
-                    "reasoning_output_tokens": 190,
-                    "total_tokens": 38185
+                    "uncached_input_tokens": 2787,
+                    "output_tokens": 3289,
+                    "reasoning_output_tokens": 122,
+                    "total_tokens": 37052
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.04452,
-                    "cached_input_usd": 0.03328,
+                    "uncached_input_usd": 0.02787,
+                    "cached_input_usd": 0.030976,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.02265,
-                    "total_usd": 0.10045
+                    "output_usd": 0.16445,
+                    "total_usd": 0.223296
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 38619,
-                    "cached_input_tokens": 37504,
+                    "input_tokens": 39296,
+                    "cached_input_tokens": 33536,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 1115,
-                    "output_tokens": 789,
-                    "reasoning_output_tokens": 458,
-                    "total_tokens": 39408
+                    "uncached_input_tokens": 5760,
+                    "output_tokens": 33,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 39329
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.01115,
-                    "cached_input_usd": 0.037504,
+                    "uncached_input_usd": 0.0576,
+                    "cached_input_usd": 0.033536,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.03945,
-                    "total_usd": 0.088104
+                    "output_usd": 0.00165,
+                    "total_usd": 0.092786
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 39820,
-                    "cached_input_tokens": 38400,
+                    "input_tokens": 40605,
+                    "cached_input_tokens": 39168,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 1420,
-                    "output_tokens": 667,
-                    "reasoning_output_tokens": 102,
-                    "total_tokens": 40487
+                    "uncached_input_tokens": 1437,
+                    "output_tokens": 387,
+                    "reasoning_output_tokens": 25,
+                    "total_tokens": 40992
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.0142,
-                    "cached_input_usd": 0.0384,
+                    "uncached_input_usd": 0.01437,
+                    "cached_input_usd": 0.039168,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.03335,
-                    "total_usd": 0.08595
+                    "output_usd": 0.01935,
+                    "total_usd": 0.072888
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 40675,
-                    "cached_input_tokens": 39680,
-                    "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 995,
-                    "output_tokens": 634,
-                    "reasoning_output_tokens": 251,
-                    "total_tokens": 41309
-                  },
-                  "cost": {
-                    "model": "gpt-6-astra",
-                    "context_band": "short",
-                    "currency": "USD",
-                    "kind": "api_equivalent",
-                    "uncached_input_usd": 0.00995,
-                    "cached_input_usd": 0.03968,
-                    "cache_write_input_usd": 0,
-                    "output_usd": 0.0317,
-                    "total_usd": 0.08133
-                  }
-                },
-                {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
-                  "model": "gpt-6-astra",
-                  "usage": {
-                    "input_tokens": 41758,
+                    "input_tokens": 41426,
                     "cached_input_tokens": 40448,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 1310,
-                    "output_tokens": 578,
-                    "reasoning_output_tokens": 388,
-                    "total_tokens": 42336
+                    "uncached_input_tokens": 978,
+                    "output_tokens": 762,
+                    "reasoning_output_tokens": 268,
+                    "total_tokens": 42188
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.0131,
+                    "uncached_input_usd": 0.00978,
                     "cached_input_usd": 0.040448,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.0289,
-                    "total_usd": 0.082448
+                    "output_usd": 0.0381,
+                    "total_usd": 0.088328
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 44622,
-                    "cached_input_tokens": 41600,
+                    "input_tokens": 42807,
+                    "cached_input_tokens": 41216,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 3022,
-                    "output_tokens": 157,
-                    "reasoning_output_tokens": 40,
-                    "total_tokens": 44779
+                    "uncached_input_tokens": 1591,
+                    "output_tokens": 380,
+                    "reasoning_output_tokens": 107,
+                    "total_tokens": 43187
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.03022,
-                    "cached_input_usd": 0.0416,
+                    "uncached_input_usd": 0.01591,
+                    "cached_input_usd": 0.041216,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.00785,
-                    "total_usd": 0.07967
+                    "output_usd": 0.019,
+                    "total_usd": 0.076126
                   }
                 },
                 {
-                  "turn_id": "01a09bd1-0013-7b60-9971-6fff2e758a5d",
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
                   "model": "gpt-6-astra",
                   "usage": {
-                    "input_tokens": 44976,
-                    "cached_input_tokens": 44416,
+                    "input_tokens": 43729,
+                    "cached_input_tokens": 42624,
                     "cache_write_input_tokens": 0,
-                    "uncached_input_tokens": 560,
-                    "output_tokens": 65,
+                    "uncached_input_tokens": 1105,
+                    "output_tokens": 288,
+                    "reasoning_output_tokens": 100,
+                    "total_tokens": 44017
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.01105,
+                    "cached_input_usd": 0.042624,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0144,
+                    "total_usd": 0.068074
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ec-f599-73e0-a820-0f32d3e9ae88",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 44513,
+                    "cached_input_tokens": 43520,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 993,
+                    "output_tokens": 62,
                     "reasoning_output_tokens": 0,
-                    "total_tokens": 45041
+                    "total_tokens": 44575
                   },
                   "cost": {
                     "model": "gpt-6-astra",
                     "context_band": "short",
                     "currency": "USD",
                     "kind": "api_equivalent",
-                    "uncached_input_usd": 0.0056,
-                    "cached_input_usd": 0.044416,
+                    "uncached_input_usd": 0.00993,
+                    "cached_input_usd": 0.04352,
                     "cache_write_input_usd": 0,
-                    "output_usd": 0.00325,
-                    "total_usd": 0.053266
+                    "output_usd": 0.0031,
+                    "total_usd": 0.05655
                   }
                 }
               ],
               "usage": {
-                "input_tokens": 390635,
-                "cached_input_tokens": 343680,
+                "input_tokens": 384059,
+                "cached_input_tokens": 337664,
                 "cache_write_input_tokens": 0,
-                "uncached_input_tokens": 46955,
-                "output_tokens": 10015,
-                "reasoning_output_tokens": 1864,
-                "total_tokens": 400650
+                "uncached_input_tokens": 46395,
+                "output_tokens": 8921,
+                "reasoning_output_tokens": 712,
+                "total_tokens": 392980
               },
               "cumulative_baseline": {
                 "input_tokens": 0,
@@ -1362,13 +1340,13 @@
                 "total_tokens": 0
               },
               "cumulative_end": {
-                "input_tokens": 390635,
-                "cached_input_tokens": 343680,
+                "input_tokens": 384059,
+                "cached_input_tokens": 337664,
                 "cache_write_input_tokens": 0,
-                "uncached_input_tokens": 46955,
-                "output_tokens": 10015,
-                "reasoning_output_tokens": 1864,
-                "total_tokens": 400650
+                "uncached_input_tokens": 46395,
+                "output_tokens": 8921,
+                "reasoning_output_tokens": 712,
+                "total_tokens": 392980
               },
               "terminal": true,
               "terminal_status": "completed",
@@ -1376,9 +1354,9 @@
               "changed_paths": [],
               "item_counts": {
                 "agentMessage": 5,
-                "commandExecution": 13,
+                "commandExecution": 14,
                 "dynamicToolCall": 6,
-                "reasoning": 8,
+                "reasoning": 6,
                 "userMessage": 1
               },
               "discovered_by": [
@@ -1389,15 +1367,433 @@
                 "turn/started"
               ],
               "cost": {
-                "uncached_input_usd": 0.46955,
-                "cached_input_usd": 0.34368,
+                "uncached_input_usd": 0.46395,
+                "cached_input_usd": 0.337664,
                 "cache_write_input_usd": 0,
-                "output_usd": 0.50075,
-                "total_usd": 1.31398
+                "output_usd": 0.44605,
+                "total_usd": 1.247664
               }
             }
           ],
           "code_checks_passed": 7,
+          "code_checks_total": 14
+        },
+        {
+          "condition": "workflow",
+          "session_mode": "same",
+          "response_mode": "normal",
+          "source_run_id": "2026-09-18T00-28-48-191Z-36336",
+          "source_summary_sha256": "e46f5a763c21b631a536ebc9cd9c35f7ab926aa864308ee42ab53fe7e9c9f1f7",
+          "source_probe_results_sha256": "7db8a697ff6280a80c5ccf2629f3cba065c27c1fd4eb69ea52499030dd4eff7a",
+          "measurement_valid": true,
+          "task_success": true,
+          "tests": {
+            "reward": 1,
+            "f2p_total": 80,
+            "f2p_passed": 80,
+            "p2p_total": 116,
+            "p2p_passed": 116,
+            "f2p": 1,
+            "p2p": 1,
+            "partial": 1
+          },
+          "usage": {
+            "input_tokens": 429205,
+            "cached_input_tokens": 360448,
+            "uncached_input_tokens": 68757,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11263,
+            "reasoning_output_tokens": 1037,
+            "total_tokens": 440468
+          },
+          "request_count": 12,
+          "api_estimate_usd": 1.611168,
+          "display_api_estimate_usd": 1.611168,
+          "display_cost_basis": "observed_usage",
+          "elapsed_ms": 402834,
+          "artifact": {
+            "schema_version": 2,
+            "kind": "git-bundle",
+            "bundle": "superjson-workflow-r01.workspace.bundle",
+            "bytes": 1093084,
+            "sha256": "e43d0c57124c3d429ea8a69ca4ac6ae9fc20e3637102e608c72344ed2cca4e0e",
+            "base_commit": "11bcdfa84a890c6ad5614d0a3d4de3fb95f9101e",
+            "root": {
+              "ref": "refs/benchmark-artifacts/superjson-workflow-r01/root",
+              "snapshot_commit": "1c4f9c444e48d4e37a77bf8970c93b3585e2653a",
+              "changed_paths": [
+                ".proofline/designs/DESIGN-0001-error-stack/DESIGN.md",
+                "src/error-class-registry.ts",
+                "src/error-options.ts",
+                "src/error-sanitizer.ts",
+                "src/error-serialization.ts",
+                "src/error-stack.test.ts",
+                "src/error-stack.ts",
+                "src/index.ts",
+                "src/transformer.ts"
+              ]
+            },
+            "worktrees": [],
+            "persistent_git_unchanged": true,
+            "temporary_refs_removed": true,
+            "removed_runtime_paths": [
+              "profiles/superjson/generations/g-1789277706194-da0615d2/root/.benchmark-runtime"
+            ]
+          },
+          "threads": [
+            {
+              "thread_id": "01a0b1ea-da98-7e33-afff-7449fc518e50",
+              "parent_thread_id": null,
+              "role": "coordinator",
+              "role_source": "benchmark_root",
+              "model": "gpt-6-astra",
+              "reasoning_effort": "low",
+              "request_count": 12,
+              "request_deltas": [
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 18828,
+                    "cached_input_tokens": 0,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 18828,
+                    "output_tokens": 213,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 19041
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.18828,
+                    "cached_input_usd": 0,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.01065,
+                    "total_usd": 0.19893
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 20471,
+                    "cached_input_tokens": 18688,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 1783,
+                    "output_tokens": 214,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 20685
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.01783,
+                    "cached_input_usd": 0.018688,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0107,
+                    "total_usd": 0.047218
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 29246,
+                    "cached_input_tokens": 0,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 29246,
+                    "output_tokens": 292,
+                    "reasoning_output_tokens": 53,
+                    "total_tokens": 29538
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.29246,
+                    "cached_input_usd": 0,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0146,
+                    "total_usd": 0.30706
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 31345,
+                    "cached_input_tokens": 29056,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 2289,
+                    "output_tokens": 1111,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 32456
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.02289,
+                    "cached_input_usd": 0.029056,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.05555,
+                    "total_usd": 0.107496
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 32805,
+                    "cached_input_tokens": 31104,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 1701,
+                    "output_tokens": 2188,
+                    "reasoning_output_tokens": 17,
+                    "total_tokens": 34993
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.01701,
+                    "cached_input_usd": 0.031104,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.1094,
+                    "total_usd": 0.157514
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 35578,
+                    "cached_input_tokens": 32640,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 2938,
+                    "output_tokens": 1532,
+                    "reasoning_output_tokens": 56,
+                    "total_tokens": 37110
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.02938,
+                    "cached_input_usd": 0.03264,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0766,
+                    "total_usd": 0.13862
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 37517,
+                    "cached_input_tokens": 35456,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 2061,
+                    "output_tokens": 3872,
+                    "reasoning_output_tokens": 405,
+                    "total_tokens": 41389
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.02061,
+                    "cached_input_usd": 0.035456,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.1936,
+                    "total_usd": 0.249666
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 41813,
+                    "cached_input_tokens": 37376,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 4437,
+                    "output_tokens": 1133,
+                    "reasoning_output_tokens": 334,
+                    "total_tokens": 42946
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.04437,
+                    "cached_input_usd": 0.037376,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.05665,
+                    "total_usd": 0.138396
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 43164,
+                    "cached_input_tokens": 41600,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 1564,
+                    "output_tokens": 192,
+                    "reasoning_output_tokens": 18,
+                    "total_tokens": 43356
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.01564,
+                    "cached_input_usd": 0.0416,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0096,
+                    "total_usd": 0.06684
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 45557,
+                    "cached_input_tokens": 43008,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 2549,
+                    "output_tokens": 181,
+                    "reasoning_output_tokens": 22,
+                    "total_tokens": 45738
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.02549,
+                    "cached_input_usd": 0.043008,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.00905,
+                    "total_usd": 0.077548
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 46218,
+                    "cached_input_tokens": 45440,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 778,
+                    "output_tokens": 248,
+                    "reasoning_output_tokens": 132,
+                    "total_tokens": 46466
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.00778,
+                    "cached_input_usd": 0.04544,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.0124,
+                    "total_usd": 0.06562
+                  }
+                },
+                {
+                  "turn_id": "01a0b1ea-db85-7193-9b90-a685026cda0b",
+                  "model": "gpt-6-astra",
+                  "usage": {
+                    "input_tokens": 46663,
+                    "cached_input_tokens": 46080,
+                    "cache_write_input_tokens": 0,
+                    "uncached_input_tokens": 583,
+                    "output_tokens": 87,
+                    "reasoning_output_tokens": 0,
+                    "total_tokens": 46750
+                  },
+                  "cost": {
+                    "model": "gpt-6-astra",
+                    "context_band": "short",
+                    "currency": "USD",
+                    "kind": "api_equivalent",
+                    "uncached_input_usd": 0.00583,
+                    "cached_input_usd": 0.04608,
+                    "cache_write_input_usd": 0,
+                    "output_usd": 0.00435,
+                    "total_usd": 0.05626
+                  }
+                }
+              ],
+              "usage": {
+                "input_tokens": 429205,
+                "cached_input_tokens": 360448,
+                "cache_write_input_tokens": 0,
+                "uncached_input_tokens": 68757,
+                "output_tokens": 11263,
+                "reasoning_output_tokens": 1037,
+                "total_tokens": 440468
+              },
+              "cumulative_baseline": {
+                "input_tokens": 0,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "uncached_input_tokens": 0,
+                "output_tokens": 0,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 0
+              },
+              "cumulative_end": {
+                "input_tokens": 429205,
+                "cached_input_tokens": 360448,
+                "cache_write_input_tokens": 0,
+                "uncached_input_tokens": 68757,
+                "output_tokens": 11263,
+                "reasoning_output_tokens": 1037,
+                "total_tokens": 440468
+              },
+              "terminal": true,
+              "terminal_status": "completed",
+              "file_change_count": 0,
+              "changed_paths": [],
+              "item_counts": {
+                "agentMessage": 7,
+                "commandExecution": 11,
+                "dynamicToolCall": 4,
+                "reasoning": 8,
+                "userMessage": 1
+              },
+              "discovered_by": [
+                "thread/start",
+                "thread/started",
+                "thread/tokenUsage/updated",
+                "turn/completed",
+                "turn/started"
+              ],
+              "cost": {
+                "uncached_input_usd": 0.68757,
+                "cached_input_usd": 0.360448,
+                "cache_write_input_usd": 0,
+                "output_usd": 0.56315,
+                "total_usd": 1.611168
+              }
+            }
+          ],
+          "code_checks_passed": 4,
           "code_checks_total": 14
         }
       ],
@@ -1417,6 +1813,12 @@
               "expected": "header\nat app.ts:1:2"
             },
             "workflow": {
+              "id": "basename-root",
+              "passed": true,
+              "observed": "header\nat app.ts:1:2"
+            },
+            "workflow_same": {
+              "id": "basename-root",
               "passed": false,
               "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /app.ts:1:2'\n- 'header\\nat app.ts:1:2'\n              ^\n",
               "actual": "header\nat /app.ts:1:2",
@@ -1441,6 +1843,14 @@
               "expected": "header\nat fn (app.ts:1:2)"
             },
             "workflow": {
+              "id": "basename-relative",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (src/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+              "actual": "header\nat fn (src/app.ts:1:2)",
+              "expected": "header\nat fn (app.ts:1:2)"
+            },
+            "workflow_same": {
+              "id": "basename-relative",
               "passed": false,
               "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (src/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
               "actual": "header\nat fn (src/app.ts:1:2)",
@@ -1465,6 +1875,14 @@
               "expected": "header\nat fn (app.ts:1:2)"
             },
             "workflow": {
+              "id": "basename-spaces",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (Jane Doe/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
+              "actual": "header\nat fn (Jane Doe/app.ts:1:2)",
+              "expected": "header\nat fn (app.ts:1:2)"
+            },
+            "workflow_same": {
+              "id": "basename-spaces",
               "passed": false,
               "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat fn (Jane Doe/app.ts:1:2)'\n- 'header\\nat fn (app.ts:1:2)'\n                  ^\n",
               "actual": "header\nat fn (Jane Doe/app.ts:1:2)",
@@ -1489,6 +1907,14 @@
               "expected": "header\nat /other/repo/app.ts:1:2"
             },
             "workflow": {
+              "id": "cwd-prefix-boundary",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /otherapp.ts:1:2'\n- 'header\\nat /other/repo/app.ts:1:2'\n                    ^\n",
+              "actual": "header\nat /otherapp.ts:1:2",
+              "expected": "header\nat /other/repo/app.ts:1:2"
+            },
+            "workflow_same": {
+              "id": "cwd-prefix-boundary",
               "passed": false,
               "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'header\\nat /otherapp.ts:1:2'\n- 'header\\nat /other/repo/app.ts:1:2'\n                    ^\n",
               "actual": "header\nat /otherapp.ts:1:2",
@@ -1535,6 +1961,19 @@
               ]
             },
             "workflow": {
+              "id": "carriage-return-frames",
+              "passed": true,
+              "observed": [
+                {
+                  "raw": "header"
+                },
+                {
+                  "raw": "frame"
+                }
+              ]
+            },
+            "workflow_same": {
+              "id": "carriage-return-frames",
               "passed": true,
               "observed": [
                 {
@@ -1566,6 +2005,15 @@
               ]
             },
             "workflow": {
+              "id": "legacy-receiver-allowances",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ [\n+   1\n+ ]\n- undefined\n",
+              "actual": [
+                1
+              ]
+            },
+            "workflow_same": {
+              "id": "legacy-receiver-allowances",
               "passed": false,
               "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ [\n+   1\n+ ]\n- undefined\n",
               "actual": [
@@ -1592,6 +2040,14 @@
               ]
             },
             "workflow": {
+              "id": "legacy-aggregate",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n\ntrue !== false\n",
+              "actual": true,
+              "expected": false
+            },
+            "workflow_same": {
+              "id": "legacy-aggregate",
               "passed": true,
               "observed": [
                 "name",
@@ -1618,8 +2074,17 @@
               ]
             },
             "workflow": {
+              "id": "configured-allowed-errors",
               "passed": true,
               "observed": [
+                1
+              ]
+            },
+            "workflow_same": {
+              "id": "configured-allowed-errors",
+              "passed": false,
+              "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ undefined\n- [\n-   1\n- ]\n",
+              "expected": [
                 1
               ]
             }
@@ -1642,6 +2107,15 @@
               "expected": true
             },
             "workflow": {
+              "id": "registered-cause",
+              "passed": true,
+              "observed": {
+                "classPreserved": true,
+                "code": 42
+              }
+            },
+            "workflow_same": {
+              "id": "registered-cause",
               "passed": false,
               "error": "Expected values to be strictly equal:\n\nfalse !== true\n",
               "actual": false,
@@ -1674,14 +2148,24 @@
               }
             },
             "workflow": {
+              "id": "shared-cause-identity",
               "passed": false,
               "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
               "actual": {
-                "message": "child",
                 "name": "Error"
               },
               "expected": {
-                "message": "child",
+                "name": "Error"
+              }
+            },
+            "workflow_same": {
+              "id": "shared-cause-identity",
+              "passed": false,
+              "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
+              "actual": {
+                "name": "Error"
+              },
+              "expected": {
                 "name": "Error"
               }
             }
@@ -1704,10 +2188,18 @@
               }
             },
             "workflow": {
+              "id": "hook-object-cross-call",
               "passed": true,
               "observed": {
                 "plainObject": true
               }
+            },
+            "workflow_same": {
+              "id": "hook-object-cross-call",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n\ntrue !== false\n",
+              "actual": true,
+              "expected": false
             }
           }
         },
@@ -1736,8 +2228,20 @@
               }
             },
             "workflow": {
+              "id": "box-shared-identity",
               "passed": true,
               "observed": true
+            },
+            "workflow_same": {
+              "id": "box-shared-identity",
+              "passed": false,
+              "error": "Values have same structure but are not reference-equal:\n\n[Error: child] {\n  [cause]: undefined\n}\n",
+              "actual": {
+                "name": "Error"
+              },
+              "expected": {
+                "name": "Error"
+              }
             }
           }
         },
@@ -1754,6 +2258,14 @@
               "observed": "[redacted]"
             },
             "workflow": {
+              "id": "registered-primitive-policy",
+              "passed": false,
+              "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '[object Object]'\n- '[redacted]'\n",
+              "actual": "[object Object]",
+              "expected": "[redacted]"
+            },
+            "workflow_same": {
+              "id": "registered-primitive-policy",
               "passed": true,
               "observed": "[redacted]"
             }
@@ -1787,6 +2299,25 @@
               }
             },
             "workflow": {
+              "id": "cross-instance-cause-type",
+              "passed": true,
+              "observed": {
+                "off": {
+                  "child": true,
+                  "grandchild": true
+                },
+                "string": {
+                  "child": true,
+                  "grandchild": true
+                },
+                "frames": {
+                  "child": true,
+                  "grandchild": true
+                }
+              }
+            },
+            "workflow_same": {
+              "id": "cross-instance-cause-type",
               "passed": true,
               "observed": {
                 "off": {

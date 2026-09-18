@@ -1,11 +1,11 @@
 ---
 name: implement
-description: Implement and verify a ready Design in the current session. Explicit invocation only.
+description: Implement a ready Design in the current session. Explicit invocation only.
 ---
 
 # Implement
 
-Read the requested contract, then implement and verify it in this session:
+Read the requested contract, then implement it in this session:
 
 ```text
 node <plugin-root>/dashboard/records/development-contracts.js --project-root <project> --id <ID>
