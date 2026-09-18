@@ -1,5 +1,5 @@
 interface:
-  display_name: "emeth-discipline: Tenet Me"
+  display_name: "Emeth Discipline: Tenet Me"
   short_description: "Review intent-to-verification paths using current evidence"
   default_prompt: "Use $tenet-me to review SPEC-0001."
 

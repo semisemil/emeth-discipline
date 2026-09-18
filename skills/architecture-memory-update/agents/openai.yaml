@@ -1,5 +1,5 @@
 interface:
-  display_name: "emeth-discipline: Architecture Memory Update"
+  display_name: "Emeth Discipline: Architecture Memory Update"
   short_description: "Reconcile architecture docs through committed Git changes"
   default_prompt: "Use $architecture-memory-update to update this project's architecture memory through committed Git changes."
 

@@ -1,4 +1,4 @@
 interface:
-  display_name: "emeth-discipline: Development Design"
+  display_name: "Emeth Discipline: Development Design"
   short_description: "Develop an idea into a concrete software design"
   default_prompt: "Use $development-design to develop my current idea into a concrete design, explaining relevant structures, tradeoffs, and failure cases along the way."

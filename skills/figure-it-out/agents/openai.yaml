@@ -1,5 +1,5 @@
 interface:
-  display_name: "emeth-discipline: Figure It Out"
+  display_name: "Emeth Discipline: Figure It Out"
   short_description: "Think through a change and carry it through implementation"
   default_prompt: "Use $figure-it-out to think through this request and carry it through implementation."
 

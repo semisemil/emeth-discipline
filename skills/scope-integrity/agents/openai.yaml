@@ -1,4 +1,4 @@
 interface:
-  display_name: "emeth-discipline: Scope Integrity"
+  display_name: "Emeth Discipline: Scope Integrity"
   short_description: "Keep large work aligned with approved scope"
   default_prompt: "Use $scope-integrity to keep this multi-step task aligned with its full approved scope."

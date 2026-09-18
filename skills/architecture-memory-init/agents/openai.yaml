@@ -1,5 +1,5 @@
 interface:
-  display_name: "emeth-discipline: Architecture Memory Init"
+  display_name: "Emeth Discipline: Architecture Memory Init"
   short_description: "Initialize architecture memory from a codebase"
   default_prompt: "Use $architecture-memory-init to initialize architecture memory for this project from repository evidence."
 

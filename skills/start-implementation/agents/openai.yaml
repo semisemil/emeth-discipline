@@ -1,5 +1,5 @@
 interface:
-  display_name: "emeth-discipline: Start Implementation"
+  display_name: "Emeth Discipline: Start Implementation"
   short_description: "Start a new implementation session for a ready Design"
   default_prompt: "Use $start-implementation to select model and reasoning and launch this ready Design in a new session in the current project folder."
 
