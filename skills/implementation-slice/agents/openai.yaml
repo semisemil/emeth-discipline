@@ -1,5 +1,5 @@
 interface:
-  display_name: "Design Slice"
+  display_name: "emeth-discipline: Design Slice"
   short_description: "Plan independent parallel work for a ready Design"
   default_prompt: "Explicitly use $implementation-slice to identify useful independent work for this ready Design and record one PARALLEL.md without implementing or dispatching it."
 

@@ -1,5 +1,5 @@
 interface:
-  display_name: "Implement"
+  display_name: "emeth-discipline: Implement"
   short_description: "Implement a ready Design in this session"
   default_prompt: "Use $implement to implement this ready Design by ID in this session."
 

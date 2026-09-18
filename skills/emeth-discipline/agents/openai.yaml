@@ -1,5 +1,5 @@
 interface:
-  display_name: "Emeth Discipline"
+  display_name: "emeth-discipline: Emeth Discipline"
   short_description: "Apply Emeth Discipline baseline quality rules"
   default_prompt: "Use $emeth-discipline to apply Emeth Discipline's shared baseline quality rules to this task."
 

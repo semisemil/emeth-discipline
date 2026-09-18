@@ -1,4 +1,4 @@
 interface:
-  display_name: "Exact Port"
+  display_name: "emeth-discipline: Exact Port"
   short_description: "Preserve behavior during exact code ports"
   default_prompt: "Use $exact-port to migrate this implementation without unapproved behavior changes."

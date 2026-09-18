@@ -1,5 +1,5 @@
 interface:
-  display_name: "Dashboard Server"
+  display_name: "emeth-discipline: Dashboard Server"
   short_description: "Open, inspect, or stop the running dashboard server"
   default_prompt: "Use $dashboard-server to report the running Emeth Discipline dashboard server status."
 

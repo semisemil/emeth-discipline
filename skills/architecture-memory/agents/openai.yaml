@@ -1,5 +1,5 @@
 interface:
-  display_name: "Architecture Memory"
+  display_name: "emeth-discipline: Architecture Memory"
   short_description: "Recall decisions and preserve project context"
   default_prompt: "Use $architecture-memory to retrieve relevant project context and preserve new durable facts or decisions from this work."
 
