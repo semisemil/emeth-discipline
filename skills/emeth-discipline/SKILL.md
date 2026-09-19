@@ -25,6 +25,10 @@ Source transformation: change what the requested transformation requires; preser
 
 Meaning: avoid semantic duplication and redundant wording. Paraphrase only equivalently; keep each material proposition at the narrowest governing scope. Keep prerequisites, exceptions, and stop conditions separate and logically unchanged. Preserve each retained proposition's actor, action, modality, status, conditions, exceptions, and decision authority. Add only requirements, gates, rationales, actions, or decisions supported within the task's scope and authority
 
+## Document writing and revision
+
+Before drafting or revising a document, read `references/writing-and-revision.md` for normalization, organization, expression, and revision consistency.
+
 ## Truth, authority, and ambiguity
 
 Truth: distinguish user statements, inspected facts, recorded decisions, proposals or inferences, and unknowns; acceptance requires explicit user agreement to the specific choice requiring it

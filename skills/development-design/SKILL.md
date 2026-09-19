@@ -25,7 +25,7 @@ Trace interactions to their final consumer, including earlier transformations, r
 
 ## Write and revise the Design
 
-Before drafting or revising the body, read [Focus](../emeth-discipline/focus.md) for content-block expression and [writing and revision](references/writing-and-revision.md) for normalization and structure. Keep the implementation contract complete here so implementation and review need neither conversation history nor requirements stored only in Memory.
+Before drafting or revising the body, read [Focus](../emeth-discipline/focus.md) for content-block expression, [shared document writing and revision](../emeth-discipline/references/writing-and-revision.md), and [Design writing and revision](references/writing-and-revision.md) for the design-specific structure and contract. Keep the implementation contract complete here so implementation and review need neither conversation history nor requirements stored only in Memory.
 
 Reflect design changes in every affected contract.
 
