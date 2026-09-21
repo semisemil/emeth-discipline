@@ -18,7 +18,7 @@ Use [authoring commands](recording.md) for scaffolding and section edits. These 
 | [<System context>](01-system-context.md) | <Purpose, boundary, external relationships> |
 | [<Containers>](02-containers.md) | <Runtime and storage units> |
 | [<Components>](components/README.md) | <Selected component boundaries; include only when L3 documents exist> |
-| [<Architecture context>](04-context.md) | <Goals, constraints, qualities, plans, risks> |
+| [<Architecture context>](04-context.md) | <Domain meanings, operating conditions, business background and premises> |
 | [<Decision records>](decisions/README.md) | <Historical architecture decisions> |
 
 ## <Find relevant context>
@@ -101,6 +101,8 @@ Use [authoring commands](recording.md) for scaffolding and section edits. These 
 ~~~markdown
 # <Architecture context>
 
+<Meaning and premises needed to interpret the system that code alone does not establish. Link authoritative decisions and Designs for choices and detailed contracts.>
+
 ## <Goals>
 
 - <Goal that directly affects architecture>
@@ -117,24 +119,19 @@ Use [authoring commands](recording.md) for scaffolding and section edits. These 
 
 - <Performance, security, reliability, operability, or another decision criterion>
 
-## <Architecture principles>
+## <Domain meanings and relationships>
 
-- <Principle guiding repeated structural choices>
-
-## <Domain terms>
-
-| <Term> | <Definition> |
+| <Term or relationship> | <Business meaning and distinction> |
 |---|---|
 
-## <Plans and assumptions>
+## <Business background and premises>
 
-### <Plans>
+- <Business meaning or operating premise needed to understand a rule, with its scope and source>
+- <Link to the authoritative ADR or Design when a premise results from an explicit choice>
 
-- <Accepted target state> — `confirmed/planned`
+## <Assumptions>
 
-### <Assumptions>
-
-- <Unverified premise> — `inferred/current` — <Evidence or confirmation needed>
+- <Unverified domain or operating premise> — `inferred/current` — <Evidence or confirmation needed>
 
 ## <Risks>
 
@@ -147,9 +144,9 @@ Use [authoring commands](recording.md) for scaffolding and section edits. These 
 |---|---|
 | <Question> — `unknown/current` | <Evidence needed> |
 
-## <Related plans>
+## <Related decisions and Designs>
 
-- <Relative link to the authoritative Design>
+- <Relative link to the authoritative ADR or Design>
 ~~~
 
 ## `decisions/README.md`
