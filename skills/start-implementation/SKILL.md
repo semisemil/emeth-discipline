@@ -15,6 +15,6 @@ Resolve the contract, validate readiness and the matching project, and build the
 node <plugin-root>/skills/start-implementation/scripts/prepare-launch.js --cwd <current-folder> --design <DESIGN-ID> --project-root <matching-project-folder> --project-id <project-id> --model <model> --reasoning <effort>
 ```
 
-Use `--spec <SPEC-ID>` instead of `--design` for legacy input. Pass the returned JSON unchanged to `create_thread` once. It selects the matching project's local environment; the prompt contains only `$emeth-discipline:implement <contract-ID>`. No conversation history or duplicate handoff document is needed.
+Use `--spec <SPEC-ID>` instead of `--design` for legacy input. Pass the returned JSON unchanged to `create_thread` once. It selects the matching project's local environment; the prompt directs the new session to read [implement.md](implement.md) by its absolute path and implement the contract ID. No conversation history or duplicate handoff document is needed.
 
 Report the created task. The new session owns implementation and verification. Follow runtime-required initial status checks; an uncertain creation result is not a reason to create a duplicate task.

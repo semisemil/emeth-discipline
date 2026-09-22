@@ -86,7 +86,7 @@ test('a corrupt memory binding does not suppress a mode change or document numbe
 
 function copyPlugin(f) {
   const plugin = path.join(f.root, 'plugin');
-  for (const directory of ['hooks', 'lib', 'skills/emeth-discipline', 'skills/architecture-memory']) {
+  for (const directory of ['hooks', 'lib', 'skills/core', 'skills/architecture-memory']) {
     fs.cpSync(path.join(repoRoot, directory), path.join(plugin, directory), { recursive: true });
   }
   return plugin;
@@ -100,7 +100,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
     hook: path.join(plugin, 'hooks/run.js'), env: { PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '0' },
   });
   const response = output(result);
-  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeProoflinePrompt('normal') + '\n\n'));
+  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeProoflinePrompt('normal', { pluginRoot: plugin }) + '\n\n'));
   assert.match(response.hookSpecificOutput.additionalContext, /architecture-dependent work/);
   assert.match(result.stderr, /dashboard unavailable/);
 });
@@ -108,7 +108,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
 test('a prompt failure reports the error without consuming an undelivered memory notice', (t) => {
   const f = fixture(t); f.memory();
   const plugin = copyPlugin(f);
-  fs.unlinkSync(path.join(plugin, 'skills/emeth-discipline/normal.md'));
+  fs.unlinkSync(path.join(plugin, 'skills/core/normal.md'));
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
   assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);

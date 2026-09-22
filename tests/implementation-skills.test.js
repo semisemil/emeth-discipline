@@ -8,11 +8,14 @@ const test = require('node:test');
 const repoRoot = path.resolve(__dirname, '..');
 const skillPaths = [
   path.join(repoRoot, 'skills', 'start-implementation', 'SKILL.md'),
-  path.join(repoRoot, 'skills', 'implement', 'SKILL.md'),
+  path.join(repoRoot, 'skills', 'start-implementation', 'implement.md'),
+  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'SKILL.md'),
+  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'implement.md'),
+  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'design-slice.md'),
 ];
 
 test('implementation skills are explicit-only', () => {
-  for (const name of ['start-implementation', 'implement']) {
+  for (const name of ['start-implementation', 'start-parallel-implementation']) {
     const metadata = fs.readFileSync(
       path.join(repoRoot, 'skills', name, 'agents', 'openai.yaml'),
       'utf8',

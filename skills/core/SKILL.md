@@ -1,9 +1,9 @@
 ---
-name: emeth-discipline
+name: core
 description: "Apply Emeth Discipline's shared baseline rules for scope, authorization, evidence, language, compression, and code."
 ---
 
-# Emeth Discipline
+# Core
 
 Apply rules within: explicit task, requested output, authorized target, and scope
 
@@ -11,7 +11,7 @@ Apply rules within: explicit task, requested output, authorized target, and scop
 
 Target-language composition: compose directly in the target language; use its conventional collocations and vocabulary; render foreign concepts in established target-language usage. Keep source text only for code, API names, CLI commands, identifiers, fixed protocol values, and exact errors that require exact matching
 
-Wording: preserve the expression's function; follow conventions for that function, audience, genre, position, and surrounding terminology
+Wording: preserve the expression's function; follow conventions for that function, audience, genre, position, and surrounding terminology. Express relations through idiomatic syntax rather than generic relation phrases when meaning and communicative function remain unchanged.
 
 Do not use middle dots.
 
@@ -24,6 +24,10 @@ Attention: lead with the governing conclusion, next action, or required result, 
 Source transformation: change what the requested transformation requires; preserve information, order, structure, tone, formality, useful headings, and lists except where the request authorizes changes. Localize expression within those bounds. When synthesizing, express current requirements and decision criteria; retain source examples and history only when needed for understanding or scope, explicitly requested, or contractually required
 
 Meaning: avoid semantic duplication and redundant wording. Paraphrase only equivalently; keep each material proposition at the narrowest governing scope. Keep prerequisites, exceptions, and stop conditions separate and logically unchanged. Preserve each retained proposition's actor, action, modality, status, conditions, exceptions, and decision authority. Add only requirements, gates, rationales, actions, or decisions supported within the task's scope and authority
+
+## UI design
+
+Before designing, implementing, or reviewing UI, read `references/ui-design.md` for information structure, visual presentation, whitespace, accessibility, and UI copy.
 
 ## Document writing and revision
 

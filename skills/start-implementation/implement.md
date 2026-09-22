@@ -1,8 +1,3 @@
----
-name: implement
-description: Implement a ready Design in the current session. Explicit invocation only.
----
-
 # Implement
 
 Read the requested contract, then implement it in this session:

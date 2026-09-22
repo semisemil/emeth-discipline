@@ -6,14 +6,18 @@ const path = require('node:path');
 const test = require('node:test');
 const repoRoot = path.resolve(__dirname, '..');
 
-test('Implementation Slice links its only current plan template and keeps invocation policy', () => {
-  const skill = fs.readFileSync(path.join(repoRoot, 'skills/implementation-slice/SKILL.md'), 'utf8');
-  const metadata = fs.readFileSync(path.join(repoRoot, 'skills/implementation-slice/agents/openai.yaml'), 'utf8');
-  const links = [...skill.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)]
-    .map((match) => path.resolve(repoRoot, 'skills', 'implementation-slice', match[1]));
-
-  assert.ok(links.includes(path.join(repoRoot, 'skills', 'implementation-slice', 'assets', 'templates', 'parallel.md')));
-  for (const link of links) assert.ok(fs.statSync(link).isFile(), link);
-  assert.match(metadata, /^\s*allow_implicit_invocation:\s*false$/m);
-  assert.match(metadata, /^\s*default_prompt:\s*"[^"\r\n]*\$implementation-slice[^"\r\n]*"$/m);
+test('implementation and slicing are internal documents, with only two launch skills', () => {
+  for (const name of ['implement', 'design-slice', 'implementation-slice']) {
+    for (const file of ['SKILL.md', 'agents/openai.yaml']) {
+      assert.equal(fs.existsSync(path.join(repoRoot, 'skills', name, file)), false);
+    }
+  }
+  for (const name of ['start-implementation', 'start-parallel-implementation']) {
+    assert.ok(fs.statSync(path.join(repoRoot, 'skills', name, 'implement.md')).isFile());
+  }
+  const slice = path.join(repoRoot, 'skills/start-parallel-implementation/design-slice.md');
+  const source = fs.readFileSync(slice, 'utf8');
+  for (const match of source.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)) {
+    assert.ok(fs.statSync(path.resolve(path.dirname(slice), match[1])).isFile());
+  }
 });

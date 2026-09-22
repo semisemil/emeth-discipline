@@ -76,7 +76,7 @@ Codex가 열리면 다음 순서로 마무리합니다.
 특정 요청에 공통 기준을 명시하려면 스킬 이름을 적으세요.
 
 ```text
-$emeth-discipline:emeth-discipline
+$emeth-discipline:core
 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐줘.
 ```
 
@@ -121,7 +121,7 @@ $emeth-discipline:webagent
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:emeth-discipline` | 대화와 결과물 전반 | 자연스러운 문장, 요청 범위, 수정 권한, 판단 근거 확인 |
+| `$emeth-discipline:core` | 대화와 결과물 전반 | 자연스러운 문장, 요청 범위, 수정 권한, 판단 근거 확인 |
 | `$emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
 | `$emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
 | `$emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
@@ -148,9 +148,8 @@ $emeth-discipline:webagent
 | `$emeth-discipline:development-design` | 현재 아이디어를 설계로 발전시키거나 설계를 수정할 때 | 설명·구조 비교·초안·질문으로 기획과 기술 설계를 함께 완성 |
 | `$emeth-discipline:tenet-me` | 선택한 설계와 계약을 검토할 때 | 근거, 시스템 경계, 실패 경로와 기대 결과의 누락·모순 확인 |
 | `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성, 요청하면 현재 세션에서 구현 |
-| `$emeth-discipline:implementation-slice` | 독립적인 구현 작업을 나눌 때 | 필요한 경우에만 `PARALLEL.md`에 작업 범위와 연결 방식 정리 |
 | `$emeth-discipline:start-implementation` | 준비된 설계의 구현을 새 작업에서 시작할 때 | 모델과 추론 수준을 정하고 현재 프로젝트 폴더에 새 작업 생성 |
-| `$emeth-discipline:implement` | 준비된 설계를 현재 작업에서 구현할 때 | 구현·검증 후 현재 계약의 완료 처리 |
+| `$emeth-discipline:start-parallel-implementation` | 작업 분할과 선택적 병렬 구현을 사용할 때 | Design의 작업을 나누고 병렬 위임과 시드 재사용이 가능한 새 작업 생성 |
 
 ## 🔁 기획부터 구현까지
 
@@ -170,17 +169,17 @@ $emeth-discipline:figure-it-out
 ```
 
 현재 작업에서 필요한 설계를 준비하고 `tenet-me`로 검토합니다. `start-implementation`은 설계 문서를 새 구현 작업에 전달하고,
-`implement`가 해당 계약을 읽어 구현·검증합니다. 구현 중 전제가 달라지면 같은 작업에서 영향을 받는 설계만 수정하며, 중요한 사용자 선택은 확인합니다.
+새 작업이 내부 `implement.md` 절차에 따라 해당 계약을 읽어 구현·검증합니다. 구현 중 전제가 달라지면 같은 작업에서 영향을 받는 설계만 수정하며, 중요한 사용자 선택은 확인합니다.
 
 ```text
 $emeth-discipline:tenet-me DESIGN-0001
 $emeth-discipline:start-implementation DESIGN-0001
 ```
 
-위 명령은 각각 별도로 호출합니다. 현재 작업에서 직접 구현하려면 다음과 같이 요청합니다.
+위 명령은 각각 별도로 호출합니다. 작업 분할과 선택적 병렬 구현을 사용하려면 다음 시작 스킬을 선택합니다.
 
 ```text
-$emeth-discipline:implement DESIGN-0001
+$emeth-discipline:start-parallel-implementation DESIGN-0001
 ```
 
 모델은 [모델 선택 기준](skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
@@ -192,18 +191,18 @@ $emeth-discipline:implement DESIGN-0001
 ```text
 $emeth-discipline:figure-it-out
 사용자 알림 설정 개선을 설계부터 구현까지 완료해줘.
-Design을 준비하고 검토한 뒤, 준비된 Design에 $emeth-discipline:implement를 사용해
+Design을 준비하고 검토한 뒤, start-implementation의 implement.md를 읽고 준비된 Design에 적용해
 현재 세션에서 구현부터 완료 처리와 결과 보고까지 진행해줘.
 새 세션이나 하위 에이전트는 만들지 마.
 ```
 
-`development-design`만 요청하면 설계에서 끝납니다. 설계부터 같은 세션의 구현까지 원한다면 후속 스킬도 함께 명시할 수 있습니다.
+`development-design`만 요청하면 설계에서 끝납니다. 설계부터 같은 세션의 구현까지 원한다면 구현 절차도 함께 명시할 수 있습니다.
 
 ```text
 $emeth-discipline:development-design
 사용자 알림 설정 개선을 설계해줘.
 Design이 준비되면 $emeth-discipline:tenet-me로 검토하고,
-중요한 결정이 해결되면 $emeth-discipline:implement로 현재 세션에서 구현과 완료 처리까지 진행해줘.
+중요한 결정이 해결되면 start-implementation의 implement.md를 읽고 현재 세션에서 구현과 완료 처리까지 진행해줘.
 새 세션이나 하위 에이전트는 만들지 마.
 ```
 

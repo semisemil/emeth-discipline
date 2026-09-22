@@ -1,7 +1,0 @@
-interface:
-  display_name: "Emeth Discipline: Implement"
-  short_description: "Implement a ready Design in this session"
-  default_prompt: "Use $implement to implement this ready Design by ID in this session."
-
-policy:
-  allow_implicit_invocation: false

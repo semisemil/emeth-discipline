@@ -49,7 +49,7 @@ test('create generates valid metadata and allocates IDs from body-only input', t
 });
 
 test('current design, review and execution references resolve to existing local files', () => {
-  for (const name of ['development-design', 'tenet-me', 'figure-it-out', 'start-implementation', 'implement']) {
+  for (const name of ['development-design', 'tenet-me', 'figure-it-out', 'start-implementation', 'start-parallel-implementation']) {
     const file = path.join(root, 'skills', name, 'SKILL.md');
     const source = fs.readFileSync(file, 'utf8');
     for (const match of source.matchAll(/\]\(([^)]+\.(?:md|js))(?:#[^)]*)?\)/g)) {

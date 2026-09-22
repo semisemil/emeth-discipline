@@ -18,7 +18,7 @@ function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reaso
   requireValue(path.relative(root, savedRoot) === '', 'Saved project must match the current project folder');
   resolveContract(root, contract);
   return {
-    prompt: `$emeth-discipline:implement ${contract}`,
+    prompt: `Read ${JSON.stringify(path.resolve(__dirname, '..', 'implement.md'))} and follow it to implement ${contract} in this session.`,
     model,
     thinking: reasoning,
     target: { type: 'project', projectId, environment: { type: 'local' } },

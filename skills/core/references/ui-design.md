@@ -1,8 +1,3 @@
----
-name: ui-design
-description: "Use when designing, implementing, or reviewing UI. Covers information structure, visual presentation, whitespace, and copy suited to the screen's purpose."
----
-
 # UI Design
 
 ## Screen purpose and space

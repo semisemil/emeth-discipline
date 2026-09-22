@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth Discipline: Start Parallel Implementation"
+  short_description: "Launch implementation with selective parallel work"
+  default_prompt: "Use $start-parallel-implementation to split this ready Design and launch a new implementation task."
+
+policy:
+  allow_implicit_invocation: false
