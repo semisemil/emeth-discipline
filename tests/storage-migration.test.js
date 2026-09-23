@@ -53,6 +53,21 @@ test('new projects create no storage as a side effect of migration', t => {
   assert.deepEqual(fs.readdirSync(f.root), []);
 });
 
+test('a non-directory storage parent leaves persistence errors to the existing mode handler', t => {
+  const f = fixture(t);
+  f.write('blocked', 'preserve');
+  const base = path.join(f.root, 'blocked');
+  const original = fs.lstatSync;
+  fs.lstatSync = file => {
+    if (file.startsWith(base + path.sep)) throw Object.assign(new Error('not a directory'), { code: 'ENOTDIR' });
+    return original(file);
+  };
+  try {
+    assert.equal(migrateDirectory(base, 'proofline-mode', 'rules-mode'), path.join(base, 'rules-mode'));
+  } finally { fs.lstatSync = original; }
+  assert.equal(f.read('blocked'), 'preserve');
+});
+
 test('conflicting directories fail without changing either copy', t => {
   const f = fixture(t);
   f.write('.proofline/issues/old.json', 'old'); f.write('.emeth/issues/new.json', 'new');

@@ -1,6 +1,6 @@
 {
   "name": "emeth-discipline",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Codex가 요청 범위를 놓치지 않고, 실제로 확인한 내용만 완료로 보고하도록 돕는 플러그인입니다.",
   "author": {
     "name": "semisemil",
