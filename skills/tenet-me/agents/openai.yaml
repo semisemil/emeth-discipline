@@ -1,7 +1,7 @@
 interface:
   display_name: "Emeth Discipline: Tenet Me"
-  short_description: "Review intent-to-verification paths using current evidence"
-  default_prompt: "Use $tenet-me to review SPEC-0001."
+  short_description: "Trace outcomes backward to supporting conditions and evidence"
+  default_prompt: "Use $tenet-me to review DESIGN-0001 by tracing its required outcomes backward and checking gaps against concrete forward scenarios."
 
 policy:
   allow_implicit_invocation: false

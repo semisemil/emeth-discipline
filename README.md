@@ -15,35 +15,37 @@ Emeth Discipline은 Codex가 요청받은 작업 범위를 끝까지 지키고, 
 
 ## 📊 벤치마크
 
-SuperJSON Error 스택 직렬화 / Astra Workflow는 2026-09-18 갱신, 나머지는 2026-09-14 기록 / 조건별 1회
+SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행한 결과입니다.
 
-None은 플러그인 미사용, Core는 공통 기준 적용, Workflow는 설계 문서 작성과 검토부터 구현 및 검증까지 수행합니다. Core와 Workflow의 응답 모드는 normal입니다.
+- **None**: 플러그인 미사용
+- **Core**: 플러그인 활성화
+- **Workflow**: [`$emeth-discipline:figure-it-out`](skills/figure-it-out/SKILL.md) 호출
 
-| 모델 | 조건 | 외부 테스트 | 시간 | 비교용 추정 비용 | 추가 코드 검사 |
+| 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Astra / low | None | 196/196 | 4분 57초 | $0.973 | 3/14 |
-| Astra / low | Core | 196/196 | 4분 23초 | $0.929 | 5/14 |
-| Astra / low | Core · focus | 196/196 | 5분 51초 | $1.098 | 5/14 |
-| Astra / low | Workflow | 196/196 | 7분 54초 | $1.990 | 7/14 |
-| Astra / low | Workflow: 한 세션 | 196/196 | 6분 43초 | $1.611 | 4/14 |
-| Astra / low | Workflow · focus | 196/196 | 7분 36초 | $1.808 | 5/14 |
-| Sol / medium | None | 196/196 | 14분 55초 | $1.396 | 5/14 |
-| Sol / medium | Core | 196/196 | 8분 36초 | $1.027 | 4/14 |
-| Sol / medium | Workflow | 196/196 | 12분 48초 | $1.647 | 8/14 |
+| 6 Astra low | None | 196/196 | 3/14 | 4분 57초 | $0.973 |
+| 6 Astra low | Core | 196/196 | 5/14 | 4분 23초 | $0.929 |
+| 6 Astra low | Workflow | 196/196 | 7/14 | 7분 54초 | $1.990 |
+| 6 Astra low | Workflow (한 세션) | 196/196 | 4/14 | 6분 43초 | $1.611 |
+| 5.6 Sol Med | None | 196/196 | 5/14 | 14분 55초 | $1.396 |
+| 5.6 Sol Med | Core | 196/196 | 4/14 | 8분 36초 | $1.027 |
+| 5.6 Sol Med | Workflow | 196/196 | 8/14 | 12분 48초 | $1.647 |
+| 6 Sol Med | None | 196/196 | 6/14 | 7분 46초 | $0.375 |
+| 6 Sol Med | Core | 196/196 | 5/14 | 9분 10초 | $0.415 |
+| 6 Sol Med | Workflow | 196/196 | 4/14 | 12분 10초 | $1.142 |
 
-외부 테스트는 신규 요구 80개와 기존 회귀 116개이며, 모든 조건에서 196개를 통과했습니다.
-추가 코드 검사는 동일한 진단 항목 14개의 통과 수입니다. 조건별 1회 결과이므로 일반적인 성능 우위를 뜻하지 않습니다. [비용 계산 기준과 측정 상세](docs/benchmarks/README.md)
+[측정 상세](docs/benchmarks/README.md)
 
 ### WebAgent와 SubAgent 비용
 
-같은 두 문제를 ChatGPT Chat과 Subagent에 위임한 비용 비교 입니다. 비용은 **API 단가 기준 달러($) 추정치**이며, SubAgent는 부모와 자식 비용을 합산했습니다.
+같은 두 작업을 위임했을 때의 API 단가 기준 추정 비용입니다.
 
 | 작업 | SubAgent | WebAgent |
 | --- | ---: | ---: |
 | 코드 검토 | $0.486 | $0.167 |
 | 작업 배치 | $0.319 | $0.168 |
 
-부모 모델은 Astra / medium입니다. 도구 연결 후 요청부터 답변 검토까지 측정했습니다. [측정 조건과 사용량](docs/benchmarks/webagent-sol-comparison.md)
+[측정 상세](docs/benchmarks/webagent-sol-comparison.md)
 
 ## 📦 설치
 
@@ -146,7 +148,7 @@ $emeth-discipline:webagent
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
 | `$emeth-discipline:development-design` | 현재 아이디어를 설계로 발전시키거나 설계를 수정할 때 | 설명·구조 비교·초안·질문으로 기획과 기술 설계를 함께 완성 |
-| `$emeth-discipline:tenet-me` | 선택한 설계와 계약을 검토할 때 | 근거, 시스템 경계, 실패 경로와 기대 결과의 누락·모순 확인 |
+| `$emeth-discipline:tenet-me` | 설계나 구현이 요구 결과를 보장하는지 검토할 때 | 결과에서 필요한 조건과 근거를 역추적하고, 발견한 빈틈을 정방향 사례로 확인 |
 | `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성, 요청하면 현재 세션에서 구현 |
 | `$emeth-discipline:start-implementation` | 준비된 설계의 구현을 새 작업에서 시작할 때 | 모델과 추론 수준을 정하고 현재 프로젝트 폴더에 새 작업 생성 |
 | `$emeth-discipline:start-parallel-implementation` | 작업 분할과 선택적 병렬 구현을 사용할 때 | Design의 작업을 나누고 병렬 위임과 시드 재사용이 가능한 새 작업 생성 |
@@ -168,7 +170,7 @@ $emeth-discipline:figure-it-out
 사용자 알림 설정 개선을 설계부터 구현과 검증까지 완료해줘.
 ```
 
-현재 작업에서 필요한 설계를 준비하고 `tenet-me`로 검토합니다. `start-implementation`은 설계 문서를 새 구현 작업에 전달하고,
+현재 작업에서 필요한 설계를 준비하고, `tenet-me`로 요구 결과의 보장 조건과 근거를 역추적합니다. `start-implementation`은 설계 문서를 새 구현 작업에 전달하고,
 새 작업이 내부 `implement.md` 절차에 따라 해당 계약을 읽어 구현·검증합니다. 구현 중 전제가 달라지면 같은 작업에서 영향을 받는 설계만 수정하며, 중요한 사용자 선택은 확인합니다.
 
 ```text
