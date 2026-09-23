@@ -2,18 +2,21 @@
 'use strict';
 
 const fs = require('node:fs');
+const { migrateWorkingProject, migrateDirectory } = require('../lib/storage-migration');
 const path = require('node:path');
-const { logDiagnostic } = require('../lib/proofline-state');
+const { logDiagnostic } = require('../lib/rules-state');
 
 async function run(input) {
   const event = input.hook_event_name;
   if (!['SessionStart', 'SubagentStart', 'UserPromptSubmit'].includes(event)) return {};
+  migrateWorkingProject(typeof input.cwd === 'string' ? input.cwd : process.cwd());
+  if (process.env.PLUGIN_DATA) migrateDirectory(process.env.PLUGIN_DATA, 'proofline-mode', 'rules-mode');
   const contexts = [];
   const response = {};
   let failure;
 
   try {
-    const runtime = require('../lib/proofline-runtime');
+    const runtime = require('../lib/rules-runtime');
     if (event === 'UserPromptSubmit') {
       const mode = runtime.changeMode(input);
       if (mode.systemMessage) response.systemMessage = mode.systemMessage;
@@ -24,9 +27,9 @@ async function run(input) {
     }
   } catch (error) {
     logDiagnostic({
-      hook: event === 'UserPromptSubmit' ? 'proofline-mode' : 'load-proofline',
+      hook: event === 'UserPromptSubmit' ? 'rules-mode' : 'load-proofline',
       event, error, pluginRoot: path.resolve(__dirname, '..'),
-      skillPath: error.prooflineFilePath, filePath: error.prooflineFilePath,
+      skillPath: error.emethFilePath, filePath: error.emethFilePath,
     });
     failure = error;
   }

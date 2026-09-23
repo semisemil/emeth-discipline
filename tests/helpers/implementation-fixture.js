@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawnGit } = require('./git-policy.js');
 
 const MAIN_SETTINGS = Object.freeze({ model: 'gpt-6-astra', reasoning: 'low' });
-const SPEC = '.proofline/specs/SPEC-0001/SPEC.md';
+const SPEC = '.emeth/specs/SPEC-0001/SPEC.md';
 
 function git(cwd, ...args) {
   const result = spawnGit(cwd, args, { encoding: 'utf8' });

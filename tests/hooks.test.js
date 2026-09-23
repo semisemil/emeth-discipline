@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeProoflinePrompt } = require('../lib/proofline-prompt');
+const { composeProoflinePrompt } = require('../lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hook = path.join(repoRoot, 'hooks/run.js');
@@ -25,7 +25,7 @@ function fixture(t) {
     fs.writeFileSync(target, text);
   };
   const memory = () => {
-    write('.proofline/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture' }));
+    write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture' }));
     write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify({ schema_version: 2, managed: true }));
   };
   const run = (event, options = {}) => spawnSync(process.execPath, [options.hook || hook], {
@@ -55,7 +55,7 @@ test('numbering and memory notices compose independently, including a failed num
   const f = fixture(t); f.memory();
   const response = output(f.run({ prompt: '$emeth-discipline:development-design' }));
   assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nWhile /);
-  f.write('.proofline/issues', 'This is not a directory.');
+  f.write('.emeth/issues', 'This is not a directory.');
   const fallback = output(f.run({ session_id: 'session-b', prompt: '$emeth-discipline:issue-ledger' }));
   assert.match(fallback.hookSpecificOutput.additionalContext, /^While /);
   assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /Next issue/);
@@ -76,7 +76,7 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
 
 test('a corrupt memory binding does not suppress a mode change or document number', (t) => {
   const f = fixture(t);
-  f.write('.proofline/architecture.json', '{');
+  f.write('.emeth/architecture.json', '{');
   const result = f.run({ prompt: '$emeth-discipline focus' });
   assert.equal(output(result).hookSpecificOutput.additionalContext, composeProoflinePrompt('focus'));
   assert.match(result.stderr, /Architecture memory connection unavailable/);
@@ -86,7 +86,7 @@ test('a corrupt memory binding does not suppress a mode change or document numbe
 
 function copyPlugin(f) {
   const plugin = path.join(f.root, 'plugin');
-  for (const directory of ['hooks', 'lib', 'skills/core', 'skills/architecture-memory']) {
+  for (const directory of ['hooks', 'lib', 'skills/rules', 'skills/architecture-memory']) {
     fs.cpSync(path.join(repoRoot, directory), path.join(plugin, directory), { recursive: true });
   }
   return plugin;
@@ -108,7 +108,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
 test('a prompt failure reports the error without consuming an undelivered memory notice', (t) => {
   const f = fixture(t); f.memory();
   const plugin = copyPlugin(f);
-  fs.unlinkSync(path.join(plugin, 'skills/core/normal.md'));
+  fs.unlinkSync(path.join(plugin, 'skills/rules/normal.md'));
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
   assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);

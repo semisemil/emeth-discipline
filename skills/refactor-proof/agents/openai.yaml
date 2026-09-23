@@ -1,4 +1,4 @@
 interface:
-  display_name: "Emeth Discipline: Refactor Proof"
+  display_name: "Emeth: Refactor Proof"
   short_description: "Prove structural refactors changed the design"
   default_prompt: "Use $refactor-proof to verify that this refactor changed the intended structure."

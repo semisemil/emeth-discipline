@@ -61,17 +61,17 @@ function issue(id, title, context = []) {
 
 function createProject(root, name, linked = false) {
   const projectRoot = path.join(root, name);
-  const issues = path.join(projectRoot, '.proofline', 'issues');
+  const issues = path.join(projectRoot, '.emeth', 'issues');
   fs.mkdirSync(issues, { recursive: true });
   const context = linked ? [
-    { kind: 'Plan', location: '.proofline/plan/PLAN-0001-flow/PLAN.md' },
-    { kind: 'Spec', location: '.proofline/specs/SPEC-0001-flow/SPEC.md' },
+    { kind: 'Plan', location: '.emeth/plan/PLAN-0001-flow/PLAN.md' },
+    { kind: 'Spec', location: '.emeth/specs/SPEC-0001-flow/SPEC.md' },
   ] : [];
   const id = linked ? 'PL-0001' : 'PL-0002';
   fs.writeFileSync(path.join(issues, `${id}.json`), JSON.stringify(issue(id, name, context)), 'utf8');
   if (linked) {
-    const plan = path.join(projectRoot, '.proofline', 'plan', 'PLAN-0001-flow');
-    const spec = path.join(projectRoot, '.proofline', 'specs', 'SPEC-0001-flow');
+    const plan = path.join(projectRoot, '.emeth', 'plan', 'PLAN-0001-flow');
+    const spec = path.join(projectRoot, '.emeth', 'specs', 'SPEC-0001-flow');
     fs.mkdirSync(plan, { recursive: true });
     fs.mkdirSync(spec, { recursive: true });
     fs.writeFileSync(path.join(plan, 'PLAN.md'), [
@@ -134,7 +134,7 @@ test('registration, child server, project switching, refresh, and unavailable re
 
   const firstRoot = createProject(root, 'alpha', true);
   const secondRoot = createProject(root, 'beta', false);
-  const existingDashboard = path.join(secondRoot, '.proofline', 'dashboard');
+  const existingDashboard = path.join(secondRoot, '.emeth', 'dashboard');
   fs.mkdirSync(existingDashboard, { recursive: true });
   const preserved = path.join(existingDashboard, 'user-owned.txt');
   fs.writeFileSync(preserved, 'keep', 'utf8');
@@ -176,7 +176,7 @@ test('registration, child server, project switching, refresh, and unavailable re
     `/api/v1/projects/${firstId}/documents/plan/PLAN-0001`,
   )).body);
   assert.equal(opened.body, 'initial plan body');
-  const planPath = path.join(firstRoot, '.proofline', 'plan', 'PLAN-0001-flow', 'PLAN.md');
+  const planPath = path.join(firstRoot, '.emeth', 'plan', 'PLAN-0001-flow', 'PLAN.md');
   fs.writeFileSync(planPath, [
     '---',
     'id: PLAN-0001',
@@ -216,7 +216,7 @@ test('registration, child server, project switching, refresh, and unavailable re
   assert.deepEqual(remaining.map((project) => project.id), [secondId]);
   assert.equal(fs.readFileSync(preserved, 'utf8'), 'keep');
   assert.equal(fs.readFileSync(
-    path.join(archivedFirst, '.proofline', 'plan', 'PLAN-0001-flow', 'PLAN.md'),
+    path.join(archivedFirst, '.emeth', 'plan', 'PLAN-0001-flow', 'PLAN.md'),
     'utf8',
   ).includes('refreshed plan body'), true);
 });

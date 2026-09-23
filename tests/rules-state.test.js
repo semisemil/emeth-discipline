@@ -13,7 +13,7 @@ const {
   readDefaultMode,
   setCurrentMode,
   setDefaultMode,
-} = require('../lib/proofline-state');
+} = require('../lib/rules-state');
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-state-'));
@@ -85,7 +85,7 @@ test('empty and oversized session IDs never create state paths', (t) => {
   assert.equal(getSessionPath('', options), null);
   assert.equal(
     getSessionPath('a'.repeat(175), options),
-    path.join(options.env.PLUGIN_DATA, 'proofline-mode', `${'a'.repeat(175)}.json`),
+    path.join(options.env.PLUGIN_DATA, 'rules-mode', `${'a'.repeat(175)}.json`),
   );
   assert.equal(getSessionPath('a'.repeat(176), options), null);
 });
@@ -173,5 +173,5 @@ test('invalid or unstorable session IDs use the default without creating state',
       reason: 'session-state-unavailable',
     });
   }
-  assert.equal(fs.existsSync(path.join(options.env.PLUGIN_DATA, 'proofline-mode')), false);
+  assert.equal(fs.existsSync(path.join(options.env.PLUGIN_DATA, 'rules-mode')), false);
 });

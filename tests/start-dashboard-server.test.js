@@ -12,7 +12,7 @@ const {
   stopServer,
 } = require('../dashboard/control');
 
-const { composeProoflinePrompt } = require('../lib/proofline-prompt');
+const { composeProoflinePrompt } = require('../lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hookPath = path.join(repoRoot, 'hooks', 'run.js');
@@ -59,7 +59,7 @@ test('all four SessionStart sources reuse one server without project mutation', 
   }
 
   assert.equal(new Set(instanceIds).size, 1);
-  assert.equal(fs.existsSync(path.join(project, '.proofline')), false);
+  assert.equal(fs.existsSync(path.join(project, '.emeth')), false);
   assert.equal(fs.existsSync(path.join(directory, 'projects.json')), false);
 });
 
@@ -86,7 +86,7 @@ test('benchmark mode completes without starting a dashboard server', async (t) =
   const result = spawnSync(process.execPath, [hookPath], {
     encoding: 'utf8',
     env,
-    input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' }),
+    input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: root }),
   });
 
   assert.equal(result.status, 0, result.stderr);

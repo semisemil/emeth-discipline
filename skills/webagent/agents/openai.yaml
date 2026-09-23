@@ -1,4 +1,4 @@
 interface:
-  display_name: "Emeth Discipline: WebAgent"
+  display_name: "Emeth: WebAgent"
   short_description: "ChatGPT Chat에 작업을 위임하고 응답을 효율적으로 회수"
   default_prompt: "$webagent로 이 설계를 ChatGPT Chat에 검토받고 결과를 검증해 줘."

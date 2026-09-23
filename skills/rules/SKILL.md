@@ -1,9 +1,9 @@
 ---
-name: core
-description: "Apply Emeth Discipline's shared baseline rules for scope, authorization, evidence, language, compression, and code."
+name: rules
+description: "Apply Emeth's shared baseline rules for scope, authorization, evidence, language, compression, and code."
 ---
 
-# Core
+# Rules
 
 Apply rules within: explicit task, requested output, authorized target, and scope
 

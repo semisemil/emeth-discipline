@@ -1,5 +1,5 @@
 interface:
-  display_name: "Emeth Discipline: Tenet Me"
+  display_name: "Emeth: Tenet Me"
   short_description: "Trace outcomes backward to supporting conditions and evidence"
   default_prompt: "Use $tenet-me to review DESIGN-0001 by tracing its required outcomes backward and checking gaps against concrete forward scenarios."
 

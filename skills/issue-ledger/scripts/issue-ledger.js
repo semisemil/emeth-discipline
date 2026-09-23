@@ -4,6 +4,7 @@
 
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
+const { migrateProject, rewritePaths } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const model = require('../lib/issue-model.js');
 
@@ -39,7 +40,12 @@ function parseArgs(argv) {
 }
 
 function resolveIssuesRoot(value) {
-  return path.resolve(value || path.join(process.cwd(), '.proofline', 'issues'));
+  const root = path.resolve(value || path.join(process.cwd(), '.emeth', 'issues'));
+  const store = path.dirname(root);
+  if (path.basename(root) === 'issues' && ['.proofline', '.emeth'].includes(path.basename(store))) {
+    return path.join(migrateProject(path.dirname(store)), 'issues');
+  }
+  return root;
 }
 
 function assertIssuesRoot(root) {
@@ -216,7 +222,7 @@ function resolveProjectRoot(issuesRoot, explicitProjectRoot) {
     return path.resolve(explicitProjectRoot);
   }
   const prooflineRoot = path.dirname(issuesRoot);
-  if (path.basename(issuesRoot) === 'issues' && path.basename(prooflineRoot) === '.proofline') {
+  if (path.basename(issuesRoot) === 'issues' && path.basename(prooflineRoot) === '.emeth') {
     return path.dirname(prooflineRoot);
   }
   return process.cwd();
@@ -451,7 +457,7 @@ function commandLinkWork(options) {
     work: {
       kind: requireOption(options, 'kind', '--kind'),
       id: requireOption(options, 'work_id', '--work-id'),
-      location: requireOption(options, 'path', '--path')
+      location: rewritePaths(requireOption(options, 'path', '--path'))
     }
   };
   for (const field of ['status', 'blocker', 'unblock_condition', 'transition_summary', 'updated_at']) {

@@ -59,9 +59,9 @@ test('unrelated prompts and non-invocation mentions emit zero stdout bytes', (t)
 
 test('issue-ledger receives the next issue number from issue filenames', (t) => {
   const root = fixture(t);
-  touch(root, '.proofline/issues/PL-0002.json');
-  touch(root, '.proofline/issues/PL-0012-old.md');
-  touch(root, '.proofline/issues/not-an-issue.json');
+  touch(root, '.emeth/issues/PL-0002.json');
+  touch(root, '.emeth/issues/PL-0012-old.md');
+  touch(root, '.emeth/issues/not-an-issue.json');
 
   assert.equal(
     context(runHook(root, '$emeth-discipline:issue-ledger\nRegister this work.')),
@@ -71,8 +71,8 @@ test('issue-ledger receives the next issue number from issue filenames', (t) => 
 
 test('development-design receives the next number from Design directories', (t) => {
   const root = fixture(t);
-  fs.mkdirSync(path.join(root, '.proofline/designs/DESIGN-0004-response-modes'), { recursive: true });
-  fs.mkdirSync(path.join(root, '.proofline/designs/DESIGN-0020-another'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.emeth/designs/DESIGN-0004-response-modes'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.emeth/designs/DESIGN-0020-another'), { recursive: true });
 
   assert.equal(
     context(runHook(root, '  $emeth-discipline:development-design   \nDevelop a design.')),
@@ -82,7 +82,7 @@ test('development-design receives the next number from Design directories', (t) 
 
 test('Design numbering grows beyond four digits and starts at one for a new project', (t) => {
   const populated = fixture(t);
-  fs.mkdirSync(path.join(populated, '.proofline/designs/DESIGN-9999-roadmap'), { recursive: true });
+  fs.mkdirSync(path.join(populated, '.emeth/designs/DESIGN-9999-roadmap'), { recursive: true });
   assert.equal(
     context(runHook(populated, '$emeth-discipline:development-design\nDevelop a design.')),
     'Next design number: DESIGN-10000',
@@ -97,8 +97,8 @@ test('Design numbering grows beyond four digits and starts at one for a new proj
 
 test('figure-it-out receives only a Design number independent of legacy document numbering', (t) => {
   const root = fixture(t);
-  fs.mkdirSync(path.join(root, '.proofline/plan/PLAN-0003-roadmap'), { recursive: true });
-  fs.mkdirSync(path.join(root, '.proofline/specs/SPEC-0011-settings'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.emeth/plan/PLAN-0003-roadmap'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.emeth/specs/SPEC-0011-settings'), { recursive: true });
 
   assert.equal(
     context(runHook(root, '$emeth-discipline:figure-it-out\nTake this change through implementation.')),
@@ -108,7 +108,7 @@ test('figure-it-out receives only a Design number independent of legacy document
 
 test('a numbering read failure is logged and leaves the skill able to fall back', (t) => {
   const root = fixture(t);
-  touch(root, '.proofline/issues');
+  touch(root, '.emeth/issues');
   const result = runHook(root, '$emeth-discipline:issue-ledger');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(Buffer.byteLength(result.stdout), 0);
@@ -117,5 +117,5 @@ test('a numbering read failure is logged and leaves the skill able to fall back'
   const entry = JSON.parse(fs.readFileSync(logPath, 'utf8').trim());
   assert.equal(entry.hook, 'next-document-number');
   assert.equal(entry.event, 'UserPromptSubmit');
-  assert.match(entry.filePath, /\.proofline[\\/]issues$/);
+  assert.match(entry.filePath, /\.emeth[\\/]issues$/);
 });

@@ -13,7 +13,7 @@ function fixture(t, { bom = false, newline = '\n' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-patch-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const project = path.join(root, 'project');
-  const file = path.join(project, '.proofline/designs/DESIGN-0001-test/DESIGN.md');
+  const file = path.join(project, '.emeth/designs/DESIGN-0001-test/DESIGN.md');
   const snapshot = path.join(path.dirname(file), 'revisions/REV-1.md');
   const metadata = { schema_version: 2, id: 'DESIGN-0001', title: '부분 수정', kind: 'feature', status: 'draft', revision: 1,
     supersedes: [], superseded_by: null, related_issues: [] };
@@ -122,7 +122,7 @@ test('patch retains Memory connection and separates registration failure from sa
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.value.registration.status, 'failed');
   assert.equal(result.value.memory.status, 'created');
-  assert.ok(fs.existsSync(path.join(f.project, '.proofline/architecture.json')));
+  assert.ok(fs.existsSync(path.join(f.project, '.emeth/architecture.json')));
   assert.deepEqual(fs.readFileSync(f.snapshot), f.original);
 });
 
@@ -134,7 +134,7 @@ test('malformed patches, active locks and missing IDs do not save', t => {
     assert.equal(f.run('patch', input).value.error.code, 'document-patch-invalid');
     assert.deepEqual(fs.readFileSync(f.file), f.original);
   }
-  const lock = path.join(f.project, '.proofline/.design-write.lock');
+  const lock = path.join(f.project, '.emeth/.design-write.lock');
   fs.writeFileSync(lock, String(process.pid));
   assert.equal(f.patch(changes).value.error.code, 'document-locked');
   fs.unlinkSync(lock);
@@ -165,7 +165,7 @@ test('oversized resulting document is rejected without publishing changes', t =>
 
 test('replacement cycles are rejected by the shared Design validator', t => {
   const f = fixture(t);
-  const other = path.join(f.project, '.proofline/designs/DESIGN-0002-other/DESIGN.md');
+  const other = path.join(f.project, '.emeth/designs/DESIGN-0002-other/DESIGN.md');
   fs.mkdirSync(path.dirname(other));
   fs.writeFileSync(other, f.original.toString('utf8').replaceAll('DESIGN-0001', 'DESIGN-0002')
     .replace('"supersedes": []', '"supersedes": ["DESIGN-0001"]'));

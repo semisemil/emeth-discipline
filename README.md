@@ -1,8 +1,8 @@
-# Emeth Discipline
+# Emeth
 
-Emeth Discipline은 Codex가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다.
+Emeth는 Codex가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다.
 
-작업이 길어지면 처음 요청의 세부 조건을 빠뜨리거나, 확인하지 않은 부분까지 끝났다고 보고하기 쉽습니다. 대화 중 발견한 버그나 후속 작업도 다음 작업으로 이어지지 않고 잊히곤 합니다. Emeth Discipline은 대화에 적용할 공통 기준과 작업별 스킬, 프로젝트에 남는 기록으로 이런 누락을 줄입니다.
+작업이 길어지면 처음 요청의 세부 조건을 빠뜨리거나, 확인하지 않은 부분까지 끝났다고 보고하기 쉽습니다. 대화 중 발견한 버그나 후속 작업도 다음 작업으로 이어지지 않고 잊히곤 합니다. Emeth는 대화에 적용할 공통 기준과 작업별 스킬, 프로젝트에 남는 기록으로 이런 누락을 줄입니다.
 
 ## ✨ 주요 기능
 
@@ -51,34 +51,37 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 ### Codex CLI에서 설치
 
-Emeth Discipline 마켓플레이스를 추가한 다음 플러그인을 설치합니다.
+`emeth-discipline` 마켓플레이스를 추가한 다음 Emeth 플러그인을 설치합니다.
 
 ```bash
 codex plugin marketplace add semisemil/emeth-discipline
 codex plugin add emeth-discipline@emeth-discipline
 codex
 ```
-
-구현 Workflow에는 Git 저장소가 필요합니다.
-
 Codex가 열리면 다음 순서로 마무리합니다.
 
 1. `/hooks`를 엽니다.
-2. Emeth Discipline의 `SessionStart`, `SubagentStart`, `UserPromptSubmit` 훅을 확인하고 승인합니다.
+2. Emeth의 `SessionStart`, `SubagentStart`, `UserPromptSubmit` 훅을 확인하고 승인합니다.
 3. 새 작업을 시작합니다.
 
 대시보드 최초 등록에는 프로젝트 밖의 저장 폴더에 쓰기 권한이 필요합니다. [저장 위치와 권한 설정](#대시보드-저장-위치와-권한-설정)을 참고하세요.
 
 ## 🚀 빠르게 사용하기
 
-### 공통 기준과 응답 모드
+### 기존 저장 폴더 자동 이전
 
-`emeth-discipline` 공통 기준은 새 작업을 시작하거나 `/clear`, `/compact`를 실행할 때 자동으로 불러옵니다. 기존 작업을 재개할 때(`resume`)는 공통 기준을 다시 불러오지 않지만, 대시보드 서버 확인과 아키텍처 메모리 연결 훅은 실행됩니다. 하위 에이전트에도 `SubagentStart` 훅으로 공통 기준을 전달합니다.
+업데이트 후 프로젝트에서 작업을 시작하거나 기록 기능에 처음 접근하면 기존 `.proofline/`을 `.emeth/`로 자동 이전합니다. 이슈와 설계 문서, 아키텍처 연결을 보존하고, 이전한 폴더 안의 Markdown과 JSON에 저장된 `.proofline/` 경로도 갱신합니다. 작업별 응답 모드는 플러그인 데이터의 `proofline-mode/`에서 `rules-mode/`로 이전합니다.
+
+기존 폴더가 없는 프로젝트에는 이전 작업으로 폴더를 만들지 않습니다. 이전 중 실패하면 다음 접근에서 재시도합니다. 기존 폴더와 새 폴더가 모두 있으면 덮어쓰거나 병합하지 않고 충돌을 보고합니다.
+
+### 기본 지침과 응답 모드
+
+Emeth의 `Rules` 스킬에 담긴 기본 지침은 새 작업을 시작하거나 `/clear`, `/compact`를 실행할 때 자동으로 불러옵니다. 기존 작업을 재개할 때(`resume`)는 공통 기준을 다시 불러오지 않지만, 대시보드 서버 확인과 아키텍처 메모리 연결 훅은 실행됩니다. 하위 에이전트에도 `SubagentStart` 훅으로 공통 기준을 전달합니다.
 
 특정 요청에 공통 기준을 명시하려면 스킬 이름을 적으세요.
 
 ```text
-$emeth-discipline:core
+$emeth-discipline:rules
 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐줘.
 ```
 
@@ -93,7 +96,7 @@ $emeth-discipline:core
 | `$emeth-discipline default` | 새 작업에 적용할 기본 모드 확인 |
 | `$emeth-discipline default <mode>` | 기본 모드를 저장하고 현재 작업에도 적용 |
 
-초기 기본 모드는 `normal`입니다. 현재 모드는 작업별로 저장되며, 모드를 바꿔도 공통 품질 기준은 유지됩니다.
+`Rules`는 공통 규칙을 담은 스킬이고, `core`는 응답 모드 이름입니다. 초기 기본 모드는 `normal`입니다. 현재 모드는 작업별로 저장되며, 모드를 바꿔도 공통 품질 기준은 유지됩니다.
 
 ### 작업에 맞는 스킬 사용하기
 
@@ -117,13 +120,13 @@ $emeth-discipline:webagent
 
 ## 🧩 포함된 스킬
 
-### Core
+### 공통 규칙과 작업 관리
 
 공통 품질 기준, 작업 검증, 이슈 기록과 대시보드를 담당합니다.
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:core` | 대화와 결과물 전반 | 자연스러운 문장, 요청 범위, 수정 권한, 판단 근거 확인 |
+| `$emeth-discipline:rules` | 대화와 결과물 전반 | 자연스러운 문장, 요청 범위, 수정 권한, 판단 근거 확인 |
 | `$emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
 | `$emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
 | `$emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
@@ -226,14 +229,14 @@ PL-0012의 진행 상황과 확인 근거를 갱신해줘.
 처음 이슈를 등록하면 다음 구조가 만들어집니다.
 
 ```text
-.proofline/
+.emeth/
   STATE.md
   issues/
     PL-0001.json
 ```
 
 이슈마다 JSON 파일 하나에 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거를 저장합니다. 상세 로그나 실험 보고서는 별도 파일로 연결합니다.
-Design은 `.proofline/designs/<DESIGN-ID>-<이름>/DESIGN.md`에 저장합니다. 이슈를 지정하면 관련 작업을 연결할 수 있습니다.
+Design은 `.emeth/designs/<DESIGN-ID>-<이름>/DESIGN.md`에 저장합니다. 이슈를 지정하면 관련 작업을 연결할 수 있습니다.
 
 ## 🏛️ 아키텍처 메모리
 
@@ -246,7 +249,7 @@ $emeth-discipline:architecture-memory-init
 
 기본 위치는 `docs/architecture/`입니다. 코드·기존 문서·현재 대화를 바탕으로 프로젝트 구조와 설계 결정, 운영 제약을 정리합니다.
 
-첫 Design 저장 또는 초기화에 성공하면 `.proofline/architecture.json`에 문서 위치를 저장합니다. 이후 이 연결이 있는 프로젝트에서만 훅을 통해 메모리 스킬을 안내합니다. 개발 판단에 필요한 부분을 검색해 읽고, 앞으로도 참고할 결정이나 운영 정보가 생기면 관련 문서에 반영합니다. 일반 프로젝트 대화의 중요한 맥락도 기록합니다. 출처·범위·확정 여부를 보존하고, 읽기 전용 또는 기록 금지 요청에서는 문서를 수정하지 않습니다. 프로젝트 설정의 `enabled: false`나 비활성 Memory도 유지합니다.
+첫 Design 저장 또는 초기화에 성공하면 `.emeth/architecture.json`에 문서 위치를 저장합니다. 이후 이 연결이 있는 프로젝트에서만 훅을 통해 메모리 스킬을 안내합니다. 개발 판단에 필요한 부분을 검색해 읽고, 앞으로도 참고할 결정이나 운영 정보가 생기면 관련 문서에 반영합니다. 일반 프로젝트 대화의 중요한 맥락도 기록합니다. 출처·범위·확정 여부를 보존하고, 읽기 전용 또는 기록 금지 요청에서는 문서를 수정하지 않습니다. 프로젝트 설정의 `enabled: false`나 비활성 Memory도 유지합니다.
 
 커밋된 코드 변경을 문서에 반영하려면 별도로 갱신을 요청합니다.
 
@@ -269,7 +272,7 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 
 | 명령 | 동작 |
 | --- | --- |
-| `$emeth-discipline:dashboard-server add` | 현재 폴더에 `.proofline/`이 있으면 프로젝트 등록 |
+| `$emeth-discipline:dashboard-server add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
 | `$emeth-discipline:dashboard-server open` | 실행 중인 서버를 확인하고 대시보드 열기. 서버가 중지되어 있으면 시작하지 않음 |
 | `$emeth-discipline:dashboard-server status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
 | `$emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |

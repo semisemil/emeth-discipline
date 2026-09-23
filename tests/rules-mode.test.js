@@ -4,14 +4,14 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeProoflinePrompt } = require('../lib/proofline-prompt.js');
+const { composeProoflinePrompt } = require('../lib/rules-prompt.js');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hookPath = path.join(repoRoot, 'hooks', 'run.js');
 const loaderPath = path.join(repoRoot, 'hooks', 'run.js');
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-mode-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rules-mode-'));
   const configRoot = path.join(root, 'config');
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return {
@@ -61,7 +61,7 @@ function output(result) {
 }
 
 function statePath(env, sessionId = 'session-a') {
-  return path.join(env.PLUGIN_DATA, 'proofline-mode', `${sessionId}.json`);
+  return path.join(env.PLUGIN_DATA, 'rules-mode', `${sessionId}.json`);
 }
 
 test('ordinary prompts and namespaced skill calls emit zero stdout bytes and keep state unchanged', (t) => {
@@ -226,11 +226,11 @@ for (const [label, sessionId] of [
     const changed = output(runHook(env, '$emeth-discipline default focus', sessionId));
     assert.match(changed.systemMessage, /기본 모드와 현재 모드를 focus로 변경/);
     assert.equal(changed.hookSpecificOutput.additionalContext, composeProoflinePrompt('focus'));
-    assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'proofline-mode')), false);
+    assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode')), false);
 
     const queried = output(runHook(env, '$emeth-discipline', sessionId));
     assert.match(queried.systemMessage, /현재 모드 focus, 기본 모드 focus/);
-    assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'proofline-mode')), false);
+    assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode')), false);
   });
 }
 

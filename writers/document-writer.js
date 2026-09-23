@@ -4,6 +4,7 @@
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const { migrateProject, rewritePaths } = require('../lib/storage-migration');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
 
@@ -18,9 +19,9 @@ const {
 const { assertDesignWrite, readDevelopmentRecord } = require('../dashboard/records/development-contracts.js');
 const { registerProject, rootKey } = require('../dashboard/registry.js');
 
-const PLAN_PATH = /^\.proofline\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
-const SPEC_PATH = /^\.proofline\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
-const DESIGN_PATH = /^\.proofline\/designs\/(DESIGN-\d{4,})-([^/\\]+)\/DESIGN\.md$/;
+const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
+const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
+const DESIGN_PATH = /^\.emeth\/designs\/(DESIGN-\d{4,})-([^/\\]+)\/DESIGN\.md$/;
 const CHANGE_KINDS = new Set(['major', 'operational']);
 
 class DocumentWriterError extends Error {
@@ -113,6 +114,7 @@ function canonicalProjectRoot(projectRoot) {
     if (!fs.statSync(canonical).isDirectory()) {
       throw new Error('디렉터리가 아닙니다.');
     }
+    migrateProject(canonical);
     return canonical;
   } catch (error) {
     throw writerError('project-root-invalid', `존재하는 프로젝트 디렉터리가 아닙니다: ${absolute}`, error);
@@ -134,6 +136,7 @@ function decodeContent(buffer) {
 }
 
 function resolveTarget(root, kind, relativePath) {
+  relativePath = rewritePaths(relativePath);
   if (relativePath.includes('\0') || relativePath.includes('\\')) {
     throw writerError('document-path-invalid', '문서 경로는 프로젝트 상대 POSIX 경로여야 합니다.');
   }
@@ -347,6 +350,7 @@ function registrationResult(projectRoot) {
 }
 
 function writeDocumentUnlocked(options, sourceBuffer, expectedSource) {
+  options = { ...options, relative_path: rewritePaths(options.relative_path) };
   const projectRoot = canonicalProjectRoot(options.project_root);
   const content = decodeContent(sourceBuffer);
   const { expectedId, target } = resolveTarget(projectRoot, options.kind, options.relative_path);
@@ -429,8 +433,8 @@ function memoryResult(projectRoot, options) {
 function withDocumentLock(options, operation) {
   if (options.kind !== 'design') return operation();
   const root = canonicalProjectRoot(options.project_root);
-  ensureSafeDirectory(root, path.join(root, '.proofline'));
-  const lock = path.join(root, '.proofline', '.design-write.lock');
+  ensureSafeDirectory(root, path.join(root, '.emeth'));
+  const lock = path.join(root, '.emeth', '.design-write.lock');
   assertSafeExistingPath(root, lock, 'file');
   if (fs.existsSync(lock)) {
     const owner = Number(fs.readFileSync(lock, 'utf8'));
@@ -454,7 +458,7 @@ function createDocument(options, sourceBuffer) {
     const root = canonicalProjectRoot(options.project_root);
     const { nextDocumentId, DOCUMENT_SKILLS } = require('../lib/document-number.js');
     const id = options.id || nextDocumentId(root, DOCUMENT_SKILLS['$emeth-discipline:development-design']);
-    const relativePath = `.proofline/designs/${id}-${options.slug}/DESIGN.md`;
+    const relativePath = `.emeth/designs/${id}-${options.slug}/DESIGN.md`;
     const { target } = resolveTarget(root, 'design', relativePath);
     if (readExisting(root, target)) throw writerError('document-exists', 'Design already exists');
     const metadata = {

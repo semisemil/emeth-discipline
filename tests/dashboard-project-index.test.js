@@ -25,7 +25,7 @@ const STATE_STARTER = path.join(
 function makeRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-project-index-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  fs.mkdirSync(path.join(root, '.proofline', 'issues'), { recursive: true });
+  fs.mkdirSync(path.join(root, '.emeth', 'issues'), { recursive: true });
   return root;
 }
 
@@ -47,7 +47,7 @@ function issue(overrides = {}) {
 }
 
 function writeIssue(root, value = issue()) {
-  fs.writeFileSync(path.join(root, '.proofline', 'issues', `${value.identity.id}.json`), JSON.stringify(value), 'utf8');
+  fs.writeFileSync(path.join(root, '.emeth', 'issues', `${value.identity.id}.json`), JSON.stringify(value), 'utf8');
 }
 
 function flowIssue(id, status, context = []) {
@@ -63,7 +63,7 @@ function flowIssue(id, status, context = []) {
 }
 
 function writePlan(root, id, slug, values = {}) {
-  const directory = path.join(root, '.proofline', 'plan', `${id}-${slug}`);
+  const directory = path.join(root, '.emeth', 'plan', `${id}-${slug}`);
   fs.mkdirSync(directory, { recursive: true });
   const related = values.relatedIssues === undefined ? ['PL-0001'] : values.relatedIssues;
   const text = [
@@ -76,11 +76,11 @@ function writePlan(root, id, slug, values = {}) {
     values.body || '# Plan',
   ].join('\n');
   fs.writeFileSync(path.join(directory, 'PLAN.md'), text, 'utf8');
-  return `.proofline/plan/${id}-${slug}/PLAN.md`;
+  return `.emeth/plan/${id}-${slug}/PLAN.md`;
 }
 
 function writeSpec(root, id, slug, values = {}) {
-  const directory = path.join(root, '.proofline', 'specs', `${id}-${slug}`);
+  const directory = path.join(root, '.emeth', 'specs', `${id}-${slug}`);
   fs.mkdirSync(directory, { recursive: true });
   const metadata = {
     schema_version: 2,
@@ -94,7 +94,7 @@ function writeSpec(root, id, slug, values = {}) {
     related_issues: values.relatedIssues === undefined ? ['PL-0001'] : values.relatedIssues,
   };
   fs.writeFileSync(path.join(directory, 'SPEC.md'), `---\n${JSON.stringify(metadata, null, 2)}\n---\n${values.body || '# Spec'}`, 'utf8');
-  return `.proofline/specs/${id}-${slug}/SPEC.md`;
+  return `.emeth/specs/${id}-${slug}/SPEC.md`;
 }
 
 function project(root) {
@@ -144,7 +144,7 @@ test('project index returns canonical records, reciprocal links, and multiple fl
 
 test('production state-starter example Issue is excluded by the canonical filename owner', (t) => {
   const root = makeRoot(t);
-  fs.cpSync(STATE_STARTER, path.join(root, '.proofline'), { recursive: true });
+  fs.cpSync(STATE_STARTER, path.join(root, '.emeth'), { recursive: true });
 
   const result = buildProjectIndex(project(root)).publicIndex;
   assert.deepEqual(result.issues, []);
@@ -155,7 +155,7 @@ test('production state-starter example Issue is excluded by the canonical filena
 
 test('canonical Issue filenames use content IDs unless the filename provides an identity', (t) => {
   const root = makeRoot(t);
-  const issuesDirectory = path.join(root, '.proofline', 'issues');
+  const issuesDirectory = path.join(root, '.emeth', 'issues');
   fs.writeFileSync(
     path.join(issuesDirectory, 'other.json'),
     JSON.stringify(flowIssue('PL-0043', 'open')),
@@ -189,9 +189,9 @@ test('canonical Issue filenames use content IDs unless the filename provides an 
   assert.deepEqual(
     result.diagnostics.map((item) => ({ code: item.code, path: item.relative_path })),
     [
-      { code: 'record-metadata-invalid', path: '.proofline/issues/malformed.json' },
-      { code: 'record-id-mismatch', path: '.proofline/issues/PL-0001.json' },
-      { code: 'record-id-mismatch', path: '.proofline/issues/PL-0002-title.md' },
+      { code: 'record-metadata-invalid', path: '.emeth/issues/malformed.json' },
+      { code: 'record-id-mismatch', path: '.emeth/issues/PL-0001.json' },
+      { code: 'record-id-mismatch', path: '.emeth/issues/PL-0002-title.md' },
     ],
   );
 });
@@ -203,7 +203,7 @@ test('mismatched links and duplicate IDs are diagnosed and excluded without chan
   writeSpec(root, 'SPEC-0002', 'wrong-folder', { bodyId: 'SPEC-9999', relatedIssues: [] });
   writeIssue(root, issue({ context: [{ kind: 'Plan', location: planPath }] }));
 
-  const before = fs.readFileSync(path.join(root, '.proofline', 'issues', 'PL-0001.json'), 'utf8');
+  const before = fs.readFileSync(path.join(root, '.emeth', 'issues', 'PL-0001.json'), 'utf8');
   const result = buildProjectIndex(project(root)).publicIndex;
   assert.deepEqual(result.plans, []);
   assert.deepEqual(result.specs, []);
@@ -211,7 +211,7 @@ test('mismatched links and duplicate IDs are diagnosed and excluded without chan
   assert.ok(result.diagnostics.some((item) => item.code === 'record-id-mismatch'));
   assert.ok(result.diagnostics.some((item) => item.code === 'link-mismatch'));
   assert.ok(result.flow_signals.some((item) => item.signal === 'link-mismatch'));
-  assert.equal(fs.readFileSync(path.join(root, '.proofline', 'issues', 'PL-0001.json'), 'utf8'), before);
+  assert.equal(fs.readFileSync(path.join(root, '.emeth', 'issues', 'PL-0001.json'), 'utf8'), before);
 });
 
 test('source changes invalidate the index cache and documents load bodies on demand', (t) => {
@@ -265,7 +265,7 @@ test('watchers invalidate only one project and watcher failure leaves signature 
   assert.equal(service.summaryCache.size, 2);
   assert.equal(service.cache.size, 2);
 
-  const firstIssues = fs.realpathSync(path.join(firstRoot, '.proofline', 'issues'));
+  const firstIssues = fs.realpathSync(path.join(firstRoot, '.emeth', 'issues'));
   listeners.get(firstIssues)('change', 'PL-0001.json');
   assert.equal(service.summaryCache.has(PROJECT_ID), false);
   assert.equal(service.cache.has(PROJECT_ID), false);
@@ -300,7 +300,7 @@ test('record directory symlinks cannot expose files outside the registered proje
     '---',
     'secret outside content',
   ].join('\n'), 'utf8');
-  const planRoot = path.join(root, '.proofline', 'plan');
+  const planRoot = path.join(root, '.emeth', 'plan');
   fs.mkdirSync(planRoot, { recursive: true });
   fs.symlinkSync(external, path.join(planRoot, 'PLAN-0003-escape'), process.platform === 'win32' ? 'junction' : 'dir');
 
@@ -374,14 +374,14 @@ test('legacy issues remain indexed and nested Spec revisions are excluded', (t) 
     updated_at: '2026-08-17T00:00:00.000Z',
   };
   fs.writeFileSync(
-    path.join(root, '.proofline', 'issues', 'PL-0042.md'),
+    path.join(root, '.emeth', 'issues', 'PL-0042.md'),
     `---\n${JSON.stringify(legacy, null, 2)}\n---\n## Description\nLegacy body`,
     'utf8',
   );
   writeSpec(root, 'SPEC-0020', 'current', { revision: 2, relatedIssues: [] });
   const revisionDirectory = path.join(
     root,
-    '.proofline',
+    '.emeth',
     'specs',
     'SPEC-0020-current',
     'revisions',
@@ -422,7 +422,7 @@ test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t
     ['PLAN-0103', 'alias-indicator', '*anchor'],
     ['PLAN-0104', 'collection-indicator', '[bad]'],
   ]) {
-    const directory = path.join(root, '.proofline', 'plan', `${id}-${slug}`);
+    const directory = path.join(root, '.emeth', 'plan', `${id}-${slug}`);
     fs.mkdirSync(directory, { recursive: true });
     fs.writeFileSync(
       path.join(directory, 'PLAN.md'),
@@ -438,14 +438,14 @@ test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t
       .filter((item) => item.code === 'record-metadata-invalid')
       .map((item) => item.relative_path),
     [
-      '.proofline/plan/PLAN-0030-null-title/PLAN.md',
-      '.proofline/plan/PLAN-0031-mapping-title/PLAN.md',
-      '.proofline/plan/PLAN-0099-bad-single-quote/PLAN.md',
-      '.proofline/plan/PLAN-0100-sequence-indicator/PLAN.md',
-      '.proofline/plan/PLAN-0101-block-indicator/PLAN.md',
-      '.proofline/plan/PLAN-0102-anchor-indicator/PLAN.md',
-      '.proofline/plan/PLAN-0103-alias-indicator/PLAN.md',
-      '.proofline/plan/PLAN-0104-collection-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0030-null-title/PLAN.md',
+      '.emeth/plan/PLAN-0031-mapping-title/PLAN.md',
+      '.emeth/plan/PLAN-0099-bad-single-quote/PLAN.md',
+      '.emeth/plan/PLAN-0100-sequence-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0101-block-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0102-anchor-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0103-alias-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0104-collection-indicator/PLAN.md',
     ],
   );
 });

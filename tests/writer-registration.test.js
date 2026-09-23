@@ -15,7 +15,7 @@ const { getRegistryPath } = require('../dashboard/registry.js');
 function makeFixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-writer-'));
   const projectRoot = path.join(root, 'project');
-  const issuesRoot = path.join(projectRoot, '.proofline', 'issues');
+  const issuesRoot = path.join(projectRoot, '.emeth', 'issues');
   const configRoot = path.join(root, 'config');
   fs.mkdirSync(issuesRoot, { recursive: true });
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -75,12 +75,12 @@ function specContent(values = {}) {
 const documents = {
   plan: {
     kind: 'plan',
-    relativePath: '.proofline/plan/PLAN-0001-free/PLAN.md',
+    relativePath: '.emeth/plan/PLAN-0001-free/PLAN.md',
     content: planContent({ newline: '\r\n' }),
   },
   spec: {
     kind: 'spec',
-    relativePath: '.proofline/specs/SPEC-0001-free/SPEC.md',
+    relativePath: '.emeth/specs/SPEC-0001-free/SPEC.md',
     content: specContent(),
   },
 };
@@ -120,7 +120,7 @@ test('Design writer resolves a dot project root from the CLI working directory',
   const fixture = makeFixture(t);
   const document = {
     kind: 'design',
-    relativePath: '.proofline/designs/DESIGN-0001-free/DESIGN.md',
+    relativePath: '.emeth/designs/DESIGN-0001-free/DESIGN.md',
     content: specContent().replace('SPEC-0001', 'DESIGN-0001'),
   };
   const result = runDocument(fixture, document, { projectRoot: '.', cwd: fixture.projectRoot });
@@ -196,9 +196,9 @@ test('Issue link-work no-op does not register or rewrite', (t) => {
   const issue = makeIssue();
   issue.state.current_summary = 'Spec 연결됨';
   issue.state.next_action = '구현한다';
-  issue.context = [{ kind: 'Spec', location: '.proofline/specs/SPEC-0001-example/SPEC.md' }];
+  issue.context = [{ kind: 'Spec', location: '.emeth/specs/SPEC-0001-example/SPEC.md' }];
   const issuePath = path.join(fixture.issuesRoot, 'PL-0001.json');
-  const specPath = path.join(fixture.projectRoot, '.proofline', 'specs', 'SPEC-0001-example', 'SPEC.md');
+  const specPath = path.join(fixture.projectRoot, '.emeth', 'specs', 'SPEC-0001-example', 'SPEC.md');
   fs.mkdirSync(path.dirname(specPath), { recursive: true });
   fs.writeFileSync(issuePath, `${JSON.stringify(issue, null, 2)}\n`, 'utf8');
   fs.writeFileSync(specPath, specContent({ relatedIssues: ['PL-0001'] }), 'utf8');
@@ -206,7 +206,7 @@ test('Issue link-work no-op does not register or rewrite', (t) => {
 
   const result = runIssue([
     'link-work', 'PL-0001', '--kind', 'spec', '--work-id', 'SPEC-0001',
-    '--path', '.proofline/specs/SPEC-0001-example/SPEC.md',
+    '--path', '.emeth/specs/SPEC-0001-example/SPEC.md',
     '--current-summary', 'Spec 연결됨', '--next-action', '구현한다',
     '--updated-at', '2026-08-17T01:00:00.000Z', '--root', fixture.issuesRoot,
     '--project-root', fixture.projectRoot
@@ -312,7 +312,7 @@ test('Spec major update snapshots exact previous bytes and increments once', (t)
   assert.equal(output.write.status, 'updated');
   assert.deepEqual(output.write.snapshot, {
     status: 'created',
-    path: '.proofline/specs/SPEC-0001-free/revisions/REV-1.md',
+    path: '.emeth/specs/SPEC-0001-free/revisions/REV-1.md',
   });
   assert.equal(fs.readFileSync(target, 'utf8'), next);
   assert.equal(
@@ -367,7 +367,7 @@ test('document writer rejects paths outside the canonical Plan and Spec location
   const fixture = makeFixture(t);
   const result = runDocument(fixture, {
     ...documents.plan,
-    relativePath: '.proofline/plan/../outside/PLAN.md',
+    relativePath: '.emeth/plan/../outside/PLAN.md',
   });
 
   assert.equal(result.status, 1);
@@ -379,7 +379,7 @@ test('document writer does not register after a filesystem write failure', (t) =
   const fixture = makeFixture(t);
   const result = runDocument(fixture, {
     ...documents.plan,
-    relativePath: `.proofline/plan/PLAN-0001-${'x'.repeat(300)}/PLAN.md`,
+    relativePath: `.emeth/plan/PLAN-0001-${'x'.repeat(300)}/PLAN.md`,
   });
 
   assert.equal(result.status, 1);
@@ -387,9 +387,9 @@ test('document writer does not register after a filesystem write failure', (t) =
   assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
 });
 
-test('document writer rejects a linked .proofline directory without writing outside the project', (t) => {
+test('document writer rejects a linked .emeth directory without writing outside the project', (t) => {
   const fixture = makeFixture(t);
-  const proofline = path.join(fixture.projectRoot, '.proofline');
+  const proofline = path.join(fixture.projectRoot, '.emeth');
   const external = path.join(fixture.root, 'external');
   fs.rmSync(proofline, { recursive: true, force: true });
   fs.mkdirSync(external);

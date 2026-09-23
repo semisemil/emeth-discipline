@@ -2,6 +2,7 @@
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const { migrateProject } = require('../lib/storage-migration');
 const os = require('node:os');
 const path = require('node:path');
 
@@ -386,6 +387,7 @@ function writeRegistry(registryPath, registry) {
 function registerProject(projectRoot, options = {}) {
   const platform = options.platform || process.platform;
   const normalizedRoot = normalizeProjectRoot(projectRoot);
+  migrateProject(normalizedRoot);
   const registryPath = options.registryPath || getRegistryPath(options);
   return withRegistryLock(registryPath, options, () => {
     const { registry } = readRegistry({ ...options, registryPath });

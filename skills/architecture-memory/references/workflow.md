@@ -28,4 +28,4 @@ An occupied unregistered architecture root requires a separately scoped integrat
 
 ## Connection
 
-The connection root is stored in `.proofline/architecture.json`. Keep this binding and published documents in version control, excluding `<root>/.architecture-memory/work/` recovery data. Hosts without the connection hook require explicit skill use.
+The connection root is stored in `.emeth/architecture.json`. Keep this binding and published documents in version control, excluding `<root>/.architecture-memory/work/` recovery data. Hosts without the connection hook require explicit skill use.

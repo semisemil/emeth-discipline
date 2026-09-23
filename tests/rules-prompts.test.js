@@ -4,17 +4,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { MODE_SLOT } = require('../lib/proofline-prompt.js');
+const { MODE_SLOT } = require('../lib/rules-prompt.js');
 
 const repoRoot = path.resolve(__dirname, '..');
 
 test('the shared prompt has one mode slot and all mode components exist', () => {
-  const skillPath = path.join(repoRoot, 'skills', 'core', 'SKILL.md');
+  const skillPath = path.join(repoRoot, 'skills', 'rules', 'SKILL.md');
   const baseline = fs.readFileSync(skillPath, 'utf8');
   assert.equal(baseline.split(MODE_SLOT).length - 1, 1);
 
   for (const mode of ['normal', 'focus', 'core']) {
-    const modePath = path.join(repoRoot, 'skills', 'core', `${mode}.md`);
+    const modePath = path.join(repoRoot, 'skills', 'rules', `${mode}.md`);
     assert.ok(fs.statSync(modePath).isFile(), mode);
     assert.ok(fs.statSync(modePath).size > 0, mode);
   }

@@ -33,7 +33,7 @@ function document(id = 'DESIGN-0001', overrides = {}, body = '# 알림 설계\n\
 function save(f, text = document(), extra = []) {
   const id = JSON.parse(text.split('---')[1]).id;
   const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'write', '--kind', 'design',
-    '--project-root', f.project, '--relative-path', `.proofline/designs/${id}-notification/DESIGN.md`, ...extra],
+    '--project-root', f.project, '--relative-path', `.emeth/designs/${id}-notification/DESIGN.md`, ...extra],
   { input: text, encoding: 'utf8', env: f.env, windowsHide: true });
   return { ...result, value: result.status === 0 ? JSON.parse(result.stdout) : JSON.parse(result.stderr) };
 }
@@ -74,7 +74,7 @@ test('contract CLI reports Memory state without initializing it or blocking the 
   assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
   recording.ensureMemory(f.project);
   assert.equal(read().status, 'connected');
-  f.write('.proofline/architecture.json', '{broken');
+  f.write('.emeth/architecture.json', '{broken');
   assert.equal(read().status, 'failed');
 });
 
@@ -84,7 +84,7 @@ test('Design revision snapshots the old contract and rejects body changes under 
   assert.equal(save(f, original).status, 0);
   const changed = document('DESIGN-0001', { revision: 2 }, '# 새 계약\n\n실패하면 접수 ID를 반환하지 않는다.');
   assert.equal(save(f, changed, ['--change-kind', 'major']).status, 0);
-  assert.equal(f.read('.proofline/designs/DESIGN-0001-notification/revisions/REV-1.md'), original);
+  assert.equal(f.read('.emeth/designs/DESIGN-0001-notification/revisions/REV-1.md'), original);
   const invalid = save(f, document('DESIGN-0001', { revision: 2 }), ['--change-kind', 'operational']);
   assert.notEqual(invalid.status, 0);
   assert.equal(invalid.value.error.code, 'contract-revision-required');
@@ -94,8 +94,8 @@ test('Design revision snapshots the old contract and rejects body changes under 
 test('a legacy contract has one successor in the writer, dashboard and execution resolver without rewriting its file', t => {
   const f = fixture(t);
   const legacy = document('SPEC-0001');
-  f.write('.proofline/specs/SPEC-0001-original/SPEC.md', legacy);
-  f.write('.proofline/specs/SPEC-0002-independent/SPEC.md', document('SPEC-0002'));
+  f.write('.emeth/specs/SPEC-0001-original/SPEC.md', legacy);
+  f.write('.emeth/specs/SPEC-0002-independent/SPEC.md', document('SPEC-0002'));
   assert.equal(resolveContract(f.project, 'SPEC-0001').id, 'SPEC-0001');
   assert.equal(save(f, document('DESIGN-0001', { status: 'draft', supersedes: ['SPEC-0001'] })).status, 0);
   assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-superseded');
@@ -107,7 +107,7 @@ test('a legacy contract has one successor in the writer, dashboard and execution
   assert.equal(index.designs[0].status, 'draft');
   assert.equal(index.specs.find(record => record.id === 'SPEC-0001').status, 'superseded');
   assert.equal(index.specs.find(record => record.id === 'SPEC-0001').superseded_by, 'DESIGN-0001');
-  assert.equal(f.read('.proofline/specs/SPEC-0001-original/SPEC.md'), legacy);
+  assert.equal(f.read('.emeth/specs/SPEC-0001-original/SPEC.md'), legacy);
   assert.equal(save(f, document('DESIGN-0002', { supersedes: ['DESIGN-0001'] })).status, 0);
   const cycle = save(f, document('DESIGN-0001', { status: 'draft', supersedes: ['SPEC-0001', 'DESIGN-0002'] }), ['--change-kind', 'operational']);
   assert.equal(cycle.value.error.code, 'contract-successor-cycle');
@@ -116,9 +116,9 @@ test('a legacy contract has one successor in the writer, dashboard and execution
 
 test('manual successor conflicts block both the dashboard detail and execution', t => {
   const f = fixture(t);
-  f.write('.proofline/specs/SPEC-0001-original/SPEC.md', document('SPEC-0001'));
+  f.write('.emeth/specs/SPEC-0001-original/SPEC.md', document('SPEC-0001'));
   save(f, document('DESIGN-0001', { supersedes: ['SPEC-0001'] }));
-  f.write('.proofline/designs/DESIGN-0002-manual/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
+  f.write('.emeth/designs/DESIGN-0002-manual/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-successor-conflict');
   const { ProjectIndexService } = require('../dashboard/records/project-index.js');
   const { registerProject } = require('../dashboard/registry.js');
@@ -137,10 +137,10 @@ test('disabled or prohibited Memory is preserved, and recording failure is separ
   const f = fixture(t);
   assert.equal(save(f, document(), ['--memory', 'off']).value.memory.status, 'disabled');
   assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
-  f.write('.proofline/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
+  f.write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
   assert.equal(save(f).value.memory.status, 'disabled');
   assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
-  fs.unlinkSync(path.join(f.project, '.proofline/architecture.json'));
+  fs.unlinkSync(path.join(f.project, '.emeth/architecture.json'));
   f.write('docs/architecture/manual.md', 'Keep existing user documentation.');
   const result = save(f);
   assert.equal(result.status, 0);
@@ -228,7 +228,7 @@ test('interrupted conversation publication blocks retrieval and survey until rec
   assert.equal(corpus.byId.has('AM-a'), true);
   assert.equal(corpus.byId.has('AM-b'), true);
   assert.equal(corpus.state.manifest.git_checkpoint.revision, null);
-  f.write('.proofline/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
+  f.write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
   assert.throws(() => workflow.begin(f.project, 'update'), error => error.code === 'memory-not-initialized');
   assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-c', expected: null, text: section('AM-c', 'Disabled.') }] }), error => error.code === 'memory-disabled');
 });

@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
 
 const issueModel = require('../../skills/issue-ledger/lib/issue-model.js');
@@ -144,28 +145,29 @@ function projectAvailability(project) {
     if (rootKey(rootReal) !== rootKey(path.normalize(path.resolve(project.root)))) {
       return { availability: 'unavailable' };
     }
+    migrateProject(rootReal);
     const rootStat = fs.statSync(rootReal);
-    const prooflinePath = path.join(rootReal, '.proofline');
+    const emethPath = path.join(rootReal, '.emeth');
     fs.accessSync(rootReal, fs.constants.R_OK);
     if (!rootStat.isDirectory()) {
       return { availability: 'unavailable' };
     }
     try {
-      const prooflineReal = realpath(prooflinePath);
-      const prooflineStat = fs.statSync(prooflineReal);
-      fs.accessSync(prooflineReal, fs.constants.R_OK);
-      if (prooflineStat.isDirectory() && isInside(rootReal, prooflineReal)) {
-        return { availability: 'available', rootReal, prooflineReal, prooflineExists: true };
+      const emethReal = realpath(emethPath);
+      const emethStat = fs.statSync(emethReal);
+      fs.accessSync(emethReal, fs.constants.R_OK);
+      if (emethStat.isDirectory() && isInside(rootReal, emethReal)) {
+        return { availability: 'available', rootReal, emethReal, emethExists: true };
       }
     } catch {
-      // Architecture-only projects do not require a .proofline directory.
+      // Architecture-only projects do not require a .emeth directory.
     }
     if (hasArchitectureManifest(rootReal)) {
       return {
         availability: 'available',
         rootReal,
-        prooflineReal: prooflinePath,
-        prooflineExists: false,
+        emethReal: emethPath,
+        emethExists: false,
       };
     }
     return { availability: 'unavailable' };
@@ -224,8 +226,8 @@ function directoryEntries(directory, rootReal, relativePath, diagnostics) {
 function collectCandidates(projectState, diagnostics) {
   const { rootReal } = projectState;
   const candidates = [];
-  const issuesDirectory = path.join(rootReal, '.proofline', 'issues');
-  for (const entry of directoryEntries(issuesDirectory, rootReal, '.proofline/issues', diagnostics)) {
+  const issuesDirectory = path.join(rootReal, '.emeth', 'issues');
+  for (const entry of directoryEntries(issuesDirectory, rootReal, '.emeth/issues', diagnostics)) {
     if ((!entry.isFile() && !entry.isSymbolicLink())
         || !issueModel.isIssueFileName(entry.name)) {
       continue;
@@ -246,11 +248,11 @@ function collectCandidates(projectState, diagnostics) {
     { kind: 'spec', directoryName: 'specs', fileName: 'SPEC.md', idPattern: SPEC_ID },
     { kind: 'design', directoryName: 'designs', fileName: 'DESIGN.md', idPattern: DESIGN_ID },
   ]) {
-    const recordsDirectory = path.join(rootReal, '.proofline', definition.directoryName);
+    const recordsDirectory = path.join(rootReal, '.emeth', definition.directoryName);
     for (const entry of directoryEntries(
       recordsDirectory,
       rootReal,
-      `.proofline/${definition.directoryName}`,
+      `.emeth/${definition.directoryName}`,
       diagnostics,
     )) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) {
@@ -323,7 +325,7 @@ function parseCandidates(projectState, diagnostics, options = {}) {
       record.supersededBy = next.get(record.id);
     }
   } catch (error) {
-    diagnostics.push(diagnostic(error.code, '.proofline/designs', error.message));
+    diagnostics.push(diagnostic(error.code, '.emeth/designs', error.message));
     for (const record of records) if (record.kind !== 'issue') { record.status = 'blocked'; record.contractError = error.code; }
   }
   return records;
@@ -334,9 +336,9 @@ function canonicalDocumentPath(kind, location) {
     return null;
   }
   const pattern = kind === 'plan'
-    ? /^\.proofline\/plan\/(PLAN-\d{4,})-[^/]+\/PLAN\.md$/
-    : kind === 'design' ? /^\.proofline\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
-      : /^\.proofline\/specs\/(SPEC-\d{4,})-[^/]+\/SPEC\.md$/;
+    ? /^\.emeth\/plan\/(PLAN-\d{4,})-[^/]+\/PLAN\.md$/
+    : kind === 'design' ? /^\.emeth\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
+      : /^\.emeth\/specs\/(SPEC-\d{4,})-[^/]+\/SPEC\.md$/;
   const match = location.match(pattern);
   return match ? { id: match[1], path: location } : null;
 }
@@ -527,9 +529,9 @@ function projectSourceSignature(project) {
     return `${canonicalProjectRootIdentity(project)}\0unavailable`;
   }
   const parts = [canonicalProjectRootIdentity(project), 'available'];
-  appendPathSignature(parts, state.prooflineReal, '.proofline');
+  appendPathSignature(parts, state.emethReal, '.emeth');
   for (const definition of RECORD_DIRECTORY_DEFINITIONS) {
-    const directory = path.join(state.prooflineReal, definition.directoryName);
+    const directory = path.join(state.emethReal, definition.directoryName);
     appendPathSignature(parts, directory, definition.directoryName);
     const entries = sortedDirectoryEntries(directory, parts, definition.directoryName);
     if (definition.directoryName === 'issues') {
@@ -562,9 +564,9 @@ function projectWatcherPaths(project) {
   if (state.availability === 'unavailable') {
     return [];
   }
-  const watchedPaths = new Set(state.prooflineExists ? [state.prooflineReal] : []);
+  const watchedPaths = new Set(state.emethExists ? [state.emethReal] : []);
   for (const definition of RECORD_DIRECTORY_DEFINITIONS) {
-    const directory = path.join(state.prooflineReal, definition.directoryName);
+    const directory = path.join(state.emethReal, definition.directoryName);
     let directoryReal;
     try {
       directoryReal = realpath(directory);

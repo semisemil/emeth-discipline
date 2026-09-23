@@ -64,7 +64,7 @@ function makeIssue() {
 
 function createFixture(t, issue = makeIssue()) {
   const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-link-work-'));
-  const root = path.join(projectRoot, '.proofline', 'issues');
+  const root = path.join(projectRoot, '.emeth', 'issues');
   const filePath = path.join(root, 'PL-0001.json');
   t.after(() => fs.rmSync(projectRoot, { recursive: true, force: true }));
   fs.mkdirSync(root, { recursive: true });
@@ -77,7 +77,7 @@ function runLinkWork(root, overrides = {}) {
     issueId: 'PL-0001',
     kind: 'spec',
     workId: 'SPEC-0001',
-    workPath: '.proofline\\specs\\SPEC-0001-example\\SPEC.md',
+    workPath: '.emeth\\specs\\SPEC-0001-example\\SPEC.md',
     currentSummary: 'SPEC-0001 구현을 진행 중이다.',
     nextAction: '구현 검토를 완료한다.',
     status: 'doing',
@@ -136,7 +136,7 @@ test('link-work stores one canonical context link and is idempotent', (t) => {
   const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   assert.deepEqual(linked.context, [{
     kind: 'Spec',
-    location: '.proofline/specs/SPEC-0001-example/SPEC.md'
+    location: '.emeth/specs/SPEC-0001-example/SPEC.md'
   }]);
   assert.equal(linked.state.status, 'doing');
   assert.equal(linked.state.current_summary, 'SPEC-0001 구현을 진행 중이다.');
@@ -154,7 +154,7 @@ test('link-work stores one canonical context link and is idempotent', (t) => {
 
 test('Design work links round-trip through the issue ledger and dashboard with readiness signals', (t) => {
   const { root, projectRoot, filePath } = createFixture(t);
-  const overrides = { kind: 'design', workId: 'DESIGN-0001', workPath: '.proofline/designs/DESIGN-0001-example/DESIGN.md' };
+  const overrides = { kind: 'design', workId: 'DESIGN-0001', workPath: '.emeth/designs/DESIGN-0001-example/DESIGN.md' };
   assert.equal(runLinkWork(root, overrides).status, 0);
   const issue = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   assert.deepEqual(issue.context, [{ kind: 'Design', location: overrides.workPath }]);
@@ -165,7 +165,7 @@ test('Design work links round-trip through the issue ledger and dashboard with r
   assert.equal(index.diagnostics.length, 0);
   assert.ok(index.issues[0].flow_signal_ids.includes('issue:PL-0001:implementation-ready'));
   const before = fs.readFileSync(filePath, 'utf8');
-  const rejected = runLinkWork(root, { ...overrides, workId: 'DESIGN-0002', workPath: '.proofline/designs/DESIGN-0002-missing/DESIGN.md', relatedIssues: [] });
+  const rejected = runLinkWork(root, { ...overrides, workId: 'DESIGN-0002', workPath: '.emeth/designs/DESIGN-0002-missing/DESIGN.md', relatedIssues: [] });
   assert.equal(rejected.status, 1);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
@@ -185,7 +185,7 @@ test('link-work accepts a Plan without changing the active issue status', (t) =>
   const result = runLinkWork(root, {
     kind: 'plan',
     workId: 'PLAN-0001',
-    workPath: '.proofline/plan/PLAN-0001-example/PLAN.md',
+    workPath: '.emeth/plan/PLAN-0001-example/PLAN.md',
     currentSummary: 'PLAN-0001이 명세 입력으로 준비되었다.',
     nextAction: '구현 명세를 작성한다.',
     status: null
@@ -196,7 +196,7 @@ test('link-work accepts a Plan without changing the active issue status', (t) =>
   assert.equal(linked.state.status, 'open');
   assert.deepEqual(linked.context, [{
     kind: 'Plan',
-    location: '.proofline/plan/PLAN-0001-example/PLAN.md'
+    location: '.emeth/plan/PLAN-0001-example/PLAN.md'
   }]);
   assert.deepEqual(linked.events, []);
 });
@@ -206,7 +206,7 @@ test('link-work accepts an inline Plan related_issues array', (t) => {
   const result = runLinkWork(root, {
     kind: 'plan',
     workId: 'PLAN-0002',
-    workPath: '.proofline/plan/PLAN-0002-inline/PLAN.md',
+    workPath: '.emeth/plan/PLAN-0002-inline/PLAN.md',
     currentSummary: 'PLAN-0002가 준비되었다.',
     nextAction: '명세 여부를 결정한다.',
     status: null,
@@ -215,7 +215,7 @@ test('link-work accepts an inline Plan related_issues array', (t) => {
 
   assert.equal(result.status, 0, result.stderr);
   const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  assert.equal(linked.context[0].location, '.proofline/plan/PLAN-0002-inline/PLAN.md');
+  assert.equal(linked.context[0].location, '.emeth/plan/PLAN-0002-inline/PLAN.md');
 });
 
 test('link-work rejects a missing explicit issue before changing other issues', (t) => {
@@ -249,7 +249,7 @@ test('generic update cannot bypass linked-artifact validation', (t) => {
     work: {
       kind: 'spec',
       id: 'SPEC-0001',
-      location: '.proofline/specs/SPEC-0001-example/SPEC.md'
+      location: '.emeth/specs/SPEC-0001-example/SPEC.md'
     }
   }), 'utf8');
 

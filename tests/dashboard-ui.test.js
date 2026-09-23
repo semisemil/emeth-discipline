@@ -59,16 +59,16 @@ const indexFixture = {
   ],
   plans: [{
     id: 'PLAN-0002', title: '통합 대시보드 기획', status: 'ready', related_issues: ['PL-0002'],
-    linked_issue_ids: ['PL-0002'], relative_path: '.proofline/plan/PLAN-0002/PLAN.md',
+    linked_issue_ids: ['PL-0002'], relative_path: '.emeth/plan/PLAN-0002/PLAN.md',
     updated_at: '2026-08-18T05:00:00.000Z',
   }],
   specs: [{
     id: 'SPEC-0005', title: 'Pulse 화면 계약', status: 'ready', related_issues: ['PL-0002', 'PL-9999'],
-    linked_issue_ids: ['PL-0002'], relative_path: '.proofline/specs/SPEC-0005/SPEC.md',
+    linked_issue_ids: ['PL-0002'], relative_path: '.emeth/specs/SPEC-0005/SPEC.md',
     updated_at: '2026-08-19T05:00:00.000Z', kind: 'feature', revision: 2,
   }, {
     id: 'SPEC-0006', title: '완료된 화면 계약', status: 'completed', related_issues: [],
-    linked_issue_ids: [], relative_path: '.proofline/specs/SPEC-0006/SPEC.md',
+    linked_issue_ids: [], relative_path: '.emeth/specs/SPEC-0006/SPEC.md',
     updated_at: '2026-08-18T06:00:00.000Z', kind: 'feature', revision: 1,
   }],
   flow_signals: [
@@ -81,7 +81,7 @@ const indexFixture = {
       observed: 'Issue와 문서의 양방향 연결이 일치하지 않습니다.', next_action: '양쪽 원본 링크를 확인합니다.',
     },
   ],
-  diagnostics: [{ code: 'record-invalid', message: '기록을 읽지 못했습니다.', relative_path: '.proofline/issues/bad.json' }],
+  diagnostics: [{ code: 'record-invalid', message: '기록을 읽지 못했습니다.', relative_path: '.emeth/issues/bad.json' }],
   read_at: '2026-08-19T06:00:00.000Z',
 };
 
@@ -142,7 +142,7 @@ async function uiServer(t) {
       metadata: { revision: 2, related_issues: ['PL-0002'] },
       content_type: 'text/markdown',
       body: '# 안전한 본문\n\n[공식 문서](https://example.com)',
-      relative_path: '.proofline/specs/SPEC-0005/SPEC.md',
+      relative_path: '.emeth/specs/SPEC-0005/SPEC.md',
       updated_at: '2026-08-19T05:00:00.000Z',
       projectId,
     }),
@@ -261,9 +261,9 @@ test('project choice, search, independent issue axes, documents, and flow orderi
 test('production index schema feeds full signal IDs and canonical completed Spec status to UI', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-dashboard-ui-schema-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const issueDirectory = path.join(root, '.proofline', 'issues');
-  const readySpecDirectory = path.join(root, '.proofline', 'specs', 'SPEC-0005-ready');
-  const completedSpecDirectory = path.join(root, '.proofline', 'specs', 'SPEC-0006-completed');
+  const issueDirectory = path.join(root, '.emeth', 'issues');
+  const readySpecDirectory = path.join(root, '.emeth', 'specs', 'SPEC-0005-ready');
+  const completedSpecDirectory = path.join(root, '.emeth', 'specs', 'SPEC-0006-completed');
   fs.mkdirSync(issueDirectory, { recursive: true });
   fs.mkdirSync(readySpecDirectory, { recursive: true });
   fs.mkdirSync(completedSpecDirectory, { recursive: true });
@@ -276,7 +276,7 @@ test('production index schema feeds full signal IDs and canonical completed Spec
     criteria: [{ id: 'C1', text: 'UI가 표시됨', evidence_refs: [] }],
     milestones: [],
     relations: [],
-    context: [{ kind: 'Spec', location: '.proofline/specs/SPEC-0005-ready/SPEC.md' }],
+    context: [{ kind: 'Spec', location: '.emeth/specs/SPEC-0005-ready/SPEC.md' }],
     artifacts: [],
     evidence: [],
     events: [],

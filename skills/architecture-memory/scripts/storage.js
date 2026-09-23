@@ -1,11 +1,12 @@
 'use strict';
 
 const fs = require('node:fs');
+const { migrateProject } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { TextDecoder } = require('node:util');
 
-const BINDING = '.proofline/architecture.json';
+const BINDING = '.emeth/architecture.json';
 const WORK = '.architecture-memory/work';
 function fail(code, message) { throw Object.assign(new Error(message), { code }); }
 function relative(value) {
@@ -44,6 +45,7 @@ function atomicWrite(file, text) {
 function hash(value) { return value === null ? null : crypto.createHash('sha256').update(value).digest('hex'); }
 function saveJson(file, value) { atomicWrite(file, `${JSON.stringify(value, null, 2)}\n`); }
 function binding(project) {
+  migrateProject(project);
   const value = jsonFile(safePath(project, BINDING), 4096);
   if (value === null) return null;
   if (value.schema_version !== 1 || Object.keys(value).some(key => !['root', 'schema_version', 'enabled'].includes(key))

@@ -35,11 +35,11 @@ test('create generates valid metadata and allocates IDs from body-only input', t
     });
     assert.ok(source.endsWith(body));
   }
-  const original = fs.readFileSync(path.join(project, '.proofline/designs/DESIGN-0001-notification/DESIGN.md'));
+  const original = fs.readFileSync(path.join(project, '.emeth/designs/DESIGN-0001-notification/DESIGN.md'));
   assert.equal(create(['--id', 'DESIGN-0001']).value.error.code, 'document-exists');
-  assert.deepEqual(fs.readFileSync(path.join(project, '.proofline/designs/DESIGN-0001-notification/DESIGN.md')), original);
+  assert.deepEqual(fs.readFileSync(path.join(project, '.emeth/designs/DESIGN-0001-notification/DESIGN.md')), original);
   assert.equal(create(['--kind', 'unknown']).status, 1);
-  assert.equal(fs.existsSync(path.join(project, '.proofline/designs/DESIGN-0003-notification')), false);
+  assert.equal(fs.existsSync(path.join(project, '.emeth/designs/DESIGN-0003-notification')), false);
   const ready = create(['--id', 'DESIGN-0010', '--kind', 'bug', '--status', 'ready']);
   assert.equal(ready.status, 0);
   const parsed = parseFrontmatter(fs.readFileSync(path.join(project, ready.value.write.path), 'utf8'));

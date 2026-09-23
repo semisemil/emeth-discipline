@@ -1,6 +1,6 @@
 {
   "name": "emeth-discipline",
-  "version": "0.14.1",
+  "version": "0.15.0",
   "description": "Codex가 요청 범위를 놓치지 않고, 실제로 확인한 내용만 완료로 보고하도록 돕는 플러그인입니다.",
   "author": {
     "name": "semisemil",
@@ -17,7 +17,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Emeth Discipline",
+    "displayName": "Emeth",
     "brandColor": "#c93686",
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/icon.svg",
@@ -39,7 +39,7 @@
     ],
     "defaultPrompt": [
       "$emeth-discipline focus",
-      "$emeth-discipline:core 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐 줘",
+      "$emeth-discipline:rules 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐 줘",
       "$emeth-discipline:figure-it-out 사용자 알림 설정 개선을 필요한 기획부터 구현과 검증까지 맡아서 완료해 줘"
     ],
     "websiteURL": "https://github.com/semisemil/emeth-discipline"

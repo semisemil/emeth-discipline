@@ -81,7 +81,7 @@ test('Plan and Spec parsers accept only their current metadata contracts', () =>
 
 test('record reads enforce folder identity, strict UTF-8, body separation, and 2 MiB', (t) => {
   const root = makeRoot(t);
-  const planDirectory = path.join(root, '.proofline', 'plan');
+  const planDirectory = path.join(root, '.emeth', 'plan');
   const recordDirectory = path.join(planDirectory, 'PLAN-0001-example');
   const filePath = path.join(recordDirectory, 'PLAN.md');
   fs.mkdirSync(recordDirectory, { recursive: true });
@@ -97,14 +97,14 @@ test('record reads enforce folder identity, strict UTF-8, body separation, and 2
 
   const indexed = parseCurrentRecord({
     kind: 'plan', root, directory: planDirectory, filePath,
-    expectedId: 'PLAN-0001', relativePath: '.proofline/plan/PLAN-0001-example/PLAN.md',
+    expectedId: 'PLAN-0001', relativePath: '.emeth/plan/PLAN-0001-example/PLAN.md',
     includeBody: false,
   });
   assert.equal(indexed.body, undefined);
 
   const detailed = parseCurrentRecord({
     kind: 'plan', root, directory: planDirectory, filePath,
-    expectedId: 'PLAN-0001', relativePath: '.proofline/plan/PLAN-0001-example/PLAN.md',
+    expectedId: 'PLAN-0001', relativePath: '.emeth/plan/PLAN-0001-example/PLAN.md',
     includeBody: true,
   });
   assert.equal(detailed.body, '# Body\n<script>alert(1)</script>');
@@ -145,7 +145,7 @@ test('record parser rejects a canonical project root replaced by a symlink or ju
   const projectRoot = path.join(base, 'project');
   const movedRoot = path.join(base, 'moved-project');
   const externalRoot = path.join(base, 'external');
-  const externalDirectory = path.join(externalRoot, '.proofline', 'plan', 'PLAN-0009-external');
+  const externalDirectory = path.join(externalRoot, '.emeth', 'plan', 'PLAN-0009-external');
   const externalFile = path.join(externalDirectory, 'PLAN.md');
   fs.mkdirSync(projectRoot, { recursive: true });
   fs.mkdirSync(externalDirectory, { recursive: true });
@@ -157,10 +157,10 @@ test('record parser rejects a canonical project root replaced by a symlink or ju
     () => parseCurrentRecord({
       kind: 'plan',
       root: projectRoot,
-      directory: path.join(projectRoot, '.proofline', 'plan'),
-      filePath: path.join(projectRoot, '.proofline', 'plan', 'PLAN-0009-external', 'PLAN.md'),
+      directory: path.join(projectRoot, '.emeth', 'plan'),
+      filePath: path.join(projectRoot, '.emeth', 'plan', 'PLAN-0009-external', 'PLAN.md'),
       expectedId: 'PLAN-0009',
-      relativePath: '.proofline/plan/PLAN-0009-external/PLAN.md',
+      relativePath: '.emeth/plan/PLAN-0009-external/PLAN.md',
       includeBody: true,
     }),
     (error) => error.code === 'project-root-replaced',

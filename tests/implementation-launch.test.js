@@ -64,7 +64,7 @@ test('missing, ambiguous, non-ready, mismatched Specs and a different project pr
   f.write(f.spec, original.replace('"id": "SPEC-0001"', '"id": "SPEC-0002"'));
   assert.throws(() => prepareLaunch(options(f)), /does not match/);
   f.write(f.spec, original);
-  f.write('.proofline/specs/SPEC-0001-duplicate/SPEC.md', original);
+  f.write('.emeth/specs/SPEC-0001-duplicate/SPEC.md', original);
   assert.throws(() => prepareLaunch(options(f)), /Ambiguous/);
   assert.throws(() => parseArgs(['--cwd', f.cwd, '--cwd', f.cwd]), /once/);
   assert.throws(() => parseArgs(['--unsupported', 'value']), /supported/);

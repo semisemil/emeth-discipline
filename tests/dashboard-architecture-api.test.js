@@ -69,8 +69,8 @@ async function fixture(t, values = {}) {
   const assetRoot = path.join(temporaryRoot, 'assets');
   const registryPath = path.join(temporaryRoot, 'config', 'projects.json');
   fs.mkdirSync(projectRoot, { recursive: true });
-  if (values.proofline !== false) {
-    fs.mkdirSync(path.join(projectRoot, '.proofline'), { recursive: true });
+  if (values.emeth !== false) {
+    fs.mkdirSync(path.join(projectRoot, '.emeth'), { recursive: true });
   }
   fs.mkdirSync(assetRoot, { recursive: true });
   fs.mkdirSync(path.dirname(registryPath), { recursive: true });
@@ -190,8 +190,8 @@ test('architecture API lists registered documents and reads one Markdown documen
   assert.ok(Number(head.headers['content-length']) > 0);
 });
 
-test('an architecture-only registered project remains selectable without .proofline records', async (t) => {
-  const { server } = await fixture(t, { proofline: false });
+test('an architecture-only registered project remains selectable without .emeth records', async (t) => {
+  const { server } = await fixture(t, { emeth: false });
   const response = await request(server, '/api/v1/projects');
   assert.equal(response.status, 200);
   const project = JSON.parse(response.body).projects.find((item) => item.id === PROJECT_ID);

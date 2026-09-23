@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
 const { parseCurrentRecord, DEVELOPMENT_ID } = require('./record-parser.js');
 
@@ -11,9 +12,10 @@ const FORMATS = {
 };
 function fail(code, message) { throw Object.assign(new Error(message), { code }); }
 function readDevelopmentRecord(root, id) {
+  migrateProject(root);
   if (!DEVELOPMENT_ID.test(id)) fail('contract-id-invalid', 'Supply a Design or legacy document ID');
   const format = FORMATS[id.split('-')[0]];
-  const directory = path.join(root, '.proofline', format.directory);
+  const directory = path.join(root, '.emeth', format.directory);
   const entries = fs.existsSync(directory) ? fs.readdirSync(directory, { withFileTypes: true }) : [];
   const matches = entries.filter(entry => entry.isDirectory() && (entry.name === id || entry.name.startsWith(`${id}-`)))
     .map(entry => path.join(directory, entry.name, format.file)).filter(file => fs.existsSync(file));
@@ -27,7 +29,8 @@ function readDevelopmentRecord(root, id) {
   }
 }
 function readDesigns(root) {
-  const directory = path.join(root, '.proofline', 'designs');
+  migrateProject(root);
+  const directory = path.join(root, '.emeth', 'designs');
   if (!fs.existsSync(directory)) return [];
   const ids = new Set(fs.readdirSync(directory, { withFileTypes: true })
     .filter(entry => entry.isDirectory()).map(entry => /^(DESIGN-\d{4,})-/.exec(entry.name)?.[1]).filter(Boolean));

@@ -39,7 +39,7 @@ async function fixture(t, options = {}) {
   const availableRoot = path.join(root, 'available');
   const unavailableRoot = path.join(root, 'missing');
   const assetRoot = path.join(root, 'assets');
-  const issues = path.join(availableRoot, '.proofline', 'issues');
+  const issues = path.join(availableRoot, '.emeth', 'issues');
   fs.mkdirSync(issues, { recursive: true });
   fs.writeFileSync(path.join(issues, 'PL-0001.json'), JSON.stringify(makeIssue()), 'utf8');
   for (const [relativePath, contents] of Object.entries(options.assetFiles || {})) {
@@ -601,13 +601,13 @@ test('two simultaneously available projects never expose each other records', as
   const first = makeIssue();
   first.identity.title = 'ONLY-IN-PROJECT-A';
   fs.writeFileSync(
-    path.join(availableRoot, '.proofline', 'issues', 'PL-0001.json'),
+    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'),
     JSON.stringify(first),
     'utf8',
   );
 
   const secondRoot = path.join(root, 'available-second');
-  const secondIssues = path.join(secondRoot, '.proofline', 'issues');
+  const secondIssues = path.join(secondRoot, '.emeth', 'issues');
   fs.mkdirSync(secondIssues, { recursive: true });
   const second = makeIssue();
   second.identity.id = 'PL-0002';
@@ -657,7 +657,7 @@ test('HTTP index rejects a file-link escape through a symlink or Windows junctio
     '---',
     'EXTERNAL-BODY-SECRET',
   ].join('\n'), 'utf8');
-  const planDirectory = path.join(availableRoot, '.proofline', 'plan', 'PLAN-0009-file-link');
+  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0009-file-link');
   fs.mkdirSync(planDirectory, { recursive: true });
   linkExternalFile(externalFile, path.join(planDirectory, 'PLAN.md'));
 
@@ -668,13 +668,13 @@ test('HTTP index rejects a file-link escape through a symlink or Windows junctio
   const index = JSON.parse(response.body);
   assert.deepEqual(index.plans, []);
   assert.ok(index.diagnostics.some((item) => item.code === 'record-path-outside-project'
-    && item.relative_path === '.proofline/plan/PLAN-0009-file-link/PLAN.md'));
+    && item.relative_path === '.emeth/plan/PLAN-0009-file-link/PLAN.md'));
   assert.doesNotMatch(response.body, /EXTERNAL-(?:FILE|BODY)-SECRET/);
 });
 
 test('HTTP index rejects records over 2 MiB with a relative-path diagnostic', async (t) => {
   const { availableRoot, server } = await fixture(t);
-  const planDirectory = path.join(availableRoot, '.proofline', 'plan', 'PLAN-0010-too-large');
+  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0010-too-large');
   const planPath = path.join(planDirectory, 'PLAN.md');
   fs.mkdirSync(planDirectory, { recursive: true });
   fs.writeFileSync(planPath, Buffer.concat([
@@ -690,7 +690,7 @@ test('HTTP index rejects records over 2 MiB with a relative-path diagnostic', as
   const index = JSON.parse(response.body);
   assert.deepEqual(index.plans, []);
   assert.ok(index.diagnostics.some((item) => item.code === 'record-too-large'
-    && item.relative_path === '.proofline/plan/PLAN-0010-too-large/PLAN.md'));
+    && item.relative_path === '.emeth/plan/PLAN-0010-too-large/PLAN.md'));
 });
 
 test('HTTP never trusts a canonical project root replaced by a junction or symlink', async (t) => {
@@ -701,7 +701,7 @@ test('HTTP never trusts a canonical project root replaced by a junction or symli
 
   const movedRoot = path.join(root, 'moved-original');
   const externalRoot = path.join(root, 'external');
-  const externalIssues = path.join(externalRoot, '.proofline', 'issues');
+  const externalIssues = path.join(externalRoot, '.emeth', 'issues');
   fs.mkdirSync(externalIssues, { recursive: true });
   const externalIssue = makeIssue();
   externalIssue.identity.id = 'PL-9999';
@@ -737,7 +737,7 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   issueA.identity.title = 'SECRET-FROM-A';
   issueA.state.current_summary = 'SECRET-FROM-A';
   fs.writeFileSync(
-    path.join(availableRoot, '.proofline', 'issues', 'PL-0001.json'),
+    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'),
     JSON.stringify(issueA),
     'utf8',
   );
@@ -748,7 +748,7 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   assert.equal(projectService.cache.get(AVAILABLE_ID).canonicalRootIdentity, pathKey(availableRoot));
 
   const rootB = path.join(root, 'available-b');
-  const issuesB = path.join(rootB, '.proofline', 'issues');
+  const issuesB = path.join(rootB, '.emeth', 'issues');
   fs.mkdirSync(issuesB, { recursive: true });
   const issueB = makeIssue();
   issueB.identity.title = 'ROOT-B';
@@ -794,7 +794,7 @@ test('project list computes only sidebar summaries and never seeds the detail ca
   changed.state.blocker = '외부 조건';
   changed.state.unblock_condition = '외부 조건 완료';
   fs.writeFileSync(
-    path.join(availableRoot, '.proofline', 'issues', 'PL-0001.json'),
+    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'),
     JSON.stringify(changed),
     'utf8',
   );
@@ -810,8 +810,8 @@ test('project list computes only sidebar summaries and never seeds the detail ca
 
 test('sidebar summary validates every byte while retaining only bounded Plan and Spec prefixes', async (t) => {
   const { availableRoot, projectService, server } = await fixture(t);
-  const planDirectory = path.join(availableRoot, '.proofline', 'plan', 'PLAN-0008-large');
-  const specDirectory = path.join(availableRoot, '.proofline', 'specs', 'SPEC-0008-large');
+  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0008-large');
+  const specDirectory = path.join(availableRoot, '.emeth', 'specs', 'SPEC-0008-large');
   const planPath = path.join(planDirectory, 'PLAN.md');
   const specPath = path.join(specDirectory, 'SPEC.md');
   fs.mkdirSync(planDirectory, { recursive: true });
@@ -873,7 +873,7 @@ test('sidebar summary validates every byte while retaining only bounded Plan and
 
 test('summary retains valid metadata past 64 KiB through its delimiter and streams the body', async (t) => {
   const { availableRoot, projectService, server } = await fixture(t);
-  const planDirectory = path.join(availableRoot, '.proofline', 'plan', 'PLAN-0011-wide-metadata');
+  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0011-wide-metadata');
   const planPath = path.join(planDirectory, 'PLAN.md');
   const title = 'T'.repeat(70 * 1024);
   const bodyMarker = 'BODY-MUST-STAY-STREAMING-ONLY';
@@ -903,7 +903,7 @@ test('summary retains valid metadata past 64 KiB through its delimiter and strea
   const index = JSON.parse(indexResponse.body);
   assert.equal(index.plans.find((plan) => plan.id === 'PLAN-0011').title.length, title.length);
   assert.equal(index.diagnostics.some((item) => item.relative_path
-    === '.proofline/plan/PLAN-0011-wide-metadata/PLAN.md'), false);
+    === '.emeth/plan/PLAN-0011-wide-metadata/PLAN.md'), false);
   assert.doesNotMatch(indexResponse.body, new RegExp(bodyMarker));
   assert.ok([...projectService.cache.get(AVAILABLE_ID).index.recordMap.values()]
     .every((record) => record.body === undefined));
@@ -911,8 +911,8 @@ test('summary retains valid metadata past 64 KiB through its delimiter and strea
 
 test('project summary and index exclude invalid UTF-8 tails with safe diagnostics and no cached bodies', async (t) => {
   const { availableRoot, projectService, server } = await fixture(t);
-  const planDirectory = path.join(availableRoot, '.proofline', 'plan', 'PLAN-0007-invalid');
-  const specDirectory = path.join(availableRoot, '.proofline', 'specs', 'SPEC-0007-invalid');
+  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0007-invalid');
+  const specDirectory = path.join(availableRoot, '.emeth', 'specs', 'SPEC-0007-invalid');
   fs.mkdirSync(planDirectory, { recursive: true });
   fs.mkdirSync(specDirectory, { recursive: true });
   const invalidTail = Buffer.concat([Buffer.alloc(70 * 1024, 0x61), Buffer.from([0xc3, 0x28])]);
@@ -951,8 +951,8 @@ test('project summary and index exclude invalid UTF-8 tails with safe diagnostic
   assert.deepEqual(
     body.diagnostics.filter((item) => item.code === 'record-invalid-utf8').map((item) => item.relative_path),
     [
-      '.proofline/plan/PLAN-0007-invalid/PLAN.md',
-      '.proofline/specs/SPEC-0007-invalid/SPEC.md',
+      '.emeth/plan/PLAN-0007-invalid/PLAN.md',
+      '.emeth/specs/SPEC-0007-invalid/SPEC.md',
     ],
   );
   assert.ok([...projectService.cache.get(AVAILABLE_ID).index.recordMap.values()]

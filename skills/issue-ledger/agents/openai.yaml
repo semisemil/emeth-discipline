@@ -1,4 +1,4 @@
 interface:
-  display_name: "Emeth Discipline: Issue Ledger"
+  display_name: "Emeth: Issue Ledger"
   short_description: "Record and update project work items"
   default_prompt: "Use $issue-ledger to record this project work item from the current context."

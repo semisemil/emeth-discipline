@@ -26,17 +26,17 @@
     ['design', {
       label: 'Design',
       idPattern: /^DESIGN-\d{4,}$/,
-      locationPattern: /^\.proofline\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
+      locationPattern: /^\.emeth\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
     }],
     ['plan', {
       label: 'Plan',
       idPattern: /^PLAN-\d{4,}$/,
-      locationPattern: /^\.proofline\/plan\/(PLAN-\d{4,})-[^/]+\/PLAN\.md$/
+      locationPattern: /^\.emeth\/plan\/(PLAN-\d{4,})-[^/]+\/PLAN\.md$/
     }],
     ['spec', {
       label: 'Spec',
       idPattern: /^SPEC-\d{4,}$/,
-      locationPattern: /^\.proofline\/specs\/(SPEC-\d{4,})-[^/]+\/SPEC\.md$/
+      locationPattern: /^\.emeth\/specs\/(SPEC-\d{4,})-[^/]+\/SPEC\.md$/
     }]
   ]);
 
