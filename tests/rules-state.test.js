@@ -16,7 +16,7 @@ const {
 } = require('../lib/rules-state');
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-state-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-state-'));
   const configRoot = path.join(root, 'config');
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return {
@@ -38,15 +38,15 @@ function fixture(t) {
 test('default mode paths follow Windows and POSIX configuration roots', () => {
   assert.equal(
     getConfigPath({ env: { APPDATA: 'C:\\Config' }, platform: 'win32', homeDir: 'C:\\Home' }),
-    path.win32.join('C:\\Config', 'proofline', 'config.json'),
+    path.win32.join('C:\\Config', 'emeth', 'config.json'),
   );
   assert.equal(
     getConfigPath({ env: { XDG_CONFIG_HOME: '/xdg' }, platform: 'linux', homeDir: '/home/me' }),
-    path.posix.join('/xdg', 'proofline', 'config.json'),
+    path.posix.join('/xdg', 'emeth', 'config.json'),
   );
   assert.equal(
     getConfigPath({ env: {}, platform: 'linux', homeDir: '/home/me' }),
-    path.posix.join('/home/me', '.config', 'proofline', 'config.json'),
+    path.posix.join('/home/me', '.config', 'emeth', 'config.json'),
   );
 });
 
@@ -132,7 +132,7 @@ test('missing, corrupt, unreadable, and unsupported state safely falls back and 
   fs.writeFileSync(sessionPath, JSON.stringify({ mode: 'verbose' }), 'utf8');
   assert.equal(getCurrentMode('broken-session', options).mode, 'focus');
 
-  const unreadablePath = path.join(root, 'unreadable', 'proofline', 'config.json');
+  const unreadablePath = path.join(root, 'unreadable', 'emeth', 'config.json');
   const accessError = new Error('read denied for test');
   accessError.code = 'EACCES';
   const fsModule = Object.create(fs);
@@ -153,7 +153,7 @@ test('missing, corrupt, unreadable, and unsupported state safely falls back and 
   };
   assert.equal(readDefaultMode(unreadableOptions), 'normal');
 
-  const log = fs.readFileSync(path.join(options.homeDir, '.codex', 'log', 'proofline-hook.log'), 'utf8');
+  const log = fs.readFileSync(path.join(options.homeDir, '.codex', 'log', 'emeth-hook.log'), 'utf8');
   assert.match(log, /Unsupported Emeth Discipline default mode/);
   assert.match(log, /Unsupported Emeth Discipline session mode/);
   assert.match(log, /read denied for test/);

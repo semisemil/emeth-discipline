@@ -29,14 +29,14 @@ test('new state starter creates no static dashboard and documents the global ent
   assert.match(state, /`status`/);
   assert.match(state, /`stop`/);
 
-  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-state-starter-'));
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-state-starter-'));
   t.after(() => fs.rmSync(project, { recursive: true, force: true }));
   fs.cpSync(starter, path.join(project, '.emeth'), { recursive: true });
   assert.equal(fs.existsSync(path.join(project, '.emeth', 'dashboard')), false);
 });
 
 test('transition sources never target an existing project dashboard', (t) => {
-  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-existing-dashboard-'));
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-existing-dashboard-'));
   t.after(() => fs.rmSync(project, { recursive: true, force: true }));
   const dashboard = path.join(project, '.emeth', 'dashboard');
   fs.mkdirSync(dashboard, { recursive: true });

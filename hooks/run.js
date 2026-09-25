@@ -27,7 +27,7 @@ async function run(input) {
     }
   } catch (error) {
     logDiagnostic({
-      hook: event === 'UserPromptSubmit' ? 'rules-mode' : 'load-proofline',
+      hook: event === 'UserPromptSubmit' ? 'rules-mode' : 'load-emeth',
       event, error, pluginRoot: path.resolve(__dirname, '..'),
       skillPath: error.emethFilePath, filePath: error.emethFilePath,
     });
@@ -44,7 +44,7 @@ async function run(input) {
   } catch (error) {
     process.stderr.write(`Architecture memory connection unavailable: ${error.code || error.message}\n`);
   }
-  if (event === 'SessionStart' && process.env.PROOFLINE_BENCHMARK_DISABLE_DASHBOARD !== '1') {
+  if (event === 'SessionStart' && process.env.EMETH_BENCHMARK_DISABLE_DASHBOARD !== '1') {
     try {
       const result = await require('../dashboard/control').startServer();
       if (!result.ok && result.reason !== 'start-in-progress') throw new Error(result.reason);

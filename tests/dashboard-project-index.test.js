@@ -23,7 +23,7 @@ const STATE_STARTER = path.join(
 );
 
 function makeRoot(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-project-index-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-project-index-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, '.emeth', 'issues'), { recursive: true });
   return root;
@@ -289,7 +289,7 @@ test('watchers invalidate only one project and watcher failure leaves signature 
 
 test('record directory symlinks cannot expose files outside the registered project', (t) => {
   const root = makeRoot(t);
-  const external = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-external-records-'));
+  const external = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-external-records-'));
   t.after(() => fs.rmSync(external, { recursive: true, force: true }));
   const externalRecord = path.join(external, 'PLAN.md');
   fs.writeFileSync(externalRecord, [

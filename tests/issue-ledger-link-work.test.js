@@ -63,7 +63,7 @@ function makeIssue() {
 }
 
 function createFixture(t, issue = makeIssue()) {
-  const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-link-work-'));
+  const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-link-work-'));
   const root = path.join(projectRoot, '.emeth', 'issues');
   const filePath = path.join(root, 'PL-0001.json');
   t.after(() => fs.rmSync(projectRoot, { recursive: true, force: true }));

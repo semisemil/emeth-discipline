@@ -1,11 +1,11 @@
 'use strict';
 
 (function startArchitecture() {
-  const core = globalThis.ProoflineDashboardCore;
-  const motion = globalThis.ProoflineMotion;
+  const core = globalThis.EmethDashboardCore;
+  const motion = globalThis.EmethMotion;
   if (!core) return;
 
-  const STORAGE_PROJECT = 'proofline.dashboard.project';
+  const STORAGE_PROJECT = 'emeth.dashboard.project';
   const DOCUMENT_KIND_LABELS = Object.freeze({
     index: '아키텍처 안내',
     'system-context': '시스템 맥락',
@@ -52,8 +52,8 @@
 
   function applySavedAppearance() {
     try {
-      const theme = localStorage.getItem('proofline.dashboard.theme');
-      const accent = (localStorage.getItem('proofline.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
+      const theme = localStorage.getItem('emeth.dashboard.theme');
+      const accent = (localStorage.getItem('emeth.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
       if (/^#[0-9a-fA-F]{6}$/.test(accent || '')) {
         document.documentElement.style.setProperty('--accent', accent);

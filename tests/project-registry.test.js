@@ -17,7 +17,7 @@ const {
 } = require('../dashboard/registry.js');
 
 function makeRoot(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-registry-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-registry-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return root;
 }
@@ -96,7 +96,7 @@ test('concurrent registration retains every distinct project', async (t) => {
   const workerSource = String.raw`
     const fs = require('node:fs');
     const path = require('node:path');
-    const registryPath = process.env.PROOFLINE_TEST_REGISTRY;
+    const registryPath = process.env.EMETH_TEST_REGISTRY;
     const originalRead = fs.readFileSync;
     const waitState = new Int32Array(new SharedArrayBuffer(4));
     fs.readFileSync = function delayedRegistryRead(filePath, ...args) {
@@ -106,7 +106,7 @@ test('concurrent registration retains every distinct project', async (t) => {
       }
       return result;
     };
-    const { registerProject } = require(process.env.PROOFLINE_TEST_REGISTRY_MODULE);
+    const { registerProject } = require(process.env.EMETH_TEST_REGISTRY_MODULE);
     process.send('ready');
     process.once('message', () => {
       try {
@@ -123,8 +123,8 @@ test('concurrent registration retains every distinct project', async (t) => {
     const child = spawn(process.execPath, ['-e', workerSource, projectRoot], {
       env: {
         ...env,
-        PROOFLINE_TEST_REGISTRY: registryPath,
-        PROOFLINE_TEST_REGISTRY_MODULE: path.join(repoRoot, 'dashboard', 'registry.js')
+        EMETH_TEST_REGISTRY: registryPath,
+        EMETH_TEST_REGISTRY_MODULE: path.join(repoRoot, 'dashboard', 'registry.js')
       },
       stdio: ['ignore', 'pipe', 'pipe', 'ipc']
     });

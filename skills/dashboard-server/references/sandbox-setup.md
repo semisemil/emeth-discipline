@@ -10,7 +10,7 @@ Reuse the resolved dashboard directory from the failed operation when available.
 node -e "console.log(require(process.argv[1]).getDashboardConfigDir())" <plugin-root>/dashboard/registry.js
 ```
 
-The directory contains `projects.json`, lock and temporary files, and server state. Windows uses `%APPDATA%\proofline\dashboard`; other platforms use `$XDG_CONFIG_HOME/proofline/dashboard`, falling back to `~/.config/proofline/dashboard`. Use the resolved absolute directory, including when it does not exist yet.
+The directory contains `projects.json`, lock and temporary files, and server state. Windows uses `%APPDATA%\emeth\dashboard`; other platforms use `$XDG_CONFIG_HOME/emeth/dashboard`, falling back to `~/.config/emeth/dashboard`. Use the resolved absolute directory, including when it does not exist yet.
 
 ## Configure write access
 

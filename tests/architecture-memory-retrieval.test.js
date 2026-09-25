@@ -14,7 +14,7 @@ function record(id, text, metadata = {}, status = 'confirmed/current') {
 }
 
 function fixture(t, contents = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-memory-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-memory-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const architecture = path.join(root, 'docs', 'architecture');
   const manifestPath = path.join(architecture, '.architecture-memory', 'manifest.json');

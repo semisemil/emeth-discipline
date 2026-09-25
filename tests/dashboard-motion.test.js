@@ -8,9 +8,9 @@ const test = require('node:test');
 
 function setup({ reduced = false, storageUnavailable = false } = {}) {
   const saved = new Map([
-    ['proofline.dashboard.theme', 'dark'],
-    ['proofline.dashboard.accent', '#3459e6'],
-    ['proofline.dashboard.sidebar', 'collapsed'],
+    ['emeth.dashboard.theme', 'dark'],
+    ['emeth.dashboard.accent', '#3459e6'],
+    ['emeth.dashboard.sidebar', 'collapsed'],
   ]);
   const root = { dataset: {}, style: { setProperty() {} } };
   const context = vm.createContext({
@@ -22,7 +22,7 @@ function setup({ reduced = false, storageUnavailable = false } = {}) {
     },
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../dashboard/assets/motion.js'), 'utf8'), context);
-  return { motion: context.ProoflineMotion, root, saved };
+  return { motion: context.EmethMotion, root, saved };
 }
 
 function region() {
@@ -94,7 +94,7 @@ test('page appearance is restored before rendering and sidebar controls tolerate
   assert.equal(root.dataset.sidebar, 'collapsed');
   motion.sidebar(false);
   assert.equal(root.dataset.sidebar, 'expanded');
-  assert.equal(saved.get('proofline.dashboard.sidebar'), 'expanded');
+  assert.equal(saved.get('emeth.dashboard.sidebar'), 'expanded');
   const restricted = setup({ storageUnavailable: true });
   assert.doesNotThrow(() => restricted.motion.sidebar(true));
   assert.equal(restricted.root.dataset.sidebar, 'collapsed');

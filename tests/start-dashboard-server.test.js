@@ -12,7 +12,7 @@ const {
   stopServer,
 } = require('../dashboard/control');
 
-const { composeProoflinePrompt } = require('../lib/rules-prompt');
+const { composeEmethPrompt } = require('../lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hookPath = path.join(repoRoot, 'hooks', 'run.js');
@@ -29,7 +29,7 @@ function isolatedEnvironment(root) {
 }
 
 test('all four SessionStart sources reuse one server without project mutation', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-hook-server-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-server-'));
   const project = path.join(root, 'project');
   const env = isolatedEnvironment(root);
   const directory = dashboardDirectory({ env });
@@ -52,7 +52,7 @@ test('all four SessionStart sources reuse one server without project mutation', 
     });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout ? JSON.parse(result.stdout).hookSpecificOutput.additionalContext : '',
-      source === 'resume' ? '' : composeProoflinePrompt('normal'));
+      source === 'resume' ? '' : composeEmethPrompt('normal'));
     const status = await inspectServer({ directory });
     assert.equal(status.status, 'running');
     instanceIds.push(status.instance_id);
@@ -75,10 +75,10 @@ test('hook registration covers SessionStart only and all sources', () => {
 });
 
 test('benchmark mode completes without starting a dashboard server', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-hook-benchmark-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-benchmark-'));
   const env = {
     ...isolatedEnvironment(root),
-    PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '1',
+    EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
   };
   const directory = dashboardDirectory({ env });
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -90,13 +90,13 @@ test('benchmark mode completes without starting a dashboard server', async (t) =
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeProoflinePrompt('normal'));
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt('normal'));
   assert.equal((await inspectServer({ directory })).status, 'stopped');
   assert.equal(fs.existsSync(directory), false);
 });
 
 test('startup replaces an expired lock whose owner PID was reused', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-hook-stale-lock-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-stale-lock-'));
   const project = path.join(root, 'project');
   const env = isolatedEnvironment(root);
   const directory = dashboardDirectory({ env });
@@ -126,7 +126,7 @@ test('startup replaces an expired lock whose owner PID was reused', async (t) =>
   const status = await inspectServer({ directory });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeProoflinePrompt('normal'));
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt('normal'));
   assert.equal(status.status, 'running');
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), true);
   assert.equal(fs.existsSync(lockPath), false);

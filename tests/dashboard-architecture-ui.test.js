@@ -29,7 +29,7 @@ test('root intro separates Dashboard and Architecture without starting another a
 
   const introApp = readAsset('intro.js');
   assert.match(introApp, /get\('expected_version'\)/);
-  assert.match(introApp, /proofline\.dashboard\.project/);
+  assert.match(introApp, /emeth\.dashboard\.project/);
 
   assert.match(dashboard, /id="app-shell"/);
   assert.match(dashboard, /src="\/app\.js"/);
@@ -54,7 +54,7 @@ test('Architecture page is a read-only local viewer with local Mermaid loading',
   assert.match(app, /\['Git 커밋', checkpoint\.revision\]/);
   assert.match(app, /\['Git 동기화', checkpoint\.checked_at\]/);
   assert.match(app, /querySelectorAll\('pre > code\.language-mermaid'\)/);
-  assert.match(app, /proofline\.dashboard\.project/);
+  assert.match(app, /emeth\.dashboard\.project/);
   assert.match(app, /new URLSearchParams\(globalThis\.location\.search\)/);
   assert.doesNotMatch(app, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
   assert.doesNotMatch(app, /https?:\/\/[^'"`\s]+mermaid/i);

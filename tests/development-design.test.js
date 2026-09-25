@@ -18,7 +18,7 @@ const { notice } = require('../lib/architecture-memory.js');
 
 const repo = path.resolve(__dirname, '..');
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-design-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-design-'));
   const project = path.join(root, 'project');
   fs.mkdirSync(project);
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

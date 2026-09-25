@@ -10,7 +10,7 @@ const { getRegistryPath } = require('../dashboard/registry.js');
 const cli = path.resolve(__dirname, '../writers/document-writer.js');
 
 function fixture(t, { bom = false, newline = '\n' } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-patch-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-patch-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const project = path.join(root, 'project');
   const file = path.join(project, '.emeth/designs/DESIGN-0001-test/DESIGN.md');

@@ -6,18 +6,18 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeProoflinePrompt } = require('../lib/rules-prompt');
+const { composeEmethPrompt } = require('../lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hook = path.join(repoRoot, 'hooks/run.js');
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-hooks-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hooks-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 10 }));
   const env = {
     ...process.env, HOME: root, USERPROFILE: root,
     APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
-    PLUGIN_DATA: path.join(root, 'plugin-data'), PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '1',
+    PLUGIN_DATA: path.join(root, 'plugin-data'), EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
   };
   const write = (name, text) => {
     const target = path.join(root, name);
@@ -44,11 +44,11 @@ test('mode changes and the memory connection share one response without losing e
   const f = fixture(t); f.memory();
   const changed = output(f.run({ prompt: '$emeth-discipline focus' }));
   assert.match(changed.systemMessage, /focus/);
-  assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeProoflinePrompt('focus') + '\n\n'));
+  assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('focus') + '\n\n'));
   assert.match(changed.hookSpecificOutput.additionalContext, /architecture-dependent work/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
   const next = output(f.run({ prompt: '$emeth-discipline core' }));
-  assert.equal(next.hookSpecificOutput.additionalContext, composeProoflinePrompt('core'));
+  assert.equal(next.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
 });
 
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
@@ -65,7 +65,7 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));
   const start = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' }));
-  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(composeProoflinePrompt('focus') + '\n\n'));
+  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('focus') + '\n\n'));
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' })), {});
   const compact = output(f.run({ hook_event_name: 'SessionStart', source: 'compact' }));
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
@@ -78,7 +78,7 @@ test('a corrupt memory binding does not suppress a mode change or document numbe
   const f = fixture(t);
   f.write('.emeth/architecture.json', '{');
   const result = f.run({ prompt: '$emeth-discipline focus' });
-  assert.equal(output(result).hookSpecificOutput.additionalContext, composeProoflinePrompt('focus'));
+  assert.equal(output(result).hookSpecificOutput.additionalContext, composeEmethPrompt('focus'));
   assert.match(result.stderr, /Architecture memory connection unavailable/);
   const number = output(f.run({ prompt: '$emeth-discipline:development-design' }));
   assert.equal(number.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
@@ -97,10 +97,10 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
   const plugin = copyPlugin(f);
   f.write('plugin/dashboard/control.js', 'exports.startServer = async () => { throw new Error("dashboard unavailable"); };');
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
-    hook: path.join(plugin, 'hooks/run.js'), env: { PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '0' },
+    hook: path.join(plugin, 'hooks/run.js'), env: { EMETH_BENCHMARK_DISABLE_DASHBOARD: '0' },
   });
   const response = output(result);
-  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeProoflinePrompt('normal', { pluginRoot: plugin }) + '\n\n'));
+  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('normal', { pluginRoot: plugin }) + '\n\n'));
   assert.match(response.hookSpecificOutput.additionalContext, /architecture-dependent work/);
   assert.match(result.stderr, /dashboard unavailable/);
 });

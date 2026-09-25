@@ -24,7 +24,7 @@ function removeFixture(directory) {
 }
 
 function fixture(t, options = {}) {
-  const cwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-implementation-test-')));
+  const cwd = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-implementation-test-')));
   t.after(() => removeFixture(cwd));
   const write = (name, content) => {
     const target = path.join(cwd, name);
@@ -33,7 +33,7 @@ function fixture(t, options = {}) {
   };
   git(cwd, 'init');
   git(cwd, 'config', 'user.name', 'Emeth Discipline Test');
-  git(cwd, 'config', 'user.email', 'proofline@example.invalid');
+  git(cwd, 'config', 'user.email', 'emeth@example.invalid');
   git(cwd, 'config', 'core.autocrlf', 'false');
   const metadata = { schema_version: 2, id: 'SPEC-0001', title: 'Independent implementation fixture',
     kind: 'feature', status: 'ready', revision: 1, supersedes: [], superseded_by: null, related_issues: [] };

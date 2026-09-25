@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeProoflinePrompt } = require('../lib/rules-prompt.js');
+const { composeEmethPrompt } = require('../lib/rules-prompt.js');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hookPath = path.join(repoRoot, 'hooks', 'run.js');
@@ -18,7 +18,7 @@ function fixture(t) {
     root,
     env: {
       ...process.env,
-      PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '1',
+      EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
       APPDATA: configRoot,
       XDG_CONFIG_HOME: configRoot,
       PLUGIN_DATA: path.join(root, 'plugin-data'),
@@ -98,7 +98,7 @@ test('mode changes are ASCII case-insensitive and emit the SessionStart prompt',
   const response = output(runHook(env, '\n  $emeth-discipline FoCuS  '));
   assert.match(response.systemMessage, /focus/);
   const prompt = response.hookSpecificOutput.additionalContext;
-  assert.equal(prompt, composeProoflinePrompt('focus'));
+  assert.equal(prompt, composeEmethPrompt('focus'));
   const loaded = runLoader(env);
   assert.equal(loaded.status, 0, loaded.stderr);
   assert.equal(prompt, JSON.parse(loaded.stdout).hookSpecificOutput.additionalContext);
@@ -108,7 +108,7 @@ test('mode changes are ASCII case-insensitive and emit the SessionStart prompt',
 test('a valid command is applied before the remaining task', (t) => {
   const { env } = fixture(t);
   const response = output(runHook(env, '$emeth-discipline core\nDiagnose the failing test.'));
-  assert.equal(response.hookSpecificOutput.additionalContext, composeProoflinePrompt('core'));
+  assert.equal(response.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath(env), 'utf8')), { mode: 'core' });
 });
 
@@ -131,11 +131,11 @@ test('saving the current mode as default persists it without reinjection, includ
     const response = output(runHook(env, '$emeth-discipline default focus'));
     assert.match(response.systemMessage, /기본 모드 focus 저장, 현재 모드 focus 유지/);
     assert.equal(response.hookSpecificOutput, undefined);
-    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'proofline', 'config.json'), 'utf8')), { defaultMode: 'focus' });
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'emeth', 'config.json'), 'utf8')), { defaultMode: 'focus' });
     assert.deepEqual(JSON.parse(fs.readFileSync(statePath(env), 'utf8')), { mode: 'focus' });
   }
   const loaded = output(runLoader(env, 'new-session'));
-  assert.equal(loaded.hookSpecificOutput.additionalContext, composeProoflinePrompt('focus'));
+  assert.equal(loaded.hookSpecificOutput.additionalContext, composeEmethPrompt('focus'));
 });
 
 test('reselecting the saved default still injects when the current session mode differs', (t) => {
@@ -143,7 +143,7 @@ test('reselecting the saved default still injects when the current session mode 
   output(runHook(env, '$emeth-discipline default core'));
   output(runHook(env, '$emeth-discipline focus'));
   const response = output(runHook(env, '$emeth-discipline default core'));
-  assert.equal(response.hookSpecificOutput.additionalContext, composeProoflinePrompt('core'));
+  assert.equal(response.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath(env), 'utf8')), { mode: 'core' });
 });
 
@@ -182,7 +182,7 @@ test('invalid modes, missing shapes, and extra arguments preserve the current mo
 
 test('saved caveman preferences load and report as core for existing and new sessions', (t) => {
   const { env } = fixture(t);
-  const configPath = path.join(env.APPDATA, 'proofline', 'config.json');
+  const configPath = path.join(env.APPDATA, 'emeth', 'config.json');
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.mkdirSync(path.dirname(statePath(env)), { recursive: true });
   fs.writeFileSync(configPath, JSON.stringify({ defaultMode: 'caveman' }));
@@ -193,7 +193,7 @@ test('saved caveman preferences load and report as core for existing and new ses
   for (const sessionId of ['session-a', 'session-b']) {
     const loaded = runLoader(env, sessionId);
     assert.equal(loaded.status, 0, loaded.stderr);
-    assert.equal(JSON.parse(loaded.stdout).hookSpecificOutput.additionalContext, composeProoflinePrompt('core'));
+    assert.equal(JSON.parse(loaded.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
   }
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath(env, 'session-b'), 'utf8')), { mode: 'core' });
 });
@@ -202,12 +202,12 @@ test('default changes persist first and immediately apply to the current session
   const { env } = fixture(t);
   const response = output(runHook(env, '$emeth-discipline default CORE'));
   assert.match(response.systemMessage, /기본 모드와 현재 모드를 core/);
-  assert.equal(response.hookSpecificOutput.additionalContext, composeProoflinePrompt('core'));
+  assert.equal(response.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
   const loaded = runLoader(env);
   assert.equal(loaded.status, 0, loaded.stderr);
   assert.equal(response.hookSpecificOutput.additionalContext, JSON.parse(loaded.stdout).hookSpecificOutput.additionalContext);
   assert.deepEqual(
-    JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'proofline', 'config.json'), 'utf8')),
+    JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'emeth', 'config.json'), 'utf8')),
     { defaultMode: 'core' },
   );
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath(env), 'utf8')), { mode: 'core' });
@@ -225,7 +225,7 @@ for (const [label, sessionId] of [
     const { env } = fixture(t);
     const changed = output(runHook(env, '$emeth-discipline default focus', sessionId));
     assert.match(changed.systemMessage, /기본 모드와 현재 모드를 focus로 변경/);
-    assert.equal(changed.hookSpecificOutput.additionalContext, composeProoflinePrompt('focus'));
+    assert.equal(changed.hookSpecificOutput.additionalContext, composeEmethPrompt('focus'));
     assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode')), false);
 
     const queried = output(runHook(env, '$emeth-discipline', sessionId));
@@ -255,7 +255,7 @@ test('a current-session write failure preserves a successfully saved default and
   assert.match(response.systemMessage, /현재 모드 변경 실패/);
   assert.equal(response.hookSpecificOutput, undefined);
   assert.deepEqual(
-    JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'proofline', 'config.json'), 'utf8')),
+    JSON.parse(fs.readFileSync(path.join(env.APPDATA, 'emeth', 'config.json'), 'utf8')),
     { defaultMode: 'focus' },
   );
 });

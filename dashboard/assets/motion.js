@@ -2,10 +2,10 @@
 
 (function exposeMotion() {
   const root = document.documentElement;
-  const sidebarKey = 'proofline.dashboard.sidebar';
+  const sidebarKey = 'emeth.dashboard.sidebar';
   try {
-    const theme = localStorage.getItem('proofline.dashboard.theme');
-    const accent = (localStorage.getItem('proofline.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
+    const theme = localStorage.getItem('emeth.dashboard.theme');
+    const accent = (localStorage.getItem('emeth.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
     if (theme === 'light' || theme === 'dark') root.dataset.theme = theme;
     if (/^#[0-9a-f]{6}$/i.test(accent || '')) root.style.setProperty('--accent', accent);
     root.dataset.sidebar = localStorage.getItem(sidebarKey) === 'collapsed' ? 'collapsed' : 'expanded';
@@ -50,5 +50,5 @@
     try { localStorage.setItem(sidebarKey, root.dataset.sidebar); } catch { /* Optional preference. */ }
   }
 
-  globalThis.ProoflineMotion = Object.freeze({ enter, begin, finish, sidebar });
+  globalThis.EmethMotion = Object.freeze({ enter, begin, finish, sidebar });
 }());

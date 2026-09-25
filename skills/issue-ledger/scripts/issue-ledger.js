@@ -221,9 +221,9 @@ function resolveProjectRoot(issuesRoot, explicitProjectRoot) {
   if (typeof explicitProjectRoot === 'string' && explicitProjectRoot.trim() !== '') {
     return path.resolve(explicitProjectRoot);
   }
-  const prooflineRoot = path.dirname(issuesRoot);
-  if (path.basename(issuesRoot) === 'issues' && path.basename(prooflineRoot) === '.emeth') {
-    return path.dirname(prooflineRoot);
+  const emethRoot = path.dirname(issuesRoot);
+  if (path.basename(issuesRoot) === 'issues' && path.basename(emethRoot) === '.emeth') {
+    return path.dirname(emethRoot);
   }
   return process.cwd();
 }

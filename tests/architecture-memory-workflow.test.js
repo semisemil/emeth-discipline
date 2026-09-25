@@ -12,7 +12,7 @@ const { loadRecords } = require('../skills/architecture-memory/scripts/memory.js
 const { notice } = require('../lib/architecture-memory.js');
 
 function fixture(t, gitEnabled = true) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-memory-workflow-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-memory-workflow-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   function git(...args) {
     const run = spawnSync('git', args, { cwd: root, encoding: 'utf8', windowsHide: true });

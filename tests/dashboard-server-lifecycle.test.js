@@ -15,7 +15,7 @@ const {
 } = require('../dashboard/control');
 
 function tempDirectory(t) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-server-'));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-server-'));
   t.after(async () => {
     await stopServer({ directory });
     fs.rmSync(directory, { recursive: true, force: true });

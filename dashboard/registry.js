@@ -34,13 +34,13 @@ function getDashboardConfigDir(options = {}) {
     if (typeof env.APPDATA !== 'string' || env.APPDATA.trim() === '') {
       throw new RegistryError('config-unavailable', 'APPDATA가 설정되지 않았습니다.');
     }
-    return path.join(env.APPDATA, 'proofline', 'dashboard');
+    return path.join(env.APPDATA, 'emeth', 'dashboard');
   }
 
   const configHome = typeof env.XDG_CONFIG_HOME === 'string' && env.XDG_CONFIG_HOME.trim() !== ''
     ? env.XDG_CONFIG_HOME
     : path.join(home, '.config');
-  return path.join(configHome, 'proofline', 'dashboard');
+  return path.join(configHome, 'emeth', 'dashboard');
 }
 
 function getRegistryPath(options = {}) {

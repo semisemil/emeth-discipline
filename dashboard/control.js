@@ -21,7 +21,7 @@ function dashboardDirectory(options = {}) {
   const configRoot = platform === 'win32'
     ? (env.APPDATA || pathApi.join(homeDir, 'AppData', 'Roaming'))
     : (env.XDG_CONFIG_HOME || pathApi.join(homeDir, '.config'));
-  return pathApi.join(configRoot, 'proofline', 'dashboard');
+  return pathApi.join(configRoot, 'emeth', 'dashboard');
 }
 
 function dashboardPaths(options = {}) {

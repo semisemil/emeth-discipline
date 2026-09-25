@@ -282,8 +282,8 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 ### 대시보드 저장 위치와 권한 설정
 
 프로젝트 목록과 서버 상태는 공용 폴더에 저장합니다.
-Windows에서는 `%APPDATA%\proofline\dashboard`를 사용합니다.
-다른 운영체제에서는 `$XDG_CONFIG_HOME/proofline/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/proofline/dashboard`를 사용합니다.
+Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
+다른 운영체제에서는 `$XDG_CONFIG_HOME/emeth/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/emeth/dashboard`를 사용합니다.
 
 등록 코드는 필요한 저장소를 자동으로 만들고, 이미 등록된 프로젝트는 `no-op`으로 처리합니다.
 등록 결과가 `registered` 또는 `no-op`이면 추가 설정 확인 없이 완료합니다.

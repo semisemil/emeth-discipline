@@ -1,15 +1,15 @@
 'use strict';
 
 (function startDashboard() {
-  const core = globalThis.ProoflineDashboardCore;
-  const motion = globalThis.ProoflineMotion;
+  const core = globalThis.EmethDashboardCore;
+  const motion = globalThis.EmethMotion;
   if (!core) return;
 
   const STORAGE = Object.freeze({
-    accent: 'proofline.dashboard.accent',
-    background: 'proofline.dashboard.background',
-    project: 'proofline.dashboard.project',
-    theme: 'proofline.dashboard.theme',
+    accent: 'emeth.dashboard.accent',
+    background: 'emeth.dashboard.background',
+    project: 'emeth.dashboard.project',
+    theme: 'emeth.dashboard.theme',
   });
   const state = {
     projects: [],
@@ -1109,7 +1109,7 @@
         reject(new Error('IndexedDB를 사용할 수 없습니다.'));
         return;
       }
-      const request = indexedDB.open('proofline-dashboard', 1);
+      const request = indexedDB.open('emeth-dashboard', 1);
       request.onupgradeneeded = () => request.result.createObjectStore('preferences');
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);

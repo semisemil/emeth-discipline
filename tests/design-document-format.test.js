@@ -9,7 +9,7 @@ const { parseDesignMetadata, parseFrontmatter } = require('../dashboard/records/
 const root = path.resolve(__dirname, '..');
 
 test('create generates valid metadata and allocates IDs from body-only input', t => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-create-'));
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-create-'));
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
   const project = path.join(temporary, 'project');
   fs.mkdirSync(project);

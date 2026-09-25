@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const W = require('../../skills/architecture-memory/scripts/workflow.js');
 const { notice } = require('../../lib/architecture-memory.js');
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-workflow-benchmark-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-workflow-benchmark-'));
 const frames = [];
 function git(...args) {
   const result = spawnSync('git', args, { cwd: root, encoding: 'utf8', windowsHide: true });

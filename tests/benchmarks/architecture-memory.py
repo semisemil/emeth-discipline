@@ -43,7 +43,7 @@ for name in prompt_files:
                     "after_tokens": tokens(current), "before_sha256": hashlib.sha256(old.encode()).hexdigest() if old is not None else None})
 print(json.dumps({"type": "prompts", "tokenizer": "o200k_base", "files": prompts}))
 for unrelated_count in (0, 8, 80):
-    with tempfile.TemporaryDirectory(prefix="proofline-memory-benchmark-") as directory:
+    with tempfile.TemporaryDirectory(prefix="emeth-memory-benchmark-") as directory:
         project = Path(directory)
         architecture = project / "docs/architecture"
         (architecture / ".architecture-memory").mkdir(parents=True)
@@ -123,7 +123,7 @@ def measured_read(project, ids, seen=(), cap=12000, cursor=None):
     return json.loads(output), tokens(request), tokens(output)
 
 
-with tempfile.TemporaryDirectory(prefix="proofline-memory-shared-") as directory:
+with tempfile.TemporaryDirectory(prefix="emeth-memory-shared-") as directory:
     project = Path(directory)
     contents = {"global.md": section("AM-global", "Shared requirement and its operating exception. " * 90, always=True)}
     contents.update({f"owner-{i}.md": section(f"AM-owner-{i}", "Owner-specific context. " * 12) for i in range(5)})
@@ -141,7 +141,7 @@ with tempfile.TemporaryDirectory(prefix="proofline-memory-shared-") as directory
                           "request_tokens": request_tokens, "response_tokens": response_tokens,
                           "io_tokens": request_tokens + response_tokens}))
 
-with tempfile.TemporaryDirectory(prefix="proofline-memory-fanout-") as directory:
+with tempfile.TemporaryDirectory(prefix="emeth-memory-fanout-") as directory:
     project = Path(directory)
     dependencies = [f"AM-required-{i}" for i in range(25)]
     text = section("AM-root", "Required conditions follow.", links=dependencies)

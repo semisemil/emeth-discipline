@@ -20,7 +20,7 @@ function fixture(t) {
   };
   const read = name => fs.readFileSync(path.join(root, name), 'utf8');
   const env = { ...process.env, APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
-    PLUGIN_DATA: path.join(root, 'plugin'), HOME: root, USERPROFILE: root, PROOFLINE_BENCHMARK_DISABLE_DASHBOARD: '1' };
+    PLUGIN_DATA: path.join(root, 'plugin'), HOME: root, USERPROFILE: root, EMETH_BENCHMARK_DISABLE_DASHBOARD: '1' };
   return { root, write, read, env };
 }
 
@@ -41,7 +41,7 @@ test('first startup migrates project records, links and saved session mode witho
   assert.match(f.read('.emeth/STATE.md'), /\(.emeth\/designs\//);
   assert.deepEqual(fs.readFileSync(path.join(f.root, '.emeth/attachment.bin')), Buffer.from([0, 255, 128, 1]));
   const prompt = JSON.parse(result.stdout).hookSpecificOutput.additionalContext;
-  assert.equal(prompt, require('../lib/rules-prompt').composeProoflinePrompt('focus'));
+  assert.equal(prompt, require('../lib/rules-prompt').composeEmethPrompt('focus'));
   const before = fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs;
   migrateProject(f.root);
   assert.equal(fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs, before);

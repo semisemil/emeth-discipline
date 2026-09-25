@@ -15,7 +15,7 @@ Wording: preserve the expression's function; follow conventions for that functio
 
 Do not use middle dots.
 
-<!-- proofline-response-mode -->
+<!-- emeth-response-mode -->
 
 Clarity: maximize information per word while preserving required distinctions; use familiar terms and direct sentences
 

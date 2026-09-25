@@ -7,7 +7,7 @@ const {spawnSync} = require('node:child_process');
 const test = require('node:test');
 const cli = path.resolve(__dirname, '../writers/document-writer.js');
 function fixture(t, kind='design', pretty=false, newline='\n') {
-  const root=fs.mkdtempSync(path.join(os.tmpdir(),'proofline-status-'));
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-status-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   const project=path.join(root,'project'), id=kind==='design'?'DESIGN-0001':'SPEC-0001';
   const file=path.join(project,'.emeth',kind==='design'?'designs':'specs',id+'-test',kind==='design'?'DESIGN.md':'SPEC.md');

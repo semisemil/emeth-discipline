@@ -14,7 +14,7 @@ const {
 } = require('../dashboard/records/record-parser.js');
 
 function makeRoot(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-record-parser-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-record-parser-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return root;
 }

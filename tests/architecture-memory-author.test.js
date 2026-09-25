@@ -12,7 +12,7 @@ const M = require('../skills/architecture-memory/scripts/memory.js');
 const S = require('../skills/architecture-memory/scripts/storage.js');
 
 function fixture(t, options = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-author-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-author-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(path.join(root, 'app.js'), 'console.log("app");\n');
   const run = (command, input, extra = {}) => A.run(root, command, input, { ...options, ...extra });

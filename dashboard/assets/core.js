@@ -6,7 +6,7 @@
     module.exports = api;
   }
   if (typeof globalThis !== 'undefined') {
-    globalThis.ProoflineDashboardCore = api;
+    globalThis.EmethDashboardCore = api;
   }
 }(function createCore() {
   const ACTIVE_STATUSES = new Set(['open', 'doing']);
@@ -327,8 +327,8 @@
 
   function safeInternalUrl(value) {
     try {
-      const parsed = new URL(String(value || ''), 'http://proofline.local');
-      if (parsed.origin !== 'http://proofline.local' || parsed.pathname !== '/architecture') return null;
+      const parsed = new URL(String(value || ''), 'http://emeth.local');
+      if (parsed.origin !== 'http://emeth.local' || parsed.pathname !== '/architecture') return null;
       return escapeHtml(`${parsed.pathname}${parsed.search}${parsed.hash}`);
     } catch {
       return null;

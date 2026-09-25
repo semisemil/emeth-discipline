@@ -259,7 +259,7 @@ test('project choice, search, independent issue axes, documents, and flow orderi
 });
 
 test('production index schema feeds full signal IDs and canonical completed Spec status to UI', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-dashboard-ui-schema-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-dashboard-ui-schema-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const issueDirectory = path.join(root, '.emeth', 'issues');
   const readySpecDirectory = path.join(root, '.emeth', 'specs', 'SPEC-0005-ready');
@@ -820,7 +820,7 @@ test('actual markup and styles expose responsive, keyboard, tooltip, and state c
   assert.match(app, /focusTarget\.focus\(\)/);
   assert.match(app, /event\.key === 'Escape'/);
   assert.match(app, /ArrowLeft/);
-  assert.match(app, /indexedDB\.open\('proofline-dashboard'/);
+  assert.match(app, /indexedDB\.open\('emeth-dashboard'/);
   assert.match(app, /setInterval\([\s\S]*?30000/);
   assert.match(app, /visibilitychange[\s\S]*?visibilityState === 'visible'[\s\S]*?loadIndex\(false, true\)/);
   assert.equal((app.match(/\.innerHTML\s*=/g) || []).length, 1);

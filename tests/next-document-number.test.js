@@ -9,7 +9,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const hookPath = path.join(repoRoot, 'hooks', 'run.js');
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-number-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-number-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return root;
 }
@@ -113,7 +113,7 @@ test('a numbering read failure is logged and leaves the skill able to fall back'
   assert.equal(result.status, 0, result.stderr);
   assert.equal(Buffer.byteLength(result.stdout), 0);
 
-  const logPath = path.join(root, '.codex', 'log', 'proofline-hook.log');
+  const logPath = path.join(root, '.codex', 'log', 'emeth-hook.log');
   const entry = JSON.parse(fs.readFileSync(logPath, 'utf8').trim());
   assert.equal(entry.hook, 'next-document-number');
   assert.equal(entry.event, 'UserPromptSubmit');

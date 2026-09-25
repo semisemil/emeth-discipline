@@ -13,7 +13,7 @@ const documentCli = path.join(repoRoot, 'writers', 'document-writer.js');
 const { getRegistryPath } = require('../dashboard/registry.js');
 
 function makeFixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-writer-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-writer-'));
   const projectRoot = path.join(root, 'project');
   const issuesRoot = path.join(projectRoot, '.emeth', 'issues');
   const configRoot = path.join(root, 'config');
@@ -389,12 +389,12 @@ test('document writer does not register after a filesystem write failure', (t) =
 
 test('document writer rejects a linked .emeth directory without writing outside the project', (t) => {
   const fixture = makeFixture(t);
-  const proofline = path.join(fixture.projectRoot, '.emeth');
+  const emeth = path.join(fixture.projectRoot, '.emeth');
   const external = path.join(fixture.root, 'external');
-  fs.rmSync(proofline, { recursive: true, force: true });
+  fs.rmSync(emeth, { recursive: true, force: true });
   fs.mkdirSync(external);
   try {
-    fs.symlinkSync(external, proofline, process.platform === 'win32' ? 'junction' : 'dir');
+    fs.symlinkSync(external, emeth, process.platform === 'win32' ? 'junction' : 'dir');
   } catch (error) {
     if (error.code === 'EPERM' || error.code === 'EACCES') {
       t.skip(`링크 생성 권한 없음: ${error.code}`);

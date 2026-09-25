@@ -1,4 +1,4 @@
-(function exposeProoflineIssueModel(root, factory) {
+(function exposeEmethIssueModel(root, factory) {
   const api = factory();
 
   if (typeof module === 'object' && module.exports) {
@@ -6,7 +6,7 @@
   }
 
   if (root) {
-    root.ProoflineIssueModel = api;
+    root.EmethIssueModel = api;
   }
 }(typeof globalThis === 'object' ? globalThis : this, () => {
   'use strict';

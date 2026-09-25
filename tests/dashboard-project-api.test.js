@@ -35,7 +35,7 @@ function makeIssue() {
 }
 
 async function fixture(t, options = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-project-api-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-project-api-'));
   const availableRoot = path.join(root, 'available');
   const unavailableRoot = path.join(root, 'missing');
   const assetRoot = path.join(root, 'assets');
@@ -345,7 +345,7 @@ test('static GET and HEAD reject an asset-root replacement between stat and open
       assetFiles: { 'index.html': '<!doctype html>SAFE' },
     });
     const originalAssetRoot = path.join(root, `assets-before-${method.toLowerCase()}`);
-    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-static-external-'));
+    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-static-external-'));
     const externalSecret = 'OUTSIDE-SECRET';
     fs.writeFileSync(path.join(externalRoot, 'index.html'), externalSecret, 'utf8');
     t.after(() => fs.rmSync(externalRoot, { recursive: true, force: true }));
@@ -387,7 +387,7 @@ test('static GET and HEAD reject a nested component replacement between realpath
       assetFiles: { 'nested/index.html': '<!doctype html>SAFE-NESTED' },
     });
     const originalNestedRoot = path.join(assetRoot, `nested-before-${method.toLowerCase()}`);
-    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-static-nested-external-'));
+    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-static-nested-external-'));
     const externalSecret = 'OUTSIDE-SECRET-REPRO';
     fs.writeFileSync(path.join(externalRoot, 'index.html'), externalSecret, 'utf8');
     t.after(() => fs.rmSync(externalRoot, { recursive: true, force: true }));

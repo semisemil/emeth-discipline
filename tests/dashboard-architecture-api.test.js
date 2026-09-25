@@ -64,7 +64,7 @@ function writeMemory(projectRoot, relativeRoot = 'docs/architecture', values = {
 }
 
 async function fixture(t, values = {}) {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-architecture-api-'));
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-architecture-api-'));
   const projectRoot = path.join(temporaryRoot, 'project');
   const assetRoot = path.join(temporaryRoot, 'assets');
   const registryPath = path.join(temporaryRoot, 'config', 'projects.json');

@@ -116,7 +116,7 @@ function register(projectRoot, env) {
 }
 
 test('registration, child server, project switching, refresh, and unavailable removal stay isolated', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-refresh-integration-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-refresh-integration-'));
   const appData = path.join(root, 'config');
   const env = { ...process.env, APPDATA: appData };
   const originalAppData = process.env.APPDATA;

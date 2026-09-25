@@ -8,9 +8,9 @@
   const expectedVersion = source.get('expected_version');
   let projectId = null;
   try {
-    projectId = localStorage.getItem('proofline.dashboard.project');
-    const theme = localStorage.getItem('proofline.dashboard.theme');
-    const accent = (localStorage.getItem('proofline.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
+    projectId = localStorage.getItem('emeth.dashboard.project');
+    const theme = localStorage.getItem('emeth.dashboard.theme');
+    const accent = (localStorage.getItem('emeth.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
     if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
     if (/^#[0-9a-f]{6}$/i.test(accent || '')) document.documentElement.style.setProperty('--accent', accent);
   } catch {

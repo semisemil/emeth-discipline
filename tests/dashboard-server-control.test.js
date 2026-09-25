@@ -26,7 +26,7 @@ function isolatedEnvironment(root) {
 }
 
 function tempDirectory(t) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-control-'));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-control-'));
   t.after(async () => {
     await stopServer({ directory });
     fs.rmSync(directory, { recursive: true, force: true });
@@ -95,7 +95,7 @@ test('dashboard-server CLI reserves stderr and exit 2 for invalid actions', () =
 });
 
 test('open, status, and stop have stable stopped stdout, stderr, and exit codes', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proofline-control-cli-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-control-cli-'));
   const env = isolatedEnvironment(root);
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
@@ -112,5 +112,5 @@ test('open, status, and stop have stable stopped stdout, stderr, and exit codes'
   assert.equal(stop.status, 0);
   assert.equal(JSON.parse(stop.stdout).action, 'unchanged');
   assert.equal(stop.stderr, '');
-  assert.equal(fs.existsSync(path.join(root, 'appdata', 'proofline', 'dashboard')), false);
+  assert.equal(fs.existsSync(path.join(root, 'appdata', 'emeth', 'dashboard')), false);
 });
