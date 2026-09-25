@@ -1,31 +1,49 @@
-# UI Design
+# UI character and polish
 
-## Screen purpose and space
+Give the actual information and controls their own character. Connect typography, color, proportions, spacing, icons, panels, buttons, and interaction feedback through a coherent set of design rules.
 
-Prioritize information and controls needed to understand and perform the current task. Do not expose information merely because it is related; place supplementary information where and when it is needed. Allocate space according to importance to the current task.
+## Expression suited to the product
 
-Arrange information and controls so users can find and use them when needed. Keep task-critical information visible, and place material conditions, costs, risks, and non-obvious consequences at the relevant decision point.
+Choose an expression that fits the product's subject, audience, screen purpose, information density, and interaction patterns. Directions such as “modern,” “premium,” or “clean” must translate into concrete differences in layout, typography, shapes, spacing, and state styling.
 
-## Whitespace and information density
+Do not treat the same layout with different colors and fonts as a distinct design. Where needed, choose different focal elements, information groupings, proportions, whitespace, and control arrangements.
 
-Leave unused space empty. Do not add headings, subtitles, slogans, greetings, mood-setting copy, cards, or explanations to fill space or create atmosphere.
+## Character in the necessary UI
 
-Use explanations only for information that is not apparent from the name or screen and is needed for a decision or action. Omit self-evident explanations and empty embellishment; preserve necessary accessibility information.
+Design the presentation of the headings, values, lists, options, and buttons already needed before adding slogans, evocative copy, or introductory banners for character.
 
-## Structure and UI copy
+By default, omit purely atmospheric copy on task screens and game control screens. Preserve text needed to identify objects, communicate states, actions, conditions, costs, and outcomes, or resolve errors. In product introductions, distinguish content that conveys actual reasons to buy or product functionality from atmospheric copy.
 
-Make available actions, choices, and states apparent through structure and visual presentation, adding explanations as needed for understanding.
+Choose the amount of decoration to suit the screen without crowding out actual information and controls.
 
-Use concise, conventional labels for inputs, actions, and distinct outcomes, with consistent wording for equivalent roles. Expose terminology from the development and review process only when it describes an actual product state users need to know.
+## Relationships and visual emphasis
 
-Use one heading or label when one is sufficient. Do not add decorative English headings or subtitles.
+Within a product, apply the same visual rules to the same roles, and make different roles and states recognizably distinct. Vary size, proportions, spacing, and emphasis so that important information and actions stand out sufficiently. Adjust the remaining elements to support those differences. Do not make every element similar in size and emphasis for the sake of consistency.
 
-## Format suited to the information type
+### Typography
 
-Build on formats familiar to readers and conventional for the information type, making the needed content easy to find and understand. Provide both accurate content and an appropriate form of presentation.
+Define size, weight, width, line height, line breaks, and alignment alongside the typeface. Use visual weight to distinguish the roles and importance of headings, names, numeric values, units, body text, and supporting information.
 
-## Emphasis, accessibility, and action feedback
+### Color
 
-Choose emphasis to suit the screen's context while making importance and state distinguishable. Visible labels, accessible names, icons, layout, order, color, and state cues must convey the same meaning. Provide accessible names and nonvisual equivalents for critical identity, order, state, instructions, and consequences.
+Distinguish color roles for backgrounds, surfaces, primary text, supporting information, primary actions, selections, and warnings. Adjust the prominence of strong colors to suit what needs emphasis, and convey state differences through cues beyond color.
 
-Use error feedback to help users understand the location and cause of a problem and choose an available next action.
+### Spacing and proportions
+
+Distinguish spacing within a group from spacing between groups. Do not consider the layout finished simply because every area has the same padding. Choose whitespace and information density to suit the screen's purpose.
+
+### Icons, panels, and buttons
+
+Coordinate stroke widths, corner shapes, internal spacing, borders, and surface treatments. Do not turn every piece of information into a card. Match button emphasis to the importance of the action, and distinguish interactive elements from information to read.
+
+### Interaction feedback
+
+Apply the same design rules to selected, pressed, disabled, loading, error, and completed states, as well as panel opening. Match the scale and speed of feedback to the action's role, and do not leave individual states in default component styling.
+
+## Polish in the actual screen
+
+The UI itself must retain the chosen design's character even when the logo and atmospheric copy are disregarded. Do not actually delete necessary feature names or explanations for this check.
+
+Check not only the overall layout but also text baselines, the optical centers of icons, internal button spacing, long names, numbers and units, and line wrapping on narrow screens. Inspect the initial screen, key selection states, and open menus and panels using content in the actual language and at actual lengths.
+
+When a problem appears, specify the element to change and the adjustment to its size, spacing, alignment, emphasis, or state styling instead of asking to “make it more polished.”
