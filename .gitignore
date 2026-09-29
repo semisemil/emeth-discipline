@@ -17,3 +17,6 @@ CONTEXT.md
 
 # Local benchmark runs, analysis and report archives
 /.local/
+
+# Local architecture memory
+/docs/architecture/
