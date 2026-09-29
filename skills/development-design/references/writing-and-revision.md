@@ -1,25 +1,11 @@
-# Writing and revising a Design
+# Write a Design
 
-## Normalize the design
+An early draft briefly proposes the outcome, relevant flow, responsibilities, assumptions, and open choices. Expand as decisions settle. Leave result-preserving implementation details to implementation.
 
-A discussion summary preserves the discussion's course; a Design records its currently valid result.
+Requirements preserve the user's intended outcome, usage, and constraints. Their basis is the user's request, an existing contract, or a decision within delegated authority. Other additions remain proposals.
 
-Keep document status in metadata and execution results in the completion report.
+A ready Design contains the complete implementation contract without relying on chat history or Memory. Distinguish required behavior from implementation choices. Identify existing code and proposed locations only where needed.
 
-## Build the reading order
+Trace affected interactions to their final consumer, including transformations, reused state, retries, optional paths, and compatibility. Include a concrete case when individual correctness would not establish the final result and preserved state. Retain required verification and its applicability; leave other methods open.
 
-Order the needed content from the intended result through required behavior and consequential design decisions to open choices. Use sections where distinct contracts or choices need separate explanation.
-
-For existing systems, identify files and symbols/sections from inspected code where needed to locate the change or explain responsibilities and affected contracts. Include current roles only where they explain the intended change. Mark new locations as proposed and unresolved locations as open choices.
-
-## State the contract locally
-
-Add concrete inputs, conditions, expected observations, or interaction boundaries where needed to distinguish correct behavior from plausible wrong results, referencing the governing behavior rule. Retain user/project verification obligations with their source and applicability; leave other verification methods open.
-
-Required behavior remains interpretable independently of proposed structure and optional implementation details.
-
-Where locally correct steps may combine into a wrong result, include a concrete input/state and final observations, including unaffected data.
-
-## Choose the expression
-
-For diagrams, use fenced Mermaid: `flowchart`, `sequenceDiagram`, or `stateDiagram-v2`.
+Keep readiness in metadata and execution results in the completion report. Use fenced Mermaid for diagrams.

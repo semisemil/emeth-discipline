@@ -1,44 +1,22 @@
 ---
 name: development-design
-description: Develop a software idea or partial design into an implementation-ready Design through explanation, drafts, comparisons, and decisions. Use for development planning, technical design, or Design revision and lifecycle work.
+description: Develop software ideas into Designs. Use for development planning, technical design, and Design revision or status changes.
 ---
 
 # Development Design
 
-Develop the user's idea into the single current Design and implementation contract. A direct design request ends with design. Apply [shared discipline](../rules/SKILL.md), reading it if absent from context.
+Maintain one current Design. A design request ends with design. Apply [shared rules](../rules/SKILL.md) if absent from context.
 
-## Start from the current idea
+## Develop
 
-Resolve an explicit Design ID/path directly; for a new request, inspect plausible same-goal Designs. For lifecycle-only work, follow [status changes](references/document-status.md).
+Use the named Design or find an existing one with the same goal. For status-only work, use [status changes](references/document-status.md).
 
-Ground the design in the intended user and scenario, settled decisions, and affected existing contracts. Resolve factual gaps from project/domain context, implementation, and connected Architecture Memory; an absent Memory match does not establish absence of constraints. Research external approaches when local evidence cannot settle a choice, citing what influences it.
+Discuss the next consequential open choice whose prerequisites are settled. Present a brief proposal with relevant conflicts and tradeoffs. Resolve factual gaps from existing contracts, code, and connected [Architecture Memory](../architecture-memory/SKILL.md). Use external evidence when local sources are insufficient. Reopen settled choices when intent or evidence changes.
 
-## Develop the design together
+## Record
 
-Start an unsettled design with a concrete provisional proposal: relevant flow, responsibilities, assumptions, and open choices. Scale its depth to the feature and the user's understanding.
+When drafting or revising, use [Design writing](references/writing-and-revision.md), [shared writing rules](../rules/references/writing-and-revision.md), and [Focus](../rules/focus.md). Reuse guidance already in context.
 
-Address the most consequential open choice whose prerequisites are settled, including conflicts and failure cases the user has not raised. Recommend an approach with its affected behavior and the evidence or tradeoffs needed to resolve the choice; compare alternatives or explain a pattern's fit when that changes the decision.
+Set [readiness](references/document-status.md), then save through [creation](references/document-operations.md) or [editing](references/document-editing.md). Use `--memory off` when recording is prohibited; otherwise capture durable context through Architecture Memory. For `EPERM`/`EACCES`, follow [sandbox recovery](../dashboard-server/references/sandbox-setup.md).
 
-Incorporate answers into the proposal and explain their effects on dependent choices. Reopen settled choices when evidence or user intent changes. Reversible details may remain stated assumptions; leave result-preserving algorithms and internal representations to implementation.
-
-Trace interactions to their final consumer, including earlier transformations, reused state, retries, optional behavior, and affected compatibility.
-
-## Write and revise the Design
-
-Before drafting or revising the body, read [Focus](../rules/focus.md) for content-block expression, [shared document writing and revision](../rules/references/writing-and-revision.md), and [Design writing and revision](references/writing-and-revision.md) for the design-specific structure and contract. Keep the implementation contract complete here so implementation and review need neither conversation history nor requirements stored only in Memory.
-
-Reflect design changes in every affected contract.
-
-## Set readiness metadata
-
-Set frontmatter readiness after normalization. Use `ready` when the intended result, scope, consequential structure/behavior, affected contracts, and decisive expected observations are established, with material choices accepted or resolved under delegated authority. Remaining implementation choices must preserve the required outcome and constraints.
-
-Use `draft` for a missing material decision or fact, or a user-requested draft; state the blocker and needed resolution in the relevant section. Actual external prerequisites may justify `blocked`. Readiness does not establish execution authorization or implementation evidence.
-
-## Save and finish
-
-Save through [creation](references/document-operations.md) or [editing](references/document-editing.md), reading only the relevant guide. For `EPERM`/`EACCES`, follow [sandbox recovery](../dashboard-server/references/sandbox-setup.md). Add `--memory off` when recording is prohibited.
-
-When connected and recording is permitted, update [Architecture Memory](../architecture-memory/SKILL.md) with new durable findings.
-
-Report the saved Design, material open decisions, and any failures.
+Report the saved Design, material open decisions, and failures briefly.

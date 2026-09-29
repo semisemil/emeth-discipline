@@ -1,5 +1,11 @@
 # Change document status
 
+## Readiness
+
+Use `draft` while a material fact or decision is unresolved, or when requested; name the missing resolution. Use `ready` when scope, required behavior, affected contracts, and acceptance conditions are established, with material choices accepted or resolved under delegated authority. Remaining implementation choices must preserve these outcomes. Use `blocked` for actual external prerequisites. Readiness neither authorizes execution nor proves implementation.
+
+## Status changes
+
 For status changes, pass the document ID and target state directly:
 
 ```text
