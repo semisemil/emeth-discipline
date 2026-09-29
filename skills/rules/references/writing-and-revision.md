@@ -8,13 +8,13 @@ Apply authoring directions to the work; the body records the document's subject,
 
 ## Build the reading order
 
-Scale depth to the subject. Give each subsection one coherent subject rather than combining distinct topics. Repeat content only where needed for understanding; otherwise reference its primary location. Place detailed investigation and comparisons after the content they support.
+Scale depth to the subject. Give each subsection one coherent subject rather than combining distinct topics. Repeat content only where needed for understanding; otherwise reference its primary location. Follow conclusions with only the investigation detail needed to assess them.
 
 ## Keep related information together
 
 Keep each behavior's actor, conditions, defaults, exceptions, final result, and preserved state together. Define terms where used. Explain shared mechanisms once and link to them, retaining the premises and branch outcomes needed to interpret each local rule.
 
-Keep decisive reasons, assumptions, alternatives, accepted costs, and revisit conditions beside each choice.
+Keep beside each choice the reasons, assumptions, alternatives, accepted costs, or revisit conditions that affect its selection or validity.
 
 Preserve requested examples; add others for distinct boundaries or likely misinterpretations.
 
@@ -24,7 +24,7 @@ Use labeled phrases for definitions, attributes, scope, and states; sentences fo
 
 Use **bold** and *italics* for emphasis.
 
-Use each applicable form below, showing its relevant conditions and outcomes:
+Choose prose or a form below according to which makes the relationship easiest to understand, preserving relevant conditions and outcomes:
 
 | Relationship | Form |
 |---|---|
@@ -35,7 +35,7 @@ Use each applicable form below, showing its relevant conditions and outcomes:
 | State transitions | State diagram with triggers and conditions. |
 | Ordered logic | Short pseudocode separating required behavior from implementation examples. |
 
-Visualize relationships with charts, diagrams, or other forms suited to the output medium. Add prose only for information the form cannot convey.
+Add prose alongside a structured form only for information that form cannot convey.
 
 ## Complete the revision
 

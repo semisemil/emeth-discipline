@@ -17,7 +17,7 @@ Ground the design in the intended user and scenario, settled decisions, and affe
 
 Start an unsettled design with a concrete provisional proposal: relevant flow, responsibilities, assumptions, and open choices. Scale its depth to the feature and the user's understanding.
 
-Address the most consequential open choice whose prerequisites are settled, including conflicts and failure cases the user has not raised. Recommend an approach with its affected behavior, evidence, benefit, and cost; compare alternatives or explain a pattern's fit when that changes the decision.
+Address the most consequential open choice whose prerequisites are settled, including conflicts and failure cases the user has not raised. Recommend an approach with its affected behavior and the evidence or tradeoffs needed to resolve the choice; compare alternatives or explain a pattern's fit when that changes the decision.
 
 Incorporate answers into the proposal and explain their effects on dependent choices. Reopen settled choices when evidence or user intent changes. Reversible details may remain stated assumptions; leave result-preserving algorithms and internal representations to implementation.
 

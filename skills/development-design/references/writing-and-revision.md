@@ -8,18 +8,13 @@ Keep document status in metadata and execution results in the completion report.
 
 ## Build the reading order
 
-Use this default progression, with headings in the project's terminology:
+Order the needed content from the intended result through required behavior and consequential design decisions to open choices. Use sections where distinct contracts or choices need separate explanation.
 
-- Definition: the feature or change.
-- Behavior: actions, observable results, and conditions.
-- Change design: where and how, responsibilities, data flow, affected contracts, and structural reasons.
-- Open decisions: choices, candidates, consequences, and needed resolution.
-
-For existing systems, identify each affected file and symbol/section from inspected code, its current role, and intended change. Mark new locations as proposed and unresolved locations as open choices.
+For existing systems, identify files and symbols/sections from inspected code where needed to locate the change or explain responsibilities and affected contracts. Include current roles only where they explain the intended change. Mark new locations as proposed and unresolved locations as open choices.
 
 ## State the contract locally
 
-Verification sections reference behavior rules and add concrete inputs, conditions, expected observations, and interaction boundaries. Retain user/project verification obligations with their source and applicability; leave other verification methods open.
+Add concrete inputs, conditions, expected observations, or interaction boundaries where needed to distinguish correct behavior from plausible wrong results, referencing the governing behavior rule. Retain user/project verification obligations with their source and applicability; leave other verification methods open.
 
 Required behavior remains interpretable independently of proposed structure and optional implementation details.
 
@@ -27,6 +22,4 @@ Where locally correct steps may combine into a wrong result, include a concrete 
 
 ## Choose the expression
 
-Use newlines after sentences and blank lines between paragraphs. Group related sentences; favor readability over line/token savings.
-
-Use fenced Mermaid diagrams: `flowchart`, `sequenceDiagram`, or `stateDiagram-v2`.
+For diagrams, use fenced Mermaid: `flowchart`, `sequenceDiagram`, or `stateDiagram-v2`.
