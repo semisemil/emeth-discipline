@@ -20,7 +20,7 @@ async function run(input) {
   try {
     const runtime = require('../lib/rules-runtime');
     if (event === 'UserPromptSubmit') {
-      const mode = runtime.changeMode(input);
+      const mode = runtime.submit(input);
       if (mode.systemMessage) response.systemMessage = mode.systemMessage;
       if (mode.additionalContext) contexts.push(mode.additionalContext);
     } else {
