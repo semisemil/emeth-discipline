@@ -7,10 +7,19 @@ const { resolveContract } = require('../../../dashboard/records/development-cont
 
 function requireValue(condition, message) { if (!condition) throw new Error(message); }
 
-function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reasoning }) {
+function contractFor(design, spec) {
   requireValue(!(design && spec), 'Supply one Design or legacy Spec ID');
   const contract = design || spec;
   requireValue(/^(?:DESIGN|SPEC)-\d{4,}$/.test(contract), 'Supply a Design or legacy Spec ID');
+  return contract;
+}
+
+function implementationPrompt(contract) {
+  return `Read ${JSON.stringify(path.resolve(__dirname, '..', 'implement.md'))} and follow it to implement ${contract} in this session.`;
+}
+
+function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reasoning }) {
+  const contract = contractFor(design, spec);
   requireValue([cwd, projectRoot, projectId, model, reasoning].every(value => typeof value === 'string' && value.trim()),
     'Supply the current project, matching saved project, model, and reasoning');
   const root = fs.realpathSync(cwd);
@@ -18,16 +27,32 @@ function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reaso
   requireValue(path.relative(root, savedRoot) === '', 'Saved project must match the current project folder');
   resolveContract(root, contract);
   return {
-    prompt: `Read ${JSON.stringify(path.resolve(__dirname, '..', 'implement.md'))} and follow it to implement ${contract} in this session.`,
+    prompt: implementationPrompt(contract),
     model,
     thinking: reasoning,
     target: { type: 'project', projectId, environment: { type: 'local' } },
   };
 }
 
+// Claude Code runs the implementation as a subagent in the current folder, so no saved project or effort is passed.
+function prepareClaudeLaunch({ cwd, design, spec, model }) {
+  const contract = contractFor(design, spec);
+  requireValue(typeof cwd === 'string' && cwd.trim(), 'Supply the current project');
+  requireValue(model === undefined || ['sonnet', 'opus', 'haiku', 'fable'].includes(model),
+    'Supply a Claude Code agent model: sonnet, opus, haiku, or fable');
+  resolveContract(fs.realpathSync(cwd), contract);
+  return {
+    subagent_type: 'general-purpose',
+    description: `Implement ${contract}`,
+    // A subagent cannot ask the user, so it returns blockers instead of deciding them.
+    prompt: `${implementationPrompt(contract)} You cannot ask the user. If the contract needs a Design revision or a user decision, or an Emeth command fails, stop: do not revise the Design or change its status another way. Report the blocker, completed changes, and verification to the calling session.`,
+    ...(model ? { model } : {}),
+  };
+}
+
 function parseArgs(argv) {
   const names = { '--cwd': 'cwd', '--design': 'design', '--spec': 'spec', '--project-root': 'projectRoot',
-    '--project-id': 'projectId', '--model': 'model', '--reasoning': 'reasoning' };
+    '--project-id': 'projectId', '--model': 'model', '--reasoning': 'reasoning', '--host': 'host' };
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const key = names[argv[i]];
@@ -38,8 +63,12 @@ function parseArgs(argv) {
 }
 
 if (require.main === module) {
-  try { process.stdout.write(`${JSON.stringify(prepareLaunch(parseArgs(process.argv.slice(2))), null, 2)}\n`); }
-  catch (error) { process.stderr.write(`Implementation launch: ${error.message}\n`); process.exitCode = 1; }
+  try {
+    const { host, ...options } = parseArgs(process.argv.slice(2));
+    requireValue(host === undefined || host === 'codex' || host === 'claude', 'Supply --host codex or claude');
+    const launch = host === 'claude' ? prepareClaudeLaunch(options) : prepareLaunch(options);
+    process.stdout.write(`${JSON.stringify(launch, null, 2)}\n`);
+  } catch (error) { process.stderr.write(`Implementation launch: ${error.message}\n`); process.exitCode = 1; }
 }
 
-module.exports = { prepareLaunch, parseArgs };
+module.exports = { prepareLaunch, prepareClaudeLaunch, parseArgs };

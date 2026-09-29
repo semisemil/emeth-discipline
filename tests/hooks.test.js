@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeEmethPrompt } = require('../lib/rules-prompt');
+const { composeEmethPrompt, composeClaudePrompt } = require('../lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '..');
 const hook = path.join(repoRoot, 'hooks/run.js');
@@ -45,7 +45,7 @@ test('mode changes and the memory connection share one response without losing e
   const changed = output(f.run({ prompt: '$emeth-discipline focus' }));
   assert.match(changed.systemMessage, /focus/);
   assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('focus') + '\n\n'));
-  assert.match(changed.hookSpecificOutput.additionalContext, /architecture-dependent work/);
+  assert.match(changed.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
   const next = output(f.run({ prompt: '$emeth-discipline core' }));
   assert.equal(next.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
@@ -54,10 +54,10 @@ test('mode changes and the memory connection share one response without losing e
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
   const f = fixture(t); f.memory();
   const response = output(f.run({ prompt: '$emeth-discipline:development-design' }));
-  assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nWhile /);
+  assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nProject architecture memory is connected/);
   f.write('.emeth/issues', 'This is not a directory.');
   const fallback = output(f.run({ session_id: 'session-b', prompt: '$emeth-discipline:issue-ledger' }));
-  assert.match(fallback.hookSpecificOutput.additionalContext, /^While /);
+  assert.match(fallback.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
   assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /Next issue/);
 });
 
@@ -101,7 +101,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
   });
   const response = output(result);
   assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('normal', { pluginRoot: plugin }) + '\n\n'));
-  assert.match(response.hookSpecificOutput.additionalContext, /architecture-dependent work/);
+  assert.match(response.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   assert.match(result.stderr, /dashboard unavailable/);
 });
 
@@ -112,7 +112,7 @@ test('a prompt failure reports the error without consuming an undelivered memory
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
   assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);
-  assert.match(response.hookSpecificOutput.additionalContext, /^While /);
+  assert.match(response.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
   assert.match(result.stderr, /normal\.md/);
 });
 
@@ -132,4 +132,70 @@ test('malformed hook input fails before creating state', (t) => {
     assert.match(result.stderr, /Emeth Discipline hook failed/);
   }
   assert.equal(fs.existsSync(f.env.PLUGIN_DATA), false);
+});
+
+function claudeEnvironment(f) {
+  return {
+    PLUGIN_ROOT: '', PLUGIN_DATA: '',
+    CLAUDE_PLUGIN_ROOT: repoRoot,
+    CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
+  };
+}
+
+test('Claude applies fixed rules across lifecycle events without reading or changing Codex modes', (t) => {
+  const f = fixture(t);
+  const env = claudeEnvironment(f);
+  f.write('config/emeth/config.json', JSON.stringify({ defaultMode: 'core' }));
+  f.write('plugin-data/rules-mode/session-a.json', JSON.stringify({ mode: 'focus' }));
+  for (const source of ['startup', 'clear', 'compact']) {
+    const response = output(f.run({ hook_event_name: 'SessionStart', source }, { env }));
+    assert.equal(response.hookSpecificOutput.additionalContext, composeClaudePrompt());
+  }
+  assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'child' }, { env }))
+    .hookSpecificOutput.additionalContext, composeClaudePrompt());
+  assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' }, { env })), {});
+  for (const prompt of ['$emeth-discipline focus', '$emeth-discipline default core', '/emeth-discipline focus']) {
+    assert.deepEqual(output(f.run({ prompt }, { env })), {});
+  }
+  assert.equal(fs.existsSync(env.CLAUDE_PLUGIN_DATA), false);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.root, 'config/emeth/config.json'))), { defaultMode: 'core' });
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.env.PLUGIN_DATA, 'rules-mode/session-a.json'))), { mode: 'focus' });
+});
+
+test('host-specific Memory state stays separate for the same project and session', (t) => {
+  const f = fixture(t); f.memory();
+  const claudeEnv = claudeEnvironment(f);
+  const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: repoRoot };
+  const codex = output(f.run({ prompt: '$emeth-discipline focus' }, { env: codexEnv }));
+  assert.match(codex.systemMessage, /focus/);
+  const claude = output(f.run({ prompt: 'Continue.' }, { env: claudeEnv }));
+  assert.match(claude.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: claudeEnv })), {});
+  assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: codexEnv })), {});
+  for (const directory of [f.env.PLUGIN_DATA, claudeEnv.CLAUDE_PLUGIN_DATA]) {
+    assert.equal(fs.readdirSync(path.join(directory, 'architecture-notices')).length, 1);
+  }
+  assert.equal(fs.existsSync(path.join(claudeEnv.CLAUDE_PLUGIN_DATA, 'rules-mode')), false);
+});
+
+test('Claude slash skill invocations get document numbers without interpreting mode commands', (t) => {
+  const f = fixture(t);
+  const env = claudeEnvironment(f);
+  const response = output(f.run({ prompt: '/emeth-discipline:development-design Plan a change.' }, { env }));
+  assert.equal(response.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
+  assert.deepEqual(output(f.run({ prompt: '$emeth-discipline:development-design' }, { env })), {});
+});
+
+test('Claude prompt failures use Claude plugin logs and preserve the Memory connection', (t) => {
+  const f = fixture(t); f.memory();
+  const plugin = copyPlugin(f);
+  fs.unlinkSync(path.join(plugin, 'skills/rules/claude-code.md'));
+  const env = { ...claudeEnvironment(f), CLAUDE_PLUGIN_ROOT: plugin };
+  const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
+    env, hook: path.join(plugin, 'hooks/run.js'),
+  });
+  assert.match(output(result).hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  const log = fs.readFileSync(path.join(env.CLAUDE_PLUGIN_DATA, 'log/emeth-hook.log'), 'utf8');
+  assert.match(log, /claude-code\.md/);
+  assert.equal(fs.existsSync(path.join(f.root, '.codex/log')), false);
 });

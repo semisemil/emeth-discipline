@@ -7,7 +7,8 @@ const path = require('node:path');
 const test = require('node:test');
 
 const repoRoot = path.resolve(__dirname, '..');
-const hooksPath = path.join(repoRoot, 'hooks', 'hooks.json');
+const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
+const hooksPath = path.join(repoRoot, manifest.hooks);
 const starter = path.join(repoRoot, 'skills', 'issue-ledger', 'assets', 'state-starter');
 
 test('SessionStart uses the global server hook and has no project dashboard refresh hook', () => {

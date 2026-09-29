@@ -138,7 +138,9 @@ test('a missing selected mode fails and records the exact component path', (t) =
   fs.mkdirSync(hooksDir, { recursive: true });
   fs.mkdirSync(skillDir, { recursive: true });
   copyRuntime(tempPlugin);
-  fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', 'SKILL.md'), path.join(skillDir, 'SKILL.md'));
+  for (const file of ['SKILL.md', 'codex.md']) {
+    fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', file), path.join(skillDir, file));
+  }
 
   const result = runLoader(env, 'session-a', 'startup', path.join(hooksDir, 'run.js'));
   assert.equal(result.status, 1);
@@ -166,7 +168,7 @@ test('a missing baseline fails and records the exact component path', (t) => {
   assert.match(entry.filePath, /rules[\\/]SKILL\.md$/);
 });
 
-test('a missing response slot fails and records the baseline path', (t) => {
+test('a missing response slot fails and records the Codex rules path', (t) => {
   const { root, env } = fixture(t);
   const tempPlugin = path.join(root, 'plugin');
   const hooksDir = path.join(tempPlugin, 'hooks');
@@ -174,15 +176,17 @@ test('a missing response slot fails and records the baseline path', (t) => {
   fs.mkdirSync(hooksDir, { recursive: true });
   fs.mkdirSync(skillDir, { recursive: true });
   copyRuntime(tempPlugin);
-  const baseline = fs.readFileSync(path.join(repoRoot, 'skills', 'rules', 'SKILL.md'), 'utf8')
+  const baseline = fs.readFileSync(path.join(repoRoot, 'skills', 'rules', 'codex.md'), 'utf8')
     .replace('<!-- emeth-response-mode -->', '');
-  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), baseline, 'utf8');
-  fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', 'normal.md'), path.join(skillDir, 'normal.md'));
+  fs.writeFileSync(path.join(skillDir, 'codex.md'), baseline, 'utf8');
+  for (const file of ['SKILL.md', 'normal.md']) {
+    fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', file), path.join(skillDir, file));
+  }
 
   const result = runLoader(env, 'session-a', 'startup', path.join(hooksDir, 'run.js'));
   assert.equal(result.status, 1);
   const logPath = path.join(env.HOME, '.codex', 'log', 'emeth-hook.log');
   const entry = JSON.parse(fs.readFileSync(logPath, 'utf8').trim());
   assert.equal(entry.code, 'INVALID_MODE_SLOT');
-  assert.match(entry.filePath, /rules[\\/]SKILL\.md$/);
+  assert.match(entry.filePath, /rules[\\/]codex\.md$/);
 });

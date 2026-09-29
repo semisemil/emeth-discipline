@@ -1,5 +1,6 @@
 ---
 name: figure-it-out
+disable-model-invocation: true
 description: Think through a project change and carry it through the full Emeth Discipline development workflow.
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: architecture-memory-update
+disable-model-invocation: true
 description: Reconcile connected architecture memory with Git, including a minimal collection started by a Design save.
 ---
 

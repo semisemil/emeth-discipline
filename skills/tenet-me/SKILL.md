@@ -1,6 +1,8 @@
 ---
 name: tenet-me
+disable-model-invocation: true
 description: Review a Design, legacy plan, or implementation through backward prerequisite tracing and forward counterexamples. Use when explicitly invoked or figure-it-out owns the workflow.
+argument-hint: "[DESIGN-ID or target]"
 ---
 
 # Tenet Me

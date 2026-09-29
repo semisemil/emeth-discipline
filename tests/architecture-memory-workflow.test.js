@@ -204,7 +204,9 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   assert.equal(fs.existsSync(dataRoot), false);
   initialize(f);
   const first = notice(event, { dataRoot });
+  assert.match(first, /^Project architecture memory is connected at "docs\/architecture" via \.emeth\/architecture\.json\. Skill: /);
   assert.match(first, /skills.*architecture-memory.*SKILL.md/);
+  assert.doesNotMatch(first, /read |lookup|mechanical|architecture-dependent|durable|Reuse/);
   assert.equal(notice(event, { dataRoot }), '');
   assert.match(notice({ ...event, hook_event_name: 'SessionStart', source: 'compact' }, { dataRoot }), /SKILL.md/);
   assert.match(notice({ ...event, hook_event_name: 'SubagentStart', agent_id: 'a1' }, { dataRoot }), /SKILL.md/);
@@ -214,6 +216,12 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   const manifest = f.manifest(); manifest.managed = false;
   f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
   assert.match(notice(event, { dataRoot }), /disabled/);
+  assert.equal(notice(event, { dataRoot }), '');
+  manifest.managed = true;
+  f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
+  assert.equal(notice(event, { dataRoot }), first);
+  fs.unlinkSync(path.join(f.root, 'docs/architecture/.architecture-memory/manifest.json'));
+  assert.equal(notice(event, { dataRoot }), 'Project architecture memory connection is unavailable or disabled.');
   assert.equal(notice(event, { dataRoot }), '');
 });
 
@@ -330,7 +338,8 @@ test('registered hook CLI emits bounded valid context and stays empty without a 
   const f = fixture(t);
   const plugin = path.resolve(__dirname, '..');
   const hook = path.join(plugin, 'hooks/run.js');
-  const config = JSON.parse(fs.readFileSync(path.join(plugin, 'hooks/hooks.json')));
+  const manifest = JSON.parse(fs.readFileSync(path.join(plugin, '.codex-plugin/plugin.json')));
+  const config = JSON.parse(fs.readFileSync(path.join(plugin, manifest.hooks)));
   for (const event of ['SessionStart', 'SubagentStart', 'UserPromptSubmit']) {
     assert.ok(config.hooks[event].some((group) => group.hooks.some((command) => command.command.includes('/hooks/run.js'))));
   }

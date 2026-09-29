@@ -50,7 +50,7 @@ test('the first Design is saved, indexed and executable with a minimal connected
   assert.equal(manifest.documents.length, 1);
   assert.equal(manifest.git_checkpoint.revision, null);
   assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory/work/state.json')), false);
-  assert.match(notice({ cwd: f.project, thread_id: 'design-test' }, { dataRoot: path.join(f.root, 'hooks') }), /new durable project context/);
+  assert.match(notice({ cwd: f.project, thread_id: 'design-test' }, { dataRoot: path.join(f.root, 'hooks') }), /Project architecture memory is connected/);
   const launch = prepareLaunch({ cwd: f.project, design: 'DESIGN-0001', projectRoot: f.project, projectId: 'project', model: 'chosen-model', reasoning: 'high' });
   assert.equal(launch.prompt, `Read ${JSON.stringify(path.resolve(__dirname, '../skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`);
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.project }).publicIndex;

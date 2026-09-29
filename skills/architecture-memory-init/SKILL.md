@@ -1,5 +1,6 @@
 ---
 name: architecture-memory-init
+disable-model-invocation: true
 description: Initialize human-readable architecture memory from an existing codebase.
 ---
 

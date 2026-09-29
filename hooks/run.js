@@ -5,12 +5,14 @@ const fs = require('node:fs');
 const { migrateWorkingProject, migrateDirectory } = require('../lib/storage-migration');
 const path = require('node:path');
 const { logDiagnostic } = require('../lib/rules-state');
+const host = require('../lib/host');
 
 async function run(input) {
   const event = input.hook_event_name;
   if (!['SessionStart', 'SubagentStart', 'UserPromptSubmit'].includes(event)) return {};
   migrateWorkingProject(typeof input.cwd === 'string' ? input.cwd : process.cwd());
-  if (process.env.PLUGIN_DATA) migrateDirectory(process.env.PLUGIN_DATA, 'proofline-mode', 'rules-mode');
+  const data = host.dataDir();
+  if (host.name() === 'codex' && data) migrateDirectory(data, 'proofline-mode', 'rules-mode');
   const contexts = [];
   const response = {};
   let failure;

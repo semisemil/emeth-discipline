@@ -9,13 +9,12 @@ const repoRoot = path.resolve(__dirname, '..');
 const skillPaths = [
   path.join(repoRoot, 'skills', 'start-implementation', 'SKILL.md'),
   path.join(repoRoot, 'skills', 'start-implementation', 'implement.md'),
-  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'SKILL.md'),
-  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'implement.md'),
-  path.join(repoRoot, 'skills', 'start-parallel-implementation', 'design-slice.md'),
+  path.join(repoRoot, 'skills', 'start-implementation', 'references', 'codex.md'),
+  path.join(repoRoot, 'skills', 'start-implementation', 'references', 'claude-code.md'),
 ];
 
 test('implementation skills are explicit-only', () => {
-  for (const name of ['start-implementation', 'start-parallel-implementation']) {
+  for (const name of ['start-implementation']) {
     const metadata = fs.readFileSync(
       path.join(repoRoot, 'skills', name, 'agents', 'openai.yaml'),
       'utf8',

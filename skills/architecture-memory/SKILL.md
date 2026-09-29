@@ -1,15 +1,15 @@
 ---
 name: architecture-memory
-description: Retrieve project conditions and decisions for design or implementation; preserve durable context in connected project memory, including ordinary project conversations.
+description: Use when design, implementation, or project conversation needs project purpose, operating conditions, domain meanings, or reasons for prior decisions, or when new context needs preservation for later work.
 ---
 
 # Architecture Memory
 
-A Design save starts minimal Memory unless recording is disabled. Optional `architecture-memory-init` surveys an existing codebase; it is not a prerequisite for recording. Enter through the project's hook connection or an explicit request. With no connection, do not scan or initialize merely because architecture is mentioned. Read-only/no-memory requests suppress writes; explicit disabled settings stay disabled.
+A Design save starts minimal Memory unless recording is disabled. Optional `architecture-memory-init` surveys an existing codebase; it is not a prerequisite for recording. With no connection, do not scan or initialize merely because architecture is mentioned. Read-only/no-memory requests suppress writes; explicit disabled settings stay disabled.
 
 ## Retrieve for a decision
 
-Use Memory when work depends on project purpose, operating conditions, responsibility boundaries, or prior decisions; mechanical changes need no lookup. Search domain terms and affected paths, then read the necessary sections:
+Reuse context from the conversation and inspected materials when it is sufficient for the current decision. When context is missing and Memory is connected and enabled, search domain terms and affected paths, then read only the sections needed to fill that gap:
 
 ```text
 node <skill-root>/scripts/memory.js search --project-root <project> --query "<topic>" --path <code-path>

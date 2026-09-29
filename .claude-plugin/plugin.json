@@ -1,0 +1,14 @@
+{
+  "name": "emeth-discipline",
+  "version": "0.16.0",
+  "description": "요청 범위를 지키고 직접 확인한 근거로 작업하는 공통 규칙, 설계, 이슈와 프로젝트 맥락 관리 스킬입니다.",
+  "author": {
+    "name": "semisemil",
+    "url": "https://github.com/semisemil"
+  },
+  "homepage": "https://github.com/semisemil/emeth-discipline",
+  "repository": "https://github.com/semisemil/emeth-discipline",
+  "license": "MIT",
+  "keywords": ["quality", "verification", "refactoring", "claude-code"],
+  "hooks": "./hooks/claude-hooks.json"
+}

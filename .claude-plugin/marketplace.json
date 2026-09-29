@@ -1,0 +1,14 @@
+{
+  "name": "emeth-discipline",
+  "owner": { "name": "semisemil" },
+  "metadata": {
+    "description": "Emeth Discipline for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "emeth-discipline",
+      "source": "./",
+      "description": "공통 품질 규칙, 설계, 이슈와 프로젝트 맥락 관리"
+    }
+  ]
+}

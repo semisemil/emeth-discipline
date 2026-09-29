@@ -7,7 +7,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const read = (...parts) => fs.readFileSync(path.join(repoRoot, ...parts), 'utf8');
 const skills = ['architecture-memory-init', 'architecture-memory', 'architecture-memory-update'];
 
-test('architecture skills disable global implicit invocation; initialized projects use the local connection', () => {
+test('memory context is implicitly discoverable; initialization and reconciliation require explicit invocation', () => {
   for (const name of skills) {
     const source = read('skills', name, 'SKILL.md');
     const metadata = read('skills', name, 'agents', 'openai.yaml');
@@ -15,9 +15,23 @@ test('architecture skills disable global implicit invocation; initialized projec
     assert.ok(frontmatter, name);
     assert.ok(frontmatter[1].includes('name: ' + name));
     assert.match(frontmatter[1], /^description:\s*\S.+$/m);
-    assert.ok(metadata.includes('allow_implicit_invocation: false'));
+    assert.match(metadata, new RegExp('^\\s*allow_implicit_invocation: ' + (name === 'architecture-memory') + '$', 'm'));
     assert.ok(metadata.includes('$' + name));
   }
+});
+
+test('description owns selection while the body reuses sufficient context and preserves execution constraints', () => {
+  const main = read('skills', 'architecture-memory', 'SKILL.md');
+  const description = main.match(/^description: (.*)$/m)[1];
+  for (const trigger of ['design', 'implementation', 'project conversation', 'project purpose', 'operating conditions', 'domain meanings', 'reasons for prior decisions', 'preservation for later work']) {
+    assert.ok(description.includes(trigger), trigger);
+  }
+  assert.match(main, /Reuse context from the conversation and inspected materials when it is sufficient for the current decision/);
+  assert.match(main, /When context is missing and Memory is connected and enabled/);
+  assert.match(main, /read only the sections needed to fill that gap/);
+  assert.match(main, /With no connection, do not scan or initialize merely because architecture is mentioned/);
+  assert.match(main, /Read-only\/no-memory requests suppress writes; explicit disabled settings stay disabled/);
+  assert.doesNotMatch(main, /Enter through|mechanical/);
 });
 
 test('all workflow reference pointers resolve', () => {

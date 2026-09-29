@@ -1,9 +1,13 @@
 ---
 name: webagent
-description: ChatGPT Chat에 독립적인 조사나 설계 검토를 위임하고 대화 생성, 모델 선택, 전송, 대기와 결과 회수를 수행한다. WebAgent 또는 Chat 협업 요청에 사용한다. ChatGPT Work는 대상에서 제외한다.
+description: Codex에서 ChatGPT Chat에 독립적인 조사나 설계 검토를 위임하고 대화 생성, 모델 선택, 전송, 대기와 결과 회수를 수행한다. WebAgent 또는 Chat 협업 요청에 사용한다. ChatGPT Work는 대상에서 제외한다.
+disable-model-invocation: true
+user-invocable: false
 ---
 
 # WebAgent
+
+Codex 전용이다. Claude Code에서 이 파일을 직접 읽은 경우 미지원임을 알리고 중단한다.
 
 ChatGPT Chat을 텍스트 작업의 협업자로 사용한다. 필요한 맥락과 산출물 조건을 전달하고, 결과는 현재 작업에서 검증한다. 로컬 파일과 도구 상태는 자동 공유되지 않는다.
 

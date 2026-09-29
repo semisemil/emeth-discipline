@@ -9,7 +9,7 @@ const { MODE_SLOT } = require('../lib/rules-prompt.js');
 const repoRoot = path.resolve(__dirname, '..');
 
 test('the shared prompt has one mode slot and all mode components exist', () => {
-  const skillPath = path.join(repoRoot, 'skills', 'rules', 'SKILL.md');
+  const skillPath = path.join(repoRoot, 'skills', 'rules', 'codex.md');
   const baseline = fs.readFileSync(skillPath, 'utf8');
   assert.equal(baseline.split(MODE_SLOT).length - 1, 1);
 
@@ -21,7 +21,8 @@ test('the shared prompt has one mode slot and all mode components exist', () => 
 });
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {
-  const hooks = JSON.parse(fs.readFileSync(path.join(repoRoot, 'hooks', 'hooks.json'), 'utf8')).hooks;
+  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
+  const hooks = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8')).hooks;
   assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
   assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
   for (const [event, groups] of Object.entries(hooks)) {
@@ -34,4 +35,20 @@ test('hook registration keeps lifecycle boundaries and removes legacy owners', (
   assert.equal(hooks.SessionEnd, undefined);
   assert.equal(fs.existsSync(path.join(repoRoot, 'hooks', 'load-baseline.js')), false);
   assert.equal(fs.existsSync(path.join(repoRoot, 'skills', 'proofline-baseline-quality')), false);
+});
+
+test('Claude registers one exec-form hook per event without a shared default hook file', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude-plugin/plugin.json'), 'utf8'));
+  const hooks = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8')).hooks;
+  assert.equal(fs.existsSync(path.join(repoRoot, 'hooks/hooks.json')), false);
+  assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
+  assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
+  for (const groups of Object.values(hooks)) {
+    assert.equal(groups.length, 1);
+    assert.equal(groups[0].hooks.length, 1);
+    const command = groups[0].hooks[0];
+    assert.equal(command.command, 'node');
+    assert.deepEqual(command.args, ['${CLAUDE_PLUGIN_ROOT}/hooks/run.js']);
+    assert.equal(command.commandWindows, undefined);
+  }
 });

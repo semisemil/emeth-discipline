@@ -1,6 +1,6 @@
 # Emeth
 
-Emeth는 Codex가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다.
+Emeth는 코딩 에이전트가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다. Codex와 Claude Code를 지원합니다.
 
 작업이 길어지면 처음 요청의 세부 조건을 빠뜨리거나, 확인하지 않은 부분까지 끝났다고 보고하기 쉽습니다. 대화 중 발견한 버그나 후속 작업도 다음 작업으로 이어지지 않고 잊히곤 합니다. Emeth는 대화에 적용할 공통 기준과 작업별 스킬, 프로젝트에 남는 기록으로 이런 누락을 줄입니다.
 
@@ -64,7 +64,18 @@ Codex가 열리면 다음 순서로 마무리합니다.
 2. Emeth의 `SessionStart`, `SubagentStart`, `UserPromptSubmit` 훅을 확인하고 승인합니다.
 3. 새 작업을 시작합니다.
 
+훅 파일 경로가 바뀐 버전으로 업데이트한 경우에도 `/hooks`에서 현재 정의를 확인하고 승인합니다.
+
 대시보드 최초 등록에는 프로젝트 밖의 저장 폴더에 쓰기 권한이 필요합니다. [저장 위치와 권한 설정](#대시보드-저장-위치와-권한-설정)을 참고하세요.
+
+### Claude Code에서 설치
+
+Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치합니다.
+
+```text
+/plugin marketplace add semisemil/emeth-discipline
+/plugin install emeth-discipline@emeth-discipline
+```
 
 ## 🚀 빠르게 사용하기
 
@@ -74,18 +85,18 @@ Codex가 열리면 다음 순서로 마무리합니다.
 
 기존 폴더가 없는 프로젝트에는 이전 작업으로 폴더를 만들지 않습니다. 이전 중 실패하면 다음 접근에서 재시도합니다. 기존 폴더와 새 폴더가 모두 있으면 덮어쓰거나 병합하지 않고 충돌을 보고합니다.
 
-### 기본 지침과 응답 모드
+### 기본 지침과 Codex 응답 모드
 
 Emeth의 `Rules` 스킬에 담긴 기본 지침은 새 작업을 시작하거나 `/clear`, `/compact`를 실행할 때 자동으로 불러옵니다. 기존 작업을 재개할 때(`resume`)는 공통 기준을 다시 불러오지 않지만, 대시보드 서버 확인과 아키텍처 메모리 연결 훅은 실행됩니다. 하위 에이전트에도 `SubagentStart` 훅으로 공통 기준을 전달합니다.
 
-특정 요청에 공통 기준을 명시하려면 스킬 이름을 적으세요.
+Codex에서 특정 요청에 공통 기준을 명시하려면 스킬 이름을 적으세요.
 
 ```text
 $emeth-discipline:rules
 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐줘.
 ```
 
-응답 모드를 바꾸려면 프롬프트의 첫 내용 줄에 다음 명령을 적습니다.
+응답 모드 전환은 Codex에서 지원합니다. 프롬프트의 첫 내용 줄에 다음 명령을 적습니다.
 
 | 명령 | 동작 |
 | --- | --- |
@@ -100,7 +111,9 @@ $emeth-discipline:rules
 
 ### 작업에 맞는 스킬 사용하기
 
-일부 스킬은 Codex가 작업에 맞춰 불러오고, 기획·구현 시작처럼 직접 호출해야 하는 스킬도 있습니다. 적용할 기준을 분명히 하고 싶다면 아래처럼 스킬 이름을 적으세요.
+일부 스킬은 에이전트가 작업에 맞춰 불러오고, 기획과 구현 시작처럼 직접 호출해야 하는 스킬도 있습니다. 적용할 기준을 분명히 하고 싶다면 아래처럼 스킬 이름을 적으세요.
+
+아래 예시는 Codex 기준입니다. Claude Code에서는 `$emeth-discipline:스킬명` 대신 `/emeth-discipline:스킬명`으로 호출합니다. `webagent`와 `rules` 직접 호출은 Codex에서만 지원합니다.
 
 책임이나 호출 구조를 바꾸는 리팩터링:
 ```text
@@ -154,7 +167,6 @@ $emeth-discipline:webagent
 | `$emeth-discipline:tenet-me` | 설계나 구현이 요구 결과를 보장하는지 검토할 때 | 결과에서 필요한 조건과 근거를 역추적하고, 발견한 빈틈을 정방향 사례로 확인 |
 | `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성, 요청하면 현재 세션에서 구현 |
 | `$emeth-discipline:start-implementation` | 준비된 설계의 구현을 새 작업에서 시작할 때 | 모델과 추론 수준을 정하고 현재 프로젝트 폴더에 새 작업 생성 |
-| `$emeth-discipline:start-parallel-implementation` | 작업 분할과 선택적 병렬 구현을 사용할 때 | Design의 작업을 나누고 병렬 위임과 시드 재사용이 가능한 새 작업 생성 |
 
 ## 🔁 기획부터 구현까지
 
@@ -181,11 +193,7 @@ $emeth-discipline:tenet-me DESIGN-0001
 $emeth-discipline:start-implementation DESIGN-0001
 ```
 
-위 명령은 각각 별도로 호출합니다. 작업 분할과 선택적 병렬 구현을 사용하려면 다음 시작 스킬을 선택합니다.
-
-```text
-$emeth-discipline:start-parallel-implementation DESIGN-0001
-```
+위 명령은 각각 별도로 호출합니다. 병렬 구현이 필요하면 모델에 작업 분할과 병렬 처리를 직접 요청하세요.
 
 모델은 [모델 선택 기준](skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
 

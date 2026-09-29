@@ -64,7 +64,8 @@ test('all four SessionStart sources reuse one server without project mutation', 
 });
 
 test('hook registration covers SessionStart only and all sources', () => {
-  const config = JSON.parse(fs.readFileSync(path.join(repoRoot, 'hooks', 'hooks.json'), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
+  const config = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8'));
   const entry = config.hooks.SessionStart.find((candidate) => candidate.hooks.some((hook) => (
     hook.command.includes('run.js')
   )));
