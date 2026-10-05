@@ -52,7 +52,7 @@ test('all four SessionStart sources reuse one server without project mutation', 
     });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout ? JSON.parse(result.stdout).hookSpecificOutput.additionalContext : '',
-      source === 'resume' ? '' : composeEmethPrompt('normal'));
+      source === 'resume' ? '' : composeEmethPrompt());
     const status = await inspectServer({ directory });
     assert.equal(status.status, 'running');
     instanceIds.push(status.instance_id);
@@ -91,7 +91,7 @@ test('benchmark mode completes without starting a dashboard server', async (t) =
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt('normal'));
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
   assert.equal((await inspectServer({ directory })).status, 'stopped');
   assert.equal(fs.existsSync(directory), false);
 });
@@ -127,7 +127,7 @@ test('startup replaces an expired lock whose owner PID was reused', async (t) =>
   const status = await inspectServer({ directory });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt('normal'));
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
   assert.equal(status.status, 'running');
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), true);
   assert.equal(fs.existsSync(lockPath), false);

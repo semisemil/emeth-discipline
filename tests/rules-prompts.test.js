@@ -4,20 +4,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { MODE_SLOT } = require('../lib/rules-prompt.js');
+const { composeEmethPrompt } = require('../lib/rules-prompt.js');
 
 const repoRoot = path.resolve(__dirname, '..');
 
-test('the shared prompt has one mode slot and all mode components exist', () => {
+test('Codex uses one prompt with context and concise expression rules', () => {
   const skillPath = path.join(repoRoot, 'skills', 'rules', 'codex.md');
   const baseline = fs.readFileSync(skillPath, 'utf8');
-  assert.equal(baseline.split(MODE_SLOT).length - 1, 1);
-
-  for (const mode of ['normal', 'focus', 'core']) {
-    const modePath = path.join(repoRoot, 'skills', 'rules', `${mode}.md`);
-    assert.ok(fs.statSync(modePath).isFile(), mode);
-    assert.ok(fs.statSync(modePath).size > 0, mode);
-  }
+  assert.doesNotMatch(baseline, /emeth-response-mode/);
+  const prompt = composeEmethPrompt();
+  assert.match(prompt, /provide the context needed to understand the answer/i);
+  assert.match(prompt, /Use line breaks with noun phrases, state names, and short clauses/);
 });
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {

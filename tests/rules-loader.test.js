@@ -66,18 +66,15 @@ function copyRuntime(plugin) {
   fs.copyFileSync(path.join(repoRoot, 'skills/architecture-memory/scripts/storage.js'), path.join(memory, 'storage.js'));
 }
 
-test('startup inserts normal at the response slot', (t) => {
+test('startup inserts the fixed Codex prompt without mode state', (t) => {
   const { env } = fixture(t);
   const result = runLoader(env, 'session-a', 'startup');
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(context(result), composeEmethPrompt('normal'));
-  assert.deepEqual(
-    JSON.parse(fs.readFileSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), 'utf8')),
-    { mode: 'normal' },
-  );
+  assert.equal(context(result), composeEmethPrompt());
+  assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode')), false);
 });
 
-test('startup, clear, and compact preserve the stored mode for one session', (t) => {
+test('startup, clear, and compact use fixed rules and leave retired mode state untouched', (t) => {
   const { env } = fixture(t);
   const statePath = path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json');
   writeJson(statePath, { mode: 'focus' });
@@ -85,12 +82,12 @@ test('startup, clear, and compact preserve the stored mode for one session', (t)
   for (const source of ['startup', 'clear', 'compact']) {
     const result = runLoader(env, 'session-a', source);
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(context(result), composeEmethPrompt('focus'));
+    assert.equal(context(result), composeEmethPrompt());
     assert.deepEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), { mode: 'focus' });
   }
 });
 
-test('new session IDs initialize from the latest default without changing existing sessions', (t) => {
+test('existing and new sessions ignore the retired default without changing saved preferences', (t) => {
   const { env } = fixture(t);
   writeJson(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), { mode: 'core' });
   writeJson(path.join(env.APPDATA, 'emeth', 'config.json'), { defaultMode: 'focus' });
@@ -99,16 +96,13 @@ test('new session IDs initialize from the latest default without changing existi
   const fresh = runLoader(env, 'session-b', 'startup');
   assert.equal(existing.status, 0, existing.stderr);
   assert.equal(fresh.status, 0, fresh.stderr);
-  assert.equal(context(existing), composeEmethPrompt('core'));
-  assert.equal(context(fresh), composeEmethPrompt('focus'));
+  assert.equal(context(existing), composeEmethPrompt());
+  assert.equal(context(fresh), composeEmethPrompt());
   assert.deepEqual(
     JSON.parse(fs.readFileSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), 'utf8')),
     { mode: 'core' },
   );
-  assert.deepEqual(
-    JSON.parse(fs.readFileSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-b.json'), 'utf8')),
-    { mode: 'focus' },
-  );
+  assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-b.json')), false);
 });
 
 test('resume produces no injection and creates no session state', (t) => {
@@ -119,18 +113,18 @@ test('resume produces no injection and creates no session state', (t) => {
   assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json')), false);
 });
 
-test('SubagentStart receives the parent session Emeth Discipline mode', (t) => {
+test('SubagentStart receives the fixed Codex rules', (t) => {
   const { env } = fixture(t);
   const statePath = path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json');
   writeJson(statePath, { mode: 'focus' });
 
   const result = runLoader(env, 'session-a', undefined, loaderPath, 'SubagentStart');
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(context(result), composeEmethPrompt('focus'));
+  assert.equal(context(result), composeEmethPrompt());
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), { mode: 'focus' });
 });
 
-test('a missing selected mode fails and records the exact component path', (t) => {
+test('missing Codex rules fail and record the exact component path', (t) => {
   const { root, env } = fixture(t);
   const tempPlugin = path.join(root, 'plugin');
   const hooksDir = path.join(tempPlugin, 'hooks');
@@ -138,7 +132,7 @@ test('a missing selected mode fails and records the exact component path', (t) =
   fs.mkdirSync(hooksDir, { recursive: true });
   fs.mkdirSync(skillDir, { recursive: true });
   copyRuntime(tempPlugin);
-  for (const file of ['SKILL.md', 'codex.md']) {
+  for (const file of ['SKILL.md']) {
     fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', file), path.join(skillDir, file));
   }
 
@@ -146,7 +140,7 @@ test('a missing selected mode fails and records the exact component path', (t) =
   assert.equal(result.status, 1);
   const logPath = path.join(env.HOME, '.codex', 'log', 'emeth-hook.log');
   const entries = fs.readFileSync(logPath, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
-  assert.match(entries.at(-1).filePath, /rules[\\/]normal\.md$/);
+  assert.match(entries.at(-1).filePath, /rules[\\/]codex\.md$/);
 });
 
 test('a missing baseline fails and records the exact component path', (t) => {
@@ -166,27 +160,4 @@ test('a missing baseline fails and records the exact component path', (t) => {
   assert.equal(entry.pluginRoot, tempPlugin);
   assert.match(entry.skillPath, /rules[\\/]SKILL\.md$/);
   assert.match(entry.filePath, /rules[\\/]SKILL\.md$/);
-});
-
-test('a missing response slot fails and records the Codex rules path', (t) => {
-  const { root, env } = fixture(t);
-  const tempPlugin = path.join(root, 'plugin');
-  const hooksDir = path.join(tempPlugin, 'hooks');
-  const skillDir = path.join(tempPlugin, 'skills', 'rules');
-  fs.mkdirSync(hooksDir, { recursive: true });
-  fs.mkdirSync(skillDir, { recursive: true });
-  copyRuntime(tempPlugin);
-  const baseline = fs.readFileSync(path.join(repoRoot, 'skills', 'rules', 'codex.md'), 'utf8')
-    .replace('<!-- emeth-response-mode -->', '');
-  fs.writeFileSync(path.join(skillDir, 'codex.md'), baseline, 'utf8');
-  for (const file of ['SKILL.md', 'normal.md']) {
-    fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', file), path.join(skillDir, file));
-  }
-
-  const result = runLoader(env, 'session-a', 'startup', path.join(hooksDir, 'run.js'));
-  assert.equal(result.status, 1);
-  const logPath = path.join(env.HOME, '.codex', 'log', 'emeth-hook.log');
-  const entry = JSON.parse(fs.readFileSync(logPath, 'utf8').trim());
-  assert.equal(entry.code, 'INVALID_MODE_SLOT');
-  assert.match(entry.filePath, /rules[\\/]codex\.md$/);
 });

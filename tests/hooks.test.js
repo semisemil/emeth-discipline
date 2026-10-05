@@ -40,15 +40,14 @@ function output(result) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
-test('mode changes and the memory connection share one response without losing either', (t) => {
+test('model rules and the memory connection share one response without losing either', (t) => {
   const f = fixture(t); f.memory();
-  const changed = output(f.run({ prompt: '$emeth-discipline focus' }));
-  assert.match(changed.systemMessage, /focus/);
-  assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('focus') + '\n\n'));
+  const changed = output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' }));
+  assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ model: 'gpt-6-sol' }) + '\n\n'));
   assert.match(changed.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
-  const next = output(f.run({ prompt: '$emeth-discipline core' }));
-  assert.equal(next.hookSpecificOutput.additionalContext, composeEmethPrompt('core'));
+  const next = output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' }));
+  assert.equal(next.hookSpecificOutput.additionalContext, composeEmethPrompt());
 });
 
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
@@ -65,7 +64,7 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));
   const start = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' }));
-  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('focus') + '\n\n'));
+  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt() + '\n\n'));
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' })), {});
   const compact = output(f.run({ hook_event_name: 'SessionStart', source: 'compact' }));
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
@@ -74,11 +73,11 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'execution-guard')), false);
 });
 
-test('a corrupt memory binding does not suppress a mode change or document number', (t) => {
+test('a corrupt memory binding does not suppress the fixed prompt or document number', (t) => {
   const f = fixture(t);
   f.write('.emeth/architecture.json', '{');
-  const result = f.run({ prompt: '$emeth-discipline focus' });
-  assert.equal(output(result).hookSpecificOutput.additionalContext, composeEmethPrompt('focus'));
+  const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' });
+  assert.equal(output(result).hookSpecificOutput.additionalContext, composeEmethPrompt());
   assert.match(result.stderr, /Architecture memory connection unavailable/);
   const number = output(f.run({ prompt: '$emeth-discipline:development-design' }));
   assert.equal(number.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
@@ -100,7 +99,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
     hook: path.join(plugin, 'hooks/run.js'), env: { EMETH_BENCHMARK_DISABLE_DASHBOARD: '0' },
   });
   const response = output(result);
-  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt('normal', { pluginRoot: plugin }) + '\n\n'));
+  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ pluginRoot: plugin }) + '\n\n'));
   assert.match(response.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   assert.match(result.stderr, /dashboard unavailable/);
 });
@@ -108,12 +107,12 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
 test('a prompt failure reports the error without consuming an undelivered memory notice', (t) => {
   const f = fixture(t); f.memory();
   const plugin = copyPlugin(f);
-  fs.unlinkSync(path.join(plugin, 'skills/rules/normal.md'));
+  fs.unlinkSync(path.join(plugin, 'skills/rules/codex.md'));
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
   assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);
   assert.match(response.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
-  assert.match(result.stderr, /normal\.md/);
+  assert.match(result.stderr, /codex\.md/);
 });
 
 test('unregistered tool events and old role markers do not enforce the retired guard', (t) => {
@@ -167,7 +166,7 @@ test('host-specific Memory state stays separate for the same project and session
   const claudeEnv = claudeEnvironment(f);
   const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: repoRoot };
   const codex = output(f.run({ prompt: '$emeth-discipline focus' }, { env: codexEnv }));
-  assert.match(codex.systemMessage, /focus/);
+  assert.match(codex.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   const claude = output(f.run({ prompt: 'Continue.' }, { env: claudeEnv }));
   assert.match(claude.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: claudeEnv })), {});

@@ -7,7 +7,6 @@ const path = require('node:path');
 const { spawnSync, spawn } = require('node:child_process');
 const test = require('node:test');
 const { migrateProject, migrateDirectory } = require('../lib/storage-migration');
-const { getCurrentMode, setCurrentMode } = require('../lib/rules-state');
 const repo = path.resolve(__dirname, '..');
 
 function fixture(t) {
@@ -24,7 +23,7 @@ function fixture(t) {
   return { root, write, read, env };
 }
 
-test('first startup migrates project records, links and saved session mode without a manual command', t => {
+test('first startup migrates project records and links while leaving retired mode files untouched', t => {
   const f = fixture(t);
   f.write('.proofline/issues/PL-0042.json', JSON.stringify({ location: '.proofline/designs/DESIGN-0001-example/DESIGN.md' }));
   f.write('.proofline/designs/DESIGN-0001-example/DESIGN.md', '# Existing design\n[issue](../../issues/PL-0042.json)');
@@ -35,13 +34,13 @@ test('first startup migrates project records, links and saved session mode witho
     input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: f.root, session_id: 'session' }) });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(fs.existsSync(path.join(f.root, '.proofline')), false);
-  assert.equal(fs.existsSync(path.join(f.root, 'plugin/proofline-mode')), false);
-  assert.equal(JSON.parse(f.read('plugin/rules-mode/session.json')).mode, 'focus');
+  assert.equal(fs.existsSync(path.join(f.root, 'plugin/rules-mode')), false);
+  assert.equal(JSON.parse(f.read('plugin/proofline-mode/session.json')).mode, 'focus');
   assert.equal(JSON.parse(f.read('.emeth/issues/PL-0042.json')).location, '.emeth/designs/DESIGN-0001-example/DESIGN.md');
   assert.match(f.read('.emeth/STATE.md'), /\(.emeth\/designs\//);
   assert.deepEqual(fs.readFileSync(path.join(f.root, '.emeth/attachment.bin')), Buffer.from([0, 255, 128, 1]));
   const prompt = JSON.parse(result.stdout).hookSpecificOutput.additionalContext;
-  assert.equal(prompt, require('../lib/rules-prompt').composeEmethPrompt('focus'));
+  assert.equal(prompt, require('../lib/rules-prompt').composeEmethPrompt());
   const before = fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs;
   migrateProject(f.root);
   assert.equal(fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs, before);
@@ -53,7 +52,7 @@ test('new projects create no storage as a side effect of migration', t => {
   assert.deepEqual(fs.readdirSync(f.root), []);
 });
 
-test('a non-directory storage parent leaves persistence errors to the existing mode handler', t => {
+test('a non-directory storage parent remains unchanged', t => {
   const f = fixture(t);
   f.write('blocked', 'preserve');
   const base = path.join(f.root, 'blocked');
@@ -112,17 +111,6 @@ test('migration refuses linked directories and leaves external data unchanged', 
   assert.equal(f.read('outside/STATE.md'), '.proofline/issues/PL-0001.json');
 });
 
-test('mode migration preserves all sessions and subsequent writes use the new directory', t => {
-  const f = fixture(t);
-  f.write('plugin/proofline-mode/a.json', '{"mode":"focus"}');
-  f.write('plugin/proofline-mode/b.json', '{"mode":"core"}');
-  const options = { env: f.env, homeDir: f.root };
-  assert.equal(getCurrentMode('a', options).mode, 'focus');
-  assert.equal(getCurrentMode('b', options).mode, 'core');
-  assert.equal(setCurrentMode('a', 'normal', options).ok, true);
-  assert.equal(JSON.parse(f.read('plugin/rules-mode/a.json')).mode, 'normal');
-  assert.equal(fs.existsSync(path.join(f.root, 'plugin/proofline-mode')), false);
-});
 
 test('direct document numbering and architecture access migrate without a session hook', t => {
   const f = fixture(t);

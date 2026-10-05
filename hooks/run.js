@@ -2,17 +2,14 @@
 'use strict';
 
 const fs = require('node:fs');
-const { migrateWorkingProject, migrateDirectory } = require('../lib/storage-migration');
+const { migrateWorkingProject } = require('../lib/storage-migration');
 const path = require('node:path');
 const { logDiagnostic } = require('../lib/rules-state');
-const host = require('../lib/host');
 
 async function run(input) {
   const event = input.hook_event_name;
   if (!['SessionStart', 'SubagentStart', 'UserPromptSubmit'].includes(event)) return {};
   migrateWorkingProject(typeof input.cwd === 'string' ? input.cwd : process.cwd());
-  const data = host.dataDir();
-  if (host.name() === 'codex' && data) migrateDirectory(data, 'proofline-mode', 'rules-mode');
   const contexts = [];
   const response = {};
   let failure;
@@ -20,16 +17,15 @@ async function run(input) {
   try {
     const runtime = require('../lib/rules-runtime');
     if (event === 'UserPromptSubmit') {
-      const mode = runtime.submit(input);
-      if (mode.systemMessage) response.systemMessage = mode.systemMessage;
-      if (mode.additionalContext) contexts.push(mode.additionalContext);
+      const rules = runtime.submit(input);
+      if (rules.additionalContext) contexts.push(rules.additionalContext);
     } else {
       const context = runtime.load(input);
       if (context) contexts.push(context);
     }
   } catch (error) {
     logDiagnostic({
-      hook: event === 'UserPromptSubmit' ? 'rules-mode' : 'load-emeth',
+      hook: event === 'UserPromptSubmit' ? 'rules-model' : 'load-emeth',
       event, error, pluginRoot: path.resolve(__dirname, '..'),
       skillPath: error.emethFilePath, filePath: error.emethFilePath,
     });
