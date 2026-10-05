@@ -91,16 +91,16 @@ test('Design revision snapshots the old contract and rejects body changes under 
   assert.equal(resolveContract(f.project, 'DESIGN-0001').revision, 2);
 });
 
-test('a legacy contract has one successor in the writer, dashboard and execution resolver without rewriting its file', t => {
+test('a legacy document has one successor without becoming executable or rewriting its file', t => {
   const f = fixture(t);
   const legacy = document('SPEC-0001');
   f.write('.emeth/specs/SPEC-0001-original/SPEC.md', legacy);
   f.write('.emeth/specs/SPEC-0002-independent/SPEC.md', document('SPEC-0002'));
-  assert.equal(resolveContract(f.project, 'SPEC-0001').id, 'SPEC-0001');
+  assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-id-invalid');
   assert.equal(save(f, document('DESIGN-0001', { status: 'draft', supersedes: ['SPEC-0001'] })).status, 0);
-  assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-superseded');
+  assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-id-invalid');
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-not-ready');
-  assert.equal(resolveContract(f.project, 'SPEC-0002').id, 'SPEC-0002');
+  assert.throws(() => resolveContract(f.project, 'SPEC-0002'), error => error.code === 'contract-id-invalid');
   const conflicting = save(f, document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
   assert.equal(conflicting.value.error.code, 'contract-successor-conflict');
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.project }).publicIndex;

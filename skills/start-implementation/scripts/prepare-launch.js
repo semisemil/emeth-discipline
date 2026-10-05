@@ -4,22 +4,21 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { resolveContract } = require('../../../dashboard/records/development-contracts.js');
+const { DESIGN_ID } = require('../../../dashboard/records/record-parser.js');
 
 function requireValue(condition, message) { if (!condition) throw new Error(message); }
 
-function contractFor(design, spec) {
-  requireValue(!(design && spec), 'Supply one Design or legacy Spec ID');
-  const contract = design || spec;
-  requireValue(/^(?:DESIGN|SPEC)-\d{4,}$/.test(contract), 'Supply a Design or legacy Spec ID');
-  return contract;
+function contractFor(design) {
+  requireValue(DESIGN_ID.test(design), 'Supply a Design ID');
+  return design;
 }
 
 function implementationPrompt(contract) {
   return `Read ${JSON.stringify(path.resolve(__dirname, '..', 'implement.md'))} and follow it to implement ${contract} in this session.`;
 }
 
-function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reasoning }) {
-  const contract = contractFor(design, spec);
+function prepareLaunch({ cwd, design, projectRoot, projectId, model, reasoning }) {
+  const contract = contractFor(design);
   requireValue([cwd, projectRoot, projectId, model, reasoning].every(value => typeof value === 'string' && value.trim()),
     'Supply the current project, matching saved project, model, and reasoning');
   const root = fs.realpathSync(cwd);
@@ -35,8 +34,8 @@ function prepareLaunch({ cwd, design, spec, projectRoot, projectId, model, reaso
 }
 
 // Claude Code runs the implementation as a subagent in the current folder, so no saved project or effort is passed.
-function prepareClaudeLaunch({ cwd, design, spec, model }) {
-  const contract = contractFor(design, spec);
+function prepareClaudeLaunch({ cwd, design, model }) {
+  const contract = contractFor(design);
   requireValue(typeof cwd === 'string' && cwd.trim(), 'Supply the current project');
   requireValue(model === undefined || ['sonnet', 'opus', 'haiku', 'fable'].includes(model),
     'Supply a Claude Code agent model: sonnet, opus, haiku, or fable');
@@ -51,7 +50,7 @@ function prepareClaudeLaunch({ cwd, design, spec, model }) {
 }
 
 function parseArgs(argv) {
-  const names = { '--cwd': 'cwd', '--design': 'design', '--spec': 'spec', '--project-root': 'projectRoot',
+  const names = { '--cwd': 'cwd', '--design': 'design', '--project-root': 'projectRoot',
     '--project-id': 'projectId', '--model': 'model', '--reasoning': 'reasoning', '--host': 'host' };
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {

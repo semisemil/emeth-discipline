@@ -10,20 +10,24 @@ The Agent tool cannot set reasoning effort per dispatch; the subagent inherits t
 
 ## Validate and dispatch
 
-Resolve the contract, validate readiness, and build the Agent arguments in one call:
+Build the Agent arguments:
 
 ```text
 node <plugin-root>/skills/start-implementation/scripts/prepare-launch.js --host claude --cwd <current-folder> --design <DESIGN-ID> [--model <model>]
 ```
 
-Use `--spec <SPEC-ID>` instead of `--design` for legacy input. On failure, report the error and stop.
+On failure, report the error and stop.
 
-Pass the returned `subagent_type`, `description`, `prompt`, and `model` when present to the Agent tool once, unchanged. The prompt directs the subagent to read [implement.md](../implement.md) by its absolute path and implement the contract ID; it needs no conversation history or duplicate handoff document. Because the subagent cannot ask the user, the prompt also makes it stop and report when the contract needs a Design revision or a user decision, or an Emeth command fails.
+Pass the returned `subagent_type`, `description`, `prompt`, and `model` when present to the Agent tool once, unchanged.
 
-The subagent owns implementation and verification; do not edit the contract's files in this session while it runs.
+Do not edit the contract's files in this session while either subagent runs.
 If the dispatch result is uncertain, check the running agents before anything else and never dispatch a second implementation for the same contract.
+
+## Review
+
+After implementation completes, dispatch a `general-purpose` subagent using the selected model and the [review handoff](../implement.md#review-handoff).
 
 ## Report
 
-When the subagent returns, relay its implementation result, verification, completion status, and unresolved failures to the user. Its report is not visible to the user until relayed.
-When it returns a blocker, resolve it with the user in this session, revising the Design through [development-design](../../development-design/SKILL.md) when needed. Dispatching again after the blocker is resolved is not a duplicate dispatch.
+Relay the reviewer's final result to the user.
+When either subagent returns a blocker, resolve it with the user in this session, revising the Design through [development-design](../../development-design/SKILL.md) when needed. Resume the affected role once resolved.

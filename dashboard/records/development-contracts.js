@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
-const { parseCurrentRecord, DEVELOPMENT_ID } = require('./record-parser.js');
+const { parseCurrentRecord, DEVELOPMENT_ID, DESIGN_ID } = require('./record-parser.js');
 
 const FORMATS = {
   DESIGN: { kind: 'design', directory: 'designs', file: 'DESIGN.md' },
@@ -67,13 +67,13 @@ function assertDesignWrite(root, metadata, relativePath) {
   return next;
 }
 function resolveContract(root, id) {
+  if (!DESIGN_ID.test(id)) fail('contract-id-invalid', 'Supply a Design ID');
   const record = readDevelopmentRecord(root, id);
-  if (record.kind === 'plan') fail('contract-not-implementable', 'A legacy Plan needs a Design before implementation');
   const next = supersessionMap(readDesigns(root));
   if (next.has(id) || record.metadata.superseded_by) {
     fail('contract-superseded', `${id} is replaced by ${next.get(id) || record.metadata.superseded_by}`);
   }
-  if (record.status !== 'ready') fail('contract-not-ready', 'Design or legacy Spec must be ready');
+  if (record.status !== 'ready') fail('contract-not-ready', 'Design must be ready');
   return record;
 }
 module.exports = { readDevelopmentRecord, readDesigns, supersessionMap, assertDesignWrite, resolveContract };

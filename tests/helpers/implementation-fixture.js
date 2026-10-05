@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawnGit } = require('./git-policy.js');
 
 const MAIN_SETTINGS = Object.freeze({ model: 'gpt-6-astra', reasoning: 'low' });
-const SPEC = '.emeth/specs/SPEC-0001/SPEC.md';
+const DESIGN = '.emeth/designs/DESIGN-0001/DESIGN.md';
 
 function git(cwd, ...args) {
   const result = spawnGit(cwd, args, { encoding: 'utf8' });
@@ -35,9 +35,9 @@ function fixture(t, options = {}) {
   git(cwd, 'config', 'user.name', 'Emeth Discipline Test');
   git(cwd, 'config', 'user.email', 'emeth@example.invalid');
   git(cwd, 'config', 'core.autocrlf', 'false');
-  const metadata = { schema_version: 2, id: 'SPEC-0001', title: 'Independent implementation fixture',
+  const metadata = { schema_version: 2, id: 'DESIGN-0001', title: 'Independent implementation fixture',
     kind: 'feature', status: 'ready', revision: 1, supersedes: [], superseded_by: null, related_issues: [] };
-  write(SPEC, `---\n${JSON.stringify(metadata, null, 2)}\n---\n\nChange src/value.js to export 2. Preserve src/other.js and existing user edits. Completion: importing src/value.js returns 2; verify this with Node.\n`);
+  write(DESIGN, `---\n${JSON.stringify(metadata, null, 2)}\n---\n\nChange src/value.js to export 2. Preserve src/other.js and existing user edits. Completion: importing src/value.js returns 2; verify this with Node.\n`);
   write('src/value.js', 'module.exports = 1;\n');
   write('src/other.js', 'module.exports = "unchanged";\n');
   write('notes.txt', 'original notes\n');
@@ -48,8 +48,8 @@ function fixture(t, options = {}) {
   options.beforeLaunch?.({ cwd, write });
   const initialIndex = fs.readFileSync(path.join(cwd, '.git', 'index'));
   const initialHead = git(cwd, 'rev-parse', 'HEAD');
-  return { cwd, write, spec: SPEC, initialIndex, initialHead,
+  return { cwd, write, design: DESIGN, initialIndex, initialHead,
     read: name => fs.readFileSync(path.join(cwd, name), 'utf8') };
 }
 
-module.exports = { fixture, git, MAIN_SETTINGS, SPEC };
+module.exports = { fixture, git, MAIN_SETTINGS, DESIGN };
