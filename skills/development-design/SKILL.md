@@ -1,22 +1,42 @@
 ---
 name: development-design
-description: Develop software ideas into Designs. Use for development planning, technical design, and Design revision or status changes.
+description: Create or revise development planning and design documents (Designs) by clarifying software ideas and requirements with the user. Also use for Design status changes.
 ---
 
 # Development Design
 
-Maintain one current Design. A design request ends with design. Apply [shared rules](../rules/SKILL.md) if absent from context.
+Partner with the user to complete development planning and design documents.
+Start from goals and constraints and decide together what to build and how it should behave under different conditions.
+Read and apply [shared rules](../rules/SKILL.md) if absent from context.
 
-## Develop
+## Develop Together
 
-Use the named Design or find an existing one with the same goal. For status-only work, use [status changes](references/document-status.md).
+Explain your recommendation for the current problem, your reasoning, and how behavior will change.
+Discuss important choices with the user and decide details within the established goals and constraints.
 
-Discuss the next consequential open choice whose prerequisites are settled. Present a brief proposal with relevant conflicts and tradeoffs. Resolve factual gaps from existing contracts, code, and connected [Architecture Memory](../architecture-memory/SKILL.md). Use external evidence when local sources are insufficient. Reopen settled choices when intent or evidence changes.
+Address prerequisite decisions first.
+When an issue is settled, proactively present the next issue with a recommendation and any necessary questions.
+Lead the discussion until the features and behavior within the requested scope are concrete and documented.
 
-## Record
+Confirm facts and background as needed from existing contracts, code, documentation, and connected [Architecture Memory](../architecture-memory/SKILL.md).
 
-When drafting or revising, use [Design writing](references/writing-and-revision.md), [shared writing rules](../rules/references/writing-and-revision.md), and [Focus](../rules/focus.md). Reuse guidance already in context.
+## Write the Design
 
-Set [readiness](references/document-status.md), then save through [creation](references/document-operations.md) or [editing](references/document-editing.md). Use `--memory off` when recording is prohibited; otherwise capture durable context through Architecture Memory. For `EPERM`/`EACCES`, follow [sandbox recovery](../dashboard-server/references/sandbox-setup.md).
+Continue working on the named Design or an existing one with the same goal; create one if none exists.
+For status-only requests, follow [status changes](references/document-status.md).
+Apply [shared writing rules](../rules/references/writing-and-revision.md) when drafting or revising.
 
-Report the saved Design, material open decisions, and failures briefly.
+Specify what will be built or changed, how it should behave under the relevant conditions, the expected results, and how to check them.
+The Design must be understandable without reconstructing the conversation.
+Leave implementation details open when changing them would preserve the designed behavior and structure.
+
+Include a concrete case when checking each part separately would miss an incorrect final result or lost state.
+Use Mermaid code blocks for diagrams.
+
+## Save and Report
+
+Set [readiness](references/document-status.md), then save through [creation](references/document-operations.md) or [editing](references/document-editing.md).
+Use `--memory off` when recording is prohibited; otherwise capture durable project context through Architecture Memory.
+If `EPERM` or `EACCES` occurs, follow [sandbox recovery](../dashboard-server/references/sandbox-setup.md).
+
+Briefly report the saved Design, important unresolved points, and any failed work.
