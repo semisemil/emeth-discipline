@@ -102,6 +102,13 @@ $emeth-discipline:rules
 
 아래 예시는 Codex 기준입니다. Claude Code에서는 `$emeth-discipline:스킬명` 대신 `/emeth-discipline:스킬명`으로 호출합니다. `webagent`와 `rules` 직접 호출은 Codex에서만 지원합니다.
 
+아키텍처 설계나 재설계:
+
+```text
+$emeth-discipline:architecture-coop
+사용자 알림 시스템의 아키텍처를 함께 설계해줘.
+```
+
 책임이나 호출 구조를 바꾸는 리팩터링:
 ```text
 $emeth-discipline:refactor-proof
@@ -136,10 +143,11 @@ $emeth-discipline:webagent
 
 ### Architecture
 
-프로젝트 구조와 주요 결정을 문서로 남기고, 개발 중 참고하거나 갱신합니다.
+프로젝트 구조를 함께 설계하고, 배경과 주요 결정을 기록하거나 참고합니다.
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
+| `$emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
 | `$emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
 | `$emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
 | `$emeth-discipline:architecture-memory-update` | 커밋된 코드 변경을 아키텍처 문서에 반영할 때 | 마지막 확인 커밋 이후의 변경 검토와 문서 갱신 |
