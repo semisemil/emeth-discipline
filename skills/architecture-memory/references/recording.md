@@ -1,10 +1,10 @@
 # Record durable context
 
-Memory body content describes project conditions, architecture, decisions, or evidence needed to assess them. Authoring directions govern the work; session activity belongs in the completion report. Organize current-state records by architectural subject rather than conversation or investigation order.
+For information worth capturing under [Architecture Memory](../SKILL.md), use [shared writing rules](../../rules/references/writing-and-revision.md) for the body. Use the manifest language and omit empty conditional sections or rows. Template placeholders describe content, not sentence form.
 
-## Choose the record's home
+## Record placement
 
-Decide whether information merits capture, then place it by its function. Split mixed passages by meaning; a useful topic does not make every sentence belong in the same document.
+Place each passage by its function, including passages that share a topic.
 
 | Content | Home |
 |---|---|
@@ -14,11 +14,9 @@ Decide whether information merits capture, then place it by its function. Split 
 | Detailed behavior, contracts, implementation plans, and choices local to a Design | The authoritative Design |
 | Work progress, implementation chronology, and test execution results | Completion or verification report |
 
-Context explains the meaning and premises needed to understand current business rules, including rules expressed in code. Keep the choice, alternatives, and consequences in the decision record or Design and link to that source. Do not populate context with code behavior restatements or use it as a default home for accepted plans.
+`context` explains business meaning and premises, including those behind rules expressed in code. Use the authoritative source for behavior restatements and accepted plans. Link choices, alternatives, and consequences to the decision record or Design that owns them.
 
-Reuse the canonical section or search the concept before adding one. Link an existing authoritative decision or Design rather than duplicating it. Keep each retained claim's reasons, scope, and limits together; a decision made for one task does not establish a general policy. Evidence supporting a durable premise or decision stays with that claim; routine verification activity does not become context.
-
-Use the manifest language and omit empty conditional sections or rows. Template placeholders specify content, not sentence form; labeled phrases are valid.
+Reuse the canonical section or search the concept before adding one. Preserve a task-specific decision's scope when referencing it. Keep evidence supporting a durable premise or decision with that record.
 
 ## Author documents and sections
 
@@ -42,7 +40,17 @@ Use `--root <relative-root>` for an unconnected custom-root draft. Commands targ
 
 The writer allocates document/section IDs and ADR numbers, registers files, and maintains indexes and decision links. Results return created documents and section IDs. A decision's date defaults to `unknown`; supply an established date as `YYYY-MM-DD`.
 
-Section fields: `title`, Markdown `body`, `confidence` (`confirmed`, `inferred`, `proposed`, `unknown`), and `lifecycle` (`current`, `planned`, `historical`). Optional `paths` are repository-relative scopes, `terms` are search aliases, `links` are required section IDs, and `always: true` marks a shared prerequisite. Use level-3 or deeper body headings; the writer supplies the level-2 heading and metadata.
+### Section fields
+
+| Field | Meaning |
+|---|---|
+| `title`, `body` | Section title and Markdown body. Use level-3 or deeper body headings; the writer supplies the level-2 heading and metadata. |
+| `confidence` | `confirmed`, `inferred`, `proposed`, or `unknown`. |
+| `lifecycle` | `current`, `planned`, or `historical`. |
+| Optional `paths`, `terms` | Repository-relative scopes and search aliases, respectively. |
+| Optional `links`, `always` | Required section IDs; `always: true` marks a shared prerequisite. |
+
+### Section revisions
 
 To revise a section, use `author.js read` for its current target, then supply `id` and its `receipt` as `expected`. `title` and routing fields may be omitted to preserve them. `current` uses these update fields without `document`, and describes the complete revised current effect with `current` or `planned` lifecycle. On conflict, reread and reconcile before retrying.
 

@@ -1,26 +1,32 @@
 # Writing and revising documents
 
-## Normalize the content
+## Content
 
-For documents that record current decisions, normalize source material into current decisions, open choices, reasons, and constraints. Express past events through their current effects.
+Match content, depth, and structure to the user's intent, the document's purpose, and its reader.
 
-Apply authoring directions to the work; the body records the document's subject, decisions, and supporting evidence. Pair acceptance conditions with observable results, and findings with their measurement conditions and limits.
+Use the reader's task to choose what belongs in the document. Include internal identifiers with enough context to use them when that task needs them.
 
-## Build the reading order
+For documents that record current decisions, organize current requirements, open choices, reasons, and constraints by subject. Incorporate corrections into the resulting requirement. Retain history and exclusions only when needed to explain a current choice or define an active contract.
 
-Scale depth to the subject. Give each subsection one coherent subject rather than combining distinct topics. Repeat content only where needed for understanding; otherwise reference its primary location. Follow conclusions with only the investigation detail needed to assess them.
+Authoring directions govern the work; the body records the subject, decisions, and supporting evidence. Pair acceptance conditions with observable results, and findings with their measurement conditions and limits.
 
-## Keep related information together
+## Organization
 
-Keep each behavior's actor, conditions, defaults, exceptions, final result, and preserved state together. Define terms where used. Explain shared mechanisms once and link to them, retaining the premises and branch outcomes needed to interpret each local rule.
+Give each subsection one coherent subject. Keep each behavior's actor, conditions, defaults, exceptions, final result, and preserved state together. Define terms where used.
 
-Keep beside each choice the reasons, assumptions, alternatives, accepted costs, or revisit conditions that affect its selection or validity.
+Keep beside each choice only the reasons and conditions needed to assess its selection or validity, or decide when to revisit it.
+
+Explain shared mechanisms once and link to their primary location. Retain the premises and branch outcomes needed to interpret each local rule; repeat other content only where needed for understanding.
+
+Follow conclusions with only the investigation detail needed to assess them.
 
 Preserve requested examples; add others for distinct boundaries or likely misinterpretations.
 
-## Choose the expression
+## Expression
 
-Use labeled phrases for definitions, attributes, scope, and states; sentences for explanations or relationships needing them.
+Use noun phrases, labels, and short clauses for definitions, attributes, scope, and states. Use sentences where needed to explain relationships or conditions.
+
+Keep introductions, transitions, and explanations that add information about the subject. Omit sentences that only set a mood or announce what follows.
 
 Use **bold** and *italics* for emphasis.
 
@@ -37,6 +43,11 @@ Choose prose or a form below according to which makes the relationship easiest t
 
 Add prose alongside a structured form only for information that form cannot convey.
 
-## Complete the revision
+## Revision consistency
 
-Integrate changed terms, scope, and decisions into every affected rule, example, and diagram. Replace superseded statements with the current content and update references to actual sections or links.
+Remove passages whose removal leaves the reader equally able to understand, act on, and assess the document.
+
+| Consistency | Required result |
+|---|---|
+| Current content | Changed terms, scope, requirements, decisions, and established facts are reflected where applicable. Superseded statements in current descriptions are replaced. |
+| Related content | Every affected rule, example, and diagram reflects the revision. References point to actual sections or links. |
