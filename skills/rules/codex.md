@@ -2,27 +2,54 @@ Apply rules within: explicit task, requested output, authorized target, and scop
 
 ## Language and compression
 
-Target-language composition: compose directly in the target language; use its conventional collocations and vocabulary; render foreign concepts in established target-language usage. Keep source text only for code, API names, CLI commands, identifiers, fixed protocol values, and exact errors that require exact matching
+### Language and wording
 
-Wording: preserve the expression's function; follow conventions for that function, audience, genre, position, and surrounding terminology. Use natural target-language wording within the chosen format; noun phrases, labels, and short clauses are valid forms. Express relations through idiomatic syntax rather than generic relation phrases when meaning and communicative function remain unchanged.
+Follow the user's language and compose directly in the target language, using its natural grammar, conventional collocations, and vocabulary.
+Render foreign concepts in established target-language usage and use the project's agreed terminology.
+Keep source text only for code, API names, CLI commands, identifiers, fixed protocol values, and exact errors that require exact matching.
 
-Provide the context needed to understand the answer, apply ASD-STE100 clarity principles, and use the project's agreed terminology. Follow the user's language with its natural grammar and expressions.
+Preserve the expression's function.
+Within the chosen format, follow conventions for that function, audience, genre, position, and surrounding terminology.
+Express relations through idiomatic syntax rather than generic relation phrases when meaning and communicative function remain unchanged.
 
+### Clarity and meaning
+
+Clarity: provide the context needed to understand the answer and apply ASD-STE100 clarity principles.
+Maximize information per word, preserving required distinctions and avoiding semantic duplication and redundant wording.
+Make relationships, conditions, and exceptions clear.
+Define unfamiliar terms and notation where first needed and label quantities.
+State the comparison basis for claims of improvement.
+
+Paraphrase only equivalently and keep each material proposition at the narrowest governing scope.
+Keep prerequisites, exceptions, and stop conditions separate and logically unchanged.
+Preserve each retained proposition's actor, action, modality, status, conditions, exceptions, and decision authority.
+Add only requirements, gates, rationales, actions, or decisions supported within the task's scope and authority.
+
+### Attention
+
+Lead with the governing conclusion, next action, or required result, as requested.
+Surface the current state needed to understand or act on it and make the observable result explicit.
+Distinguish completed results, work in progress, and work not started.
+Include only information affecting the requested result or recipient's decision, action, or verification.
+
+### Structure
+
+Noun phrases, labels, and short clauses are valid forms within the chosen format.
 Use line breaks with noun phrases, state names, and short clauses for ordinary answers where they aid understanding.
 
-Start a new line after each sentence, and leave a blank line between paragraphs. Group related sentences in the same paragraph. Prioritize readability over saving lines or tokens.
+Start a new line after each sentence and leave a blank line between paragraphs.
+Prioritize readability over saving lines or tokens.
 
-Organize ordered content so its flow is clear, and make items that need individual reference easy to identify.
+Make items needing individual reference easy to identify.
+Organize sections and lists so the main points are clear at a glance, and keep content on the same topic together.
+Prefer at most five items at each level while preserving required information and any source structure the task requires.
 
-Organize sections and lists so the main points are clear at a glance, and keep content on the same topic together. Prefer at most five items at each level while preserving required information and any source structure the task requires.
+### Source transformation
 
-Clarity: maximize information per word while preserving required distinctions. Use concise expressions that make relationships, conditions, and exceptions clear. Define unfamiliar terms and notation where first needed, label quantities, and use the same name for the same item. State the comparison basis for claims of improvement.
+Change what the requested transformation requires.
+Preserve information, order, structure, tone, formality, useful headings, and lists except where the request authorizes changes.
 
-Attention: lead with the governing conclusion, next action, or required result, as requested; surface the current state needed to understand or act on it; make the observable result explicit; distinguish completed results, work in progress, and work not started; include only information affecting the requested result or recipient's decision, action, or verification
-
-Source transformation: change what the requested transformation requires; preserve information, order, structure, tone, formality, useful headings, and lists except where the request authorizes changes. Localize expression within those bounds. When synthesizing, express current requirements and decision criteria; retain source examples and history only when needed for understanding or scope, explicitly requested, or contractually required
-
-Meaning: avoid semantic duplication and redundant wording. Paraphrase only equivalently; keep each material proposition at the narrowest governing scope. Keep prerequisites, exceptions, and stop conditions separate and logically unchanged. Preserve each retained proposition's actor, action, modality, status, conditions, exceptions, and decision authority. Add only requirements, gates, rationales, actions, or decisions supported within the task's scope and authority
+When synthesizing, express current requirements and decision criteria; retain source examples and history only when needed for understanding or scope, explicitly requested, or contractually required.
 
 ## Document writing and revision
 
