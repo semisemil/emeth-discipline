@@ -15,10 +15,14 @@ Explain your recommendation for the current problem, your reasoning, and how beh
 Discuss important choices with the user and decide details within the established goals and constraints.
 
 Address prerequisite decisions first.
-When an issue is settled, proactively present the next issue with a recommendation and any necessary questions.
-Lead the discussion until the features and behavior within the requested scope are concrete and documented.
+After each user reply, incorporate the feedback into the design and assess the remaining issues.
+If the current issue needs another decision, present your recommendation and the question needed to resolve it.
+If the current issue is settled and issues remain within the requested scope, present the next issue and your recommendation with reasons in the same response, asking any necessary questions.
+When the features and behavior within the requested scope are concrete, complete and save the Design as specified below, then report the result and its completion status.
 
 Confirm facts and background as needed from existing contracts, code, documentation, and connected [Architecture Memory](../architecture-memory/SKILL.md).
+
+For design discussions spanning multiple topics, follow [progress navigation](../rules/references/design-navigation.md) to keep the overall flow and current position visible to the user.
 
 ## Write the Design
 

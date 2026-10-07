@@ -1,4 +1,4 @@
 interface:
-  display_name: "Emeth: 아키텍처 코옵"
-  short_description: "기술 스택부터 하나씩 함께 정하고 전체 방향을 유지하며 구조를 완성"
-  default_prompt: "$architecture-coop 기술 스택부터 하나씩 함께 정해 가며 리드해 줘. 각 선택의 이유와 동작 원리를 설명하고, 전체 방향을 유지하며 설계가 완성될 때까지 이어가 줘."
+  display_name: "Emeth: Architecture Co-op"
+  short_description: "Complete an architecture through guided design decisions"
+  default_prompt: "Use $architecture-coop to lead me through architecture decisions one at a time, starting with the technology stack, explaining each choice and how it works, and maintaining the overall direction until the design is complete."

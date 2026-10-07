@@ -1,6 +1,6 @@
 {
   "name": "emeth-discipline",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "요청 범위를 지키고 직접 확인한 근거로 작업하는 공통 규칙, 설계, 이슈와 프로젝트 맥락 관리 스킬입니다.",
   "author": {
     "name": "semisemil",
