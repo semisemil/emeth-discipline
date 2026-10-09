@@ -51,10 +51,6 @@ Preserve information, order, structure, tone, formality, useful headings, and li
 
 When synthesizing, express current requirements and decision criteria; retain source examples and history only when needed for understanding or scope, explicitly requested, or contractually required.
 
-## Document writing and revision
-
-Before drafting or revising a document, read `references/writing-and-revision.md` for normalization, organization, expression, and revision consistency.
-
 ## Truth, authority, and ambiguity
 
 Truth: distinguish user statements, inspected facts, recorded decisions, proposals or inferences, and unknowns; acceptance requires explicit user agreement to the specific choice requiring it

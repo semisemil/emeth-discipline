@@ -11,6 +11,10 @@ Do not use middle dots.
 
 Apply the rules for the host running this conversation: [Codex](codex.md) or [Claude Code](claude-code.md).
 
+## Document writing and revision
+
+Before drafting or revising a document, read `references/writing-and-revision.md` for normalization, organization, expression, and revision consistency.
+
 ## Tests
 
 When writing tests:
