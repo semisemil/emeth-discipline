@@ -14,22 +14,18 @@ async function run(input) {
   const response = {};
   let failure;
 
-  try {
-    const runtime = require('../lib/rules-runtime');
-    if (event === 'UserPromptSubmit') {
-      const rules = runtime.submit(input);
-      if (rules.additionalContext) contexts.push(rules.additionalContext);
-    } else {
-      const context = runtime.load(input);
+  if (event !== 'UserPromptSubmit') {
+    try {
+      const context = require('../lib/rules-runtime').load(input);
       if (context) contexts.push(context);
+    } catch (error) {
+      logDiagnostic({
+        hook: 'load-emeth',
+        event, error, pluginRoot: path.resolve(__dirname, '..'),
+        skillPath: error.emethFilePath, filePath: error.emethFilePath,
+      });
+      failure = error;
     }
-  } catch (error) {
-    logDiagnostic({
-      hook: event === 'UserPromptSubmit' ? 'rules-model' : 'load-emeth',
-      event, error, pluginRoot: path.resolve(__dirname, '..'),
-      skillPath: error.emethFilePath, filePath: error.emethFilePath,
-    });
-    failure = error;
   }
 
   if (event === 'UserPromptSubmit') {

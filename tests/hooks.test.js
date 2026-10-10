@@ -40,14 +40,28 @@ function output(result) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
-test('model rules and the memory connection share one response without losing either', (t) => {
+test('model changes leave the memory connection available without reinjecting rules', (t) => {
   const f = fixture(t); f.memory();
-  const changed = output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' }));
-  assert.ok(changed.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ model: 'gpt-6-sol' }) + '\n\n'));
-  assert.match(changed.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  const first = output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' }));
+  assert.match(first.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
+  assert.doesNotMatch(first.hookSpecificOutput.additionalContext, /# Rules/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
-  const next = output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' }));
-  assert.equal(next.hookSpecificOutput.additionalContext, composeEmethPrompt());
+  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' })), {});
+  assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'rules-model')), false);
+});
+
+test('model metadata does not change lifecycle rules or create session state', (t) => {
+  const f = fixture(t);
+  for (const source of ['startup', 'clear', 'compact']) {
+    const response = output(f.run({ hook_event_name: 'SessionStart', source, model: 'gpt-6-sol' }));
+    assert.equal(response.hookSpecificOutput.additionalContext, composeEmethPrompt());
+  }
+  assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'child', model: 'gpt-6-astra' }))
+    .hookSpecificOutput.additionalContext, composeEmethPrompt());
+  assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume', model: 'gpt-6-astra' })), {});
+  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' })), {});
+  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' })), {});
+  assert.equal(fs.existsSync(f.env.PLUGIN_DATA), false);
 });
 
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
