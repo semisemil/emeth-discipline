@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 
 const HOST = '127.0.0.1';
@@ -304,6 +304,58 @@ function waitForChild(child, timeoutMs) {
   });
 }
 
+async function startWindowsServer(args, paths, instanceId, timeoutMs) {
+  const resultPath = path.join(paths.directory, `server-start-${instanceId}.json`);
+  const deadline = Date.now() + timeoutMs;
+  const literal = (value) => `'${value.replace(/'/g, "''")}'`;
+  const argumentList = args.map((argument) => (
+    `"${argument.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`
+  )).join(' ');
+  const command = `$ErrorActionPreference = 'Stop'; (Start-Process -FilePath ${literal(process.execPath)} -ArgumentList ${literal(argumentList)} -WindowStyle Hidden -PassThru).Id`;
+  const powershell = path.join(process.env.SystemRoot || 'C:\\Windows',
+    'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  let pid;
+  let ready = false;
+  try {
+    const output = await new Promise((resolve, reject) => {
+      execFile(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-EncodedCommand',
+        Buffer.from(command, 'utf16le').toString('base64')], {
+        windowsHide: true,
+        timeout: timeoutMs,
+        env: { ...process.env, EMETH_DASHBOARD_START_RESULT: resultPath },
+      }, (error, stdout) => error ? reject(error) : resolve(stdout));
+    });
+    pid = Number(output.trim());
+    if (!Number.isInteger(pid) || pid <= 0) return { ok: false, reason: 'start-failed' };
+    fs.writeFileSync(paths.lock, JSON.stringify({
+      schema_version: 1,
+      instance_id: instanceId,
+      owner_pid: pid,
+      started_at: new Date().toISOString(),
+    }), 'utf8');
+    while (Date.now() < deadline) {
+      try {
+        const result = readJson(resultPath);
+        if (result.ok === false) return result;
+        if (result.ok === true && result.pid === pid && isPort(result.port)) {
+          ready = true;
+          releaseLock(paths, instanceId);
+          return result;
+        }
+        return { ok: false, reason: 'start-failed' };
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+      if (!pidExists(pid)) return { ok: false, reason: 'start-failed' };
+      await delay(25);
+    }
+    return { ok: false, reason: 'start-timeout' };
+  } finally {
+    if (!ready && pid && pidExists(pid)) process.kill(pid);
+    unlinkIfExists(resultPath);
+  }
+}
+
 async function startServer(options = {}) {
   const paths = dashboardPaths(options);
   const expectedVersion = options.expectedVersion || pluginVersion(options);
@@ -345,22 +397,29 @@ async function startServer(options = {}) {
     if (settings.firstSelection) {
       args.push('--save-port');
     }
-    const child = spawn(process.execPath, args, {
-      detached: true,
-      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-      windowsHide: true,
-    });
-    fs.writeFileSync(paths.lock, JSON.stringify({
-      schema_version: 1,
-      instance_id: instanceId,
-      owner_pid: child.pid,
-      started_at: new Date().toISOString(),
-    }), 'utf8');
-    const result = await waitForChild(child, options.startTimeoutMs || START_TIMEOUT_MS);
-    child.unref();
+    let child;
+    let result;
+    const timeoutMs = options.startTimeoutMs || START_TIMEOUT_MS;
+    if (process.platform === 'win32') {
+      result = await startWindowsServer(args, paths, instanceId, timeoutMs);
+    } else {
+      child = spawn(process.execPath, args, {
+        detached: true,
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        windowsHide: true,
+      });
+      fs.writeFileSync(paths.lock, JSON.stringify({
+        schema_version: 1,
+        instance_id: instanceId,
+        owner_pid: child.pid,
+        started_at: new Date().toISOString(),
+      }), 'utf8');
+      result = await waitForChild(child, timeoutMs);
+      child.unref();
+    }
     if (!result.ok) {
       try {
-        child.kill();
+        if (child) child.kill();
       } catch {
         // The child may already have exited.
       }

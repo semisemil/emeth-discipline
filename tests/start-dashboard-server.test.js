@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const test = require('node:test');
 
@@ -61,6 +61,44 @@ test('all four SessionStart sources reuse one server without project mutation', 
   assert.equal(new Set(instanceIds).size, 1);
   assert.equal(fs.existsSync(path.join(project, '.emeth')), false);
   assert.equal(fs.existsSync(path.join(directory, 'projects.json')), false);
+});
+
+test('Windows PowerShell hook closes its output while the dashboard stays running', {
+  skip: process.platform !== 'win32',
+}, async (testContext) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth powershell '한글-"));
+  assert.equal(path.dirname(path.resolve(root)), path.resolve(os.tmpdir()));
+  const env = { ...isolatedEnvironment(root), PLUGIN_ROOT: repoRoot };
+  const directory = dashboardDirectory({ env });
+  testContext.after(async () => {
+    await stopServer({ directory });
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const config = JSON.parse(fs.readFileSync(path.join(repoRoot, 'hooks/codex-hooks.json'), 'utf8'));
+  const command = config.hooks.SessionStart[0].hooks[0].commandWindows;
+  const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', command], {
+    env,
+    windowsHide: true,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  let stdout = '';
+  let stderr = '';
+  child.stdout.setEncoding('utf8');
+  child.stderr.setEncoding('utf8');
+  child.stdout.on('data', (chunk) => { stdout += chunk; });
+  child.stderr.on('data', (chunk) => { stderr += chunk; });
+  const exitCode = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('PowerShell hook output did not close.')), 5000);
+    child.once('error', (error) => { clearTimeout(timer); reject(error); });
+    child.once('close', (code) => { clearTimeout(timer); resolve(code); });
+    child.stdin.end(JSON.stringify({ cwd: root, hook_event_name: 'SessionStart', source: 'startup' }));
+  });
+
+  assert.equal(exitCode, 0, stderr);
+  assert.equal(stderr, '');
+  assert.equal(JSON.parse(stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
+  assert.equal((await inspectServer({ directory })).status, 'running');
+  assert.equal(fs.readdirSync(directory).some((name) => /^server-start-/.test(name)), false);
 });
 
 test('hook registration covers SessionStart only and all sources', () => {

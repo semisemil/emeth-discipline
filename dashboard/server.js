@@ -109,6 +109,8 @@ function unlinkOwned(filePath, instanceId) {
 function sendParent(message) {
   if (typeof process.send === 'function' && process.connected) {
     process.send(message, () => process.disconnect());
+  } else if (process.env.EMETH_DASHBOARD_START_RESULT) {
+    writeJsonAtomic(process.env.EMETH_DASHBOARD_START_RESULT, message);
   }
 }
 

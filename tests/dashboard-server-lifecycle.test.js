@@ -84,6 +84,26 @@ test('stored port owned by another process is reported and never replaced', asyn
   assert.equal(occupant.listening, true);
 });
 
+test('Windows startup timeout stops the child and removes startup state', {
+  skip: process.platform !== 'win32',
+}, async (testContext) => {
+  const directory = tempDirectory(testContext);
+  const serverScript = path.join(directory, 'unready-server.js');
+  const pidPath = path.join(directory, 'test-server.pid');
+  fs.writeFileSync(serverScript,
+    "require('node:fs').writeFileSync(require('node:path').join(process.argv[3], 'test-server.pid'), String(process.pid)); setInterval(() => {}, 1000);");
+
+  const result = await startServer({ directory, serverScript, startTimeoutMs: 1500 });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'start-timeout');
+  const pid = Number(fs.readFileSync(pidPath, 'utf8'));
+  assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+  assert.equal(fs.existsSync(path.join(directory, 'server.json')), false);
+  assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
+  assert.equal(fs.readdirSync(directory).some((name) => /^server-start-/.test(name)), false);
+});
+
 test('PID reuse and another health service are not treated as Emeth Discipline or stopped', async (t) => {
   const directory = tempDirectory(t);
   const otherInstance = randomUUID();
