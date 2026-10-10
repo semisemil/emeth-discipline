@@ -1,4 +1,4 @@
 interface:
   display_name: "Emeth: Architecture Co-op"
   short_description: "Complete an architecture through guided design decisions"
-  default_prompt: "Use $architecture-coop to lead me through architecture decisions one at a time, starting with the technology stack, explaining each choice and how it works, and maintaining the overall direction until the design is complete."
+  default_prompt: "Use $architecture-coop to work through this architecture's key decisions with me and present the resulting design."

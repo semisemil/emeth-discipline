@@ -8,13 +8,13 @@ const { composeEmethPrompt } = require('../lib/rules-prompt.js');
 
 const repoRoot = path.resolve(__dirname, '..');
 
-test('Codex uses one prompt with context and concise expression rules', () => {
+test('Codex includes its host rules once in the composed prompt', () => {
   const skillPath = path.join(repoRoot, 'skills', 'rules', 'codex.md');
   const baseline = fs.readFileSync(skillPath, 'utf8');
   assert.doesNotMatch(baseline, /emeth-response-mode/);
   const prompt = composeEmethPrompt();
-  assert.match(prompt, /provide the context needed to understand the answer/i);
-  assert.match(prompt, /Use line breaks with noun phrases, state names, and short clauses/);
+  assert.ok(prompt.includes(baseline.trim()));
+  assert.equal(prompt.indexOf(baseline.trim()), prompt.lastIndexOf(baseline.trim()));
 });
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {

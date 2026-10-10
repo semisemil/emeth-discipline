@@ -1,46 +1,19 @@
 ---
 name: development-design
-description: Create or revise development planning and design documents (Designs) by clarifying software ideas and requirements with the user. Also use for Design status changes.
+description: Write or revise connected software development design documents for implementation and review. Also use for Design status changes.
 ---
 
 # Development Design
 
-Partner with the user to complete development planning and design documents.
-Start from goals and constraints and decide together what to build and how it should behave under different conditions.
-Read and apply [shared rules](../rules/SKILL.md) if absent from context.
+For status-only requests, use [status](references/document-status.md).
 
-## Develop Together
+Apply [software design criteria](../rules/references/software-design.md) when developing or writing a Design.
+Continue the named Design or one with the same goal; otherwise create one.
+Use `DESIGN.md` for purpose, scope, the architecture overview, and navigation to detailed views in Markdown documents in the same directory.
+Deliver the complete document set with valid links.
+Keep [readiness](references/document-status.md) in metadata only.
+Save through [creation](references/document-operations.md) or [revision](references/document-editing.md).
+Capture durable project context through Architecture Memory, or use `--memory off` when prohibited.
+For registration access failures, use [setup](../dashboard-server/references/sandbox-setup.md).
 
-Explain your recommendation for the current problem, your reasoning, and how behavior will change.
-Discuss important choices with the user and decide details within the established goals and constraints.
-
-Address prerequisite decisions first.
-After each user reply, incorporate the feedback into the design and assess the remaining issues.
-If the current issue needs another decision, present your recommendation and the question needed to resolve it.
-If the current issue is settled and issues remain within the requested scope, present the next issue and your recommendation with reasons in the same response, asking any necessary questions.
-When the features and behavior within the requested scope are concrete, complete and save the Design as specified below, then report the result and its completion status.
-
-Confirm facts and background as needed from existing contracts, code, documentation, and connected [Architecture Memory](../architecture-memory/SKILL.md).
-
-For design discussions spanning multiple topics, follow [progress navigation](../rules/references/design-navigation.md) to keep the overall flow and current position visible to the user.
-
-## Write the Design
-
-Continue working on the named Design or an existing one with the same goal; create one if none exists.
-For status-only requests, follow [status changes](references/document-status.md).
-Apply [shared writing rules](../rules/references/writing-and-revision.md) when drafting or revising.
-
-Specify what will be built or changed, how it should behave under the relevant conditions, the expected results, and how to check them.
-The Design must be understandable without reconstructing the conversation.
-Leave implementation details open when changing them would preserve the designed behavior and structure.
-
-Include a concrete case when checking each part separately would miss an incorrect final result or lost state.
-Use Mermaid code blocks for diagrams.
-
-## Save and Report
-
-Set [readiness](references/document-status.md), then save through [creation](references/document-operations.md) or [editing](references/document-editing.md).
-Use `--memory off` when recording is prohibited; otherwise capture durable project context through Architecture Memory.
-If `EPERM` or `EACCES` occurs, follow [sandbox recovery](../dashboard-server/references/sandbox-setup.md).
-
-Briefly report the saved Design, important unresolved points, and any failed work.
+Report the overview link, readiness, and material open matters in the conversation, distinguishing save failures from registration or Memory failures after a successful save.

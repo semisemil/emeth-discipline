@@ -1,15 +1,20 @@
-# Change document status
+# Status
 
-## Readiness
+Assess the entire document set:
 
-Use `draft` while a material fact or decision is unresolved, or when requested; name the missing resolution. Use `ready` when scope, required behavior, affected contracts, and acceptance conditions are established, with material choices accepted or resolved under delegated authority. Remaining implementation choices must preserve these outcomes. Use `blocked` for actual external prerequisites. Readiness neither authorizes execution nor proves implementation.
+| Status | Condition |
+| --- | --- |
+| `draft` | Material facts or decisions unresolved, or requested |
+| `ready` | Selected form, complete and consistent documents and links, established scope, behavior, contracts, and acceptance conditions; material choices accepted or resolved within delegation |
+| `blocked` | External prerequisite prevents progress |
+| `completed` | Verification establishes every required condition of the final set revision |
 
-## Status changes
-
-For status changes, pass the document ID and target state directly:
+For status-only changes:
 
 ```text
-node <plugin-root>/writers/document-writer.js status --project-root <absolute-project-root> --id <DESIGN-ID> --status completed
+node <plugin-root>/writers/document-writer.js status --project-root <absolute-project-root> --id <DESIGN-ID> --status <state>
 ```
 
-Complete only after verification establishes every required condition of the final revision. A status request does not authorize verification. Cancel only when requested. For replacement, put the previous Design ID in the new Design's `supersedes`.
+Status-only requests do not authorize implementation or verification.
+Cancel only when requested.
+For replacement, put the previous ID in the new Design's `supersedes`.

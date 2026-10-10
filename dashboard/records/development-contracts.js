@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
 const { parseCurrentRecord, DEVELOPMENT_ID, DESIGN_ID } = require('./record-parser.js');
+const { readDesignDocuments, assertDocumentSetAvailable } = require('../../lib/design-documents.js');
 
 const FORMATS = {
   DESIGN: { kind: 'design', directory: 'designs', file: 'DESIGN.md' },
@@ -33,7 +34,8 @@ function readDesigns(root) {
   const directory = path.join(root, '.emeth', 'designs');
   if (!fs.existsSync(directory)) return [];
   const ids = new Set(fs.readdirSync(directory, { withFileTypes: true })
-    .filter(entry => entry.isDirectory()).map(entry => /^(DESIGN-\d{4,})-/.exec(entry.name)?.[1]).filter(Boolean));
+    .filter(entry => entry.isDirectory() && fs.existsSync(path.join(directory, entry.name, 'DESIGN.md')))
+    .map(entry => /^(DESIGN-\d{4,})-/.exec(entry.name)?.[1]).filter(Boolean));
   return [...ids].map(id => readDevelopmentRecord(root, id));
 }
 function supersessionMap(records) {
@@ -74,7 +76,8 @@ function resolveContract(root, id) {
     fail('contract-superseded', `${id} is replaced by ${next.get(id) || record.metadata.superseded_by}`);
   }
   if (record.status !== 'ready') fail('contract-not-ready', 'Design must be ready');
-  return record;
+  assertDocumentSetAvailable(record.source.filePath);
+  return { ...record, documents: readDesignDocuments(root, record) };
 }
 module.exports = { readDevelopmentRecord, readDesigns, supersessionMap, assertDesignWrite, resolveContract };
 
@@ -89,7 +92,7 @@ if (require.main === module) {
     const root = fs.realpathSync(options['--project-root']);
     const record = resolveContract(root, options['--id']);
     process.stdout.write(JSON.stringify({ id: record.id, title: record.title, path: record.relativePath,
-      revision: record.revision, status: record.status, metadata: record.metadata, body: record.body,
+      revision: record.revision, status: record.status, metadata: record.metadata, body: record.body, documents: record.documents,
       memory: require('../../lib/architecture-memory.js').connectionStatus(root) }) + '\n');
   } catch (error) { process.stderr.write(JSON.stringify({ error: { code: error.code || 'contract-unavailable', message: error.message } }) + '\n'); process.exitCode = 1; }
 }

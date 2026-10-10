@@ -1,4 +1,4 @@
 interface:
   display_name: "Emeth: Development Design"
-  short_description: "Develop an idea into a concrete software design"
-  default_prompt: "Use $development-design to develop my current idea into a concrete design, explaining relevant structures, tradeoffs, and failure cases along the way."
+  short_description: "Write connected software design documentation"
+  default_prompt: "Use $development-design to write connected development design documents for this work."

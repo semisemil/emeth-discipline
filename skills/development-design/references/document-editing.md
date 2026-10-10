@@ -1,21 +1,27 @@
-# Edit a Design
+# Revise
 
-Read the Design when its current text is needed:
+Read source when needed:
 
 ```text
-node <plugin-root>/writers/document-writer.js read --project-root <absolute-project-root> --id DESIGN-0001
+node <plugin-root>/writers/document-writer.js read --project-root <absolute-project-root> --id <DESIGN-ID>
 ```
 
-Send changed spans as UTF-8 JSON on stdin to:
+Patch with UTF-8 JSON on stdin:
 
 ```text
-node <plugin-root>/writers/document-writer.js patch --project-root <absolute-project-root> --id DESIGN-0001 --change-kind major
+node <plugin-root>/writers/document-writer.js patch --project-root <absolute-project-root> --id <DESIGN-ID> --change-kind major
 ```
 
 ```json
-{"edits":[{"old":"The request returns an ID.","new":"A successful request returns an ID."}]}
+{"edits":[{"old":"<overview span>","new":"<replacement>"}],"documents":[
+  {"path":"<existing>.md","edits":[{"old":"<span>","new":"<replacement>"}]},
+  {"path":"<new>.md","body":"<design>"},
+  {"path":"<retired>.md","remove":true}]}
 ```
 
-Edits apply in order; each `old` must match exactly once. For body/contract changes, use `major` and reassess readiness; the command increments revision automatically. Use `operational` for link/status changes without changing the body. Include any required metadata changes other than revision.
+Omit unused operations.
+Each `old` must match exactly once in its file; edits apply in order.
+`body` adds a document; `remove` retires one.
+Detailed content or membership changes require `major`, even without overview changes.
 
-Use [the status command](document-status.md) for status-only changes.
+Use `operational` only for metadata or work links, preserving content and membership.

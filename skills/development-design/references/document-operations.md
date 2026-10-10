@@ -1,11 +1,17 @@
-# Create a Design
+# Create
 
-Send only the UTF-8 Markdown body on stdin:
+Send UTF-8 JSON on stdin:
 
 ```text
-node <plugin-root>/writers/document-writer.js create --project-root <absolute-project-root> --title <title> --slug <lowercase-hyphenated-name> --kind <kind> --status <status> --language <document-language>
+node <plugin-root>/writers/document-writer.js create --project-root <absolute-project-root> --title <title> --slug <lowercase-hyphenated-name> --kind <kind> --status <status> --language <document-language> --input-format documents
 ```
 
-Kinds: `feature | bug | refactor | exact_port | maintenance` (default `feature`). Status defaults to `draft`; choose readiness under the skill's criteria.
+```json
+{"body":"<DESIGN.md overview with relative links>","documents":[{"path":"<topic>.md","body":"<detailed design>"}]}
+```
 
-The command allocates the next ID, creates `.emeth/designs/<ID>-<slug>/DESIGN.md`, and generates metadata with revision 1 and empty links. Supply `--id DESIGN-NNNN` only when a specific unused ID is required. For explicit issue targets, apply [work links](../../issue-ledger/references/work-link.md).
+Detailed paths are relative to `.emeth/designs/<ID>-<slug>/`; overview links must reach all members.
+
+Kinds are `feature | bug | refactor | exact_port | maintenance`.
+Supply `--id DESIGN-NNNN` only when a particular unused ID is required.
+For explicit issue targets, apply [work links](../../issue-ledger/references/work-link.md).

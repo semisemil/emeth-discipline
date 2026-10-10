@@ -320,6 +320,7 @@ function parseSpecMetadata(metadataText, design = false) {
     'schema_version', 'id', 'title', 'kind', 'status', 'revision',
     'supersedes', 'superseded_by', 'related_issues',
   ];
+  if (design && metadata && Object.hasOwn(metadata, 'documents')) required.push('documents');
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)
       || Object.keys(metadata).sort().join(',') !== [...required].sort().join(',')
       || metadata.schema_version !== 2
@@ -335,6 +336,10 @@ function parseSpecMetadata(metadataText, design = false) {
     throw new RecordError('record-metadata-invalid', `${design ? 'Design' : 'Spec'} metadata가 올바르지 않습니다.`);
   }
   metadata.related_issues = validateRelatedIssues(metadata.related_issues);
+  if (design && Object.hasOwn(metadata, 'documents')) {
+    try { require('../../lib/design-documents.js').validateDocumentPaths(metadata.documents); }
+    catch (error) { throw new RecordError('record-metadata-invalid', error.message, error); }
+  }
   return metadata;
 }
 

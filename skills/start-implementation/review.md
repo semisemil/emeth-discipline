@@ -6,6 +6,8 @@ Read the assigned Design:
 node <plugin-root>/dashboard/records/development-contracts.js --project-root <project> --id <DESIGN-ID>
 ```
 
+Review the returned overview and detailed documents together as the Design.
+
 Review the assigned implementation commit against the Design. Make fixes and refactoring directly within the change and its effects, preserving unrelated work. Use related unchanged code to assess those effects.
 
 Use relevant project coding standards from documents or connected [Architecture Memory](../architecture-memory/SKILL.md). Where no standard is recorded, use established code conventions and ordinary quality judgment without inventing project rules.
