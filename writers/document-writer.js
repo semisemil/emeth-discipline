@@ -812,6 +812,20 @@ function formatError(error) {
   };
 }
 
+function formatSuccess(result) {
+  if (!result.write) return result;
+  const { status, kind, id, path: documentPath, revision, snapshot } = result.write;
+  const registration = result.registration && (result.registration.status === 'failed'
+    ? result.registration : { status: result.registration.status });
+  return {
+    schema_version: result.schema_version,
+    write: { status, kind, id, path: documentPath, revision, snapshot },
+    registration,
+    ...(result.memory ? { memory: result.memory } : {}),
+    ...(result.document_status !== undefined ? { document_status: result.document_status } : {}),
+  };
+}
+
 function main(argv = process.argv.slice(2), sourceBuffer) {
   try {
     const options = parseArgs(argv);
@@ -822,7 +836,7 @@ function main(argv = process.argv.slice(2), sourceBuffer) {
       : options.command === 'status'
       ? updateDocumentStatus(options)
       : writeDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer);
-    process.stdout.write(`${JSON.stringify(result)}\n`);
+    process.stdout.write(`${JSON.stringify(formatSuccess(result))}\n`);
     return result;
   } catch (error) {
     process.stderr.write(`${JSON.stringify(formatError(error))}\n`);

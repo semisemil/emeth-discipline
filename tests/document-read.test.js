@@ -126,3 +126,32 @@ test('partial reads retain validation of unselected members and pending document
   assert.equal(pending.status, 1);
   assert.equal(pending.value.error.code, 'design-document-set-pending');
 });
+
+test('compact CLI save results retain revision, snapshots, registration, and document status', t => {
+  const f = fixture(t);
+  assert.deepEqual(f.create.value, {
+    schema_version: 1,
+    write: { status: 'created', kind: 'design', id: 'DESIGN-0001', path: `${directory}/DESIGN.md`, revision: 1, snapshot: null },
+    registration: { status: 'registered' }, memory: { status: 'disabled' },
+  });
+  const original = fs.readFileSync(f.file('contracts/request.md'));
+  const patch = f.run('patch', ['--change-kind', 'major'], { documents: [{ path: 'contracts/request.md', edits: [{ old: '요청 ID', new: '접수 ID' }] }] });
+  assert.equal(patch.status, 0, patch.stderr);
+  assert.equal(patch.value.write.revision, 2);
+  assert.deepEqual(patch.value.write.snapshot, { status: 'created', path: `${directory}/revisions/REV-1/DESIGN.md` });
+  assert.deepEqual(patch.value.registration, { status: 'no-op' });
+  assert.deepEqual(fs.readFileSync(f.file('revisions/REV-1/contracts/request.md')), original);
+  const status = f.run('status', ['--status', 'completed']);
+  assert.equal(status.status, 0, status.stderr);
+  assert.equal(status.value.document_status, 'completed');
+  assert.equal(status.value.write.revision, 2);
+  assert.equal(status.value.write.snapshot, null);
+  const noOp = f.run('status', ['--status', 'completed']);
+  assert.equal(noOp.status, 0, noOp.stderr);
+  assert.equal(noOp.value.write.status, 'no-op');
+  assert.equal(noOp.value.registration, null);
+  const metadata = JSON.parse(fs.readFileSync(f.file('DESIGN.md'), 'utf8').split('---')[1]);
+  assert.equal(metadata.title, '알림 설계');
+  assert.deepEqual(metadata.documents, ['contracts/request.md', 'delivery.md']);
+  assert.equal(metadata.status, 'completed');
+});
