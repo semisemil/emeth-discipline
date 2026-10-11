@@ -19,6 +19,7 @@ const {
 const { assertDesignWrite, readDevelopmentRecord } = require('../dashboard/records/development-contracts.js');
 const { registerProject, rootKey } = require('../dashboard/registry.js');
 const { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable } = require('../lib/design-documents.js');
+const { readMarkdownSection } = require('../lib/markdown-section.js');
 
 const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
 const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
@@ -42,13 +43,14 @@ function parseArgs(argv) {
   if (!['create', 'write', 'status', 'read', 'patch', 'recover'].includes(command)) {
     throw writerError(
       'invalid-command',
-      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read|patch|recover --project-root DIR --id DESIGN-ID'
+      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read --project-root DIR --id DESIGN-ID [--document PATH] [--section TITLE]; patch|recover --project-root DIR --id DESIGN-ID'
     );
   }
 
   const options = command === 'write' ? {} : { command };
   const allowed = new Set(command === 'create' ? ['project_root', 'id', 'title', 'slug', 'kind', 'status', 'memory', 'language', 'input_format']
-    : command === 'read' || command === 'recover' ? ['project_root', 'id']
+    : command === 'read' ? ['project_root', 'id', 'document', 'section']
+    : command === 'recover' ? ['project_root', 'id']
     : command === 'patch' ? ['project_root', 'id', 'change_kind', 'memory', 'language']
     : command === 'status'
     ? ['project_root', 'id', 'status', 'memory', 'language']
@@ -106,6 +108,9 @@ function parseArgs(argv) {
   }
   if (options.change_kind !== undefined && !CHANGE_KINDS.has(options.change_kind)) {
     throw writerError('change-kind-invalid', '--change-kind는 major 또는 operational이어야 합니다.');
+  }
+  if (options.section !== undefined && !options.section.trim()) {
+    throw writerError('invalid-argument', '--section에는 절 제목이 필요합니다.');
   }
   return options;
 }
@@ -640,7 +645,23 @@ function readDesignSource(options) {
 
 function readDocument(options) {
   const { record, text } = readDesignSource(options);
-  return { id: options.id, path: record.relativePath, text, documents: readDesignDocuments(canonicalProjectRoot(options.project_root), record) };
+  const documents = readDesignDocuments(canonicalProjectRoot(options.project_root), record);
+  if (options.document === undefined && options.section === undefined) {
+    return { id: options.id, path: record.relativePath, text, documents };
+  }
+  const name = options.document === undefined ? 'DESIGN.md' : options.document;
+  let selected = { path: record.relativePath, text };
+  if (name !== 'DESIGN.md') {
+    validateDocumentPaths([name]);
+    const documentPath = path.posix.join(path.posix.dirname(record.relativePath), name);
+    const document = documents.find(document => document.path === documentPath);
+    if (!document) throw writerError('contract-unavailable', `등록된 상세 문서가 아닙니다: ${name}`);
+    selected = { path: document.path, text: document.body };
+  }
+  if (options.section !== undefined) {
+    selected.text = readMarkdownSection(name === 'DESIGN.md' ? parseFrontmatter(selected.text).body : selected.text, options.section);
+  }
+  return { id: options.id, ...selected };
 }
 
 function withRevision(content, revision) {
