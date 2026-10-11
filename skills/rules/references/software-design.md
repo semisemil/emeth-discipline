@@ -25,7 +25,6 @@ Use prose to establish purpose and explain relationships or material tradeoffs n
 Separate the overview from detailed views by subject and responsibility, with links between them.
 Each contract has one owning section or document, referenced elsewhere.
 Headings and diagram levels follow the selected conventions; all views agree on boundaries, responsibilities, and contract conditions.
-Review rendered diagrams and tables for legibility.
 Keep choices local to a Design with their contracts; record significant architectural decisions through [Architecture Memory ADR guidance](../../architecture-memory/references/decision-templates.md).
 Open implementation choices preserve the specified behavior and structure.
 
