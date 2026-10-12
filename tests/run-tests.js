@@ -18,7 +18,8 @@ if (testFiles.length === 0) {
   console.error('No test files found.');
   process.exitCode = 1;
 } else {
-  const result = spawnSync(process.execPath, ['--test', ...testFiles], {
+  const concurrency = process.platform === 'win32' ? ['--test-concurrency=1'] : [];
+  const result = spawnSync(process.execPath, ['--test', ...concurrency, ...testFiles], {
     cwd: repoRoot,
     env: {
       ...process.env,
