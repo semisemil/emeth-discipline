@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
+const roots = require('../lib/document-roots.js');
 
 const { rootKey } = require('./registry.js');
 const { ProjectApiError } = require('./records/project-index.js');
@@ -82,7 +83,8 @@ function readSecureFile(options) {
   let descriptor;
   try {
     const candidate = path.resolve(options.path);
-    if (!isInside(options.projectRoot, candidate)
+    const storageRoot = options.storageRoot || options.projectRoot;
+    if (!isInside(storageRoot, candidate)
         || !isInside(options.boundaryRoot, candidate)) {
       throw architectureError(
         'architecture-path-outside-project',
@@ -91,7 +93,7 @@ function readSecureFile(options) {
     }
 
     const canonical = realpath(candidate);
-    if (!isInside(options.projectRoot, canonical)
+    if (!isInside(storageRoot, canonical)
         || !isInside(options.boundaryRoot, canonical)) {
       throw architectureError(
         'architecture-path-outside-project',
@@ -128,7 +130,7 @@ function readSecureFile(options) {
     const current = fs.statSync(currentCanonical, { bigint: true });
     const currentProjectRoot = realpath(options.projectRoot);
     if (rootKey(currentProjectRoot) !== rootKey(options.projectRoot)
-        || !isInside(currentProjectRoot, currentCanonical)
+        || !isInside(storageRoot, currentCanonical)
         || !isInside(options.boundaryRoot, currentCanonical)
         || !current.isFile()
         || !sameIdentity(opened, current)
@@ -159,6 +161,14 @@ function readSecureFile(options) {
 }
 
 function discoverManifest(projectRoot) {
+  const setting = roots.architectureSetting(projectRoot);
+  if (setting && (roots.configuredRoot(projectRoot, 'architecture') || !setting.startsWith('docs/'))) {
+    const directory = roots.rootPath(projectRoot, setting);
+    roots.checkOwner(projectRoot, directory);
+    const manifestPath = path.join(directory, MEMORY_DIRECTORY, MANIFEST_NAME);
+    if (!fs.existsSync(manifestPath)) throw architectureError('architecture-not-found', '아키텍처 메모리를 찾을 수 없습니다.', 404);
+    return { docsRoot: directory, manifestPath, configured: true };
+  }
   const docsPath = path.join(projectRoot, 'docs');
   let docsRoot;
   try {
@@ -326,13 +336,13 @@ function parseManifest(content, options = {}) {
 
 function loadArchitecture(project, options = {}) {
   const projectRoot = canonicalProjectRoot(project);
-  const { docsRoot, manifestPath } = discoverManifest(projectRoot);
+  const { docsRoot, manifestPath, configured } = discoverManifest(projectRoot);
   const architectureRootPath = path.dirname(path.dirname(manifestPath));
   let architectureRoot;
   try {
     architectureRoot = realpath(architectureRootPath);
     if (!fs.statSync(architectureRoot).isDirectory()
-        || !isInside(projectRoot, architectureRoot)
+        || (!configured && !isInside(projectRoot, architectureRoot))
         || !isInside(docsRoot, architectureRoot)) {
       throw new Error('architecture root outside docs');
     }
@@ -343,6 +353,7 @@ function loadArchitecture(project, options = {}) {
   const manifestFile = readSecureFile({
     path: manifestPath,
     projectRoot,
+    storageRoot: configured ? docsRoot : projectRoot,
     boundaryRoot: docsRoot,
     maxBytes: MAX_MANIFEST_BYTES,
     tooLargeMessage: '아키텍처 매니페스트가 256 KiB 한도를 초과합니다.',
@@ -406,6 +417,7 @@ function readArchitectureDocument(state, documentId) {
   return readSecureFile({
     path: path.resolve(state.architectureRoot, ...registered.path.split('/')),
     projectRoot: state.projectRoot,
+    storageRoot: state.architectureRoot,
     boundaryRoot: state.architectureRoot,
     maxBytes: MAX_DOCUMENT_BYTES,
     tooLargeMessage: '아키텍처 문서가 2 MiB 한도를 초과합니다.',

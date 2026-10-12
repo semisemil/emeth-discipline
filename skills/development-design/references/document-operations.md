@@ -10,7 +10,7 @@ node <plugin-root>/writers/document-writer.js create --project-root <absolute-pr
 {"body":"<DESIGN.md overview with relative links>","documents":[{"path":"<topic>.md","body":"<detailed design>"}]}
 ```
 
-Detailed paths are relative to `.emeth/designs/<ID>-<slug>/`; overview links must reach all members.
+Detailed paths are relative to the Design directory; overview links must reach all members.
 
 Kinds are `feature | bug | refactor | exact_port | maintenance`.
 Supply `--id DESIGN-NNNN` only when a particular unused ID is required.

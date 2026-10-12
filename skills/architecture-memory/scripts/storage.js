@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { migrateProject } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const roots = require('../../../lib/document-roots.js');
 const { TextDecoder } = require('node:util');
 
 const BINDING = '.emeth/architecture.json';
@@ -44,15 +45,21 @@ function atomicWrite(file, text) {
 }
 function hash(value) { return value === null ? null : crypto.createHash('sha256').update(value).digest('hex'); }
 function saveJson(file, value) { atomicWrite(file, `${JSON.stringify(value, null, 2)}\n`); }
+function rootPath(project, value) {
+  const directory = roots.rootPath(project, value);
+  roots.checkOwner(project, directory);
+  return directory;
+}
 function binding(project) {
   migrateProject(project);
   const value = jsonFile(safePath(project, BINDING), 4096);
   if (value === null) return null;
   if (value.schema_version !== 1 || Object.keys(value).some(key => !['root', 'schema_version', 'enabled'].includes(key))
       || (value.enabled !== undefined && typeof value.enabled !== 'boolean')
-      || !relative(value.root).startsWith('docs/')) fail('memory-binding-invalid', 'Invalid project memory binding.');
-  safePath(project, value.root);
-  return value;
+      || typeof value.root !== 'string' || !value.root.trim()) fail('memory-binding-invalid', 'Invalid project memory binding.');
+  const root = roots.architectureSetting(project) || value.root;
+  roots.rootPath(project, root);
+  return { ...value, root };
 }
 function exclusive(root, action) {
   const file = safePath(root, `${WORK}/lock`);
@@ -69,4 +76,5 @@ function exclusive(root, action) {
   fs.writeFileSync(file, JSON.stringify({ pid: process.pid }), { flag: 'wx' });
   try { return action(); } finally { fs.unlinkSync(file); }
 }
-module.exports = { BINDING, WORK, fail, relative, safePath, textFile, jsonFile, atomicWrite, hash, saveJson, binding, exclusive };
+module.exports = { BINDING, WORK, fail, relative, safePath, textFile, jsonFile, atomicWrite, hash, saveJson, binding, exclusive,
+  rootPath, prepareRoot: roots.prepareRoot, architectureSetting: roots.architectureSetting };

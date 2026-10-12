@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
+const roots = require('../../lib/document-roots.js');
 
 const issueModel = require('../../skills/issue-ledger/lib/issue-model.js');
 
@@ -96,6 +97,14 @@ function toRelative(root, filePath) {
 }
 
 function hasArchitectureManifest(rootReal) {
+  try {
+    const setting = roots.architectureSetting(rootReal);
+    if (setting && (roots.configuredRoot(rootReal, 'architecture') || !setting.startsWith('docs/'))) {
+      const directory = roots.rootPath(rootReal, setting);
+      roots.checkOwner(rootReal, directory);
+      return fs.statSync(path.join(directory, ARCHITECTURE_MEMORY_DIRECTORY, ARCHITECTURE_MANIFEST)).isFile();
+    }
+  } catch { return false; }
   let docsReal;
   try {
     docsReal = realpath(path.join(rootReal, 'docs'));
@@ -248,10 +257,13 @@ function collectCandidates(projectState, diagnostics) {
     { kind: 'spec', directoryName: 'specs', fileName: 'SPEC.md', idPattern: SPEC_ID },
     { kind: 'design', directoryName: 'designs', fileName: 'DESIGN.md', idPattern: DESIGN_ID },
   ]) {
-    const recordsDirectory = path.join(rootReal, '.emeth', definition.directoryName);
+    let storage;
+    try { storage = definition.kind === 'design' ? roots.designStorage(rootReal) : { root: rootReal, directory: path.join(rootReal, '.emeth', definition.directoryName) }; }
+    catch (error) { diagnostics.push(diagnostic(error.code || 'document-root-unavailable', '.emeth/documents.json', error.message)); continue; }
+    const recordsDirectory = storage.directory;
     for (const entry of directoryEntries(
       recordsDirectory,
-      rootReal,
+      storage.root,
       `.emeth/${definition.directoryName}`,
       diagnostics,
     )) {
@@ -269,10 +281,11 @@ function collectCandidates(projectState, diagnostics) {
       }
       candidates.push({
         kind: definition.kind,
+        root: storage.root,
         filePath,
         directory: recordsDirectory,
         expectedId: id,
-        relativePath: toRelative(rootReal, filePath),
+        relativePath: definition.kind === 'design' ? roots.designReference(rootReal, filePath) : toRelative(rootReal, filePath),
       });
     }
   }
@@ -285,7 +298,7 @@ function parseCandidates(projectState, diagnostics, options = {}) {
     try {
       parsed.push(parseCurrentRecord({
         ...candidate,
-        root: projectState.rootReal,
+        root: candidate.root || projectState.rootReal,
         includeBody: false,
         readMode: options.readMode || 'index',
       }));
@@ -530,8 +543,12 @@ function projectSourceSignature(project) {
   }
   const parts = [canonicalProjectRootIdentity(project), 'available'];
   appendPathSignature(parts, state.emethReal, '.emeth');
+  appendPathSignature(parts, path.join(state.emethReal, 'documents.json'), 'documents.json');
   for (const definition of RECORD_DIRECTORY_DEFINITIONS) {
-    const directory = path.join(state.emethReal, definition.directoryName);
+    let directory;
+    try { directory = definition.directoryName === 'designs' ? roots.designStorage(state.rootReal).directory : path.join(state.emethReal, definition.directoryName); }
+    catch (error) { parts.push(`designs:error:${error.code}`); continue; }
+    parts.push(directory);
     appendPathSignature(parts, directory, definition.directoryName);
     const entries = sortedDirectoryEntries(directory, parts, definition.directoryName);
     if (definition.directoryName === 'issues') {
@@ -566,11 +583,14 @@ function projectWatcherPaths(project) {
   }
   const watchedPaths = new Set(state.emethExists ? [state.emethReal] : []);
   for (const definition of RECORD_DIRECTORY_DEFINITIONS) {
-    const directory = path.join(state.emethReal, definition.directoryName);
+    let storage;
+    try { storage = definition.directoryName === 'designs' ? roots.designStorage(state.rootReal) : { root: state.rootReal, directory: path.join(state.emethReal, definition.directoryName) }; }
+    catch { continue; }
+    const directory = storage.directory;
     let directoryReal;
     try {
       directoryReal = realpath(directory);
-      if (!fs.statSync(directoryReal).isDirectory() || !isInside(state.rootReal, directoryReal)) {
+      if (!fs.statSync(directoryReal).isDirectory() || !isInside(storage.root, directoryReal)) {
         continue;
       }
       watchedPaths.add(directoryReal);
@@ -605,11 +625,11 @@ function projectWatcherPaths(project) {
       }
       try {
         const childReal = realpath(path.join(directory, entry.name));
-        if (fs.statSync(childReal).isDirectory() && isInside(state.rootReal, childReal)) {
+        if (fs.statSync(childReal).isDirectory() && isInside(storage.root, childReal)) {
           watchedPaths.add(childReal);
           try {
             const recordReal = realpath(path.join(childReal, definition.fileName));
-            if (isInside(state.rootReal, recordReal) && fs.statSync(recordReal).isFile()) {
+            if (isInside(storage.root, recordReal) && fs.statSync(recordReal).isFile()) {
               watchedPaths.add(recordReal);
             }
           } catch {
@@ -994,7 +1014,7 @@ class ProjectIndexService {
         directory: indexed.source.directory,
         expectedId: indexed.source.expectedId,
         relativePath: indexed.relativePath,
-        root: project.root,
+        root: indexed.source.root || project.root,
         includeBody: true,
         readMode: 'document',
       });

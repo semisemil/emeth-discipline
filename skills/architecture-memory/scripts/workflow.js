@@ -38,16 +38,19 @@ function paths(project, revision, root) {
       const directory = queue.pop();
       for (const entry of fs.readdirSync(directory ? S.safePath(project, directory) : project, { withFileTypes: true })) {
         const name = directory ? `${directory}/${entry.name}` : entry.name;
-        if (entry.isSymbolicLink() || ['.git', 'node_modules', 'vendor', 'dist', 'build', '.cache'].includes(entry.name) || owned(name, root)) continue;
+        if (entry.isSymbolicLink() || ['.git', 'node_modules', 'vendor', 'dist', 'build', '.cache'].includes(entry.name) || owned(name, root, project)) continue;
         if (entry.isDirectory()) queue.push(name);
         else if (entry.isFile()) names.push(name);
         if (names.length + queue.length > 100000) S.fail('memory-inventory-limit', 'Inventory exceeds 100,000 entries; use a narrower project root.');
       }
     }
   }
-  return names.filter((name) => !owned(name, root)).sort();
+  return names.filter((name) => !owned(name, root, project)).sort();
 }
-function owned(name, root) { return name === S.BINDING || name === root || name.startsWith(`${root}/`); }
+function owned(name, root, project) {
+  const relativeRoot = path.relative(project, path.resolve(project, root)).split(path.sep).join('/');
+  return name === S.BINDING || name === '.emeth/documents.json' || name === relativeRoot || name.startsWith(`${relativeRoot}/`);
+}
 function delta(project, base, revision, root) {
   if (!base) return null;
   if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(base)) S.fail('memory-checkpoint-invalid', 'Checkpoint must be a full commit ID.');
@@ -59,7 +62,7 @@ function delta(project, base, revision, root) {
     const names = [fields[index++]];
     if (/^[RC]/.test(status)) names.push(fields[index++]);
     if (names.some((name) => typeof name !== 'string' || !name)) S.fail('memory-diff-invalid', 'Incomplete Git path record.');
-    if (!names.every((name) => owned(name, root))) changes.push({ status, paths: names });
+    if (!names.every((name) => owned(name, root, project))) changes.push({ status, paths: names });
   }
   return changes;
 }
@@ -69,10 +72,13 @@ function locate(project, requested) {
   try { existing = loadArchitecture({ root: project }, { allowDisabled: true }); }
   catch (error) { if (error.code !== 'architecture-not-found') throw error; }
   const found = existing ? path.relative(project, existing.architectureRoot).split(path.sep).join('/') : null;
-  const root = requested || linked?.root || found || 'docs/architecture';
-  if (!S.relative(root).startsWith('docs/')) S.fail('memory-root-invalid', 'Memory root must be under docs/.');
-  if ((found && root !== found) || (linked && root !== linked.root)) S.fail('memory-root-conflict', 'Existing memory belongs to another root.');
-  return { root, directory: S.safePath(project, root), existing };
+  const root = requested || S.architectureSetting(project) || linked?.root || found || 'docs/architecture';
+  const directory = S.rootPath(project, root);
+  if ((existing && path.relative(directory, existing.architectureRoot) !== '') || (linked && path.relative(directory, S.rootPath(project, linked.root)) !== '')) S.fail('memory-root-conflict', 'Existing memory belongs to another root.');
+  return { root, directory, existing };
+}
+function publicationPath(project, found, name) {
+  return name.startsWith(`${found.root}/`) ? S.safePath(found.directory, name.slice(found.root.length + 1)) : S.safePath(project, name);
 }
 function statePath(directory) { return S.safePath(directory, `${S.WORK}/state.json`); }
 function loadState(directory) {
@@ -90,8 +96,8 @@ function loadState(directory) {
       || !Object.values(state.classifications).every((item) => object(item) && ['none', 'architecture'].includes(item.effect) && typeof item.reason === 'string')) {
     S.fail('memory-state-invalid', 'Missing or invalid work state; do not treat it as a fresh operation.');
   }
-  for (const name of [state.root, ...state.inventory, ...state.changes.flatMap((change) => change.paths), ...Object.keys(state.before), ...Object.keys(state.observations), ...Object.keys(state.classifications)]) S.relative(name);
-  if (!state.root.startsWith('docs/')) S.fail('memory-state-invalid', 'Invalid memory root in work state.');
+  for (const name of [...state.inventory, ...state.changes.flatMap((change) => change.paths), ...Object.keys(state.observations), ...Object.keys(state.classifications)]) S.relative(name);
+  for (const name of Object.keys(state.before)) S.relative(name.startsWith(`${state.root}/`) ? name.slice(state.root.length + 1) : name);
   try { parseManifest(JSON.stringify({ ...skeleton('en'), git_checkpoint: state.snapshot })); }
   catch { S.fail('memory-state-invalid', 'Invalid captured checkpoint metadata.'); }
   if (state.phase !== 'draft' && (!Array.isArray(state.entries) || !state.entries.every((entry) => object(entry)
@@ -131,20 +137,20 @@ function begin(project, mode, options = {}) {
   const found = locate(project, options.root);
   if (mode === 'update' && (!found.existing || !found.existing.manifest.managed || S.binding(project)?.enabled === false)) S.fail('memory-not-initialized', 'Memory must be connected and enabled before Git reconciliation.');
   if (!found.existing && fs.existsSync(found.directory) && !fs.existsSync(statePath(found.directory))
-      && fs.readdirSync(found.directory).some((name) => name !== '.architecture-memory')) {
+      && fs.readdirSync(found.directory).some((name) => !['.architecture-memory', '.emeth-project.json'].includes(name))) {
     S.fail('memory-root-conflict', 'Existing documents are not managed; choose an empty --root or establish an integration scope.');
   }
-  if (!fs.existsSync(found.directory)) fs.mkdirSync(found.directory, { recursive: true });
+  S.prepareRoot(project, found.directory);
   return S.exclusive(found.directory, () => {
     if (S.jsonFile(S.safePath(found.directory, `${S.WORK}/record.json`), 128 * 1024 * 1024)) S.fail('memory-record-pending', 'Resume record.js ensure before starting init/update');
     const old = fs.existsSync(statePath(found.directory)) ? loadState(found.directory) : null;
-    if (old && old.root !== found.root) S.fail('memory-state-invalid', 'Work root does not match the selected memory.');
+    if (old && old.root !== found.root && old.phase !== 'applied') S.fail('memory-state-invalid', 'Work root does not match the selected memory.');
     if (old && old.phase !== 'applied') {
       if (old.mode !== mode) S.fail('memory-work-pending', `Resume pending ${old.mode} work before ${mode}.`);
       return report(old, found.directory);
     }
     if (!found.existing) {
-      const conflicting = fs.readdirSync(found.directory).filter((name) => name !== '.architecture-memory');
+      const conflicting = fs.readdirSync(found.directory).filter((name) => !['.architecture-memory', '.emeth-project.json'].includes(name));
       if (conflicting.length) S.fail('memory-root-conflict', 'Existing documents are not managed; choose an empty --root or establish an integration scope.');
     }
     const snap = snapshot(project);
@@ -322,8 +328,8 @@ function apply(project, options = {}, testOptions = {}) {
     if (state.phase === 'draft') {
       state.entries = prepareEntries(project, found, state);
       // Check all before-images before publishing even the first document.
-      for (const [name, before] of Object.entries(state.before)) if (S.hash(S.textFile(S.safePath(project, name))) !== before) S.fail('memory-target-changed', `Target changed since begin: ${name}`);
-      for (const entry of state.entries) if (S.hash(S.textFile(S.safePath(project, entry.file))) !== entry.before) S.fail('memory-target-changed', `Target changed since begin: ${entry.file}`);
+      for (const [name, before] of Object.entries(state.before)) if (S.hash(S.textFile(publicationPath(project, found, name))) !== before) S.fail('memory-target-changed', `Target changed since begin: ${name}`);
+      for (const entry of state.entries) if (S.hash(S.textFile(publicationPath(project, found, entry.file))) !== entry.before) S.fail('memory-target-changed', `Target changed since begin: ${entry.file}`);
       state.phase = 'applying'; saveState(found.directory, state);
     }
     if (!Array.isArray(state.entries)) S.fail('memory-state-invalid', 'Applying work has no publication journal.');
@@ -332,16 +338,16 @@ function apply(project, options = {}, testOptions = {}) {
       if ((!entry.file.startsWith(`${found.root}/`) && ![S.BINDING, 'AGENTS.md'].includes(entry.file))
           || entry.file.startsWith(`${found.root}/.architecture-memory/`) && entry.file !== `${found.root}/${MANIFEST}`
           || S.hash(entry.after) !== entry.after_hash || targets.has(entry.file)) S.fail('memory-state-invalid', 'Invalid journal target or content.');
-      S.safePath(project, entry.file);
+      publicationPath(project, found, entry.file);
       targets.add(entry.file);
       if (entry.file === `${found.root}/${MANIFEST}`) parseManifest(entry.after);
     }
     for (const [name, before] of Object.entries(state.before)) {
-      if (!state.entries.some((entry) => entry.file === name) && S.hash(S.textFile(S.safePath(project, name))) !== before) S.fail('memory-target-changed', `Unchanged dependency was edited externally: ${name}`);
+      if (!state.entries.some((entry) => entry.file === name) && S.hash(S.textFile(publicationPath(project, found, name))) !== before) S.fail('memory-target-changed', `Unchanged dependency was edited externally: ${name}`);
     }
     let written = 0;
     for (const entry of state.entries) {
-      const file = S.safePath(project, entry.file);
+      const file = publicationPath(project, found, entry.file);
       const currentText = S.textFile(file);
       const current = S.hash(currentText);
       if (current === entry.after_hash) continue;
@@ -352,7 +358,7 @@ function apply(project, options = {}, testOptions = {}) {
       written += 1;
       if (testOptions.afterWrite) testOptions.afterWrite(entry.file, written);
     }
-    for (const entry of state.entries) if (S.hash(S.textFile(S.safePath(project, entry.file))) !== entry.after_hash) S.fail('memory-target-changed', `Target changed during publication: ${entry.file}`);
+    for (const entry of state.entries) if (S.hash(S.textFile(publicationPath(project, found, entry.file))) !== entry.after_hash) S.fail('memory-target-changed', `Target changed during publication: ${entry.file}`);
     state.phase = 'applied'; saveState(found.directory, state);
     return { status: 'applied', changed_files: state.entries.length, checkpoint: state.snapshot.revision,
       binding: state.mode === 'init' ? S.BINDING : undefined };

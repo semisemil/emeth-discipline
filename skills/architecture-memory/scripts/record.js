@@ -51,13 +51,13 @@ function ensureMemory(project, options = {}) {
   try { existing = loadArchitecture({ root: project }, { allowDisabled: true }); }
   catch (error) { if (error.code !== 'architecture-not-found') throw error; }
   if (existing && !existing.manifest.managed) return { status: 'disabled' };
-  const root = binding?.root || (existing && path.relative(project, existing.architectureRoot).split(path.sep).join('/')) || 'docs/architecture';
-  const directory = S.safePath(project, root);
+  const root = S.architectureSetting(project) || binding?.root || (existing && path.relative(project, existing.architectureRoot).split(path.sep).join('/')) || 'docs/architecture';
+  const directory = S.rootPath(project, root);
   if (existing && path.resolve(directory) !== path.resolve(existing.architectureRoot)) S.fail('memory-root-conflict', 'Memory registration and connection disagree');
-  if (!existing && fs.existsSync(directory) && fs.readdirSync(directory).some(name => name !== '.architecture-memory')) {
+  if (!existing && fs.existsSync(directory) && fs.readdirSync(directory).some(name => !['.architecture-memory', '.emeth-project.json'].includes(name))) {
     if (!fs.existsSync(S.safePath(directory, JOURNAL))) S.fail('memory-root-conflict', 'Preserve existing unregistered architecture documents');
   }
-  fs.mkdirSync(directory, { recursive: true });
+  S.prepareRoot(project, directory);
   return S.exclusive(directory, () => {
     const pending = S.jsonFile(S.safePath(directory, `${S.WORK}/state.json`), 128 * 1024 * 1024);
     if (pending && pending.phase !== 'applied') S.fail('memory-work-pending', 'Finish the pending memory operation before connecting');
@@ -145,7 +145,7 @@ function preparePatch(state, sources, options, payload) {
 function patch(project, options, payload) {
   const binding = S.binding(project);
   if (!binding || binding.enabled === false) S.fail('memory-disabled', 'Memory is not connected');
-  const directory = S.safePath(project, binding.root);
+  const directory = S.rootPath(project, binding.root);
   return S.exclusive(directory, () => {
     const pending = S.jsonFile(S.safePath(directory, `${S.WORK}/state.json`), 128 * 1024 * 1024);
     if (pending && pending.phase !== 'applied') S.fail('memory-work-pending', 'Patch the operation draft while init/update is pending');

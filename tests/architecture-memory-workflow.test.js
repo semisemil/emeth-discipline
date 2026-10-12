@@ -240,7 +240,7 @@ test('inventory and source output are bounded; bulk classification does not echo
 
 test('path boundaries, unregistered drafts and malformed inputs fail without replacing live documents', (t) => {
   const f = fixture(t);
-  assert.throws(() => W.begin(f.root, 'init', { root: '../escape' }), { code: 'memory-path-invalid' });
+  assert.throws(() => W.begin(f.root, 'init', { root: 'docs/\0escape' }), { code: 'document-root-invalid' });
   f.write('docs/manual/README.md', 'Existing manual.');
   assert.throws(() => W.begin(f.root, 'init', { root: 'docs/manual' }), { code: 'memory-root-conflict' });
   assert.equal(fs.existsSync(path.join(f.root, 'docs/manual/.architecture-memory')), false);

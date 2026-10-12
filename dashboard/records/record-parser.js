@@ -436,6 +436,7 @@ function parseCurrentRecord(options) {
       filePath: options.filePath,
       directory: options.directory,
       expectedId: options.expectedId,
+      root: options.root,
     },
   };
 }

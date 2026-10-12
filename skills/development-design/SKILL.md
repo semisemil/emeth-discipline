@@ -16,4 +16,4 @@ Save through [creation](references/document-operations.md) or [revision](referen
 Capture durable project context through Architecture Memory, or use `--memory off` when prohibited.
 For registration access failures, use [setup](../dashboard-server/references/sandbox-setup.md).
 
-Report the overview link, readiness, and material open matters in the conversation, distinguishing save failures from registration or Memory failures after a successful save.
+Report the overview link (`absolute_path` when returned), readiness, and material open matters in the conversation, distinguishing save failures from registration or Memory failures after a successful save.

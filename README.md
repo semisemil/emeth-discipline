@@ -242,8 +242,46 @@ PL-0012의 진행 상황과 확인 근거를 갱신해줘.
 ```
 
 이슈마다 JSON 파일 하나에 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거를 저장합니다. 상세 로그나 실험 보고서는 별도 파일로 연결합니다.
-Design의 개요는 `.emeth/designs/<DESIGN-ID>-<이름>/DESIGN.md`에 저장하고, 주제별 상세 설계는 같은 디렉터리의 별도 Markdown 파일로 연결합니다.
+Design의 개요는 기본적으로 `.emeth/designs/<DESIGN-ID>-<이름>/DESIGN.md`에 저장하고, 주제별 상세 설계는 같은 디렉터리의 별도 Markdown 파일로 연결합니다.
 이슈를 지정하면 관련 작업을 연결할 수 있습니다.
+
+### 문서 저장 경로
+
+코드 프로젝트의 `.emeth/documents.json`에서 아키텍처와 개발 설계 문서의 저장 경로를 지정할 수 있습니다.
+Obsidian vault처럼 프로젝트 밖의 폴더도 사용할 수 있으며, 생성과 조회, 수정, 상태 변경, 구현용 설계 조회와 대시보드가 같은 위치의 파일을 사용합니다.
+
+```json
+{
+  "schema_version": 1,
+  "root": "D:/Obsidian/projects/my-project"
+}
+```
+
+이 설정에서는 아키텍처를 `<root>/architecture/`, 개발 설계를 `<root>/designs/`에 저장합니다.
+각 위치를 따로 지정하려면 `architecture`와 `designs`를 사용합니다.
+
+```json
+{
+  "schema_version": 1,
+  "architecture": "D:/Obsidian/projects/my-project/architecture",
+  "designs": "D:/Obsidian/projects/my-project/development"
+}
+```
+
+상대 경로의 기준은 코드 프로젝트입니다.
+개별 경로는 `root`보다 우선하며, 지정하지 않은 종류는 `root`의 하위 폴더를 사용합니다.
+`root`도 없으면 해당 종류의 기존 위치를 사용합니다.
+아키텍처는 기존 `.emeth/architecture.json`의 연결 위치를 따르고, 연결이 없으면 `docs/architecture/`를 사용합니다.
+개발 설계의 기본 위치는 `.emeth/designs/`입니다.
+
+외부 문서 디렉터리에는 `.emeth-project.json`으로 소속 코드 프로젝트의 경로를 기록합니다.
+이슈는 코드 프로젝트의 `.emeth/issues/`에 유지됩니다.
+기존 Design ID와 `.emeth/designs/...` 작업 참조는 유지되며, 도구가 설정된 실제 경로로 해석합니다.
+개발 설계를 사용자 지정 경로에 저장하면 저장과 조회 응답에 실제 파일 위치인 `absolute_path`가 포함됩니다.
+
+기존 문서의 위치를 바꾸려면 해당 문서 디렉터리를 새 위치로 옮긴 뒤 설정을 변경하세요.
+설정은 이후 작업에서 사용할 위치를 지정합니다.
+외부 경로에도 사용 중인 에이전트의 파일 접근 권한이 필요합니다.
 
 ## 🏛️ 아키텍처 메모리
 

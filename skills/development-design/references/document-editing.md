@@ -11,7 +11,7 @@ Use `--document DESIGN.md` for the overview or a detailed path relative to its D
 Add `--section "<heading text>"` to return that heading and its subsections, ending before the next heading of the same or higher level.
 Without `--document`, `--section` selects from the overview.
 ATX (`#`) and Setext headings are matched by exact heading text, including inline Markdown; absent or duplicate titles fail.
-Partial reads return `id`, project-relative `path`, and source `text`, retaining line endings and validating the entire document set.
+Partial reads return `id`, `path`, and source `text`, retaining line endings and validating the entire document set.
 
 Patch with UTF-8 JSON on stdin:
 

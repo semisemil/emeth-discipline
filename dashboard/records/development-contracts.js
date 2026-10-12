@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
+const roots = require('../../lib/document-roots.js');
 const { parseCurrentRecord, DEVELOPMENT_ID, DESIGN_ID } = require('./record-parser.js');
 const { readDesignDocuments, assertDocumentSetAvailable } = require('../../lib/design-documents.js');
 
@@ -16,14 +17,15 @@ function readDevelopmentRecord(root, id) {
   migrateProject(root);
   if (!DEVELOPMENT_ID.test(id)) fail('contract-id-invalid', 'Supply a Design or legacy document ID');
   const format = FORMATS[id.split('-')[0]];
-  const directory = path.join(root, '.emeth', format.directory);
+  const storage = format.kind === 'design' ? roots.designStorage(root) : { root, directory: path.join(root, '.emeth', format.directory) };
+  const directory = storage.directory;
   const entries = fs.existsSync(directory) ? fs.readdirSync(directory, { withFileTypes: true }) : [];
   const matches = entries.filter(entry => entry.isDirectory() && (entry.name === id || entry.name.startsWith(`${id}-`)))
     .map(entry => path.join(directory, entry.name, format.file)).filter(file => fs.existsSync(file));
   if (matches.length !== 1) fail('contract-unavailable', matches.length ? `Ambiguous document ID: ${id}` : `Document not found: ${id}`);
   try {
-    return parseCurrentRecord({ root, directory, filePath: matches[0], expectedId: id, kind: format.kind,
-      relativePath: path.relative(root, matches[0]).split(path.sep).join('/') });
+    return parseCurrentRecord({ root: storage.root, directory, filePath: matches[0], expectedId: id, kind: format.kind,
+      relativePath: format.kind === 'design' ? roots.designReference(root, matches[0]) : path.relative(root, matches[0]).split(path.sep).join('/') });
   } catch (error) {
     if (error.code === 'record-id-mismatch') error.message = 'Document ID does not match its directory';
     throw error;
@@ -31,7 +33,7 @@ function readDevelopmentRecord(root, id) {
 }
 function readDesigns(root) {
   migrateProject(root);
-  const directory = path.join(root, '.emeth', 'designs');
+  const directory = roots.designStorage(root).directory;
   if (!fs.existsSync(directory)) return [];
   const ids = new Set(fs.readdirSync(directory, { withFileTypes: true })
     .filter(entry => entry.isDirectory() && fs.existsSync(path.join(directory, entry.name, 'DESIGN.md')))
@@ -92,6 +94,7 @@ if (require.main === module) {
     const root = fs.realpathSync(options['--project-root']);
     const record = resolveContract(root, options['--id']);
     process.stdout.write(JSON.stringify({ id: record.id, title: record.title, path: record.relativePath,
+      ...(roots.designStorage(root).configured ? { absolute_path: record.source.filePath } : {}),
       revision: record.revision, status: record.status, metadata: record.metadata, body: record.body, documents: record.documents,
       memory: require('../../lib/architecture-memory.js').connectionStatus(root) }) + '\n');
   } catch (error) { process.stderr.write(JSON.stringify({ error: { code: error.code || 'contract-unavailable', message: error.message } }) + '\n'); process.exitCode = 1; }

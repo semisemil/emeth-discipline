@@ -26,7 +26,8 @@ Run commands with UTF-8 JSON on stdin, except `scaffold` and `recover`:
 node <skill-root>/scripts/author.js <command> --project-root <project>
 ```
 
-Use `--root <relative-root>` for an unconnected custom-root draft. Commands target the pending init/update draft, or live Memory otherwise. `target: draft` still needs workflow `apply`.
+Use `--root <directory>` for an unconnected custom-root draft.
+Commands target the pending init/update draft, or live Memory otherwise. `target: draft` still needs workflow `apply`.
 
 | Command | Input |
 |---|---|

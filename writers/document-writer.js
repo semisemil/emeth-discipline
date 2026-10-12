@@ -20,6 +20,7 @@ const { assertDesignWrite, readDevelopmentRecord } = require('../dashboard/recor
 const { registerProject, rootKey } = require('../dashboard/registry.js');
 const { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable } = require('../lib/design-documents.js');
 const { readMarkdownSection } = require('../lib/markdown-section.js');
+const roots = require('../lib/document-roots.js');
 
 const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
 const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
@@ -153,11 +154,13 @@ function resolveTarget(root, kind, relativePath) {
   if (!match || match[2] === '.' || match[2] === '..') {
     throw writerError('document-path-invalid', `${kind} 문서 경로가 올바르지 않습니다: ${relativePath}`);
   }
-  const target = path.join(root, ...relativePath.split('/'));
-  if (!isInside(root, target)) {
+  const storage = kind === 'design' ? roots.designStorage(root) : { root, configured: false };
+  const storageRoot = storage.root;
+  const target = kind === 'design' ? roots.designTarget(root, relativePath) : path.join(root, ...relativePath.split('/'));
+  if (!isInside(storageRoot, target)) {
     throw writerError('document-path-outside-project', '프로젝트 밖의 문서는 쓸 수 없습니다.');
   }
-  return { expectedId: match[1], target };
+  return { expectedId: match[1], target, storageRoot, custom: storage.configured };
 }
 
 function metadataFor(kind, content, expectedId) {
@@ -466,11 +469,11 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
   options = { ...options, relative_path: rewritePaths(options.relative_path) };
   const projectRoot = canonicalProjectRoot(options.project_root);
   const content = decodeContent(sourceBuffer);
-  const { expectedId, target } = resolveTarget(projectRoot, options.kind, options.relative_path);
+  const { expectedId, target, storageRoot, custom } = resolveTarget(projectRoot, options.kind, options.relative_path);
   const nextMetadata = metadataFor(options.kind, content, expectedId);
   if (options.kind === 'design') assertDesignWrite(projectRoot, nextMetadata, options.relative_path);
   if (options.kind === 'design') assertDocumentSetAvailable(target);
-  const existing = readExisting(projectRoot, target);
+  const existing = readExisting(storageRoot, target);
   if (expectedSource && (!existing || !existing.equals(expectedSource))) {
     throw writerError('document-changed', '문서가 읽은 뒤 변경되어 덮어쓰지 않았습니다.');
   }
@@ -479,7 +482,7 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
     ? metadataFor(options.kind, decodeContent(existing), expectedId)
     : null;
   const details = options.kind === 'design'
-    ? prepareDetailChanges(projectRoot, target, existingMetadata, nextMetadata, documentChanges) : [];
+    ? prepareDetailChanges(storageRoot, target, existingMetadata, nextMetadata, documentChanges) : [];
 
   if (existing && existing.equals(sourceBuffer) && !details.length) {
     return {
@@ -490,6 +493,7 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
         id: nextMetadata.id,
         title: nextMetadata.title,
         path: options.relative_path,
+        ...(custom ? { absolute_path: target } : {}),
         revision: options.kind !== 'plan' ? nextMetadata.revision : undefined,
         snapshot: null,
       },
@@ -515,30 +519,31 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
   if (options.kind !== 'plan' && existing && options.change_kind === 'major') {
     const setOverview = path.join(path.dirname(target), 'revisions', `REV-${existingMetadata.revision}`, 'DESIGN.md');
     if (existingMetadata.documents?.length) {
-      const saved = readExisting(projectRoot, setOverview);
+      const saved = readExisting(storageRoot, setOverview);
       if (saved && !saved.equals(existing)) throw writerError('snapshot-conflict', 'Document-set overview snapshot differs');
     }
     for (const name of existingMetadata.documents || []) {
       const file = path.join(path.dirname(target), ...name.split('/'));
       const destination = path.join(path.dirname(target), 'revisions', `REV-${existingMetadata.revision}`, ...name.split('/'));
-      const original = readExisting(projectRoot, file);
-      const saved = readExisting(projectRoot, destination);
+      const original = readExisting(storageRoot, file);
+      const saved = readExisting(storageRoot, destination);
       if (saved && !saved.equals(original)) throw writerError('snapshot-conflict', `Detailed snapshot differs: ${name}`);
     }
-    snapshot = ensureSnapshot(projectRoot, target, existing, existingMetadata.revision);
+    snapshot = ensureSnapshot(storageRoot, target, existing, existingMetadata.revision);
     if (existingMetadata.documents?.length) {
-      if (!readExisting(projectRoot, setOverview)) installFile(projectRoot, setOverview, existing, null);
-      snapshot = { ...snapshot, path: path.relative(projectRoot, setOverview).split(path.sep).join('/') };
+      if (!readExisting(storageRoot, setOverview)) installFile(storageRoot, setOverview, existing, null);
+      snapshot = { ...snapshot, path: path.relative(storageRoot, setOverview).split(path.sep).join('/') };
     }
     for (const name of existingMetadata.documents || []) {
       const file = path.join(path.dirname(target), ...name.split('/'));
       const destination = path.join(path.dirname(target), 'revisions', `REV-${existingMetadata.revision}`, ...name.split('/'));
-      if (!readExisting(projectRoot, destination)) installFile(projectRoot, destination, readExisting(projectRoot, file), null);
+      if (!readExisting(storageRoot, destination)) installFile(storageRoot, destination, readExisting(storageRoot, file), null);
     }
+    if (custom) snapshot = { ...snapshot, absolute_path: path.join(storageRoot, snapshot.path), path: roots.DESIGN_PREFIX + snapshot.path };
   }
 
   try {
-    publishDocumentSet(projectRoot, target, sourceBuffer, existing, details);
+    publishDocumentSet(storageRoot, target, sourceBuffer, existing, details);
   } catch (error) {
     if (error instanceof DocumentWriterError) {
       throw error;
@@ -554,6 +559,7 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
       id: nextMetadata.id,
       title: nextMetadata.title,
       path: options.relative_path,
+      ...(custom ? { absolute_path: target } : {}),
       revision: options.kind !== 'plan' ? nextMetadata.revision : undefined,
       snapshot,
       ...(options.kind === 'design' ? { documents: nextMetadata.documents || [] } : {}),
@@ -573,6 +579,8 @@ function memoryResult(projectRoot, options) {
 function withDocumentLock(options, operation) {
   if (options.kind !== 'design') return operation();
   const root = canonicalProjectRoot(options.project_root);
+  const storage = roots.designStorage(root);
+  if (storage.configured) roots.prepareRoot(root, storage.directory);
   ensureSafeDirectory(root, path.join(root, '.emeth'));
   const lock = path.join(root, '.emeth', '.design-write.lock');
   assertSafeExistingPath(root, lock, 'file');
@@ -617,8 +625,8 @@ function createDocument(options, sourceBuffer) {
     const { nextDocumentId, DOCUMENT_SKILLS } = require('../lib/document-number.js');
     const id = options.id || nextDocumentId(root, DOCUMENT_SKILLS['$emeth-discipline:development-design']);
     const relativePath = `.emeth/designs/${id}-${options.slug}/DESIGN.md`;
-    const { target } = resolveTarget(root, 'design', relativePath);
-    if (readExisting(root, target)) throw writerError('document-exists', 'Design already exists');
+    const { target, storageRoot } = resolveTarget(root, 'design', relativePath);
+    if (readExisting(storageRoot, target)) throw writerError('document-exists', 'Design already exists');
     const metadata = {
       schema_version: 2, id, title: options.title, kind: options.design_kind || 'feature',
       status: options.status || 'draft', revision: 1,
@@ -634,9 +642,9 @@ function createDocument(options, sourceBuffer) {
 function readDesignSource(options) {
   const root = canonicalProjectRoot(options.project_root);
   const record = readDevelopmentRecord(root, options.id);
-  const { target } = resolveTarget(root, 'design', record.relativePath);
+  const { target, storageRoot } = resolveTarget(root, 'design', record.relativePath);
   assertDocumentSetAvailable(target);
-  const source = readExisting(root, target);
+  const source = readExisting(storageRoot, target);
   if (!source) throw writerError('contract-unavailable', 'Document not found');
   const text = decodeContent(source);
   metadataFor('design', text, options.id);
@@ -644,10 +652,12 @@ function readDesignSource(options) {
 }
 
 function readDocument(options) {
+  const projectRoot = canonicalProjectRoot(options.project_root);
   const { record, text } = readDesignSource(options);
-  const documents = readDesignDocuments(canonicalProjectRoot(options.project_root), record);
+  const documents = readDesignDocuments(projectRoot, record);
+  const custom = roots.designStorage(projectRoot).configured;
   if (options.document === undefined && options.section === undefined) {
-    return { id: options.id, path: record.relativePath, text, documents };
+    return { id: options.id, path: record.relativePath, ...(custom ? { absolute_path: record.source.filePath } : {}), text, documents };
   }
   const name = options.document === undefined ? 'DESIGN.md' : options.document;
   let selected = { path: record.relativePath, text };
@@ -661,7 +671,8 @@ function readDocument(options) {
   if (options.section !== undefined) {
     selected.text = readMarkdownSection(name === 'DESIGN.md' ? parseFrontmatter(selected.text).body : selected.text, options.section);
   }
-  return { id: options.id, ...selected };
+  return { id: options.id, ...selected, ...(custom
+    ? { absolute_path: path.join(path.dirname(record.source.filePath), name) } : {}) };
 }
 
 function withRevision(content, revision) {
@@ -733,7 +744,7 @@ function patchDocument(options, buffer) {
     let membership = [...(record.metadata.documents || [])];
     const changes = (patch.documents || []).map(document => {
       const target = path.join(path.dirname(record.source.filePath), ...document.path.split('/'));
-      const before = readExisting(root, target);
+      const before = readExisting(record.source.root || root, target);
       let content = null;
       if (Object.hasOwn(document, 'body')) {
         if (before || membership.includes(document.path)) throw writerError('document-exists', 'Use edits for an existing detailed document');
@@ -763,13 +774,14 @@ function patchDocument(options, buffer) {
 function recoverDocumentSet(options) {
   return withDocumentLock(options, () => {
     const root = canonicalProjectRoot(options.project_root);
-    const parent = path.join(root, '.emeth', 'designs');
+    const storage = roots.designStorage(root);
+    const parent = storage.directory;
     const matches = fs.existsSync(parent) ? fs.readdirSync(parent, { withFileTypes: true })
       .filter(entry => entry.isDirectory() && (entry.name === options.id || entry.name.startsWith(`${options.id}-`))) : [];
     if (matches.length !== 1) throw writerError('contract-unavailable', 'Supply an unambiguous Design ID for recovery');
     const directory = path.join(parent, matches[0].name);
-    assertSafeExistingPath(root, directory, 'directory');
-    return { id: options.id, ...recoverDocumentSetUnlocked(root, directory) };
+    assertSafeExistingPath(storage.root, directory, 'directory');
+    return { id: options.id, ...recoverDocumentSetUnlocked(storage.root, directory) };
   });
 }
 
@@ -781,8 +793,8 @@ function updateDocumentStatus(options) {
   return withDocumentLock({ ...options, kind }, () => {
     const root = canonicalProjectRoot(options.project_root);
     const record = readDevelopmentRecord(root, options.id);
-    const { target } = resolveTarget(root, kind, record.relativePath);
-    const existing = readExisting(root, target);
+    const { target, storageRoot } = resolveTarget(root, kind, record.relativePath);
+    const existing = readExisting(storageRoot, target);
     if (!existing) throw writerError('contract-unavailable', 'Document not found');
     const content = decodeContent(existing);
     const { metadataText } = parseFrontmatter(content);
@@ -814,12 +826,12 @@ function formatError(error) {
 
 function formatSuccess(result) {
   if (!result.write) return result;
-  const { status, kind, id, path: documentPath, revision, snapshot } = result.write;
+  const { status, kind, id, path: documentPath, absolute_path, revision, snapshot } = result.write;
   const registration = result.registration && (result.registration.status === 'failed'
     ? result.registration : { status: result.registration.status });
   return {
     schema_version: result.schema_version,
-    write: { status, kind, id, path: documentPath, revision, snapshot },
+    write: { status, kind, id, path: documentPath, ...(absolute_path ? { absolute_path } : {}), revision, snapshot },
     registration,
     ...(result.memory ? { memory: result.memory } : {}),
     ...(result.document_status !== undefined ? { document_status: result.document_status } : {}),

@@ -1,10 +1,12 @@
 # Workflow commands and recovery
 
-Run the installed `skills/architecture-memory/scripts/workflow.js` with Node. Every command needs `--project-root <absolute-project-root>`. For a custom root, add `--root docs/<name>` until initialization writes the project binding.
+Run the installed `skills/architecture-memory/scripts/workflow.js` with Node.
+Every command needs `--project-root <absolute-code-project-root>`.
+For an unconnected custom root, add `--root <directory>` until initialization writes the project binding.
 
 | Command | Output / purpose |
 | --- | --- |
-| `init [--root docs/name] [--language ko]` | Start/resume baseline draft; complete existing collections need only connection refresh |
+| `init [--root directory] [--language ko]` | Start/resume baseline draft; complete existing collections need only connection refresh |
 | `update` / `status` | Start/resume reconciliation / inspect its compact state |
 | `inventory [--prefix dir/] [--offset N] [--limit N]` | Directory counts, or paged captured paths |
 | `changes [--prefix dir/] [--offset N] [--limit N]` | Pending change page and directory counts |
@@ -28,4 +30,6 @@ An occupied unregistered architecture root requires a separately scoped integrat
 
 ## Connection
 
-The connection root is stored in `.emeth/architecture.json`. Keep this binding and published documents in version control, excluding `<root>/.architecture-memory/work/` recovery data. Hosts without the connection hook require explicit skill use.
+The connection root is stored in the code project's `.emeth/architecture.json`.
+Keep the binding and published documents in version control, excluding `<root>/.architecture-memory/work/` recovery data.
+Hosts without the connection hook require explicit skill use.

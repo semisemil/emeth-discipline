@@ -194,7 +194,9 @@ function readSpecMetadata(content) {
 }
 
 function validateWorkBacklink(issueId, work, projectRoot) {
-  const artifactPath = path.resolve(projectRoot, work.location.replace(/\\/g, '/'));
+  const artifactPath = work.kind === 'design'
+    ? require('../../../lib/document-roots.js').designTarget(projectRoot, work.location.replace(/\\/g, '/'))
+    : path.resolve(projectRoot, work.location.replace(/\\/g, '/'));
   const label = ({ design: 'Design', plan: 'Plan', spec: 'Spec' })[work.kind];
   if (!fs.existsSync(artifactPath) || !fs.statSync(artifactPath).isFile()) {
     fail(`연결할 ${label} 문서가 없습니다: ${artifactPath}`);
