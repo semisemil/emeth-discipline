@@ -39,7 +39,7 @@ test('both marketplaces install the same package without repository development 
   assert.equal(codex.plugins[0].source.path, './plugins/emeth-discipline');
   assert.equal(path.resolve(repoRoot, claude.plugins[0].source), packageRoot);
   assert.deepEqual(fs.readdirSync(packageRoot).sort(), [
-    '.claude-plugin', '.codex-plugin', 'LICENSE',
+    '.claude-plugin', '.codex-plugin', '.mixdog', 'LICENSE',
     'assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
   ].sort());
   assert.deepEqual(fs.readdirSync(path.join(packageRoot, '.claude-plugin')), ['plugin.json']);
@@ -54,8 +54,11 @@ test('both marketplaces install the same package without repository development 
 
 test('isolated package delivers host rules and numbering through its hook CLI', t => {
   const f = fixture(t);
-  for (const host of ['codex', 'claude']) {
-    const overrides = host === 'claude' ? {
+  for (const host of ['codex', 'claude', 'mixdog']) {
+    const overrides = host === 'mixdog' ? {
+      MIXDOG_PLUGIN_ROOT: f.plugin, MIXDOG_PLUGIN_DATA: path.join(f.root, 'mixdog-data'),
+      CLAUDE_PLUGIN_ROOT: f.plugin, CLAUDE_PLUGIN_DATA: path.join(f.root, 'compat-data'),
+    } : host === 'claude' ? {
       PLUGIN_ROOT: undefined, PLUGIN_DATA: undefined,
       CLAUDE_PLUGIN_ROOT: f.plugin, CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
     } : {};
@@ -63,7 +66,7 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
       hook_event_name: 'SessionStart', source: 'startup', cwd: f.project, session_id: host,
     }), overrides);
     const context = result.hookSpecificOutput.additionalContext;
-    const rules = fs.readFileSync(path.join(f.plugin, `skills/rules/${host === 'codex' ? 'codex' : 'claude-code'}.md`), 'utf8')
+    const rules = fs.readFileSync(path.join(f.plugin, `skills/rules/${host === 'mixdog' ? 'mixdog' : host === 'codex' ? 'codex' : 'claude-code'}.md`), 'utf8')
       .replaceAll('{{plugin-root}}', f.plugin).trim();
     assert.ok(context.includes(rules));
     assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/writing-and-revision.md')));

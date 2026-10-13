@@ -1,13 +1,14 @@
 ---
 name: webagent
-description: Codex에서 ChatGPT Chat에 독립적인 조사나 설계 검토를 위임하고 대화 생성, 모델 선택, 전송, 대기와 결과 회수를 수행한다. WebAgent 또는 Chat 협업 요청에 사용한다. ChatGPT Work는 대상에서 제외한다.
+when_to_use: "Explicit WebAgent or Chat collaboration request: independent research or review in ChatGPT Chat."
+description: Codex 또는 Mixdog에서 ChatGPT Chat에 독립적인 조사나 설계 검토를 위임하고 대화 생성, 모델 선택, 전송, 대기와 결과 회수를 수행한다. WebAgent 또는 Chat 협업 요청에 사용한다. ChatGPT Work는 대상에서 제외한다.
 disable-model-invocation: true
 user-invocable: false
 ---
 
 # WebAgent
 
-Codex 전용이다. Claude Code에서 이 파일을 직접 읽은 경우 미지원임을 알리고 중단한다.
+명시적인 WebAgent 또는 Chat 협업 요청에만 사용한다. Mixdog에서는 [Mixdog 실행 절차](references/mixdog.md)를 읽고 해당 절차로 진행한다. 아래 Node 브라우저 코드는 Codex용이다. Claude Code에서는 미지원임을 알리고 중단한다.
 
 ChatGPT Chat을 텍스트 작업의 협업자로 사용한다. 필요한 맥락과 산출물 조건을 전달하고, 결과는 현재 작업에서 검증한다. 로컬 파일과 도구 상태는 자동 공유되지 않는다.
 

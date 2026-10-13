@@ -19,4 +19,4 @@ Commit only changes made for this implementation, preserving unrelated work, inc
 
 Give a fresh reviewer context only the absolute path to [review.md](review.md), the Design ID, and the implementation commit ID, without conversation history.
 
-In Codex, dispatch the reviewer as a subagent and relay its final result. In Claude Code, return the two IDs to the calling session for reviewer dispatch.
+In Codex, dispatch the reviewer as a subagent and relay its final result. In Claude Code and Mixdog, return the two IDs to the calling session for reviewer dispatch.

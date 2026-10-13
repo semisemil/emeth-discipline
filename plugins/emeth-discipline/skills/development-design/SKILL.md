@@ -1,5 +1,6 @@
 ---
 name: development-design
+when_to_use: "Write or revise a development Design, detailed documents, or Design status."
 description: Write or revise connected software development design documents for implementation and review. Also use for Design status changes.
 ---
 

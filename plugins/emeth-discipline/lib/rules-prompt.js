@@ -65,7 +65,16 @@ function composeClaudePrompt(options = {}) {
   return composeBaseline(pluginRoot, 'claude').baseline.replaceAll('{{plugin-root}}', pluginRoot).trimEnd();
 }
 
+function composeMixdogPrompt(options = {}) {
+  const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
+  // The language, authority, and evidence rules are shared with Codex.
+  const { baseline } = composeBaseline(pluginRoot, 'codex');
+  const mixdog = readFileWithRetry(path.join(pluginRoot, 'skills', 'rules', 'mixdog.md'));
+  return `${baseline.trimEnd()}\n\n${mixdog.trim()}`.replaceAll('{{plugin-root}}', pluginRoot);
+}
+
 module.exports = {
   composeEmethPrompt,
   composeClaudePrompt,
+  composeMixdogPrompt,
 };

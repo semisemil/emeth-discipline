@@ -1,5 +1,6 @@
 ---
 name: dashboard-server
+when_to_use: "Explicit request only: add, open, inspect, or stop the Emeth dashboard."
 disable-model-invocation: true
 description: Add the current Emeth Discipline project, or open, inspect, or stop the running Emeth Discipline dashboard server.
 argument-hint: "add | open | status | stop"

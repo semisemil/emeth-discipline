@@ -1,5 +1,6 @@
 ---
 name: architecture-memory
+when_to_use: "Consult or preserve project purpose, operating conditions, and prior design decisions."
 description: Use when design, implementation, or project conversation needs project purpose, operating conditions, domain meanings, or reasons for prior decisions, or when new context needs preservation for later work.
 ---
 

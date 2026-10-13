@@ -1,5 +1,6 @@
 ---
 name: scope-integrity
+when_to_use: "Preserve multiple requirements and completion criteria across paths or implementation stages."
 description: Use when work involves satisfying multiple requirements together, applying requested behavior across multiple execution paths, or implementing changes in multiple stages. Preserve the user's requirements, constraints, and completion criteria so they are not omitted or arbitrarily reduced during the work.
 ---
 

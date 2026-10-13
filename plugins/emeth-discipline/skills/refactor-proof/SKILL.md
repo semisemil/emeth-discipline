@@ -1,5 +1,6 @@
 ---
 name: refactor-proof
+when_to_use: "Verify structural refactors of responsibilities, call paths, dependencies, or state flow."
 description: Use for structural refactors involving responsibility ownership, call paths, dependencies, or state/data flow. Verify that the intended structure is actually used.
 ---
 

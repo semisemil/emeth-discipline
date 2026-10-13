@@ -1,5 +1,6 @@
 ---
 name: architecture-memory-init
+when_to_use: "Explicit request only: initialize architecture memory from an existing codebase."
 disable-model-invocation: true
 description: Initialize human-readable architecture memory from an existing codebase.
 ---

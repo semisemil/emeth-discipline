@@ -1,5 +1,6 @@
 ---
 name: issue-ledger
+when_to_use: "Register or update project issues, tasks, bugs, and durable out-of-scope findings."
 description: Record and update concrete bugs, tasks, features, research, documentation, and maintenance in a project-local ledger. Use when the user asks to register or update project work, or when durable out-of-scope work should be preserved.
 ---
 

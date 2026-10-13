@@ -31,6 +31,10 @@ function findDocumentSkill(prompt) {
     return null;
   }
   let invocation = firstLine.trim().split(/[ \t]+/, 1)[0];
+  if (host.name() === 'mixdog') {
+    const name = invocation.replace(/^[$/]/, '').replace(/^emeth-discipline:/, '');
+    invocation = `$emeth-discipline:${name}`;
+  }
   if (host.name() === 'claude') {
     if (!invocation.startsWith('/')) return null;
     invocation = `$${invocation.slice(1)}`;

@@ -1,5 +1,6 @@
 ---
 name: rules
+when_to_use: "Explicit rules request, or restore the Emeth baseline after Mixdog compaction."
 disable-model-invocation: true
 user-invocable: false
 description: "Apply Emeth's shared baseline rules for scope, authorization, evidence, language, compression, and code."
@@ -9,7 +10,7 @@ description: "Apply Emeth's shared baseline rules for scope, authorization, evid
 
 Do not use middle dots.
 
-Apply the rules for the host running this conversation: [Codex](codex.md) or [Claude Code](claude-code.md).
+Apply the rules for the host running this conversation: [Codex](codex.md), [Claude Code](claude-code.md), or [Mixdog](mixdog.md).
 
 ## Document writing and revision
 

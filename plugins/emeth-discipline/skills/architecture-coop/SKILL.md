@@ -1,5 +1,6 @@
 ---
 name: architecture-coop
+when_to_use: "Design or redesign architecture with the user; compare decisions and constraints."
 description: Design or redesign an architecture with the user by working through key decisions together.
 ---
 
