@@ -5,6 +5,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node scripts/check-versions.js && node tests/run-tests.js"
+    "build:plugin": "node scripts/build-plugin.js",
+    "check:plugin": "node scripts/build-plugin.js --check",
+    "test": "node scripts/check-versions.js && node scripts/build-plugin.js --check && node tests/run-tests.js"
   }
 }

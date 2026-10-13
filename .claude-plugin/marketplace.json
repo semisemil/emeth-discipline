@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "emeth-discipline",
-      "source": "./",
+      "source": "./plugins/emeth-discipline",
       "description": "공통 품질 규칙, 설계, 이슈와 프로젝트 맥락 관리"
     }
   ]

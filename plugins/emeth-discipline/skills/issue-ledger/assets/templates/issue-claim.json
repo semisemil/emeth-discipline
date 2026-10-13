@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "identity": {
+    "id": "PL-0000",
+    "aliases": [],
+    "type": "bug",
+    "mode": "simple",
+    "title": "REPLACE: concise issue title",
+    "risk": "medium"
+  },
+  "origin": {
+    "kind": "REPLACE: request, test, review, or investigation",
+    "summary": "REPLACE: why this issue was registered",
+    "refs": []
+  },
+  "state": {
+    "status": "open",
+    "current_summary": "REPLACE: what is currently known and why it matters",
+    "next_action": "REPLACE: the next outcome-producing action"
+  },
+  "problem": {
+    "claims": [
+      {
+        "id": "P1",
+        "state": "reported",
+        "text": "REPLACE: the exact claim to confirm or refute",
+        "evidence_refs": []
+      }
+    ],
+    "impact": "REPLACE: concrete consequence if the claim is true"
+  },
+  "criteria": [
+    {
+      "id": "C1",
+      "text": "REPLACE: independently verifiable completion condition",
+      "evidence_refs": []
+    }
+  ],
+  "relations": [],
+  "context": [],
+  "artifacts": [],
+  "evidence": [],
+  "events": [],
+  "created_at": "REPLACE: ISO 8601 timestamp",
+  "updated_at": "REPLACE: ISO 8601 timestamp"
+}

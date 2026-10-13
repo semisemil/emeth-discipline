@@ -1,2 +1,5 @@
 # Keep repository text deterministic across Windows and Unix checkouts.
 * text=auto eol=lf
+
+# Preserve the upstream bundle's whitespace in the generated package.
+plugins/emeth-discipline/dashboard/assets/vendor/*.js -whitespace

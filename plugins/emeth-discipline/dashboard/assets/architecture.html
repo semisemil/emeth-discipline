@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/mark.svg" type="image/svg+xml">
+  <meta name="color-scheme" content="light dark">
+  <title>아키텍처 · Emeth Discipline</title>
+  <script src="/motion.js"></script>
+  <link rel="preload" href="/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/core.js" defer></script>
+  <script src="/vendor/mermaid.min.js" defer></script>
+  <script src="/architecture.js" defer></script>
+</head>
+<body class="architecture-page">
+  <a class="skip-link" href="#architecture-document">본문으로 건너뛰기</a>
+  <div class="architecture-shell architecture-layout">
+    <aside class="architecture-sidebar" id="architecture-sidebar" aria-label="아키텍처 탐색">
+      <header class="architecture-bar">
+        <a class="product-brand" href="/" aria-label="Emeth Discipline 홈"><img src="/mark.svg" width="30" height="30" alt=""><span class="brand-name">Emeth <span class="brand-pulse">Discipline</span></span></a>
+        <nav class="surface-nav" aria-label="Emeth Discipline 보기">
+          <a id="dashboard-link" href="/dashboard" aria-label="대시보드" title="대시보드"><span class="nav-symbol icon-work" aria-hidden="true"></span><span class="nav-label">대시보드</span></a>
+          <a href="/architecture" aria-current="page" aria-label="아키텍처" title="아키텍처"><span class="nav-symbol icon-architecture" aria-hidden="true"></span><span class="nav-label">아키텍처</span></a>
+        </nav>
+        <label class="architecture-project-control"><span>프로젝트</span><select id="architecture-project" aria-describedby="architecture-status"></select></label>
+        <button class="architecture-project-shortcut" id="architecture-project-shortcut" type="button" aria-label="프로젝트 선택">P</button>
+      </header>
+      <div class="architecture-navigation" aria-label="아키텍처 문서"><div class="architecture-navigation-heading"><h2>문서</h2></div><nav id="architecture-documents" aria-label="아키텍처 문서 목록"></nav></div>
+      <button class="sidebar-toggle" id="architecture-panel-toggle" type="button" aria-label="탐색 메뉴 접기" aria-expanded="true" aria-controls="architecture-sidebar"><span class="nav-symbol icon-panel" aria-hidden="true"></span><span class="nav-label">메뉴 접기</span></button>
+    </aside>
+    <div class="architecture-workspace">
+      <header class="reader-topbar"><h1>프로젝트 아키텍처</h1><button id="architecture-refresh" type="button"><span class="nav-symbol icon-refresh" aria-hidden="true"></span>다시 읽기</button></header>
+      <div class="architecture-status" id="architecture-status" role="status" aria-live="polite"></div>
+      <div class="transition-host">
+      <main class="architecture-document" id="architecture-document" tabindex="-1"><div class="empty-state" role="status"><h2>불러오는 중</h2></div></main>
+      <div class="project-loading" role="status" aria-live="polite"><span>읽는 중</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

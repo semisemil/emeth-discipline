@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "identity": {
+    "id": "PL-0000",
+    "aliases": [],
+    "type": "task",
+    "mode": "simple",
+    "title": "Example work item",
+    "risk": "low"
+  },
+  "origin": {
+    "kind": "example",
+    "summary": "Emeth Discipline state starter example",
+    "refs": []
+  },
+  "state": {
+    "status": "open",
+    "current_summary": "This example shows the compact v2 issue format and should be removed before real work is registered.",
+    "next_action": "Delete this example before creating the first real issue."
+  },
+  "objective": {
+    "summary": "Demonstrate the Emeth Discipline Issue Ledger v2 format.",
+    "constraints": [
+      "Do not keep the example in a real project ledger."
+    ]
+  },
+  "criteria": [
+    {
+      "id": "C1",
+      "text": "The example is removed before the first real issue is registered.",
+      "evidence_refs": []
+    }
+  ],
+  "relations": [],
+  "context": [],
+  "artifacts": [],
+  "evidence": [],
+  "events": [],
+  "created_at": "2026-07-28",
+  "updated_at": "2026-07-28"
+}

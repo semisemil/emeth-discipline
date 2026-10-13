@@ -8,7 +8,7 @@
       "name": "emeth-discipline",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/emeth-discipline"
       },
       "policy": {
         "installation": "AVAILABLE",

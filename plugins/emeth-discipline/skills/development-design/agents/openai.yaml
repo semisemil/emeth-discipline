@@ -1,0 +1,4 @@
+interface:
+  display_name: "Emeth: Development Design"
+  short_description: "Write connected software design documentation"
+  default_prompt: "Use $development-design to write connected development design documents for this work."

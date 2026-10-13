@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "identity": {
+    "id": "PL-0000",
+    "aliases": [],
+    "type": "task",
+    "mode": "simple",
+    "title": "REPLACE: concise issue title",
+    "risk": "medium"
+  },
+  "origin": {
+    "kind": "REPLACE: request, review, or planning source",
+    "summary": "REPLACE: why this issue was registered",
+    "refs": []
+  },
+  "state": {
+    "status": "open",
+    "current_summary": "REPLACE: current progress and remaining gap",
+    "next_action": "REPLACE: the next outcome-producing action"
+  },
+  "objective": {
+    "summary": "REPLACE: outcome this issue must produce",
+    "constraints": []
+  },
+  "criteria": [
+    {
+      "id": "C1",
+      "text": "REPLACE: independently verifiable completion condition",
+      "evidence_refs": []
+    }
+  ],
+  "relations": [],
+  "context": [],
+  "artifacts": [],
+  "evidence": [],
+  "events": [],
+  "created_at": "REPLACE: ISO 8601 timestamp",
+  "updated_at": "REPLACE: ISO 8601 timestamp"
+}
