@@ -4,12 +4,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { composeEmethPrompt } = require('../lib/rules-prompt.js');
+const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt.js');
 
-const repoRoot = path.resolve(__dirname, '..');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 
 test('Codex includes its host rules once in the composed prompt', () => {
-  const skillPath = path.join(repoRoot, 'skills', 'rules', 'codex.md');
+  const skillPath = path.join(pluginRoot, 'skills', 'rules', 'codex.md');
   const baseline = fs.readFileSync(skillPath, 'utf8');
   assert.doesNotMatch(baseline, /emeth-response-mode/);
   const prompt = composeEmethPrompt();
@@ -18,8 +18,8 @@ test('Codex includes its host rules once in the composed prompt', () => {
 });
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
-  const hooks = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8')).hooks;
+  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
+  const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
   assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
   assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
   for (const [event, groups] of Object.entries(hooks)) {
@@ -30,14 +30,14 @@ test('hook registration keeps lifecycle boundaries and removes legacy owners', (
   }
   assert.equal(hooks.PreToolUse, undefined);
   assert.equal(hooks.SessionEnd, undefined);
-  assert.equal(fs.existsSync(path.join(repoRoot, 'hooks', 'load-baseline.js')), false);
-  assert.equal(fs.existsSync(path.join(repoRoot, 'skills', 'proofline-baseline-quality')), false);
+  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'load-baseline.js')), false);
+  assert.equal(fs.existsSync(path.join(pluginRoot, 'skills', 'proofline-baseline-quality')), false);
 });
 
 test('Claude registers one exec-form hook per event without a shared default hook file', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude-plugin/plugin.json'), 'utf8'));
-  const hooks = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8')).hooks;
-  assert.equal(fs.existsSync(path.join(repoRoot, 'hooks/hooks.json')), false);
+  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.claude-plugin/plugin.json'), 'utf8'));
+  const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
+  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks/hooks.json')), false);
   assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
   assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
   for (const groups of Object.values(hooks)) {

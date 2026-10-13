@@ -7,13 +7,13 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { buildProjectIndex, ProjectIndexService } = require('../dashboard/records/project-index.js');
-const { ArchitectureService } = require('../dashboard/architecture.js');
-const { nextDocumentId, DOCUMENT_SKILLS } = require('../lib/document-number.js');
-const { notice } = require('../lib/architecture-memory.js');
-const W = require('../skills/architecture-memory/scripts/workflow.js');
-const A = require('../skills/architecture-memory/scripts/author.js');
-const repo = path.resolve(__dirname, '..');
+const { buildProjectIndex, ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+const { ArchitectureService } = require('../plugins/emeth-discipline/dashboard/architecture.js');
+const { nextDocumentId, DOCUMENT_SKILLS } = require('../plugins/emeth-discipline/lib/document-number.js');
+const { notice } = require('../plugins/emeth-discipline/lib/architecture-memory.js');
+const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+const A = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/author.js');
+const repo = path.resolve(__dirname, '../plugins/emeth-discipline');
 const projectId = '11111111-1111-4111-8111-111111111111';
 
 function fixture(t, config) {

@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
-const core = require('../dashboard/assets/core');
-const source = fs.readFileSync(path.join(__dirname, '../dashboard/assets/app.js'), 'utf8');
+const core = require('../plugins/emeth-discipline/dashboard/assets/core');
+const source = fs.readFileSync(path.join(__dirname, '../plugins/emeth-discipline/dashboard/assets/app.js'), 'utf8');
 
 function functionSource(start, end) {
   return source.slice(source.indexOf(start), source.indexOf(end));

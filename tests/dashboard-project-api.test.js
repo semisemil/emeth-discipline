@@ -11,9 +11,9 @@ const test = require('node:test');
 const {
   SECURITY_HEADERS,
   createDashboardHttpServer,
-} = require('../dashboard/server.js');
-const { ProjectIndexService } = require('../dashboard/records/project-index.js');
-const { MAX_RECORD_BYTES } = require('../dashboard/records/record-parser.js');
+} = require('../plugins/emeth-discipline/dashboard/server.js');
+const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+const { MAX_RECORD_BYTES } = require('../plugins/emeth-discipline/dashboard/records/record-parser.js');
 
 const AVAILABLE_ID = '11111111-1111-4111-8111-111111111111';
 const UNAVAILABLE_ID = '22222222-2222-4222-8222-222222222222';

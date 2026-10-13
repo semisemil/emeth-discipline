@@ -39,16 +39,17 @@ test('both marketplaces install the same package without repository development 
   assert.equal(codex.plugins[0].source.path, './plugins/emeth-discipline');
   assert.equal(path.resolve(repoRoot, claude.plugins[0].source), packageRoot);
   assert.deepEqual(fs.readdirSync(packageRoot).sort(), [
-    '.claude-plugin', '.codex-plugin', 'LICENSE', 'README.md',
+    '.claude-plugin', '.codex-plugin', 'LICENSE',
     'assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
   ].sort());
   assert.deepEqual(fs.readdirSync(path.join(packageRoot, '.claude-plugin')), ['plugin.json']);
   for (const relative of fs.readdirSync(packageRoot, { recursive: true })) {
     assert.doesNotMatch(path.basename(relative), /^(AGENTS|CLAUDE|CONTEXT)\.md$/i);
   }
-  const readme = fs.readFileSync(path.join(packageRoot, 'README.md'), 'utf8');
-  assert.doesNotMatch(readme, /\]\(docs\//);
-  assert.match(readme, /https:\/\/github\.com\/semisemil\/emeth-discipline\/blob\/main\/docs\/benchmarks/);
+  for (const formerSource of ['assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
+    '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', 'scripts/build-plugin.js']) {
+    assert.equal(fs.existsSync(path.join(repoRoot, formerSource)), false, formerSource);
+  }
 });
 
 test('isolated package delivers host rules and numbering through its hook CLI', t => {
@@ -109,30 +110,4 @@ test('isolated package starts its dashboard and serves packaged assets', async t
   } finally {
     await control.stopServer({ directory });
   }
-});
-
-test('package build detects missing updates and removes stale development files', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-build-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 10 }));
-  const write = (relative, text) => {
-    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
-    fs.writeFileSync(path.join(root, relative), text);
-  };
-  write('scripts/build-plugin.js', fs.readFileSync(path.join(repoRoot, 'scripts/build-plugin.js')));
-  for (const relative of ['.codex-plugin/plugin.json', '.claude-plugin/plugin.json', 'LICENSE', 'README.md']) write(relative, '{}');
-  write('hooks/run.js', 'original runtime');
-  write('hooks/AGENTS.md', 'development instructions');
-  write('docs/skill-prompt-authoring-principles.md', 'development guide');
-  const build = args => spawnSync(process.execPath, [path.join(root, 'scripts/build-plugin.js'), ...args], { encoding: 'utf8', windowsHide: true });
-  assert.equal(build([]).status, 0);
-  const output = path.join(root, 'plugins/emeth-discipline');
-  assert.equal(fs.existsSync(path.join(output, 'hooks/AGENTS.md')), false);
-  assert.equal(fs.existsSync(path.join(output, 'docs')), false);
-  write('hooks/run.js', 'updated runtime');
-  write('plugins/emeth-discipline/docs/old-guide.md', 'stale development guide');
-  assert.equal(build(['--check']).status, 1);
-  assert.equal(build([]).status, 0);
-  assert.equal(fs.readFileSync(path.join(output, 'hooks/run.js'), 'utf8'), 'updated runtime');
-  assert.equal(fs.existsSync(path.join(output, 'docs')), false);
-  assert.equal(build(['--check']).status, 0);
 });

@@ -6,10 +6,10 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
-const hooksPath = path.join(repoRoot, manifest.hooks);
-const starter = path.join(repoRoot, 'skills', 'issue-ledger', 'assets', 'state-starter');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
+const hooksPath = path.join(pluginRoot, manifest.hooks);
+const starter = path.join(pluginRoot, 'skills', 'issue-ledger', 'assets', 'state-starter');
 
 test('SessionStart uses the global server hook and has no project dashboard refresh hook', () => {
   const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8')).hooks.SessionStart;
@@ -20,7 +20,7 @@ test('SessionStart uses the global server hook and has no project dashboard refr
   assert.equal(commands.length, 2);
   assert.ok(commands.every((command) => command.includes('run.js')));
   assert.equal(hooks[0].matcher, 'startup|resume|clear|compact');
-  assert.equal(fs.existsSync(path.join(repoRoot, 'hooks', 'refresh-dashboard.js')), false);
+  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'refresh-dashboard.js')), false);
 });
 test('new state starter creates no static dashboard and documents the global entry point', (t) => {
   assert.equal(fs.existsSync(path.join(starter, 'dashboard')), false);

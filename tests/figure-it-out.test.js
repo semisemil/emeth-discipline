@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const read = (...parts) => fs.readFileSync(path.join(repoRoot, ...parts), 'utf8');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const read = (...parts) => fs.readFileSync(path.join(pluginRoot, ...parts), 'utf8');
 
 test('figure-it-out is explicit-only and exposed by the plugin', () => {
   const metadata = read('skills', 'figure-it-out', 'agents', 'openai.yaml');

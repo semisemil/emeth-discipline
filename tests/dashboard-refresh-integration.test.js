@@ -12,10 +12,10 @@ const {
   dashboardDirectory,
   startServer,
   stopServer,
-} = require('../dashboard/control.js');
+} = require('../plugins/emeth-discipline/dashboard/control.js');
 
-const repoRoot = path.resolve(__dirname, '..');
-const registerCli = path.join(repoRoot, 'dashboard', 'register-project.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const registerCli = path.join(pluginRoot, 'dashboard', 'register-project.js');
 
 function request(port, pathname, options = {}) {
   return new Promise((resolve, reject) => {
@@ -110,7 +110,7 @@ function register(projectRoot, env) {
     'register',
     '--project-root',
     projectRoot,
-  ], { cwd: repoRoot, encoding: 'utf8', env });
+  ], { cwd: pluginRoot, encoding: 'utf8', env });
   assert.equal(result.status, 0, result.stderr);
   return JSON.parse(result.stdout).project.id;
 }

@@ -6,8 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync, spawn } = require('node:child_process');
 const test = require('node:test');
-const { migrateProject, migrateDirectory } = require('../lib/storage-migration');
-const repo = path.resolve(__dirname, '..');
+const { migrateProject, migrateDirectory } = require('../plugins/emeth-discipline/lib/storage-migration');
+const repo = path.resolve(__dirname, '../plugins/emeth-discipline');
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-migration-'));
@@ -40,7 +40,7 @@ test('first startup migrates project records and links while leaving retired mod
   assert.match(f.read('.emeth/STATE.md'), /\(.emeth\/designs\//);
   assert.deepEqual(fs.readFileSync(path.join(f.root, '.emeth/attachment.bin')), Buffer.from([0, 255, 128, 1]));
   const prompt = JSON.parse(result.stdout).hookSpecificOutput.additionalContext;
-  assert.equal(prompt, require('../lib/rules-prompt').composeEmethPrompt());
+  assert.equal(prompt, require('../plugins/emeth-discipline/lib/rules-prompt').composeEmethPrompt());
   const before = fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs;
   migrateProject(f.root);
   assert.equal(fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs, before);
@@ -116,9 +116,9 @@ test('direct document numbering and architecture access migrate without a sessio
   const f = fixture(t);
   f.write('.proofline/issues/PL-0042.json', '{}');
   f.write('.proofline/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
-  const storage = require('../skills/architecture-memory/scripts/storage');
+  const storage = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage');
   assert.equal(storage.binding(f.root).enabled, false);
-  const numbers = require('../lib/document-number');
+  const numbers = require('../plugins/emeth-discipline/lib/document-number');
   assert.equal(numbers.nextDocumentId(f.root, numbers.DOCUMENT_SKILLS['$emeth-discipline:issue-ledger']), 'PL-0043');
   assert.equal(fs.existsSync(path.join(f.root, '.proofline')), false);
 });
@@ -171,7 +171,7 @@ test('dashboard and document CLI first access migrate legacy projects without a 
     const content = `---\n${JSON.stringify(metadata, null, 2)}\n---\n\n# Existing design\n`;
     f.write('.proofline/designs/DESIGN-0001-example/DESIGN.md', content);
     if (surface === 'dashboard') {
-      const { buildProjectIndex } = require('../dashboard/records/project-index');
+      const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index');
       const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.root,
         registered_at: '2026-09-01T00:00:00.000Z' }).publicIndex;
       assert.equal(index.designs[0].relative_path, '.emeth/designs/DESIGN-0001-example/DESIGN.md');

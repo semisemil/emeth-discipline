@@ -5,8 +5,8 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { parseDesignMetadata, parseFrontmatter } = require('../dashboard/records/record-parser.js');
-const root = path.resolve(__dirname, '..');
+const { parseDesignMetadata, parseFrontmatter } = require('../plugins/emeth-discipline/dashboard/records/record-parser.js');
+const root = path.resolve(__dirname, '../plugins/emeth-discipline');
 
 test('create generates valid metadata and allocates IDs from body-only input', t => {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-create-'));

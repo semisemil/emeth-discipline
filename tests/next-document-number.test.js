@@ -5,8 +5,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const hookPath = path.join(repoRoot, 'hooks', 'run.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const hookPath = path.join(pluginRoot, 'hooks', 'run.js');
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-number-'));

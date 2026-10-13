@@ -7,14 +7,14 @@ const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const registerCli = path.join(repoRoot, 'dashboard', 'register-project.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const registerCli = path.join(pluginRoot, 'dashboard', 'register-project.js');
 const {
   getDashboardConfigDir,
   getRegistryPath,
   readRegistry,
   registerProject
-} = require('../dashboard/registry.js');
+} = require('../plugins/emeth-discipline/dashboard/registry.js');
 
 function makeRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-registry-'));
@@ -124,7 +124,7 @@ test('concurrent registration retains every distinct project', async (t) => {
       env: {
         ...env,
         EMETH_TEST_REGISTRY: registryPath,
-        EMETH_TEST_REGISTRY_MODULE: path.join(repoRoot, 'dashboard', 'registry.js')
+        EMETH_TEST_REGISTRY_MODULE: path.join(pluginRoot, 'dashboard', 'registry.js')
       },
       stdio: ['ignore', 'pipe', 'pipe', 'ipc']
     });

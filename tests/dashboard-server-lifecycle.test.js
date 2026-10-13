@@ -12,7 +12,7 @@ const {
   inspectServer,
   startServer,
   stopServer,
-} = require('../dashboard/control');
+} = require('../plugins/emeth-discipline/dashboard/control');
 
 function tempDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-server-'));

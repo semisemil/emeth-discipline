@@ -5,10 +5,10 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const cliPath = path.join(repoRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const cliPath = path.join(pluginRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js');
 const model = require(path.join(
-  repoRoot,
+  pluginRoot,
   'skills',
   'issue-ledger',
   'lib',
@@ -158,7 +158,7 @@ test('Design work links round-trip through the issue ledger and dashboard with r
   assert.equal(runLinkWork(root, overrides).status, 0);
   const issue = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   assert.deepEqual(issue.context, [{ kind: 'Design', location: overrides.workPath }]);
-  const { buildProjectIndex } = require('../dashboard/records/project-index.js');
+  const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: projectRoot }).publicIndex;
   assert.deepEqual(index.issues[0].design_ids, ['DESIGN-0001']);
   assert.deepEqual(index.designs[0].linked_issue_ids, ['PL-0001']);

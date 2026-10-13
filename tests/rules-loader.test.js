@@ -4,10 +4,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeEmethPrompt } = require('../lib/rules-prompt.js');
+const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt.js');
 
-const repoRoot = path.resolve(__dirname, '..');
-const loaderPath = path.join(repoRoot, 'hooks', 'run.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const loaderPath = path.join(pluginRoot, 'hooks', 'run.js');
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-loader-'));
@@ -59,11 +59,11 @@ function context(result) {
 }
 
 function copyRuntime(plugin) {
-  fs.cpSync(path.join(repoRoot, 'hooks'), path.join(plugin, 'hooks'), { recursive: true });
-  fs.cpSync(path.join(repoRoot, 'lib'), path.join(plugin, 'lib'), { recursive: true });
+  fs.cpSync(path.join(pluginRoot, 'hooks'), path.join(plugin, 'hooks'), { recursive: true });
+  fs.cpSync(path.join(pluginRoot, 'lib'), path.join(plugin, 'lib'), { recursive: true });
   const memory = path.join(plugin, 'skills/architecture-memory/scripts');
   fs.mkdirSync(memory, { recursive: true });
-  fs.copyFileSync(path.join(repoRoot, 'skills/architecture-memory/scripts/storage.js'), path.join(memory, 'storage.js'));
+  fs.copyFileSync(path.join(pluginRoot, 'skills/architecture-memory/scripts/storage.js'), path.join(memory, 'storage.js'));
 }
 
 test('startup inserts the fixed Codex prompt without mode state', (t) => {
@@ -133,7 +133,7 @@ test('missing Codex rules fail and record the exact component path', (t) => {
   fs.mkdirSync(skillDir, { recursive: true });
   copyRuntime(tempPlugin);
   for (const file of ['SKILL.md']) {
-    fs.copyFileSync(path.join(repoRoot, 'skills', 'rules', file), path.join(skillDir, file));
+    fs.copyFileSync(path.join(pluginRoot, 'skills', 'rules', file), path.join(skillDir, file));
   }
 
   const result = runLoader(env, 'session-a', 'startup', path.join(hooksDir, 'run.js'));

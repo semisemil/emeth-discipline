@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-function checkVersions(root = path.resolve(__dirname, '..')) {
+function checkVersions(root = path.resolve(__dirname, '../plugins/emeth-discipline')) {
   const read = (directory) => JSON.parse(fs.readFileSync(path.join(root, directory, 'plugin.json'), 'utf8'));
   const codex = read('.codex-plugin');
   const claude = read('.claude-plugin');

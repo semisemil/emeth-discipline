@@ -10,9 +10,9 @@ const test = require('node:test');
 const {
   ArchitectureService,
   MAX_DOCUMENT_BYTES,
-} = require('../dashboard/architecture.js');
-const { ProjectIndexService } = require('../dashboard/records/project-index.js');
-const { createDashboardHttpServer } = require('../dashboard/server.js');
+} = require('../plugins/emeth-discipline/dashboard/architecture.js');
+const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+const { createDashboardHttpServer } = require('../plugins/emeth-discipline/dashboard/server.js');
 
 const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
 const INSTANCE_ID = '22222222-2222-4222-8222-222222222222';

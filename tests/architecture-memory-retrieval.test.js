@@ -6,8 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { loadRecords, search, read, parseArgs } = require('../skills/architecture-memory/scripts/memory.js');
-const cli = path.resolve(__dirname, '../skills/architecture-memory/scripts/memory.js');
+const { loadRecords, search, read, parseArgs } = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
+const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
 
 function record(id, text, metadata = {}, status = 'confirmed/current') {
   return `## ${id}\n<!-- am: ${JSON.stringify({ id, ...metadata })} -->\n\n**${status}**\n\n${text}\n`;

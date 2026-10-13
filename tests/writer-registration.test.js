@@ -7,10 +7,10 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const issueCli = path.join(repoRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js');
-const documentCli = path.join(repoRoot, 'writers', 'document-writer.js');
-const { getRegistryPath } = require('../dashboard/registry.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const issueCli = path.join(pluginRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js');
+const documentCli = path.join(pluginRoot, 'writers', 'document-writer.js');
+const { getRegistryPath } = require('../plugins/emeth-discipline/dashboard/registry.js');
 
 function makeFixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-writer-'));

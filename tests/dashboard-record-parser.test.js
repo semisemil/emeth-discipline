@@ -11,7 +11,7 @@ const {
   parseCurrentRecord,
   parsePlanMetadata,
   parseSpecMetadata,
-} = require('../dashboard/records/record-parser.js');
+} = require('../plugins/emeth-discipline/dashboard/records/record-parser.js');
 
 function makeRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-record-parser-'));

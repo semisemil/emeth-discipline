@@ -6,10 +6,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeEmethPrompt, composeClaudePrompt } = require('../lib/rules-prompt');
+const { composeEmethPrompt, composeClaudePrompt } = require('../plugins/emeth-discipline/lib/rules-prompt');
 
-const repoRoot = path.resolve(__dirname, '..');
-const hook = path.join(repoRoot, 'hooks/run.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const hook = path.join(pluginRoot, 'hooks/run.js');
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hooks-'));
@@ -100,7 +100,7 @@ test('a corrupt memory binding does not suppress the fixed prompt or document nu
 function copyPlugin(f) {
   const plugin = path.join(f.root, 'plugin');
   for (const directory of ['hooks', 'lib', 'skills/rules', 'skills/architecture-memory']) {
-    fs.cpSync(path.join(repoRoot, directory), path.join(plugin, directory), { recursive: true });
+    fs.cpSync(path.join(pluginRoot, directory), path.join(plugin, directory), { recursive: true });
   }
   return plugin;
 }
@@ -150,7 +150,7 @@ test('malformed hook input fails before creating state', (t) => {
 function claudeEnvironment(f) {
   return {
     PLUGIN_ROOT: '', PLUGIN_DATA: '',
-    CLAUDE_PLUGIN_ROOT: repoRoot,
+    CLAUDE_PLUGIN_ROOT: pluginRoot,
     CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
   };
 }
@@ -178,7 +178,7 @@ test('Claude applies fixed rules across lifecycle events without reading or chan
 test('host-specific Memory state stays separate for the same project and session', (t) => {
   const f = fixture(t); f.memory();
   const claudeEnv = claudeEnvironment(f);
-  const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: repoRoot };
+  const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: pluginRoot };
   const codex = output(f.run({ prompt: '$emeth-discipline focus' }, { env: codexEnv }));
   assert.match(codex.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
   const claude = output(f.run({ prompt: 'Continue.' }, { env: claudeEnv }));

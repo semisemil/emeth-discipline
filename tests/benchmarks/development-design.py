@@ -33,7 +33,7 @@ def measure(files, old):
     measured = []
     for file in files:
         text = (subprocess.check_output(['git', 'show', f'{revision}:{file}'], cwd=ROOT).decode('utf-8')
-                if old else (ROOT / file).read_text(encoding='utf-8'))
+                if old else (ROOT / "plugins/emeth-discipline" / file).read_text(encoding='utf-8'))
         normalized = text.replace('\r\n', '\n')
         measured.append({'path': file, 'tokens': len(encoding.encode(normalized)),
                          'sha256': hashlib.sha256(normalized.encode('utf-8')).hexdigest()})

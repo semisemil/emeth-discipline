@@ -6,8 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { getRegistryPath } = require('../dashboard/registry.js');
-const cli = path.resolve(__dirname, '../writers/document-writer.js');
+const { getRegistryPath } = require('../plugins/emeth-discipline/dashboard/registry.js');
+const cli = path.resolve(__dirname, '../plugins/emeth-discipline/writers/document-writer.js');
 
 function fixture(t, { bom = false, newline = '\n' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-patch-'));

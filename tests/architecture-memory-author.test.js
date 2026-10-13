@@ -5,11 +5,11 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const A = require('../skills/architecture-memory/scripts/author.js');
-const R = require('../skills/architecture-memory/scripts/record.js');
-const W = require('../skills/architecture-memory/scripts/workflow.js');
-const M = require('../skills/architecture-memory/scripts/memory.js');
-const S = require('../skills/architecture-memory/scripts/storage.js');
+const A = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/author.js');
+const R = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/record.js');
+const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+const M = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
+const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-author-'));
@@ -223,7 +223,7 @@ test('unregistered files, disabled memory and unfinished publication are preserv
 test('CLI accepts UTF-8 structured content and returns parseable errors', t => {
   const f = fixture(t);
   f.run('scaffold');
-  const cli = path.resolve(__dirname, '../skills/architecture-memory/scripts/author.js');
+  const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/author.js');
   const result = spawnSync(process.execPath, [cli, 'section', '--project-root', f.root], { encoding: 'utf8', windowsHide: true,
     input: JSON.stringify({ document: 'context', title: '한글', body: '본문 **유지**.', confidence: 'confirmed', lifecycle: 'planned' }) });
   assert.equal(result.status, 0, result.stderr);

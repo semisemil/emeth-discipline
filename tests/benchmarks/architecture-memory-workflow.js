@@ -5,8 +5,8 @@ const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
-const W = require('../../skills/architecture-memory/scripts/workflow.js');
-const { notice } = require('../../lib/architecture-memory.js');
+const W = require('../../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+const { notice } = require('../../plugins/emeth-discipline/lib/architecture-memory.js');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-workflow-benchmark-'));
 const frames = [];
 function git(...args) {

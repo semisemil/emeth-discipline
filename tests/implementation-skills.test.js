@@ -5,18 +5,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const skillPaths = [
-  path.join(repoRoot, 'skills', 'start-implementation', 'SKILL.md'),
-  path.join(repoRoot, 'skills', 'start-implementation', 'implement.md'),
-  path.join(repoRoot, 'skills', 'start-implementation', 'references', 'codex.md'),
-  path.join(repoRoot, 'skills', 'start-implementation', 'references', 'claude-code.md'),
+  path.join(pluginRoot, 'skills', 'start-implementation', 'SKILL.md'),
+  path.join(pluginRoot, 'skills', 'start-implementation', 'implement.md'),
+  path.join(pluginRoot, 'skills', 'start-implementation', 'references', 'codex.md'),
+  path.join(pluginRoot, 'skills', 'start-implementation', 'references', 'claude-code.md'),
 ];
 
 test('implementation skills are explicit-only', () => {
   for (const name of ['start-implementation']) {
     const metadata = fs.readFileSync(
-      path.join(repoRoot, 'skills', name, 'agents', 'openai.yaml'),
+      path.join(pluginRoot, 'skills', name, 'agents', 'openai.yaml'),
       'utf8',
     );
     assert.match(metadata, /^\s*allow_implicit_invocation:\s*false$/m, name);

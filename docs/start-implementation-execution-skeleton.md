@@ -1,8 +1,8 @@
 # 구현 실행 구조
 
-실행 절차는 [Codex](../skills/start-implementation/references/codex.md)와 [Claude Code](../skills/start-implementation/references/claude-code.md), 역할별 규칙은 [구현](../skills/start-implementation/implement.md)과 [리뷰](../skills/start-implementation/review.md)에서 관리한다.
+실행 절차는 [Codex](../plugins/emeth-discipline/skills/start-implementation/references/codex.md)와 [Claude Code](../plugins/emeth-discipline/skills/start-implementation/references/claude-code.md), 역할별 규칙은 [구현](../plugins/emeth-discipline/skills/start-implementation/implement.md)과 [리뷰](../plugins/emeth-discipline/skills/start-implementation/review.md)에서 관리한다.
 
-`figure-it-out`도 [start-implementation](../skills/start-implementation/SKILL.md)을 통해 구현 단계를 넘긴다.
+`figure-it-out`도 [start-implementation](../plugins/emeth-discipline/skills/start-implementation/SKILL.md)을 통해 구현 단계를 넘긴다.
 
 ## 병렬 구현
 

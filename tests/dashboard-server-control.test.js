@@ -10,10 +10,10 @@ const {
   openDashboard,
   startServer,
   stopServer,
-} = require('../dashboard/control');
+} = require('../plugins/emeth-discipline/dashboard/control');
 
-const repoRoot = path.resolve(__dirname, '..');
-const controlPath = path.join(repoRoot, 'dashboard', 'control.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const controlPath = path.join(pluginRoot, 'dashboard', 'control.js');
 
 function isolatedEnvironment(root) {
   return {

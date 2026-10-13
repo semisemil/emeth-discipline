@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const writer = path.resolve(__dirname, '../writers/document-writer.js');
+const writer = path.resolve(__dirname, '../plugins/emeth-discipline/writers/document-writer.js');
 const directory = '.emeth/designs/DESIGN-0001-notification';
 const overview = '# 알림 설계\r\n\r\n[접수](contracts/request.md)와 [전달](delivery.md).\r\n\r\n'
   + '운영 조건\r\n---------\r\n\r\n저장 완료 후 전달한다.\r\n\r\n### 재시도\r\n\r\n실패 시 재시도한다.\r\n\r\n'

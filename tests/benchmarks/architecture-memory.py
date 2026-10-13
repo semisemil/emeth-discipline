@@ -11,7 +11,7 @@ import time
 import tiktoken
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[2] / "plugins/emeth-discipline"
 CLI = ROOT / "skills/architecture-memory/scripts/memory.js"
 ENCODING = tiktoken.get_encoding("o200k_base")
 

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const load = () => import('../skills/webagent/scripts/chat-session.mjs');
+const load = () => import('../plugins/emeth-discipline/skills/webagent/scripts/chat-session.mjs');
 
 function fixture() {
   const f = { phase: 'main', draft: '', selected: false, submissions: 0, tabs: 0, complete: true, text: '검토 결과\n두 번째 줄', links: [{ text: 'source', url: 'https://example.org/' }] };

@@ -19,7 +19,7 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 - **None**: 플러그인 미사용
 - **Core**: 플러그인 활성화
-- **Workflow**: [`$emeth-discipline:figure-it-out`](skills/figure-it-out/SKILL.md) 호출
+- **Workflow**: [`$emeth-discipline:figure-it-out`](plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -193,7 +193,7 @@ $emeth-discipline:start-implementation DESIGN-0001
 
 위 명령은 각각 별도로 호출합니다. 병렬 구현이 필요하면 모델에 작업 분할과 병렬 처리를 직접 요청하세요.
 
-모델은 [모델 선택 기준](skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
+모델은 [모델 선택 기준](plugins/emeth-discipline/skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
 
 ### 한 세션에서 진행하기
 
@@ -336,7 +336,7 @@ Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
 변경된 권한이 현재 작업에 반영되지 않으면 새 Codex 작업에서 등록을 재시도하세요.
 권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
 
-권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](skills/dashboard-server/references/sandbox-setup.md)를 참고하세요.
+권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](plugins/emeth-discipline/skills/dashboard-server/references/sandbox-setup.md)를 참고하세요.
 
 
 

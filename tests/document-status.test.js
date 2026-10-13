@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {spawnSync} = require('node:child_process');
 const test = require('node:test');
-const cli = path.resolve(__dirname, '../writers/document-writer.js');
+const cli = path.resolve(__dirname, '../plugins/emeth-discipline/writers/document-writer.js');
 function fixture(t, kind='design', pretty=false, newline='\n') {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-status-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
@@ -64,7 +64,7 @@ test('status and repeated status do not initialize an absent Memory', t => {
 
 test('status reports a connected Memory without rewriting its files', t => {
   const f = fixture(t);
-  require('../skills/architecture-memory/scripts/record.js').ensureMemory(f.project);
+  require('../plugins/emeth-discipline/skills/architecture-memory/scripts/record.js').ensureMemory(f.project);
   const names = ['.emeth/architecture.json', 'docs/architecture/.architecture-memory/manifest.json', 'docs/architecture/04-context.md'];
   const before = names.map(name => ({ bytes: fs.readFileSync(path.join(f.project, name)), time: fs.statSync(path.join(f.project, name)).mtimeMs }));
   const result = f.run([], null);

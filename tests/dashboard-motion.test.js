@@ -21,7 +21,7 @@ function setup({ reduced = false, storageUnavailable = false } = {}) {
       setItem(key, value) { if (storageUnavailable) throw new Error('Storage disabled'); saved.set(key, value); },
     },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../dashboard/assets/motion.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../plugins/emeth-discipline/dashboard/assets/motion.js'), 'utf8'), context);
   return { motion: context.EmethMotion, root, saved };
 }
 

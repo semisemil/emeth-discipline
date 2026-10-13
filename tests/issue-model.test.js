@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const repoRoot = path.resolve(__dirname, '..');
-const model = require('../skills/issue-ledger/lib/issue-model.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const model = require('../plugins/emeth-discipline/skills/issue-ledger/lib/issue-model.js');
 
 function makeIssue() {
   return {
@@ -26,7 +26,7 @@ function makeIssue() {
 
 test('Issue CLI depends on the canonical model outside copied dashboard assets', () => {
   const cli = fs.readFileSync(
-    path.join(repoRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js'),
+    path.join(pluginRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js'),
     'utf8'
   );
   assert.match(cli, /require\('\.\.\/lib\/issue-model\.js'\)/);

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const load = () => import('../skills/webagent/scripts/wait-for-reply.mjs');
+const load = () => import('../plugins/emeth-discipline/skills/webagent/scripts/wait-for-reply.mjs');
 const done = '1 text WA_DONE\n2 button 응답 복사';
 const tabFor = states => ({
   ax: { get: async () => { const s = states.length > 1 ? states.shift() : states[0]; if (s instanceof Error) throw s; return s; } },

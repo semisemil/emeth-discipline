@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const core = require('../dashboard/assets/core.js');
+const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 
-const ASSET_ROOT = path.join(__dirname, '..', 'dashboard', 'assets');
+const ASSET_ROOT = path.join(__dirname, '..', 'plugins', 'emeth-discipline', 'dashboard', 'assets');
 const readAsset = (name) => fs.readFileSync(path.join(ASSET_ROOT, name), 'utf8');
 
 const documents = [

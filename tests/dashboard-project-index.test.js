@@ -10,12 +10,14 @@ const {
   ProjectIndexService,
   buildProjectIndex,
   buildProjectSummary,
-} = require('../dashboard/records/project-index.js');
+} = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 
 const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
 const STATE_STARTER = path.join(
   __dirname,
   '..',
+  'plugins',
+  'emeth-discipline',
   'skills',
   'issue-ledger',
   'assets',

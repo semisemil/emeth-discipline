@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const load = () => import('../skills/webagent/scripts/webagent.mjs');
+const load = () => import('../plugins/emeth-discipline/skills/webagent/scripts/webagent.mjs');
 
 test('compact output preserves the full answer, sources and truncation but omits diagnostics', async () => {
   const { compactResult } = await load();

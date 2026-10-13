@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { prepareLaunch, parseArgs } = require('../skills/start-implementation/scripts/prepare-launch.js');
+const { prepareLaunch, parseArgs } = require('../plugins/emeth-discipline/skills/start-implementation/scripts/prepare-launch.js');
 const { fixture, git, MAIN_SETTINGS } = require('./helpers/implementation-fixture.js');
 
 function options(f, extra = {}) {
@@ -20,13 +20,13 @@ test('launch CLI yields an internal implementation guide and Design ID and expli
   const before = git(f.cwd, 'status', '--porcelain=v1');
   const design = f.read(f.design);
   const index = fs.readFileSync(path.join(f.cwd, '.git', 'index'));
-  const script = path.resolve(__dirname, '../skills/start-implementation/scripts/prepare-launch.js');
+  const script = path.resolve(__dirname, '../plugins/emeth-discipline/skills/start-implementation/scripts/prepare-launch.js');
   const result = spawnSync(process.execPath, [script, '--cwd', f.cwd, '--design', 'DESIGN-0001',
     '--project-root', f.cwd, '--project-id', 'saved-project', '--model', 'gpt-6-astra', '--reasoning', 'medium'],
   { encoding: 'utf8', windowsHide: true });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), {
-    prompt: `Read ${JSON.stringify(path.resolve(__dirname, '../skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`, model: 'gpt-6-astra', thinking: 'medium',
+    prompt: `Read ${JSON.stringify(path.resolve(__dirname, '../plugins/emeth-discipline/skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`, model: 'gpt-6-astra', thinking: 'medium',
     target: { type: 'project', projectId: 'saved-project', environment: { type: 'local' } },
   });
   assert.equal(git(f.cwd, 'status', '--porcelain=v1'), before);
@@ -43,7 +43,7 @@ test('the request builder preserves each selected model and effort without a mod
     const result = prepareLaunch(options(f, { model, reasoning }));
     assert.equal(result.model, model);
     assert.equal(result.thinking, reasoning);
-    assert.equal(result.prompt, `Read ${JSON.stringify(path.resolve(__dirname, '../skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`);
+    assert.equal(result.prompt, `Read ${JSON.stringify(path.resolve(__dirname, '../plugins/emeth-discipline/skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`);
   }
   // Availability and authorization belong to the runtime, not a baked-in model catalog.
   assert.equal(prepareLaunch(options(f, { model: 'user-selected-model' })).model, 'user-selected-model');

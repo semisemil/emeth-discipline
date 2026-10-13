@@ -7,11 +7,11 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const core = require('../dashboard/assets/core.js');
-const { buildProjectIndex } = require('../dashboard/records/project-index.js');
-const { createDashboardHttpServer } = require('../dashboard/server.js');
+const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
+const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+const { createDashboardHttpServer } = require('../plugins/emeth-discipline/dashboard/server.js');
 
-const ASSET_ROOT = path.join(__dirname, '..', 'dashboard', 'assets');
+const ASSET_ROOT = path.join(__dirname, '..', 'plugins', 'emeth-discipline', 'dashboard', 'assets');
 const AVAILABLE_ID = '11111111-1111-4111-8111-111111111111';
 const UNAVAILABLE_ID = '22222222-2222-4222-8222-222222222222';
 

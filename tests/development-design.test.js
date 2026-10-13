@@ -6,17 +6,17 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { prepareLaunch } = require('../skills/start-implementation/scripts/prepare-launch.js');
-const { resolveContract } = require('../dashboard/records/development-contracts.js');
-const { buildProjectIndex } = require('../dashboard/records/project-index.js');
-const { selectDocuments } = require('../dashboard/assets/core.js');
-const memory = require('../skills/architecture-memory/scripts/memory.js');
-const recording = require('../skills/architecture-memory/scripts/record.js');
-const storage = require('../skills/architecture-memory/scripts/storage.js');
-const workflow = require('../skills/architecture-memory/scripts/workflow.js');
-const { notice } = require('../lib/architecture-memory.js');
+const { prepareLaunch } = require('../plugins/emeth-discipline/skills/start-implementation/scripts/prepare-launch.js');
+const { resolveContract } = require('../plugins/emeth-discipline/dashboard/records/development-contracts.js');
+const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+const { selectDocuments } = require('../plugins/emeth-discipline/dashboard/assets/core.js');
+const memory = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
+const recording = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/record.js');
+const storage = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
+const workflow = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+const { notice } = require('../plugins/emeth-discipline/lib/architecture-memory.js');
 
-const repo = path.resolve(__dirname, '..');
+const repo = path.resolve(__dirname, '../plugins/emeth-discipline');
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-design-'));
   const project = path.join(root, 'project');
@@ -52,7 +52,7 @@ test('the first Design is saved, indexed and executable with a minimal connected
   assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory/work/state.json')), false);
   assert.match(notice({ cwd: f.project, thread_id: 'design-test' }, { dataRoot: path.join(f.root, 'hooks') }), /Project architecture memory is connected/);
   const launch = prepareLaunch({ cwd: f.project, design: 'DESIGN-0001', projectRoot: f.project, projectId: 'project', model: 'chosen-model', reasoning: 'high' });
-  assert.equal(launch.prompt, `Read ${JSON.stringify(path.resolve(__dirname, '../skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`);
+  assert.equal(launch.prompt, `Read ${JSON.stringify(path.resolve(__dirname, '../plugins/emeth-discipline/skills/start-implementation/implement.md'))} and follow it to implement DESIGN-0001 in this session.`);
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.project }).publicIndex;
   assert.equal(index.designs[0].status, 'ready');
   assert.equal(selectDocuments(index, { kind: 'design' })[0].id, 'DESIGN-0001');
@@ -120,8 +120,8 @@ test('manual successor conflicts block both the dashboard detail and execution',
   save(f, document('DESIGN-0001', { supersedes: ['SPEC-0001'] }));
   f.write('.emeth/designs/DESIGN-0002-manual/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-successor-conflict');
-  const { ProjectIndexService } = require('../dashboard/records/project-index.js');
-  const { registerProject } = require('../dashboard/registry.js');
+  const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
+  const { registerProject } = require('../plugins/emeth-discipline/dashboard/registry.js');
   const registryPath = path.join(f.root, 'registry.json');
   registerProject(f.project, { registryPath });
   const service = new ProjectIndexService({ registryOptions: { registryPath }, watch: () => ({ close() {} }) });

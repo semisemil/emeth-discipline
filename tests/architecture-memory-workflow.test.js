@@ -6,10 +6,10 @@ const path = require('node:path');
 const test = require('node:test');
 const { spawnSync, execFile } = require('node:child_process');
 const { promisify } = require('node:util');
-const W = require('../skills/architecture-memory/scripts/workflow.js');
-const S = require('../skills/architecture-memory/scripts/storage.js');
-const { loadRecords } = require('../skills/architecture-memory/scripts/memory.js');
-const { notice } = require('../lib/architecture-memory.js');
+const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
+const { loadRecords } = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
+const { notice } = require('../plugins/emeth-discipline/lib/architecture-memory.js');
 
 function fixture(t, gitEnabled = true) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-memory-workflow-'));
@@ -336,7 +336,7 @@ test('invalid durable states fail closed and reject unsafe journal targets befor
 
 test('registered hook CLI emits bounded valid context and stays empty without a binding', (t) => {
   const f = fixture(t);
-  const plugin = path.resolve(__dirname, '..');
+  const plugin = path.resolve(__dirname, '../plugins/emeth-discipline');
   const hook = path.join(plugin, 'hooks/run.js');
   const manifest = JSON.parse(fs.readFileSync(path.join(plugin, '.codex-plugin/plugin.json')));
   const config = JSON.parse(fs.readFileSync(path.join(plugin, manifest.hooks)));
@@ -356,7 +356,7 @@ test('registered hook CLI emits bounded valid context and stays empty without a 
 test('committed source CLI reads run concurrently without a write lock or retries', async (t) => {
   const f = fixture(t);
   const begun = W.begin(f.root, 'init');
-  const cli = path.resolve(__dirname, '../skills/architecture-memory/scripts/workflow.js');
+  const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
   const execute = promisify(execFile);
   const results = await Promise.all(Array.from({ length: 4 }, () => execute(process.execPath, [cli, 'source', '--project-root', f.root, '--path', 'src/server.js'], { windowsHide: true })));
   for (const result of results) {

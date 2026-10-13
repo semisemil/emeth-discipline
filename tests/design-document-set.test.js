@@ -7,8 +7,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const writer = path.resolve(__dirname, '../writers/document-writer.js');
-const contracts = path.resolve(__dirname, '../dashboard/records/development-contracts.js');
+const writer = path.resolve(__dirname, '../plugins/emeth-discipline/writers/document-writer.js');
+const contracts = path.resolve(__dirname, '../plugins/emeth-discipline/dashboard/records/development-contracts.js');
 
 function fixture(t) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-design-set-'));
@@ -141,7 +141,7 @@ test('status changes preserve all detail bytes and missing details prevent ready
 test('handoff rejects a document set changed during reading instead of mixing revisions', t => {
   const f = fixture(t);
   assert.equal(f.create(input).status, 0);
-  const { resolveContract } = require('../dashboard/records/development-contracts.js');
+  const { resolveContract } = require('../plugins/emeth-discipline/dashboard/records/development-contracts.js');
   const open = fs.openSync;
   const read = fs.readSync;
   const descriptors = new Set();

@@ -10,12 +10,12 @@ const {
   dashboardDirectory,
   inspectServer,
   stopServer,
-} = require('../dashboard/control');
+} = require('../plugins/emeth-discipline/dashboard/control');
 
-const { composeEmethPrompt } = require('../lib/rules-prompt');
+const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt');
 
-const repoRoot = path.resolve(__dirname, '..');
-const hookPath = path.join(repoRoot, 'hooks', 'run.js');
+const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const hookPath = path.join(pluginRoot, 'hooks', 'run.js');
 
 function isolatedEnvironment(root) {
   return {
@@ -68,13 +68,13 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
 }, async (testContext) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth powershell '한글-"));
   assert.equal(path.dirname(path.resolve(root)), path.resolve(os.tmpdir()));
-  const env = { ...isolatedEnvironment(root), PLUGIN_ROOT: repoRoot };
+  const env = { ...isolatedEnvironment(root), PLUGIN_ROOT: pluginRoot };
   const directory = dashboardDirectory({ env });
   testContext.after(async () => {
     await stopServer({ directory });
     fs.rmSync(root, { recursive: true, force: true });
   });
-  const config = JSON.parse(fs.readFileSync(path.join(repoRoot, 'hooks/codex-hooks.json'), 'utf8'));
+  const config = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'hooks/codex-hooks.json'), 'utf8'));
   const command = config.hooks.SessionStart[0].hooks[0].commandWindows;
   const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', command], {
     env,
@@ -102,8 +102,8 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
 });
 
 test('hook registration covers SessionStart only and all sources', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, '.codex-plugin/plugin.json'), 'utf8'));
-  const config = JSON.parse(fs.readFileSync(path.join(repoRoot, manifest.hooks), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
+  const config = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8'));
   const entry = config.hooks.SessionStart.find((candidate) => candidate.hooks.some((hook) => (
     hook.command.includes('run.js')
   )));
