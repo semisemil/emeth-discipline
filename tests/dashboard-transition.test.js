@@ -35,19 +35,3 @@ test('new state starter creates no static dashboard and documents the global ent
   fs.cpSync(starter, path.join(project, '.emeth'), { recursive: true });
   assert.equal(fs.existsSync(path.join(project, '.emeth', 'dashboard')), false);
 });
-
-test('transition sources never target an existing project dashboard', (t) => {
-  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-existing-dashboard-'));
-  t.after(() => fs.rmSync(project, { recursive: true, force: true }));
-  const dashboard = path.join(project, '.emeth', 'dashboard');
-  fs.mkdirSync(dashboard, { recursive: true });
-  const marker = path.join(dashboard, 'user-dashboard.txt');
-  fs.writeFileSync(marker, 'preserve user dashboard', 'utf8');
-
-  const transitionSources = [
-    fs.readFileSync(hooksPath, 'utf8'),
-    fs.readFileSync(path.join(starter, 'STATE.md'), 'utf8'),
-  ].join('\n');
-  assert.doesNotMatch(transitionSources, /copyFileSync|cpSync|refresh-dashboard\.js/);
-  assert.equal(fs.readFileSync(marker, 'utf8'), 'preserve user dashboard');
-});

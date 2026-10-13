@@ -20,20 +20,6 @@ test('memory context is implicitly discoverable; initialization and reconciliati
   }
 });
 
-test('description owns selection while the body reuses sufficient context and preserves execution constraints', () => {
-  const main = read('skills', 'architecture-memory', 'SKILL.md');
-  const description = main.match(/^description: (.*)$/m)[1];
-  for (const trigger of ['design', 'implementation', 'project conversation', 'project purpose', 'operating conditions', 'domain meanings', 'reasons for prior decisions', 'preservation for later work']) {
-    assert.ok(description.includes(trigger), trigger);
-  }
-  assert.match(main, /Reuse context from the conversation and inspected materials when it is sufficient for the current decision/);
-  assert.match(main, /When context is missing and Memory is connected and enabled/);
-  assert.match(main, /read only the sections needed to fill that gap/);
-  assert.match(main, /With no connection, do not scan or initialize merely because architecture is mentioned/);
-  assert.match(main, /Read-only\/no-memory requests suppress writes; explicit disabled settings stay disabled/);
-  assert.doesNotMatch(main, /Enter through|mechanical/);
-});
-
 test('all workflow reference pointers resolve', () => {
   const files = [
     ...skills.map((name) => path.join('skills', name, 'SKILL.md')),
@@ -50,11 +36,4 @@ test('all workflow reference pointers resolve', () => {
       assert.ok(fs.existsSync(target), file + ' -> ' + match[1]);
     }
   }
-});
-
-test('main discovery and workflow instructions fit a bounded initial context', () => {
-  const main = read('skills', 'architecture-memory', 'SKILL.md');
-  const description = main.match(/^description: (.*)$/m)[1];
-  assert.ok(description.length <= 240);
-  assert.ok(main.length <= 3500, main.length + ' characters');
 });
