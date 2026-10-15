@@ -49,9 +49,26 @@ function prepareClaudeLaunch({ cwd, design, model }) {
   };
 }
 
+function prepareMixdogLaunch({ cwd, design, agent, tag, model, reasoning, projectRoot, projectId }) {
+  const contract = contractFor(design);
+  requireValue(typeof cwd === 'string' && cwd.trim(), 'Supply the current project');
+  requireValue(typeof agent === 'string' && agent.trim(), 'Supply the configured Mixdog workflow agent ID with --agent');
+  requireValue([model, reasoning, projectRoot, projectId].every(value => value === undefined),
+    'Mixdog spawn uses a configured agent route; model, reasoning, and saved Codex project options are not supported');
+  requireValue(tag === undefined || (typeof tag === 'string' && tag.trim()), 'Supply a nonempty worker tag');
+  const root = fs.realpathSync(cwd);
+  resolveContract(root, contract);
+  return {
+    type: 'spawn', agent, tag: tag || `emeth-implementation-${contract.toLowerCase()}`, cwd: root,
+    prompt: `${implementationPrompt(contract)} If a user decision is needed, return the blocker, completed changes, and verification to the calling session.`,
+    context: require('../../../lib/rules-prompt').composeMixdogPrompt(),
+  };
+}
+
 function parseArgs(argv) {
   const names = { '--cwd': 'cwd', '--design': 'design', '--project-root': 'projectRoot',
-    '--project-id': 'projectId', '--model': 'model', '--reasoning': 'reasoning', '--host': 'host' };
+    '--project-id': 'projectId', '--model': 'model', '--reasoning': 'reasoning', '--host': 'host',
+    '--agent': 'agent', '--tag': 'tag' };
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const key = names[argv[i]];
@@ -64,10 +81,12 @@ function parseArgs(argv) {
 if (require.main === module) {
   try {
     const { host, ...options } = parseArgs(process.argv.slice(2));
-    requireValue(host === undefined || host === 'codex' || host === 'claude', 'Supply --host codex or claude');
-    const launch = host === 'claude' ? prepareClaudeLaunch(options) : prepareLaunch(options);
+    requireValue(host === undefined || ['codex', 'claude', 'mixdog'].includes(host), 'Supply --host codex, claude, or mixdog');
+    requireValue(host === 'mixdog' || (options.agent === undefined && options.tag === undefined), '--agent and --tag require --host mixdog');
+    const launch = host === 'mixdog' ? prepareMixdogLaunch(options)
+      : host === 'claude' ? prepareClaudeLaunch(options) : prepareLaunch(options);
     process.stdout.write(`${JSON.stringify(launch, null, 2)}\n`);
   } catch (error) { process.stderr.write(`Implementation launch: ${error.message}\n`); process.exitCode = 1; }
 }
 
-module.exports = { prepareLaunch, prepareClaudeLaunch, parseArgs };
+module.exports = { prepareLaunch, prepareClaudeLaunch, prepareMixdogLaunch, parseArgs };

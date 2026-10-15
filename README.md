@@ -1,6 +1,6 @@
 # Emeth
 
-Emeth는 코딩 에이전트가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다. Codex와 Claude Code를 지원합니다.
+Emeth는 코딩 에이전트가 요청받은 작업 범위를 끝까지 지키고, 직접 확인한 결과를 바탕으로 완료 여부를 보고하도록 돕는 플러그인입니다. Codex, Claude Code, Mixdog을 지원합니다.
 
 작업이 길어지면 처음 요청의 세부 조건을 빠뜨리거나, 확인하지 않은 부분까지 끝났다고 보고하기 쉽습니다. 대화 중 발견한 버그나 후속 작업도 다음 작업으로 이어지지 않고 잊히곤 합니다. Emeth는 대화에 적용할 공통 기준과 작업별 스킬, 프로젝트에 남는 기록으로 이런 누락을 줄입니다.
 
@@ -77,6 +77,30 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 /plugin install emeth-discipline@emeth-discipline
 ```
 
+### Mixdog에서 설치
+
+저장소를 로컬에 복제한 뒤 Mixdog의 `/plugins` 또는 데스크톱 Plugins 설정에서 플러그인 추가를 선택하고 `<복제한 저장소의 절대 경로>/plugins/emeth-discipline`을 등록합니다. 현재 작업 내용을 검증할 때도 이 플러그인 폴더를 등록합니다. 등록 후 프로젝트에서 새 세션을 시작합니다. Node.js 22 이상이 `node` 명령으로 실행 가능해야 합니다.
+
+```bash
+git clone https://github.com/semisemil/emeth-discipline.git
+```
+
+현재 Mixdog은 마켓플레이스의 하위 플러그인 경로를 해석하지 않으므로 저장소 URL이나 저장소 루트를 직접 등록하면 Emeth를 불러오지 못합니다. 갱신은 로컬 저장소를 최신화한 뒤 Plugins에서 Refresh metadata를 실행합니다.
+
+Mixdog은 기존 Codex 매니페스트와 `skills/`를 읽고, Emeth의 `.mixdog/hooks.json`에서 전용 훅을 로드합니다. 스킬은 이름으로 호출합니다. 예를 들어 `development-design 스킬로 알림 설정 개선을 설계해줘`라고 요청하면 `Skill({"name":"development-design"})`로 불러옵니다. Codex의 `$emeth-discipline:...` 형식을 Mixdog에서 사용할 필요는 없습니다.
+
+| 기능 | Mixdog 지원 방식 |
+| --- | --- |
+| 공통 규칙 | 세션 시작과 매 사용자 요청에서 적용. 하위 에이전트에는 `agent` 실행 요청의 context로 전달 |
+| 설계·이슈·아키텍처·검증 스킬 | 기존 스킬과 저장 형식을 공통으로 사용 |
+| 대시보드 | 세션 시작에서 공통 서버 실행. 등록·조회·종료 도구 재사용 |
+| 구현과 독립 검토 | Mixdog의 설정된 workflow agent와 `agent` 도구 사용. 모델과 추론 수준은 해당 agent의 route 설정에서 지정 |
+| WebAgent | 데스크톱의 `browser-use`와 native `browser` 도구로 ChatGPT Chat 협업. 로그인 필요 |
+
+Mixdog은 Codex의 명시 호출 전용 메타데이터를 강제하지 않으므로 `when_to_use`와 스킬 본문에도 호출 조건을 기록합니다. 동명 사용자 스킬은 플러그인 스킬보다 우선하며, 플러그인 또는 스킬을 비활성화하면 관련 기능이 제공되지 않습니다.
+
+현재 Mixdog은 `SubagentStart`와 `PostCompact` 훅 반환 지침을 대화에 넣지 않습니다. Emeth는 `PreToolUse`로 `agent` spawn에 규칙을 전달하고 매 사용자 요청에서 복구합니다. 압축 직후 같은 턴을 계속할 때는 규칙이 사라졌다면 `rules`를 다시 불러와야 합니다. Codex WebAgent의 Node 관리 객체 대신 Mixdog 전용 도구 절차를 사용합니다. [연동 계약과 검증 방법](docs/mixdog-support.md)을 참고하세요.
+
 ## 🚀 빠르게 사용하기
 
 ### 기존 저장 폴더 자동 이전
@@ -100,7 +124,7 @@ $emeth-discipline:rules
 
 일부 스킬은 에이전트가 작업에 맞춰 불러오고, 기획과 구현 시작처럼 직접 호출해야 하는 스킬도 있습니다. 적용할 기준을 분명히 하고 싶다면 아래처럼 스킬 이름을 적으세요.
 
-아래 예시는 Codex 기준입니다. Claude Code에서는 `$emeth-discipline:스킬명` 대신 `/emeth-discipline:스킬명`으로 호출합니다. `webagent`와 `rules` 직접 호출은 Codex에서만 지원합니다.
+아래 예시는 Codex 기준입니다. Claude Code에서는 `$emeth-discipline:스킬명` 대신 `/emeth-discipline:스킬명`으로 호출합니다. Mixdog에서는 스킬 이름을 요청에 적거나 `Skill`로 불러옵니다. Claude Code에서 `webagent`와 `rules` 직접 호출은 지원하지 않습니다.
 
 아키텍처 설계나 재설계:
 
@@ -347,6 +371,8 @@ Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
 ```bash
 npm test
 ```
+
+Codex와 Mixdog의 실제 로더·훅·요청 전달·대시보드 경로를 검증하는 명령은 [호스트 검증](docs/host-validation.md)을 참고하세요.
 
 ## 라이선스
 

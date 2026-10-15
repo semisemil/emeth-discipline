@@ -1,5 +1,6 @@
 ---
 name: figure-it-out
+when_to_use: "Explicit request only: carry a change from necessary design through implementation."
 disable-model-invocation: true
 description: Think through a project change and carry it through the full Emeth Discipline development workflow.
 ---

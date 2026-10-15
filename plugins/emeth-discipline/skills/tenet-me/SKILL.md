@@ -1,5 +1,6 @@
 ---
 name: tenet-me
+when_to_use: "Explicit request or figure-it-out: review prerequisites and forward counterexamples."
 disable-model-invocation: true
 description: Review a Design, legacy plan, or implementation through backward prerequisite tracing and forward counterexamples. Use when explicitly invoked or figure-it-out owns the workflow.
 argument-hint: "[DESIGN-ID or target]"

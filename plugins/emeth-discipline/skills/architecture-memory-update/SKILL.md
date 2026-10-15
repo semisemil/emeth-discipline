@@ -1,5 +1,6 @@
 ---
 name: architecture-memory-update
+when_to_use: "Explicit request only: reconcile connected architecture memory with committed changes."
 disable-model-invocation: true
 description: Reconcile connected architecture memory with Git, including a minimal collection started by a Design save.
 ---

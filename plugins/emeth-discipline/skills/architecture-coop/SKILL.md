@@ -1,5 +1,6 @@
 ---
 name: architecture-coop
+when_to_use: "Design or redesign architecture with the user; compare decisions and constraints."
 description: Design or redesign a system's architecture, such as its boundaries, components, and runtime and data structure, with the user by working through key decisions together. For a specific change to implement, use development-design.
 ---
 
