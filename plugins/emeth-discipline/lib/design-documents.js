@@ -38,11 +38,18 @@ function readDesignDocuments(root, record) {
   return documents;
 }
 
+// The pending record survives only an interrupted write, so the failure itself names the recovery command.
+function recoveryMessage(file, reason) {
+  const id = /^(DESIGN-\d{4,})/.exec(path.basename(path.dirname(file)))?.[1] || '<DESIGN-ID>';
+  const writer = path.resolve(__dirname, '..', 'writers', 'document-writer.js');
+  return `${reason}. Run node "${writer}" recover --project-root <project> --id ${id} to restore the files from before that write, then reapply the change.`;
+}
+
 function assertDocumentSetAvailable(file) {
   const fs = require('node:fs');
   if (fs.existsSync(path.join(path.dirname(file), '.design-set-pending.json'))) {
-    throw Object.assign(new Error('Design document-set publication needs recovery'), { code: 'design-document-set-pending' });
+    throw Object.assign(new Error(recoveryMessage(file, 'Design document-set publication was interrupted')), { code: 'design-document-set-pending' });
   }
 }
 
-module.exports = { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable };
+module.exports = { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable, recoveryMessage };

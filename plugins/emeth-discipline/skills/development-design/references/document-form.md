@@ -1,14 +1,6 @@
-# Software design
+# Design document form
 
 Choose established software design conventions suited to the work and its readers.
-
-Base the design on goals, constraints, and accepted choices.
-Resolve prerequisite decisions first and delegated details directly.
-During an ongoing design discussion, connect the current point to the overall design.
-In the same response, address the next unresolved in-scope issue whose prerequisites are settled, presenting a concrete recommendation with its effects and material tradeoffs.
-Use questions to obtain required user decisions before dependent choices.
-Record unresolved matters with the design they prevent.
-Fill gaps in project facts and prior decision reasons from relevant contracts, code, and [Architecture Memory](../../architecture-memory/SKILL.md).
 
 Organize design documents using arc42 views relevant to the change: goals and constraints, context, building blocks, runtime and deployment, crosscutting concepts, decisions, quality scenarios, risks, and terminology.
 Reference existing architecture and contracts for unchanged parts.
@@ -22,10 +14,8 @@ Document database tables by schema, keys, constraints, and separate index tables
 Express acceptance criteria as scenarios with conditions and expected results.
 Use prose to establish purpose and explain relationships or material tradeoffs not apparent from the diagrams and tables.
 
-Separate the overview from detailed views by subject and responsibility, with links between them.
+Divide detailed documents by subject and responsibility.
 Each contract has one owning section or document, referenced elsewhere.
 Headings and diagram levels follow the selected conventions; all views agree on boundaries, responsibilities, and contract conditions.
 Keep choices local to a Design with their contracts; record significant architectural decisions through [Architecture Memory ADR guidance](../../architecture-memory/references/decision-templates.md).
 Open implementation choices preserve the specified behavior and structure.
-
-For multi-topic discussions, use [progress navigation](design-navigation.md).

@@ -1,15 +1,17 @@
 ---
 name: development-design
-description: Write or revise connected software development design documents for implementation and review. Also use for Design status changes.
+description: Design a specific change to implement with the user, and write or revise its connected Design documents for implementation and review. Also use for Design status changes.
 ---
 
 # Development Design
 
 For status-only requests, use [status](references/document-status.md).
 
-Apply [software design criteria](../rules/references/software-design.md) when developing or writing a Design.
+Apply [design discussion](../rules/references/design-discussion.md) while developing a Design and [document form](references/document-form.md) when writing it.
 Continue the named Design or one with the same goal; otherwise create one.
-Use `DESIGN.md` for purpose, scope, the architecture overview, and navigation to detailed views in Markdown documents in the same directory.
+Find existing Designs with `node <plugin-root>/writers/document-writer.js list --project-root <absolute-project-root>`.
+Use `DESIGN.md` for purpose, scope, and the architecture overview.
+Move a subject into a detailed Markdown document in the same directory when it would crowd the overview, and link it from `DESIGN.md`.
 Deliver the complete document set with valid links.
 Keep [readiness](references/document-status.md) in metadata only.
 Save through [creation](references/document-operations.md) or [revision](references/document-editing.md).

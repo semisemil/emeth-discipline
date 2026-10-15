@@ -16,9 +16,9 @@ const {
   parseSpecMetadata,
   parseDesignMetadata,
 } = require('../dashboard/records/record-parser.js');
-const { assertDesignWrite, readDevelopmentRecord } = require('../dashboard/records/development-contracts.js');
+const { assertDesignWrite, readDevelopmentRecord, supersessionMap } = require('../dashboard/records/development-contracts.js');
 const { registerProject, rootKey } = require('../dashboard/registry.js');
-const { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable } = require('../lib/design-documents.js');
+const { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable, recoveryMessage } = require('../lib/design-documents.js');
 const { readMarkdownSection } = require('../lib/markdown-section.js');
 const roots = require('../lib/document-roots.js');
 
@@ -41,17 +41,18 @@ function writerError(code, message, cause) {
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  if (!['create', 'write', 'status', 'read', 'patch', 'recover'].includes(command)) {
+  if (!['create', 'write', 'status', 'read', 'patch', 'recover', 'list'].includes(command)) {
     throw writerError(
       'invalid-command',
-      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read --project-root DIR --id DESIGN-ID [--document PATH] [--section TITLE]; patch|recover --project-root DIR --id DESIGN-ID'
+      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--supersedes ID]... [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read --project-root DIR --id DESIGN-ID [--document PATH] [--section TITLE]; patch|recover --project-root DIR --id DESIGN-ID; list --project-root DIR'
     );
   }
 
   const options = command === 'write' ? {} : { command };
-  const allowed = new Set(command === 'create' ? ['project_root', 'id', 'title', 'slug', 'kind', 'status', 'memory', 'language', 'input_format']
+  const allowed = new Set(command === 'create' ? ['project_root', 'id', 'title', 'slug', 'kind', 'status', 'supersedes', 'memory', 'language', 'input_format']
     : command === 'read' ? ['project_root', 'id', 'document', 'section']
     : command === 'recover' ? ['project_root', 'id']
+    : command === 'list' ? ['project_root']
     : command === 'patch' ? ['project_root', 'id', 'change_kind', 'memory', 'language']
     : command === 'status'
     ? ['project_root', 'id', 'status', 'memory', 'language']
@@ -65,14 +66,16 @@ function parseArgs(argv) {
     if (!allowed.has(key)) {
       throw writerError('invalid-argument', `알 수 없는 옵션입니다: ${argument}`);
     }
-    if (Object.hasOwn(options, key)) {
+    if (Object.hasOwn(options, key) && key !== 'supersedes') {
       throw writerError('invalid-argument', `옵션이 중복되었습니다: ${argument}`);
     }
     const value = rest[index + 1];
     if (value === undefined || value.startsWith('--')) {
       throw writerError('invalid-argument', `${argument} 값이 필요합니다.`);
     }
-    options[key] = value;
+    // --supersedes repeats once per replaced document.
+    if (key === 'supersedes') options.supersedes = [...(options.supersedes || []), value];
+    else options[key] = value;
     index += 1;
   }
 
@@ -86,6 +89,7 @@ function parseArgs(argv) {
     if (!/^DESIGN-\d{4,}$/.test(options.id || '')) throw writerError('invalid-argument', 'Supply --id DESIGN-ID');
     options.kind = 'design';
   }
+  if (command === 'list') options.kind = 'design';
   if (command === 'create') {
     options.design_kind = options.kind || 'feature';
     options.kind = 'design';
@@ -460,7 +464,9 @@ function publishDocumentSet(root, target, source, existing, details) {
     fs.unlinkSync(pending);
   } catch (error) {
     try { recoverDocumentSetUnlocked(root, directory); }
-    catch (recoveryError) { throw writerError('design-document-set-pending', recoveryError.message, error); }
+    catch (recoveryError) {
+      throw writerError('design-document-set-pending', recoveryMessage(target, `Rollback failed: ${recoveryError.message}`), error);
+    }
     throw error;
   }
 }
@@ -630,7 +636,7 @@ function createDocument(options, sourceBuffer) {
     const metadata = {
       schema_version: 2, id, title: options.title, kind: options.design_kind || 'feature',
       status: options.status || 'draft', revision: 1,
-      supersedes: [], superseded_by: null, related_issues: [],
+      supersedes: options.supersedes || [], superseded_by: null, related_issues: [],
       ...(documents ? { documents: documents.map(document => document.path) } : {}),
     };
     const content = Buffer.from(`---\n${JSON.stringify(metadata, null, 2)}\n---\n\n${body}`, 'utf8');
@@ -785,6 +791,35 @@ function recoverDocumentSet(options) {
   });
 }
 
+function listDesigns(options) {
+  const root = canonicalProjectRoot(options.project_root);
+  migrateProject(root);
+  const storage = roots.designStorage(root);
+  const entries = fs.existsSync(storage.directory) ? fs.readdirSync(storage.directory, { withFileTypes: true }) : [];
+  const ids = [...new Set(entries
+    .filter(entry => entry.isDirectory() && fs.existsSync(path.join(storage.directory, entry.name, 'DESIGN.md')))
+    .map(entry => /^(DESIGN-\d{4,})(?:-|$)/.exec(entry.name)?.[1]).filter(Boolean))].sort();
+  const records = [];
+  const designs = ids.map(id => {
+    try {
+      const record = readDevelopmentRecord(root, id);
+      records.push(record);
+      return { id, title: record.title, kind: record.metadata.kind, status: record.status, revision: record.revision,
+        path: record.relativePath, ...(storage.configured ? { absolute_path: record.source.filePath } : {}),
+        supersedes: record.metadata.supersedes, superseded_by: record.metadata.superseded_by };
+    } catch (error) {
+      return { id, error: { code: error.code || 'contract-unavailable', message: error.message } };
+    }
+  });
+  // Replacement is declared by the successor; derive it for each replaced Design.
+  let next = new Map();
+  const diagnostics = [];
+  try { next = supersessionMap(records); }
+  catch (error) { diagnostics.push({ code: error.code, message: error.message }); }
+  for (const design of designs) if (next.has(design.id)) design.superseded_by = next.get(design.id);
+  return { designs, ...(diagnostics.length ? { diagnostics } : {}) };
+}
+
 function updateDocumentStatus(options) {
   if (!/^(?:DESIGN|SPEC)-\d{4,}$/.test(options.id || '') || typeof options.status !== 'string' || !options.status) {
     throw writerError('invalid-argument', 'Supply a Design or legacy Spec ID and status');
@@ -844,6 +879,7 @@ function main(argv = process.argv.slice(2), sourceBuffer) {
     const result = options.command === 'create' ? createDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer)
       : options.command === 'read' ? readDocument(options)
       : options.command === 'recover' ? recoverDocumentSet(options)
+      : options.command === 'list' ? listDesigns(options)
       : options.command === 'patch' ? patchDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer)
       : options.command === 'status'
       ? updateDocumentStatus(options)
@@ -870,4 +906,5 @@ module.exports = {
   updateDocumentStatus,
   readDocument,
   patchDocument,
+  listDesigns,
 };

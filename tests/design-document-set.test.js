@@ -171,6 +171,21 @@ test('handoff rejects a document set changed during reading instead of mixing re
   assert.equal(f.execute().value.documents[1].body, delivery.replace('저장 완료 후', '영구 저장 완료 후'));
 });
 
+test('a replacement declared at creation is listed and blocks the replaced contract', t => {
+  const f = fixture(t);
+  assert.equal(f.create(input).status, 0);
+  const replacing = f.run('create', input, ['--title', '알림 재설계', '--slug', 'notification-v2', '--status', 'ready',
+    '--input-format', 'documents', '--supersedes', 'DESIGN-0001']);
+  assert.equal(replacing.status, 0, replacing.stderr);
+  assert.equal(f.execute().value.error.code, 'contract-superseded');
+  const listed = spawnSync(process.execPath, [writer, 'list', '--project-root', f.project], { env: f.env, encoding: 'utf8', windowsHide: true });
+  assert.equal(listed.status, 0, listed.stderr);
+  assert.deepEqual(JSON.parse(listed.stdout).designs.map(({ id, status, superseded_by }) => ({ id, status, superseded_by })), [
+    { id: 'DESIGN-0001', status: 'ready', superseded_by: 'DESIGN-0002' },
+    { id: 'DESIGN-0002', status: 'ready', superseded_by: null },
+  ]);
+});
+
 test('an interrupted publication blocks handoff and recovery preserves external changes', t => {
   const f = fixture(t);
   assert.equal(f.create(input).status, 0);
@@ -187,7 +202,9 @@ test('an interrupted publication blocks handoff and recovery preserves external 
   const interrupted = spawnSync(process.execPath, ['-e', script], { env: f.env, encoding: 'utf8', windowsHide: true });
   assert.equal(JSON.parse(interrupted.stderr).error.code, 'design-document-set-pending');
   assert.equal(f.execute().value.error.code, 'design-document-set-pending');
-  assert.equal(f.run('read').value.error.code, 'design-document-set-pending');
+  const blocked = f.run('read').value.error;
+  assert.equal(blocked.code, 'design-document-set-pending');
+  assert.match(blocked.message, /recover --project-root <project> --id DESIGN-0001/);
   const file = path.join(f.directory, 'contracts/request.md');
   fs.writeFileSync(file, '독립적인 변경');
   assert.equal(f.run('recover').value.error.code, 'document-changed');
