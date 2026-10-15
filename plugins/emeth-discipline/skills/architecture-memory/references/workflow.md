@@ -1,6 +1,6 @@
 # Workflow commands and recovery
 
-Run the installed `skills/architecture-memory/scripts/workflow.js` with Node.
+Run `<plugin-root>/skills/architecture-memory/scripts/workflow.js` with Node.
 Every command needs `--project-root <absolute-code-project-root>`.
 For an unconnected custom root, add `--root <directory>` until initialization writes the project binding.
 

@@ -9,6 +9,7 @@ build/
 .cache/
 AGENTS.md
 CONTEXT.md
+CLAUDE.md
 !skills/AGENTS.md
 
 # Local development plans and execution records

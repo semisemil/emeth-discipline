@@ -1,6 +1,6 @@
 ---
 name: scope-integrity
-description: Use when work involves satisfying multiple requirements together, applying requested behavior across multiple execution paths, or implementing changes in multiple stages. Preserve the user's requirements, constraints, and completion criteria so they are not omitted or arbitrarily reduced during the work.
+description: Use for large, risky, or multi-stage work where requirements could be dropped along the way, such as many requirements satisfied together, requested behavior applied across multiple execution paths, or changes implemented in stages. Preserve the user's requirements, constraints, and completion criteria so they are not omitted or arbitrarily reduced during the work.
 ---
 
 # Scope Integrity

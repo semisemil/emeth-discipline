@@ -50,19 +50,19 @@ function composeBaseline(pluginRoot, host) {
     throw invalidPrompt('Emeth Discipline host-rules line must appear exactly once.', 'INVALID_HOST_SLOT', skillPath);
   }
   const hostRules = readFileWithRetry(hostPath).replace(/^\uFEFF/, '').trim();
-  return { baseline: resolveReferences(shared.replace(HOST_RULES, () => hostRules), skillPath), hostPath };
+  const baseline = resolveReferences(shared.replace(HOST_RULES, () => hostRules), skillPath);
+  return { baseline: baseline.replaceAll('{{plugin-root}}', pluginRoot), hostPath };
 }
 
 function composeEmethPrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  const { baseline } = composeBaseline(pluginRoot, 'codex');
-  return baseline.trimEnd();
+  return composeBaseline(pluginRoot, 'codex').baseline.trimEnd();
 }
 
-// Claude Code has no response modes; the rules skill itself stays hidden there.
+// The rules skill stays hidden in Claude Code; only this hook output delivers it there.
 function composeClaudePrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'claude').baseline.replaceAll('{{plugin-root}}', pluginRoot).trimEnd();
+  return composeBaseline(pluginRoot, 'claude').baseline.trimEnd();
 }
 
 module.exports = {

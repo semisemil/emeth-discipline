@@ -1,6 +1,6 @@
 # Retrieval details
 
-Run `skills/architecture-memory/scripts/memory.js` with Node. Every command needs `--project-root <project>`. Retrieval is local and read-only.
+Run `<plugin-root>/skills/architecture-memory/scripts/memory.js` with Node. Every command needs `--project-root <project>`. Retrieval is local and read-only.
 
 ## Selection
 

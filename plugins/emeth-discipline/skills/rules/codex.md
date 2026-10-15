@@ -1,4 +1,4 @@
-Apply rules within: explicit task, requested output, authorized target, and scope
+Keep work within the explicit task, requested output, authorized targets, and scope.
 
 ## Language and compression
 
@@ -24,7 +24,7 @@ Avoid contradictions between statements, and do not omit the logical connections
 ### Attention
 
 Omit statements meant to demonstrate compliance or correction, and exclusions invented from possibilities the user did not raise.
-Present chosen designs through structure, behavior, and contract definitions; omit unchosen alternatives and commentary on possibilities already excluded by those definitions.
+Present a settled design through structure, behavior, and contract definitions; omit unchosen alternatives and commentary on possibilities those definitions already exclude. Decision records keep the alternatives actually considered.
 In instructions for scheduled tasks or other sessions, include only what is needed for the task being assigned.
 Do not turn information already shared and agreed upon into new requirements or mandatory report items.
 Omit information unrelated to that task.
@@ -64,3 +64,7 @@ Otherwise, use the interpretation best supported by context.
 Pause only work that depends on the answer, and continue authorized work that can proceed independently.
 
 Evidence reuse: reuse valid evidence while the state relevant to the judgment remains unchanged.
+
+## Emeth skills
+
+Emeth skill files write this plugin's root directory as `<plugin-root>`: `{{plugin-root}}` (the directory that contains `skills/`)

@@ -12,8 +12,8 @@ A Design save starts minimal Memory unless recording is disabled. Optional `arch
 Reuse context from the conversation and inspected materials when it is sufficient for the current decision. When context is missing and Memory is connected and enabled, search domain terms and affected paths, then read only the sections needed to fill that gap:
 
 ```text
-node <skill-root>/scripts/memory.js search --project-root <project> --query "<topic>" --path <code-path>
-node <skill-root>/scripts/memory.js read --project-root <project> --id <selected-id> --revision <search-revision>
+node <plugin-root>/skills/architecture-memory/scripts/memory.js search --project-root <project> --query "<topic>" --path <code-path>
+node <plugin-root>/skills/architecture-memory/scripts/memory.js read --project-root <project> --id <selected-id> --revision <search-revision>
 ```
 
 Each returned section includes a `receipt`. On later reads, pass `--seen <receipt>` for sections whose full text and preamble remain in the current context, including shared constraints. Changed content returns again; new prerequisites remain required. Never reuse receipts alone after compaction or in another agent.
@@ -26,8 +26,8 @@ New implementation requirements enter the Design through its owning revision wor
 
 ## Capture at a meaningful boundary
 
-Capture durable information needed to interpret or change the system that code alone does not establish: domain meanings and relationships, operating conditions, business-rule background, and the reasons, scope, and tradeoffs of decisions. Code may express a rule without establishing its business meaning or rationale. Not having inspected code does not make its behavior project context. This includes ordinary project conversation after connection.
+Capture durable information needed to interpret or change the system that code alone does not establish: domain meanings and relationships, operating conditions, business-rule background, and the reasons, scope, and tradeoffs of decisions. Code may express a rule without establishing its business meaning or rationale. Learn what code does from the code itself; its behavior is not project context. This includes ordinary project conversation after connection.
 
 Follow [recording](references/recording.md) to distinguish capture value from document placement when connected Memory needs new durable context and recording is permitted. Patch at a settled decision or meaningful work boundary; unchanged information needs no write.
 
-Conversation capture preserves the Git checkpoint. Explicit `architecture-memory-update` reconciles committed changes. Report changed topics compactly, and report a recording failure separately from successful design or implementation work.
+Recording during conversation leaves the Git checkpoint unchanged. Explicit `architecture-memory-update` reconciles committed changes. Report changed topics compactly, and report a recording failure separately from successful design or implementation work.

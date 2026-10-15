@@ -16,7 +16,7 @@ ChatGPT Chat을 텍스트 작업의 협업자로 사용한다. 필요한 맥락�
 Browser 스킬의 연결 절차를 수행하고 기존 브라우저 바인딩을 재사용한다. [협업자 관리자](scripts/webagent.mjs)를 Browser의 Node 실행 도구에서 가져온다.
 
 ```js
-const { WebAgent } = await import("<이 스킬의 절대 경로>/scripts/webagent.mjs");
+const { WebAgent } = await import("<plugin-root>/skills/webagent/scripts/webagent.mjs");
 const w = new WebAgent(browser);
 w.create("review"); // 모델을 지정한 경우 { model: "GPT-5.6 Sol" } 전달
 nodeRepl.write(await w.ask("review", "검토할 맥락, 질문, 결과 길이와 검증 조건"));

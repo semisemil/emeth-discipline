@@ -225,6 +225,17 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   assert.equal(notice(event, { dataRoot }), '');
 });
 
+test('the session notice reports commits made after the Memory Git checkpoint', (t) => {
+  const f = fixture(t);
+  const dataRoot = path.join(f.root, '.test-hook-data');
+  const event = { cwd: f.root, session_id: 's1', hook_event_name: 'SessionStart', source: 'startup' };
+  initialize(f);
+  assert.doesNotMatch(notice(event, { dataRoot }), /behind HEAD/);
+  f.write('src/server.js', 'const store = "database";\n');
+  f.git('add', 'src/server.js'); f.git('commit', '-qm', 'database');
+  assert.match(notice(event, { dataRoot }), /Its Git checkpoint is 1 commit behind HEAD; suggest architecture-memory-update/);
+});
+
 test('inventory and source output are bounded; bulk classification does not echo thousands of paths', (t) => {
   const f = fixture(t);
   initialize(f);

@@ -1,6 +1,6 @@
 # Record durable context
 
-For information worth capturing under [Architecture Memory](../SKILL.md), use [shared writing rules](../../rules/references/writing-and-revision.md) for the body. Use the manifest language and omit empty conditional sections or rows. Template placeholders describe content, not sentence form.
+For information worth capturing under [Architecture Memory](../SKILL.md), use [shared writing rules](../../rules/SKILL.md#document-writing-and-revision) for the body. Use the manifest language and omit empty conditional sections or rows. Template placeholders describe content, not sentence form.
 
 ## Record placement
 
@@ -23,7 +23,7 @@ Reuse the canonical section or search the concept before adding one. Preserve a 
 Run commands with UTF-8 JSON on stdin, except `scaffold` and `recover`:
 
 ```text
-node <skill-root>/scripts/author.js <command> --project-root <project>
+node <plugin-root>/skills/architecture-memory/scripts/author.js <command> --project-root <project>
 ```
 
 Use `--root <directory>` for an unconnected custom-root draft.
@@ -50,6 +50,8 @@ The writer allocates document/section IDs and ADR numbers, registers files, and 
 | `lifecycle` | `current`, `planned`, or `historical`. |
 | Optional `paths`, `terms` | Repository-relative scopes and search aliases, respectively. |
 | Optional `links`, `always` | Required section IDs; `always: true` marks a shared prerequisite. |
+
+`confirmed/current` needs evidence for the wording; a user's reported fact remains attributed. `confirmed/planned` records an accepted target without asserting implementation; once inspected code realizes it, revise the section to `current` with that evidence. If a table mixes states, put each state and evidence beside its claim instead of confirming the whole section.
 
 ### Section revisions
 

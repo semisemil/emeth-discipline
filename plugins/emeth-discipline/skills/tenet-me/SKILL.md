@@ -11,7 +11,7 @@ argument-hint: "[DESIGN-ID or target]"
 
 Derive required outcomes from source intent and accepted contracts, independently of the candidate flow and tests. For each, identify a final observation that distinguishes fulfillment from a plausible violation.
 
-Read related Memory only when it affects a traced condition; stored assertions retain their original evidentiary limits.
+Read related Memory only when it affects a traced condition. A Memory entry supports a condition only as far as its own recorded evidence does; citing it adds no evidence.
 
 ## Trace backward
 
@@ -21,7 +21,7 @@ Conditions must hold through the final observation across applicable paths, incl
 
 For example, if a completion notice promises durable storage, trace it back to evidence that storage is committed before the notice. A callback meaning only request acceptance leaves that guarantee unsupported.
 
-An observed result alone does not establish its prerequisites; citing a claim back through Memory adds no evidence.
+An observed result alone does not establish its prerequisites.
 
 ## Check gaps forward
 

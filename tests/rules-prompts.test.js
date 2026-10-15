@@ -10,11 +10,11 @@ const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 
 test('Codex includes its host rules once in the composed prompt', () => {
   const skillPath = path.join(pluginRoot, 'skills', 'rules', 'codex.md');
-  const baseline = fs.readFileSync(skillPath, 'utf8');
-  assert.doesNotMatch(baseline, /emeth-response-mode/);
+  const baseline = fs.readFileSync(skillPath, 'utf8').replaceAll('{{plugin-root}}', pluginRoot).trim();
   const prompt = composeEmethPrompt();
-  assert.ok(prompt.includes(baseline.trim()));
-  assert.equal(prompt.indexOf(baseline.trim()), prompt.lastIndexOf(baseline.trim()));
+  assert.ok(prompt.includes(baseline));
+  assert.equal(prompt.indexOf(baseline), prompt.lastIndexOf(baseline));
+  assert.doesNotMatch(prompt, /\{\{plugin-root\}\}/);
 });
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {

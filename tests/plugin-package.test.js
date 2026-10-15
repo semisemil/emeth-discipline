@@ -66,7 +66,7 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     const rules = fs.readFileSync(path.join(f.plugin, `skills/rules/${host === 'codex' ? 'codex' : 'claude-code'}.md`), 'utf8')
       .replaceAll('{{plugin-root}}', f.plugin).trim();
     assert.ok(context.includes(rules));
-    assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/writing-and-revision.md')));
+    assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/ui-design.md')));
     assert.doesNotMatch(context, /skill-prompt-authoring-principles/);
   }
   const number = f.run('hooks/run.js', [], JSON.stringify({

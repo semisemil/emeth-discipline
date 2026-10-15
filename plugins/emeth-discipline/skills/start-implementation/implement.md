@@ -6,7 +6,6 @@ Read the requested Design:
 node <plugin-root>/dashboard/records/development-contracts.js --project-root <project> --id <DESIGN-ID>
 ```
 
-Focus on implementation and debugging.
 Use the returned overview and detailed documents together as the implementation contract.
 
 Correct design errors through [development-design](../development-design/SKILL.md), then resume implementation once the revised contract is ready.

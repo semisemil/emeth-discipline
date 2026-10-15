@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { spawnSync } = require('node:child_process');
 const { migrateProject } = require('./storage-migration');
 const host = require('./host');
 const path = require('node:path');
@@ -53,6 +54,21 @@ function notice(input, options = {}) {
   if (fingerprint === 'inactive' && !previous) return '';
   S.saveJson(cache, { fingerprint });
   if (fingerprint === 'inactive') return 'Project architecture memory connection is unavailable or disabled.';
-  return `Project architecture memory is connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
+  const connected = `Project architecture memory is connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
+  const behind = commitsBehind(project, linked.root);
+  return behind ? `${connected} Its Git checkpoint is ${behind} ${behind === 1 ? 'commit' : 'commits'} behind HEAD; suggest architecture-memory-update when this affects the task.` : connected;
+}
+// Only a recorded checkpoint is measured; a minimal Memory has none until its first update.
+function commitsBehind(project, root) {
+  try {
+    const manifest = S.jsonFile(S.safePath(S.rootPath(project, root), '.architecture-memory/manifest.json'), 256 * 1024);
+    const revision = manifest?.git_checkpoint?.revision;
+    if (typeof revision !== 'string' || !/^[0-9a-f]{7,64}$/i.test(revision)) return 0;
+    const result = spawnSync('git', ['-C', project, 'rev-list', '--count', `${revision}..HEAD`],
+      { encoding: 'utf8', timeout: 3000, windowsHide: true });
+    return result.status === 0 ? Number(result.stdout.trim()) || 0 : 0;
+  } catch {
+    return 0;
+  }
 }
 module.exports = { notice, projectFor, connectionStatus };

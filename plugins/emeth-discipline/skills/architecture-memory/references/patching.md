@@ -2,10 +2,10 @@
 
 For ordinary creation and section edits, use [authoring](recording.md). This interface remains available for exact replacements, section retirement and allowed ADR lifecycle edits.
 
-For existing sections, use the `receipt` from `memory.js read` as `expected`; new sections use `null`. Send UTF-8 JSON on stdin:
+For existing sections, use the `receipt` from `memory.js read` or `author.js read` as `expected`; new sections use `null`. Send UTF-8 JSON on stdin:
 
 ```text
-node <skill-root>/scripts/record.js patch --project-root <project> --document <document-ID>
+node <plugin-root>/skills/architecture-memory/scripts/record.js patch --project-root <project> --document <document-ID>
 ```
 
 ```json
