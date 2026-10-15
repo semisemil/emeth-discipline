@@ -3,7 +3,9 @@
 'use strict';
 
 const { spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
+const { withFileLock } = require('../../../lib/file-lock');
 const { migrateProject, rewritePaths } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const model = require('../lib/issue-model.js');
@@ -373,35 +375,82 @@ function commandValidate(options) {
   console.log(`${issues.length}개 이슈가 유효합니다.`);
 }
 
-function commandCreate(options) {
-  const root = resolveIssuesRoot(options.root);
-  assertIssuesRoot(root);
-  const issue = loadJsonFile(options.input, '이슈');
-  const validation = model.validateV2Issue(issue);
-  if (!validation.valid) {
-    fail(validation.errors.join('\n'));
+// The first Issue in a project's default store starts it from the bundled starter.
+function ensureDefaultStore(root) {
+  const store = path.dirname(root);
+  if (fs.existsSync(root) || path.basename(root) !== 'issues' || path.basename(store) !== '.emeth') return;
+  fs.cpSync(path.resolve(__dirname, '../assets/state-starter'), store, { recursive: true, force: false });
+}
+
+// Template placeholders leave the ID and timestamps to the CLI.
+function fillGeneratedFields(issue) {
+  const now = new Date().toISOString();
+  for (const field of ['created_at', 'updated_at']) {
+    if (issue && (issue[field] === undefined || String(issue[field]).startsWith('REPLACE:'))) issue[field] = now;
   }
+  return Boolean(issue?.identity && (issue.identity.id === undefined || issue.identity.id === 'PL-0000'));
+}
+
+// Issue files may have any name, so both file names and stored IDs count.
+function nextIssueId(root, issues) {
+  let largest = 0;
+  for (const value of [...fs.readdirSync(root), ...issues.map((item) => item.id)]) {
+    const match = /^PL-(\d{4,})(?:$|[.-])/.exec(value || '');
+    if (match) largest = Math.max(largest, Number(match[1]));
+  }
+  return `PL-${String(largest + 1).padStart(4, '0')}`;
+}
+
+// Readers see either no file or the complete Issue.
+function publishNewIssue(filePath, issue) {
+  const temporary = `${filePath}.${crypto.randomUUID()}.tmp`;
+  try {
+    fs.writeFileSync(temporary, model.serializeIssue(issue), { encoding: 'utf8', flag: 'wx' });
+    fs.renameSync(temporary, filePath);
+  } finally {
+    fs.rmSync(temporary, { force: true });
+  }
+}
+
+// Concurrent creates allocate IDs and publish one at a time.
+function createUnderLock(root, issue, generatedId) {
   const loaded = readAllIssues(root);
-  if (loaded.errors.length) {
-    fail(loaded.errors.join('\n'));
-  }
+  if (loaded.errors.length) return { error: loaded.errors.join('\n') };
   const existing = loaded.issues;
+  if (generatedId) issue.identity.id = nextIssueId(root, existing);
+  const validation = model.validateV2Issue(issue);
+  if (!validation.valid) return { error: validation.errors.join('\n') };
   if (existing.some((item) => item.id === issue.identity.id)) {
-    fail(`이미 존재하는 이슈 ID입니다: ${issue.identity.id}`);
+    return { error: `이미 존재하는 이슈 ID입니다: ${issue.identity.id}` };
   }
   const candidate = model.toViewModel(issue, `${issue.identity.id}.json`);
   const relationErrors = validateRelations([...existing, candidate]);
-  if (relationErrors.length) {
-    fail(relationErrors.join('\n'));
-  }
+  if (relationErrors.length) return { error: relationErrors.join('\n') };
   const filePath = path.join(root, `${issue.identity.id}.json`);
-  if (fs.existsSync(filePath)) {
-    fail(`이미 존재하는 파일입니다: ${filePath}`);
+  if (fs.existsSync(filePath)) return { error: `이미 존재하는 파일입니다: ${filePath}` };
+  publishNewIssue(filePath, issue);
+  return { filePath, warnings: validation.warnings };
+}
+
+function commandCreate(options) {
+  const root = resolveIssuesRoot(options.root);
+  ensureDefaultStore(root);
+  assertIssuesRoot(root);
+  const issue = loadJsonFile(options.input, '이슈');
+  const generatedId = fillGeneratedFields(issue);
+  const lockFile = path.join(root, '.create.lock');
+  let result;
+  try {
+    result = withFileLock(lockFile, () => createUnderLock(root, issue, generatedId),
+      { code: 'issue-create-locked', message: `다른 이슈 생성이 끝나지 않았습니다: ${lockFile}` });
+  } catch (error) {
+    if (error.code !== 'issue-create-locked') throw error;
+    fail(error.message);
   }
-  writeV2Issue(filePath, issue);
+  if (result.error) fail(result.error);
   registerWrittenProject(root, options.project_root);
-  validation.warnings.forEach((warning) => console.error(`warning: ${warning}`));
-  console.log(filePath);
+  result.warnings.forEach((warning) => console.error(`warning: ${warning}`));
+  console.log(result.filePath);
 }
 
 function commandUpdate(options) {

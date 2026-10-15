@@ -5,9 +5,9 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { TextDecoder } = require('node:util');
 const { execFileSync } = require('node:child_process');
+const { withFileLock } = require('./file-lock');
 
 const MARKER = '.emeth-migration.json';
-const sleepState = new Int32Array(new SharedArrayBuffer(4));
 function fail(code, message) { throw Object.assign(new Error(message), { code }); }
 function stat(file) {
   try { return fs.lstatSync(file); } catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return null; throw error; }
@@ -16,40 +16,6 @@ function directory(file) {
   const value = stat(file);
   if (!value || !value.isDirectory() || value.isSymbolicLink()) {
     fail('migration-path-invalid', `Migration requires an ordinary directory: ${file}`);
-  }
-}
-function lock(file, action) {
-  const deadline = Date.now() + 5000;
-  let descriptor;
-  while (descriptor === undefined) {
-    try { descriptor = fs.openSync(file, 'wx'); }
-    catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      const before = stat(file);
-      if (!before) continue;
-      if (before.isSymbolicLink()) fail('migration-locked', `Migration lock unavailable: ${file}`);
-      let pid;
-      try { pid = JSON.parse(fs.readFileSync(file, 'utf8')).pid; } catch { /* A live owner may still be writing. */ }
-      if (Number.isInteger(pid) && pid > 0) {
-        try { process.kill(pid, 0); }
-        catch (failure) {
-          if (failure.code === 'ESRCH') {
-            const now = stat(file);
-            if (now && now.ino === before.ino && now.dev === before.dev) fs.unlinkSync(file);
-            continue;
-          }
-        }
-      }
-      if (Date.now() >= deadline) fail('migration-locked', `Storage migration is already running: ${file}`);
-      Atomics.wait(sleepState, 0, 0, 20);
-    }
-  }
-  try {
-    fs.writeFileSync(descriptor, JSON.stringify({ pid: process.pid }));
-    return action();
-  } finally {
-    fs.closeSync(descriptor);
-    fs.unlinkSync(file);
   }
 }
 function rewritePaths(text) {
@@ -106,7 +72,8 @@ function migrateDirectory(base, legacyName, currentName, options = {}) {
   const pending = path.join(current, MARKER);
   if (!stat(legacy) && !stat(pending)) return current;
   directory(root);
-  return lock(path.join(root, `.${currentName.replace(/^\./, '')}.migration-lock`), () => {
+  const lockFile = path.join(root, `.${currentName.replace(/^\./, '')}.migration-lock`);
+  return withFileLock(lockFile, () => {
     const old = stat(legacy);
     if (old && stat(current)) fail('migration-conflict', `Both storage directories exist; neither was overwritten: ${legacy}, ${current}`);
     if (!old && !stat(pending)) return current;
@@ -133,7 +100,7 @@ function migrateDirectory(base, legacyName, currentName, options = {}) {
     if (options.rewriteProjectPaths) migrateIgnoreRules(root);
     fs.unlinkSync(pending);
     return current;
-  });
+  }, { code: 'migration-locked', message: `Storage migration is already running: ${lockFile}` });
 }
 function migrateProject(root) {
   return migrateDirectory(root, '.proofline', '.emeth', { rewriteProjectPaths: true });

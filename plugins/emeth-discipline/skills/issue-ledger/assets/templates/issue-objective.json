@@ -33,7 +33,5 @@
   "context": [],
   "artifacts": [],
   "evidence": [],
-  "events": [],
-  "created_at": "REPLACE: ISO 8601 timestamp",
-  "updated_at": "REPLACE: ISO 8601 timestamp"
+  "events": []
 }

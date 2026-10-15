@@ -1,6 +1,6 @@
 # Issue Ledger v2
 
-Read this reference for normal update operation shapes, schema repair, or tool maintenance. Creation from templates does not require the full reference. Resolve `<skill-dir>` to the directory containing this skill and run the CLI from the project root.
+Read this reference for normal update operation shapes, schema repair, or tool maintenance. Creation from templates does not require the full reference. Run the CLI from the project root.
 
 ## Canonical groups
 
@@ -42,12 +42,12 @@ Decisions may reference earlier D-IDs through `supersedes`. New evidence may ref
 ## CLI
 
 ```text
-node <skill-dir>/scripts/issue-ledger.js list [--root DIR] [--all] [--search TEXT]
-node <skill-dir>/scripts/issue-ledger.js show ID [--root DIR] [--evidence E1,E2] [--events]
-node <skill-dir>/scripts/issue-ledger.js validate [FILE] [--root DIR]
-node <skill-dir>/scripts/issue-ledger.js create --input ISSUE.json [--root DIR]
-node <skill-dir>/scripts/issue-ledger.js update ID --operation OPERATION.json [--root DIR]
-node <skill-dir>/scripts/issue-ledger.js link-work ID --help
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js list [--root DIR] [--all] [--search TEXT]
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js show ID [--root DIR] [--evidence E1,E2] [--events]
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js validate [FILE] [--root DIR]
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js create --input ISSUE.json [--root DIR]
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js update ID --operation OPERATION.json [--root DIR]
+node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js link-work ID --help
 ```
 
 Supported update operation types are `batch`, `set_state`, `add_evidence`, `link_evidence`, `add_event`, `set_milestone`, and `add_relation`. Every update requires one top-level `current_summary` confirmation. Use `batch.operations` when evidence, its P/C/D link, a decision, or a terminal-state change must become valid atomically. `add_evidence.targets` can link a new observation to one or more existing P/C/D IDs in one operation. A changed `set_state` automatically appends a T-ID transition, using `transition_summary` when supplied and otherwise the confirmed current summary. The dedicated `link-work` command validates the Design or legacy Plan/Spec backlink, adds one canonical context path, may update active state, is idempotent, and refuses terminal issues. JSON output uses stable top-level key order and two-space indentation.

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const test = require('node:test');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
@@ -163,6 +163,74 @@ test('Issue create registers only after the file write succeeds', (t) => {
   assert.match(result.stderr, /registration: .*"status":"registered"/);
   assert.equal(registry(fixture).projects[0].root, fs.realpathSync(fixture.projectRoot));
 });
+test('Issue create from a template assigns IDs and timestamps and starts a missing default store', (t) => {
+  const fixture = makeFixture(t);
+  fs.rmSync(fixture.issuesRoot, { recursive: true });
+  fs.mkdirSync(path.join(fixture.projectRoot, '.emeth', 'designs'));
+  const template = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8'));
+  const filled = JSON.parse(JSON.stringify(template).replace(/REPLACE: [^"]*/g, '템플릿 값'));
+  const input = path.join(fixture.root, 'issue.json');
+  fs.writeFileSync(input, JSON.stringify(filled), 'utf8');
+  const run = () => spawnSync(process.execPath, [issueCli, 'create', '--input', input], { cwd: fixture.projectRoot, encoding: 'utf8', env: fixture.env });
+
+  const first = run();
+  assert.equal(first.status, 0, first.stderr);
+  assert.ok(first.stdout.trim().endsWith('PL-0001.json'));
+  const created = JSON.parse(fs.readFileSync(path.join(fixture.issuesRoot, 'PL-0001.json'), 'utf8'));
+  assert.equal(created.identity.id, 'PL-0001');
+  assert.ok(!Number.isNaN(Date.parse(created.created_at)));
+  assert.equal(created.updated_at, created.created_at);
+  assert.equal(fs.existsSync(path.join(fixture.projectRoot, '.emeth', 'STATE.md')), true);
+  assert.equal(run().stdout.trim().endsWith('PL-0002.json'), true);
+});
+
+function templateInput(fixture, name = 'issue.json') {
+  const template = fs.readFileSync(path.join(pluginRoot, 'skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8');
+  const input = path.join(fixture.root, name);
+  fs.writeFileSync(input, template.replace(/REPLACE: [^"]*/g, '템플릿 값'), 'utf8');
+  return input;
+}
+
+test('a template Issue gets an ID above IDs stored in differently named Issue files', (t) => {
+  const fixture = makeFixture(t);
+  fs.writeFileSync(path.join(fixture.issuesRoot, 'existing-task.json'), `${JSON.stringify(makeIssue(), null, 2)}\n`, 'utf8');
+  const result = runIssue(['create', '--input', templateInput(fixture), '--root', fixture.issuesRoot], fixture.env);
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stdout.trim().endsWith('PL-0002.json'));
+});
+
+test('concurrent template creates each publish a distinct complete Issue', async (t) => {
+  const fixture = makeFixture(t);
+  const input = templateInput(fixture);
+  const count = 12;
+  const runs = await Promise.all(Array.from({ length: count }, () => new Promise((resolve) => {
+    const child = spawn(process.execPath, [issueCli, 'create', '--input', input, '--root', fixture.issuesRoot],
+      { env: fixture.env, windowsHide: true });
+    let stderr = '';
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('close', (status) => resolve({ status, stderr }));
+  })));
+  assert.deepEqual(runs.filter((run) => run.status !== 0), []);
+  const files = fs.readdirSync(fixture.issuesRoot).filter((name) => name.endsWith('.json')).sort();
+  assert.deepEqual(files, Array.from({ length: count }, (_, index) => `PL-${String(index + 1).padStart(4, '0')}.json`));
+  for (const name of files) assert.equal(JSON.parse(fs.readFileSync(path.join(fixture.issuesRoot, name), 'utf8')).identity.id, name.slice(0, -5));
+});
+
+test('a create lock left by an exited process does not block Issue creation', (t) => {
+  const exitedPid = JSON.stringify({ pid: spawnSync(process.execPath, ['-e', '']).pid });
+  for (const leaveLock of [
+    (lock) => { fs.mkdirSync(lock); fs.writeFileSync(path.join(lock, 'owner.json'), exitedPid, 'utf8'); },
+    (lock) => fs.writeFileSync(lock, exitedPid, 'utf8') // earlier lock format
+  ]) {
+    const fixture = makeFixture(t);
+    const lock = path.join(fixture.issuesRoot, '.create.lock');
+    leaveLock(lock);
+    const result = runIssue(['create', '--input', templateInput(fixture), '--root', fixture.issuesRoot], fixture.env);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(fs.readdirSync(fixture.issuesRoot).filter((name) => name.startsWith('.')), []);
+  }
+});
+
 test('Issue write failure does not register the project', (t) => {
   const fixture = makeFixture(t);
   const input = path.join(fixture.root, 'issue.json');
