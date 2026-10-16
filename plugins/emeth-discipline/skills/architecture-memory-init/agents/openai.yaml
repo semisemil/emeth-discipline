@@ -1,7 +1,7 @@
 interface:
   display_name: "Emeth: Architecture Memory Init"
-  short_description: "Initialize architecture memory from a codebase"
-  default_prompt: "Use $architecture-memory-init to initialize architecture memory for this project from repository evidence."
+  short_description: "Initialize project architecture documents from a codebase"
+  default_prompt: "Use $architecture-memory-init to initialize project architecture documents from repository evidence and connect them through .emeth/architecture.json."
 
 policy:
   allow_implicit_invocation: false

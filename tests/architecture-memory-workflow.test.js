@@ -204,7 +204,7 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   assert.equal(fs.existsSync(dataRoot), false);
   initialize(f);
   const first = notice(event, { dataRoot });
-  assert.match(first, /^Project architecture memory is connected at "docs\/architecture" via \.emeth\/architecture\.json\. Skill: /);
+  assert.match(first, /^Project architecture documents are connected at "docs\/architecture" via \.emeth\/architecture\.json\. Skill: /);
   assert.match(first, /skills.*architecture-memory.*SKILL.md/);
   assert.doesNotMatch(first, /read |lookup|mechanical|architecture-dependent|durable|Reuse/);
   assert.equal(notice(event, { dataRoot }), '');
@@ -221,7 +221,7 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
   assert.equal(notice(event, { dataRoot }), first);
   fs.unlinkSync(path.join(f.root, 'docs/architecture/.architecture-memory/manifest.json'));
-  assert.equal(notice(event, { dataRoot }), 'Project architecture memory connection is unavailable or disabled.');
+  assert.equal(notice(event, { dataRoot }), 'Project architecture document connection is unavailable or disabled.');
   assert.equal(notice(event, { dataRoot }), '');
 });
 

@@ -1,7 +1,7 @@
 interface:
   display_name: "Emeth: Architecture Memory"
-  short_description: "Recall decisions and preserve project context"
-  default_prompt: "Use $architecture-memory to retrieve relevant project context and preserve new durable facts or decisions from this work."
+  short_description: "Consult and maintain project architecture documents"
+  default_prompt: "Use $architecture-memory to retrieve project context and record new durable facts or decisions in the architecture documents connected through .emeth/architecture.json."
 
 policy:
   allow_implicit_invocation: true

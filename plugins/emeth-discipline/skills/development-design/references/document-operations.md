@@ -19,5 +19,5 @@ For explicit issue targets, apply [work links](../../issue-ledger/references/wor
 
 # Save results
 
-Create, write, patch, and status responses retain `write` status, kind, ID, path, revision, and snapshot, with registration status and Memory result reported separately.
-Status responses also include `document_status`; registration and Memory failures retain their error code and message even when saving succeeds.
+Create, write, patch, and status responses retain `write` status, kind, ID, path, revision, and snapshot, with registration status and architecture document recording result reported separately.
+Status responses also include `document_status`; registration and architecture document recording failures retain their error code and message even when saving succeeds.

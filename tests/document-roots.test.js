@@ -87,7 +87,7 @@ test('external architecture baseline, authoring, retrieval and Git reconciliatio
   const architecture = path.join(f.vault, 'architecture');
   const manifest = () => JSON.parse(fs.readFileSync(path.join(architecture, '.architecture-memory/manifest.json'), 'utf8'));
   assert.equal(manifest().git_checkpoint.revision, baseline);
-  assert.match(notice({ cwd: f.project, thread_id: 'external-root' }, { dataRoot: path.join(f.temporary, 'hooks') }), /Project architecture memory is connected/);
+  assert.match(notice({ cwd: f.project, thread_id: 'external-root' }, { dataRoot: path.join(f.temporary, 'hooks') }), /Project architecture documents are connected/);
   const read = f.cli('skills/architecture-memory/scripts/memory.js', ['read', '--project-root', f.project, '--id', section.ids[0]]);
   assert.equal(read.status, 0, read.stderr);
   const receipt = JSON.parse(read.stdout).documents[0].sections[0].receipt;

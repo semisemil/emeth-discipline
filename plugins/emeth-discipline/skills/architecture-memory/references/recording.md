@@ -27,7 +27,8 @@ node <plugin-root>/skills/architecture-memory/scripts/author.js <command> --proj
 ```
 
 Use `--root <directory>` for an unconnected custom-root draft.
-Commands target the pending init/update draft, or live Memory otherwise. `target: draft` still needs workflow `apply`.
+Commands target the pending init/update draft, or the connected architecture documents otherwise.
+`target: draft` still needs workflow `apply`.
 
 | Command | Input |
 |---|---|

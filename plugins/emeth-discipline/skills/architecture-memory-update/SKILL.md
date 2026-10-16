@@ -1,8 +1,8 @@
 ---
 name: architecture-memory-update
-when_to_use: "Explicit request only: reconcile connected architecture memory with committed changes."
+when_to_use: "Explicit request only: reconcile connected project architecture documents with committed changes."
 disable-model-invocation: true
-description: Reconcile connected architecture memory with Git, including a minimal collection started by a Design save.
+description: Reconcile project architecture documents connected through .emeth/architecture.json with Git, including an initial collection created by a Design save.
 ---
 
 Explicit requests only. Resolve `<workflow>` to `<plugin-root>/skills/architecture-memory/scripts/workflow.js` from this file. Append `--project-root <project>` to each command.
@@ -11,7 +11,10 @@ Run `node <workflow> update` before code or document reads. `current` and `ignor
 
 Run `changes` for pending paths. Classify each affected responsibility: boundaries, runtime/storage units, selected components, deployment, integrations, quality constraints and decision artifacts. Use `source --path <path> --diff` for relevant hunks and `source --path <path>` for captured context. With a null checkpoint, use the [initialization evidence pass](../architecture-memory-init/references/initialization.md#evidence-pass) on the captured inventory, reconcile current-state documents, and reconstruct no ADR history.
 
-Locate affected memory with [retrieval](../architecture-memory/references/retrieval.md). Read and revise its draft sections through the authoring commands in [recording](../architecture-memory/references/recording.md), including `planned` sections the changes realize. Update stable routing paths on renames. Non-ancestor checkpoints describe snapshot differences, not ordered history.
+Locate affected architecture documents with [retrieval](../architecture-memory/references/retrieval.md).
+Read and revise their draft sections through the authoring commands in [recording](../architecture-memory/references/recording.md), including `planned` sections the changes realize.
+Update stable routing paths on renames.
+Non-ancestor checkpoints describe snapshot differences, not ordered history.
 
 Persist each classification with `classify --path <path> --effect architecture|none --reason "<short evidence-based reason>"`. Use `--prefix <directory/>` for a known homogeneous group, including both sides of renames; a directory name alone does not establish irrelevance. Remaining paths disappear from subsequent `changes` pages only when classified. Keep unresolved scope pending.
 

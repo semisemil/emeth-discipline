@@ -16,7 +16,8 @@ Move a subject into a detailed Markdown document in the same directory when it w
 Deliver the complete document set with valid links.
 Keep [readiness](references/document-status.md) in metadata only.
 Save through [creation](references/document-operations.md) or [revision](references/document-editing.md).
-Capture durable project context through Architecture Memory, or use `--memory off` when prohibited.
+Capture durable project context in project architecture documents through [Architecture Memory](../architecture-memory/SKILL.md).
+Use `--memory off` when recording in those documents is prohibited.
 For registration access failures, use [setup](../dashboard-server/references/sandbox-setup.md).
 
-Report the overview link (`absolute_path` when returned), readiness, and material open matters in the conversation, distinguishing save failures from registration or Memory failures after a successful save.
+Report the overview link (`absolute_path` when returned), readiness, and material open matters in the conversation, distinguishing save failures from registration or architecture document recording failures after a successful save.

@@ -53,8 +53,8 @@ function notice(input, options = {}) {
   if (!reset && previous?.fingerprint === fingerprint) return '';
   if (fingerprint === 'inactive' && !previous) return '';
   S.saveJson(cache, { fingerprint });
-  if (fingerprint === 'inactive') return 'Project architecture memory connection is unavailable or disabled.';
-  const connected = `Project architecture memory is connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
+  if (fingerprint === 'inactive') return 'Project architecture document connection is unavailable or disabled.';
+  const connected = `Project architecture documents are connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
   const behind = commitsBehind(project, linked.root);
   return behind ? `${connected} Its Git checkpoint is ${behind} ${behind === 1 ? 'commit' : 'commits'} behind HEAD; suggest architecture-memory-update when this affects the task.` : connected;
 }

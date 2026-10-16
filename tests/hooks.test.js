@@ -43,7 +43,7 @@ function output(result) {
 test('model changes leave the memory connection available without reinjecting rules', (t) => {
   const f = fixture(t); f.memory();
   const first = output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' }));
-  assert.match(first.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
+  assert.match(first.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
   assert.doesNotMatch(first.hookSpecificOutput.additionalContext, /# Rules/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
   assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' })), {});
@@ -67,10 +67,10 @@ test('model metadata does not change lifecycle rules or create session state', (
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
   const f = fixture(t); f.memory();
   const response = output(f.run({ prompt: '$emeth-discipline:development-design' }));
-  assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nProject architecture memory is connected/);
+  assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nProject architecture documents are connected/);
   f.write('.emeth/issues', 'This is not a directory.');
   const fallback = output(f.run({ session_id: 'session-b', prompt: '$emeth-discipline:issue-ledger' }));
-  assert.match(fallback.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
+  assert.match(fallback.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
   assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /Next issue/);
 });
 
@@ -114,7 +114,7 @@ test('dashboard startup failure leaves the prompt and memory available', (t) => 
   });
   const response = output(result);
   assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ pluginRoot: plugin }) + '\n\n'));
-  assert.match(response.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  assert.match(response.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
   assert.match(result.stderr, /dashboard unavailable/);
 });
 
@@ -125,7 +125,7 @@ test('a prompt failure reports the error without consuming an undelivered memory
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
   assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);
-  assert.match(response.hookSpecificOutput.additionalContext, /^Project architecture memory is connected/);
+  assert.match(response.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
   assert.match(result.stderr, /codex\.md/);
 });
 
@@ -180,9 +180,9 @@ test('host-specific Memory state stays separate for the same project and session
   const claudeEnv = claudeEnvironment(f);
   const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: pluginRoot };
   const codex = output(f.run({ prompt: '$emeth-discipline focus' }, { env: codexEnv }));
-  assert.match(codex.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  assert.match(codex.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
   const claude = output(f.run({ prompt: 'Continue.' }, { env: claudeEnv }));
-  assert.match(claude.hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  assert.match(claude.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
   assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: claudeEnv })), {});
   assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: codexEnv })), {});
   for (const directory of [f.env.PLUGIN_DATA, claudeEnv.CLAUDE_PLUGIN_DATA]) {
@@ -207,7 +207,7 @@ test('Claude prompt failures use Claude plugin logs and preserve the Memory conn
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
     env, hook: path.join(plugin, 'hooks/run.js'),
   });
-  assert.match(output(result).hookSpecificOutput.additionalContext, /Project architecture memory is connected/);
+  assert.match(output(result).hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
   const log = fs.readFileSync(path.join(env.CLAUDE_PLUGIN_DATA, 'log/emeth-hook.log'), 'utf8');
   assert.match(log, /claude-code\.md/);
   assert.equal(fs.existsSync(path.join(f.root, '.codex/log')), false);
