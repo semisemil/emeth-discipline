@@ -18,6 +18,9 @@ Use [component guidance](../../architecture-memory/references/component-template
 
 Use C4 IDs for referenced `PER`, `SYS`, `EXT`, `CNT` and `CMP` nodes; retain existing IDs and never reuse retired IDs or ADR numbers.
 
+Before `apply`, representative sections retrieved from the draft must use consistent terminology and conditions for the same concept.
+Their retrieval results must include the prerequisites in [record format](../../architecture-memory/references/record-format.md).
+
 Whole-document evidence review may set `verified_at` and `source_revision`; partial edits retain them. Leave registration to the authoring commands and checkpoint fields to `apply`.
 
 Initialization may establish a baseline with important unknowns beside affected claims.

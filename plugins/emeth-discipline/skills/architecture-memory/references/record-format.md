@@ -14,6 +14,14 @@ Use the document language for headings/prose. Place one routing comment directly
 적용 범위: 공장 접수 단말. 사무실 관리 화면에는 이 요구를 적용하지 않는다.
 ```
 
-`id` is stable and unique. `paths` contains normalized repository-relative file/directory prefixes; `terms` holds actual domain vocabulary and aliases. `links` declares required accompanying section IDs, all of which must exist. Ordinary Markdown links are optional navigation. Reserve `always: true` for short constraints affecting every architecture-dependent task. Put shared document prerequisites before its first level-2 heading so each read includes them.
+`id` is stable and unique.
+`paths` contains normalized repository-relative file/directory prefixes; `terms` holds actual domain vocabulary and aliases.
+
+`links` declares required accompanying section IDs, all of which must exist.
+Link definitions, scope limits and unresolved differences whose omission would change the section's meaning.
+Ordinary Markdown links are optional navigation.
+
+Put shared prerequisites, including source scope and evidence limits, before the first level-2 heading of each affected document or in a required accompanying section.
+Reserve `always: true` for short constraints affecting every architecture-dependent task.
 
 Use a standalone `**confidence/lifecycle**` line with the values and meanings in [section fields](recording.md#section-fields). Missing labels mean unclassified.
