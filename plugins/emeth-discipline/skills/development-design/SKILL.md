@@ -11,7 +11,7 @@ For status-only requests, use [status](references/document-status.md).
 Apply [design discussion](../rules/references/design-discussion.md) while developing a Design and [document form](references/document-form.md) when writing it.
 Continue the named Design or one with the same goal; otherwise create one.
 Find existing Designs with `node <plugin-root>/writers/document-writer.js list --project-root <absolute-project-root>`.
-Use `DESIGN.md` for purpose, scope, and the architecture overview.
+Use `DESIGN.md` for purpose, scope, and an overview of the change.
 Move a subject into a detailed Markdown document in the same directory when it would crowd the overview, and link it from `DESIGN.md`.
 Deliver the complete document set with valid links.
 Keep [readiness](references/document-status.md) in metadata only.
