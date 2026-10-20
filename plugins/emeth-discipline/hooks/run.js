@@ -33,6 +33,8 @@ async function run(input) {
   if (event === 'UserPromptSubmit') {
     const context = require('../lib/document-number').notice(input);
     if (context) contexts.push(context);
+    const source = require('../lib/request-source').notice(input);
+    if (source) contexts.push(source);
   }
   try {
     const context = require('../lib/architecture-memory').notice(input);
