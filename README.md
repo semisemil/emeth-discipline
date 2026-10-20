@@ -28,25 +28,12 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | 6 Astra low | Core | 196/196 | 5/14 | 4분 23초 | $0.929 |
 | 6 Astra low | Workflow | 196/196 | 7/14 | 7분 54초 | $1.990 |
 | 6 Astra low | Workflow (한 세션) | 196/196 | 4/14 | 6분 43초 | $1.611 |
-| 5.6 Sol Med | None | 196/196 | 5/14 | 14분 55초 | $1.396 |
-| 5.6 Sol Med | Core | 196/196 | 4/14 | 8분 36초 | $1.027 |
-| 5.6 Sol Med | Workflow | 196/196 | 8/14 | 12분 48초 | $1.647 |
-| 6 Sol Med | None | 196/196 | 6/14 | 7분 46초 | $0.375 |
-| 6 Sol Med | Core | 196/196 | 5/14 | 9분 10초 | $0.415 |
-| 6 Sol Med | Workflow | 196/196 | 4/14 | 12분 10초 | $1.142 |
+| 6.1 Sol medium | Core (1회) | 196/196 | 6/14 | 5분 34초 | $0.309 |
+| 6.1 Sol medium | Workflow (기본) | 196/196 | 7/14 | 8분 39초 | $0.914 |
+| 6.1 Sol medium | Workflow (확장) | 196/196 | 9/14 | 9분 27초 | $1.131 |
 
-[측정 상세](docs/benchmarks/README.md)
 
-### WebAgent와 SubAgent 비용
-
-같은 두 작업을 위임했을 때의 API 단가 기준 추정 비용입니다.
-
-| 작업 | SubAgent | WebAgent |
-| --- | ---: | ---: |
-| 코드 검토 | $0.486 | $0.167 |
-| 작업 배치 | $0.319 | $0.168 |
-
-[측정 상세](docs/benchmarks/webagent-sol-comparison.md)
+[측정 조건과 회차별 결과](docs/benchmarks/README.md)
 
 ## 📦 설치
 
@@ -78,37 +65,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 /plugin install emeth-discipline@emeth-discipline
 ```
 
-### Mixdog에서 설치
-
-저장소를 로컬에 복제한 뒤 Mixdog의 `/plugins` 또는 데스크톱 Plugins 설정에서 플러그인 추가를 선택하고 `<복제한 저장소의 절대 경로>/plugins/emeth-discipline`을 등록합니다. 현재 작업 내용을 검증할 때도 이 플러그인 폴더를 등록합니다. 등록 후 프로젝트에서 새 세션을 시작합니다. Node.js 22 이상이 `node` 명령으로 실행 가능해야 합니다.
-
-```bash
-git clone https://github.com/semisemil/emeth-discipline.git
-```
-
-현재 Mixdog은 마켓플레이스의 하위 플러그인 경로를 해석하지 않으므로 저장소 URL이나 저장소 루트를 직접 등록하면 Emeth를 불러오지 못합니다. 갱신은 로컬 저장소를 최신화한 뒤 Plugins에서 Refresh metadata를 실행합니다.
-
-Mixdog은 기존 Codex 매니페스트와 `skills/`를 읽고, Emeth의 `.mixdog/hooks.json`에서 전용 훅을 로드합니다. 스킬은 이름으로 호출합니다. 예를 들어 `development-design 스킬로 알림 설정 개선을 설계해줘`라고 요청하면 `Skill({"name":"development-design"})`로 불러옵니다. Codex의 `$emeth-discipline:...` 형식을 Mixdog에서 사용할 필요는 없습니다.
-
-| 기능 | Mixdog 지원 방식 |
-| --- | --- |
-| 공통 규칙 | 세션 시작과 매 사용자 요청에서 적용. 하위 에이전트에는 `agent` 실행 요청의 context로 전달 |
-| 설계·이슈·아키텍처·검증 스킬 | 기존 스킬과 저장 형식을 공통으로 사용 |
-| 대시보드 | 세션 시작에서 공통 서버 실행. 등록·조회·종료 도구 재사용 |
-| 구현과 독립 검토 | Mixdog의 설정된 workflow agent와 `agent` 도구 사용. 모델과 추론 수준은 해당 agent의 route 설정에서 지정 |
-| WebAgent | 데스크톱의 `browser-use`와 native `browser` 도구로 ChatGPT Chat 협업. 로그인 필요 |
-
-Mixdog은 Codex의 명시 호출 전용 메타데이터를 강제하지 않으므로 `when_to_use`와 스킬 본문에도 호출 조건을 기록합니다. 동명 사용자 스킬은 플러그인 스킬보다 우선하며, 플러그인 또는 스킬을 비활성화하면 관련 기능이 제공되지 않습니다.
-
-현재 Mixdog은 `SubagentStart`와 `PostCompact` 훅 반환 지침을 대화에 넣지 않습니다. Emeth는 `PreToolUse`로 `agent` spawn에 규칙을 전달하고 매 사용자 요청에서 복구합니다. 압축 직후 같은 턴을 계속할 때는 규칙이 사라졌다면 `rules`를 다시 불러와야 합니다. Codex WebAgent의 Node 관리 객체 대신 Mixdog 전용 도구 절차를 사용합니다. [연동 계약과 검증 방법](docs/mixdog-support.md)을 참고하세요.
-
 ## 🚀 빠르게 사용하기
-
-### 기존 저장 폴더 자동 이전
-
-업데이트 후 프로젝트에서 작업을 시작하거나 기록 기능에 처음 접근하면 기존 `.proofline/`을 `.emeth/`로 자동 이전합니다. 이슈와 설계 문서, 아키텍처 연결을 보존하고, 이전한 폴더 안의 Markdown과 JSON에 저장된 `.proofline/` 경로도 갱신합니다.
-
-기존 폴더가 없는 프로젝트에는 이전 작업으로 폴더를 만들지 않습니다. 이전 중 실패하면 다음 접근에서 재시도합니다. 기존 폴더와 새 폴더가 모두 있으면 덮어쓰거나 병합하지 않고 충돌을 보고합니다.
 
 ### 기본 지침
 
@@ -119,35 +76,6 @@ Codex에서 특정 요청에 공통 기준을 명시하려면 스킬 이름을 �
 ```text
 $emeth-discipline:rules
 이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐줘.
-```
-
-### 작업에 맞는 스킬 사용하기
-
-일부 스킬은 에이전트가 작업에 맞춰 불러오고, 기획과 구현 시작처럼 직접 호출해야 하는 스킬도 있습니다. 적용할 기준을 분명히 하고 싶다면 아래처럼 스킬 이름을 적으세요.
-
-아래 예시는 Codex 기준입니다. Claude Code에서는 `$emeth-discipline:스킬명` 대신 `/emeth-discipline:스킬명`으로 호출합니다. Mixdog에서는 스킬 이름을 요청에 적거나 `Skill`로 불러옵니다. Claude Code에서 `webagent`와 `rules` 직접 호출은 지원하지 않습니다.
-
-아키텍처 설계나 재설계:
-
-```text
-$emeth-discipline:architecture-coop
-사용자 알림 시스템의 아키텍처를 함께 설계해줘.
-```
-
-책임이나 호출 구조를 바꾸는 리팩터링:
-```text
-$emeth-discipline:refactor-proof
-사용자 설정 저장 책임을 서비스 계층으로 옮겨줘.
-```
-원본 동작을 그대로 유지해야 하는 코드 이식:
-```text
-$emeth-discipline:exact-port
-이 원본 구현을 대상 프로젝트로 동작 변경 없이 옮겨줘.
-```
-ChatGPT Chat에 조사 요청:
-```text
-$emeth-discipline:webagent
-이 설계를 ChatGPT Chat의 Sol에 검토받고, 지적 사항을 확인해 줘.
 ```
 
 ## 🧩 포함된 스킬
@@ -163,7 +91,6 @@ $emeth-discipline:webagent
 | `$emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
 | `$emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `$emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
-| `$emeth-discipline:webagent` | ChatGPT Chat에 독립적인 검토·조사를 위임할 때 | 새 대화 생성과 기존 대화 재사용, 응답 대기와 결과 회수 |
 | `$emeth-discipline:dashboard-server` | 통합 대시보드를 이용할 때 | 현재 프로젝트 등록, 실행 중인 대시보드 열기·상태 확인·종료 |
 
 ### Architecture
@@ -197,54 +124,18 @@ $emeth-discipline:webagent
 
 ## 🔁 기획부터 구현까지
 
-**Design**은 개발할 대상과 설계, 검증 기준을 담는 설계 문서 묶음입니다.
-개요 문서에서 전체 설계를 파악하고, 연결된 상세 문서에서 주제별 설계를 읽을 수 있습니다.
+`figure-it-out`을 호출하면 필요한 설계부터 구현과 검증까지 이어갑니다.
+각 단계의 스킬을 따로 호출할 수도 있습니다.
 
-```text
-$emeth-discipline:development-design
-작업이 끝나면 사용자에게 알림을 보내고 싶어. 여기까지 생각했는데 구조와 실패 처리까지 같이 설계해줘.
+```mermaid
+flowchart LR
+    A[아이디어 또는 변경 요청] --> B["설계 작성<br/>development-design"]
+    B --> C["설계 검토<br/>tenet-me"]
+    C -->|수정 필요| B
+    C -->|검토 완료| D["구현과 검증<br/>start-implementation"]
 ```
 
-이미 정한 기획은 재사용하고, 필요한 부분에 설명·비교·초안·질문을 사용합니다.
-작성 양식 문서를 사용하려면 요청에 해당 파일을 명시적으로 지정합니다.
-지정하지 않으면 작업의 목적과 독자에 맞는 개발설계문서 형식을 선택하며, 기존 산출물의 형식을 자동으로 계승하지 않습니다.
-설계부터 구현까지 맡기려면 다음과 같이 요청합니다.
-
-```text
-$emeth-discipline:figure-it-out
-사용자 알림 설정 개선을 설계부터 구현과 검증까지 완료해줘.
-```
-
-현재 대화에서 필요한 설계를 준비하고, `tenet-me`로 요구 결과의 보장 조건과 근거를 역추적합니다.
-`start-implementation`은 준비된 Design을 읽고 기능 개발, 버그 수정, 리팩터링에 맞는 절차를 선택합니다.
-현재 대화가 구현과 최종 검증을 맡습니다.
-범위가 좁고 결과를 직접 확인하기 쉬운 작업은 통합 소유자 흐름으로 진행하고, 완성된 구현을 독립 검토자가 확인합니다.
-그 외 작업은 구현 소유권 유지 흐름으로 진행하며, 설계 검토 후 독립 테스트 작성과 구현을 병렬로 수행합니다.
-
-```text
-$emeth-discipline:tenet-me DESIGN-0001
-$emeth-discipline:start-implementation DESIGN-0001
-```
-
-위 명령은 각각 별도로 호출합니다.
-`development-design`만 요청하면 설계에서 끝납니다.
-설계부터 구현까지 맡기려면 `figure-it-out`을 사용하세요.
-
-코드를 먼저 이해하려면 질문과 함께 `code-exploration`을 호출합니다.
-
-```text
-$emeth-discipline:code-exploration
-알림 요청이 저장되고 사용자에게 전달되는 흐름과, 현재 구조를 선택한 이유를 설명해줘.
-```
-
-설계안을 비교하고 개선하려면 `ensemble`을 사용할 수 있습니다.
-아키텍처와 개발 설계를 만들거나 개선할 때도 이 방식을 사용합니다.
-
-```text
-$emeth-discipline:ensemble
-알림 재시도 정책의 독립 후보를 만들고 비교한 뒤 최종안을 정리해줘.
-```
-
+**Design**은 개발할 대상과 설계, 검증 기준을 담는 문서 묶음입니다.
 
 ## 🗂️ 이슈 기록
 
@@ -275,8 +166,15 @@ Design의 개요는 기본적으로 `.emeth/designs/<DESIGN-ID>-<이름>/DESIGN.
 
 ### 문서 저장 경로
 
-코드 프로젝트의 `.emeth/documents.json`에서 아키텍처와 개발 설계 문서의 저장 경로를 지정할 수 있습니다.
-Obsidian vault처럼 프로젝트 밖의 폴더도 사용할 수 있으며, 생성과 조회, 수정, 상태 변경, 구현용 설계 조회와 대시보드가 같은 위치의 파일을 사용합니다.
+기본 저장 위치는 다음과 같습니다.
+
+| 문서 | 위치 |
+| --- | --- |
+| 아키텍처 | `docs/architecture/` 또는 이미 연결한 폴더 |
+| 개발 설계 | `.emeth/designs/` |
+| 이슈 | `.emeth/issues/` |
+
+아키텍처와 개발 설계를 다른 폴더에 저장하려면 프로젝트의 `.emeth/documents.json`에 경로를 지정하세요.
 
 ```json
 {
@@ -285,31 +183,10 @@ Obsidian vault처럼 프로젝트 밖의 폴더도 사용할 수 있으며, 생�
 }
 ```
 
-이 설정에서는 아키텍처를 `<root>/architecture/`, 개발 설계를 `<root>/designs/`에 저장합니다.
-각 위치를 따로 지정하려면 `architecture`와 `designs`를 사용합니다.
-
-```json
-{
-  "schema_version": 1,
-  "architecture": "D:/Obsidian/projects/my-project/architecture",
-  "designs": "D:/Obsidian/projects/my-project/development"
-}
-```
-
-상대 경로의 기준은 코드 프로젝트입니다.
-개별 경로는 `root`보다 우선하며, 지정하지 않은 종류는 `root`의 하위 폴더를 사용합니다.
-`root`도 없으면 해당 종류의 기존 위치를 사용합니다.
-아키텍처는 기존 `.emeth/architecture.json`의 연결 위치를 따르고, 연결이 없으면 `docs/architecture/`를 사용합니다.
-개발 설계의 기본 위치는 `.emeth/designs/`입니다.
-
-외부 문서 디렉터리에는 `.emeth-project.json`으로 소속 코드 프로젝트의 경로를 기록합니다.
-이슈는 코드 프로젝트의 `.emeth/issues/`에 유지됩니다.
-기존 Design ID와 `.emeth/designs/...` 작업 참조는 유지되며, 도구가 설정된 실제 경로로 해석합니다.
-개발 설계를 사용자 지정 경로에 저장하면 저장과 조회 응답에 실제 파일 위치인 `absolute_path`가 포함됩니다.
-
-기존 문서의 위치를 바꾸려면 해당 문서 디렉터리를 새 위치로 옮긴 뒤 설정을 변경하세요.
-설정은 이후 작업에서 사용할 위치를 지정합니다.
-외부 경로에도 사용 중인 에이전트의 파일 접근 권한이 필요합니다.
+이 예시는 지정한 폴더 아래의 architecture/와 designs/에 각각 저장합니다.
+각 폴더를 따로 정하려면 `root` 대신 `architecture`와 `designs`에 경로를 지정하세요.
+상대 경로는 프로젝트 폴더를 기준으로 합니다.
+기존 문서는 직접 옮긴 뒤 설정을 바꾸세요.
 
 ## 🏛️ 아키텍처 메모리
 
@@ -317,7 +194,6 @@ Obsidian vault처럼 프로젝트 밖의 폴더도 사용할 수 있으며, 생�
 
 ```text
 $emeth-discipline:architecture-memory-init
-이 프로젝트의 아키텍처 메모리를 만들어줘.
 ```
 
 기본 위치는 `docs/architecture/`입니다. 코드·기존 문서·현재 대화를 바탕으로 프로젝트 구조와 설계 결정, 운영 제약을 정리합니다.
@@ -328,10 +204,7 @@ $emeth-discipline:architecture-memory-init
 
 ```text
 $emeth-discipline:architecture-memory-update
-마지막으로 확인한 커밋 이후의 변경 사항을 아키텍처 문서에 반영해줘.
 ```
-
-마지막으로 확인한 커밋 이후의 변경을 반영합니다.
 
 Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화를 재시도하지 않습니다. 초기화 실패를 해결한 뒤 Design을 다시 저장하거나 Memory 초기화를 명시적으로 실행하면 연결을 재시도할 수 있습니다.
 
@@ -365,8 +238,6 @@ Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
 권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
 
 권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](plugins/emeth-discipline/skills/dashboard-server/references/sandbox-setup.md)를 참고하세요.
-
-
 
 ## ✅ 개발 검증
 
