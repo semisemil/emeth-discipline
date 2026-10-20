@@ -16,7 +16,7 @@ Mixdog의 매니페스트 로더는 등록 루트의 `.codex-plugin/plugin.json`
 
 | 영역 | 연동 |
 | --- | --- |
-| 스킬 | Mixdog 기본 플러그인 로더가 `skills/`를 읽음. 17개 스킬의 선택 조건은 `when_to_use` 또는 원본 `description`에서 제공 |
+| 스킬 | Mixdog 기본 플러그인 로더가 `skills/`를 읽음. 16개 스킬의 선택 조건은 `when_to_use` 또는 원본 `description`에서 제공 |
 | 훅 | 플러그인 폴더의 `.mixdog/hooks.json`. `node`와 인자 배열을 사용해 Windows/POSIX 경로 처리 |
 | 호스트 식별 | `MIXDOG_PLUGIN_ROOT`/`MIXDOG_PLUGIN_DATA`를 Claude 호환 변수보다 우선 |
 | 상태·로그 | `MIXDOG_PLUGIN_DATA`, fallback은 Mixdog data/log 경로. Codex와 Claude 상태 경로 유지 |
@@ -45,10 +45,6 @@ Mixdog은 Codex/Claude의 호출 제한 메타데이터를 강제하지 않는�
 하위 작업에는 Mixdog의 workflow agent와 해당 route를 사용한다.
 모델과 추론 설정은 실행 중인 `agent` 스키마와 route 설정 절차에 맞춘다.
 
-WebAgent는 [전용 절차](../plugins/emeth-discipline/skills/webagent/references/mixdog.md)에 따라 native `browser` 도구로 ChatGPT Chat을 조작한다.
-Codex의 Node Browser 관리 객체와 자동 checkpoint API는 이 경로에 없으며 요청 상태는 Mixdog 작업에서 관리한다.
-데스크톱 브라우저 연결과 로그인한 계정이 필요한 실제 대화 전송은 로더·훅 검증만으로 확인되지 않는다.
-
 ## 검증
 
 저장소 루트에서 `npm test`를 실행한다.
@@ -62,7 +58,7 @@ node scripts/check-mixdog.mjs /absolute/path/to/mixdog
 ```
 
 이 검사는 임시 플러그인 복사본을 등록한다.
-17개 스킬과 트리거, 구현 스킬 본문, 세션·사용자 훅, `agent` 입력 수정과 실제 스키마, native 세션 기록과 worker 실행기로의 입력 전달, 대시보드 상태 API·세 화면, 플러그인 비활성화를 확인한다.
+16개 스킬과 트리거, 구현 스킬 본문, 세션·사용자 훅, `agent` 입력 수정과 실제 스키마, native 세션 기록과 worker 실행기로의 입력 전달, 대시보드 상태 API·세 화면, 플러그인 비활성화를 확인한다.
 외부 모델 호출이나 계정은 사용하지 않는다.
 검사에서 시작한 대시보드는 종료하고 임시 상태를 삭제한다.
 Codex에서도 같은 설치본을 검증하는 방법과 외부 경계를 대체한 범위는 [호스트 검증](host-validation.md)을 참고한다.

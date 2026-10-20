@@ -86,16 +86,12 @@ test('Mixdog agent spawns receive rules without losing task, route, file, or use
   assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'shell', tool_input: args }), {});
 });
 
-test('Mixdog host references and WebAgent native procedure resolve without Codex-only execution', () => {
+test('Mixdog host references resolve without Codex-only execution', () => {
   for (const file of ['skills/rules/mixdog.md', 'skills/start-implementation/SKILL.md',
-    'skills/dashboard-server/references/mixdog.md', 'skills/webagent/references/mixdog.md']) {
+    'skills/dashboard-server/references/mixdog.md']) {
     const source = fs.readFileSync(path.join(repoRoot, file), 'utf8');
     for (const match of source.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)) {
       assert.ok(fs.statSync(path.resolve(repoRoot, path.dirname(file), match[1])).isFile());
     }
   }
-  const webagent = fs.readFileSync(path.join(repoRoot, 'skills/webagent/references/mixdog.md'), 'utf8');
-  assert.match(webagent, /browser-use/);
-  assert.match(webagent, /never submit a duplicate/);
-  assert.match(webagent, /SubagentStart|Codex Node Browser/);
 });
