@@ -48,12 +48,10 @@ pstack 0.15.25, 커밋 `6f131f137de64fdaf928278c0fd9ecec520ccbee`에서 가져�
 ## 출처와 검증
 
 원본의 출처와 MIT 허가문은 [THIRD_PARTY_NOTICES.md](../plugins/emeth-discipline/THIRD_PARTY_NOTICES.md)에 둔다.
-통합 파일의 원본 대응과 변경하지 않은 참조의 해시는 [테스트 자료](../tests/fixtures/pstack-import.json)에 둔다.
-이 자료는 설치본의 참조 연결, 원본 참조 보존과 라이선스를 검증하며, 최적화한 프롬프트의 본문을 과거 치환 이력에 고정하지 않는다.
+다음 명령은 스킬 호출 메타데이터와 하위 작업 완료 처리의 실행 결과를 검증한다.
 
 ```text
-node --test --test-concurrency=1 tests/pstack-integration.test.js tests/implementation-skills.test.js tests/figure-it-out.test.js tests/subagent-completion.test.js
+node --test --test-concurrency=1 tests/implementation-skills.test.js tests/figure-it-out.test.js tests/subagent-completion.test.js
 ```
 
-이 검사는 패키지와 실행 계약의 구조를 확인한다.
 실제 모델의 작업 선택, 품질, 시간과 비용은 별도 실행으로 측정한다.
