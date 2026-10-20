@@ -74,6 +74,45 @@ test('numbering and memory notices compose independently, including a failed num
   assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /Next issue/);
 });
 
+test('Codex design entry preserves the exact request as a reusable source', (t) => {
+  const f = fixture(t);
+  const prompt = '$emeth-discipline:figure-it-out\r\n상태는 `new`, `done`, `failed`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal을 유지하세요.\n';
+  const input = { turn_id: 'turn-a', prompt };
+  const response = output(f.run(input));
+  const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
+  assert.ok(source, 'The workflow receives an original request path');
+  assert.deepEqual(fs.readFileSync(source), Buffer.from(prompt, 'utf8'));
+  assert.equal(output(f.run(input)).hookSpecificOutput.additionalContext, response.hookSpecificOutput.additionalContext);
+  const later = prompt + '추가 요구사항';
+  const next = output(f.run({ turn_id: 'turn-b', prompt: later }));
+  const nextSource = next.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: ')).slice('Current request source: '.length);
+  assert.notEqual(nextSource, source);
+  assert.equal(fs.readFileSync(nextSource, 'utf8'), later);
+  assert.equal(fs.readFileSync(source, 'utf8'), prompt);
+});
+
+test('request preservation cannot replace a prior source or suppress other notices', (t) => {
+  const f = fixture(t);
+  const input = { turn_id: 'turn-a', prompt: '$emeth-discipline:start-implementation DESIGN-0001\nKeep all three states.' };
+  const response = output(f.run(input));
+  const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
+  assert.ok(source);
+  const changed = output(f.run({ ...input, prompt: '$emeth-discipline:development-design\nDifferent request.' }));
+  assert.match(changed.hookSpecificOutput.additionalContext, /Next design number/);
+  assert.doesNotMatch(changed.hookSpecificOutput.additionalContext, /Current request source/);
+  assert.equal(fs.readFileSync(source, 'utf8'), input.prompt);
+});
+
+test('request sources are limited to named Codex design and implementation entry points', (t) => {
+  const f = fixture(t);
+  for (const prompt of ['Ordinary conversation.', '$emeth-discipline:issue-ledger\nRecord this issue.']) {
+    output(f.run({ turn_id: 'turn-a', prompt }));
+  }
+  output(f.run({ turn_id: 'turn-a', prompt: '/emeth-discipline:figure-it-out\nA Claude request.' }, { env: claudeEnvironment(f) }));
+  assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'request-sources')), false);
+  assert.equal(fs.existsSync(path.join(claudeEnvironment(f).CLAUDE_PLUGIN_DATA, 'request-sources')), false);
+});
+
 test('startup, resume, compact and subagents keep their prompt and memory lifecycle boundaries', (t) => {
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));

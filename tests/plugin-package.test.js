@@ -39,8 +39,8 @@ test('both marketplaces install the same package without repository development 
   assert.equal(codex.plugins[0].source.path, './plugins/emeth-discipline');
   assert.equal(path.resolve(repoRoot, claude.plugins[0].source), packageRoot);
   assert.deepEqual(fs.readdirSync(packageRoot).sort(), [
-    '.claude-plugin', '.codex-plugin', '.mixdog', 'LICENSE',
-    'assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
+    '.claude-plugin', '.codex-plugin', '.mixdog', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+    'assets', 'dashboard', 'hooks', 'lib', 'references', 'skills', 'writers',
   ].sort());
   assert.deepEqual(fs.readdirSync(path.join(packageRoot, '.claude-plugin')), ['plugin.json']);
   for (const relative of fs.readdirSync(packageRoot, { recursive: true })) {

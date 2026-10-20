@@ -3,7 +3,7 @@
 Choose sections and detail needed to implement and verify the change, using established software design conventions.
 
 Organize design documents using arc42 views relevant to the change: goals and constraints, context, building blocks, runtime and deployment, crosscutting concepts, decisions, quality scenarios, risks, and terminology.
-Reference existing architecture and contracts for unchanged parts.
+Use existing task and design artifacts for contracts they already establish, and reference existing architecture for unchanged parts.
 
 Choose prose, tables, or diagrams suited to the information being specified.
 When using diagrams, use C4 for context and structural views, sequence diagrams for interactions, and state diagrams for lifecycles; identify element roles and label directed relationships.

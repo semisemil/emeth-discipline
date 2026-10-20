@@ -1,0 +1,6 @@
+interface:
+  display_name: "Emeth: Code Exploration"
+  short_description: "Explain code behavior and trace design rationale"
+  default_prompt: "Use $code-exploration to explain this code and choose the how, why, or teach mode for my question."
+policy:
+  allow_implicit_invocation: false

@@ -21,7 +21,7 @@ For this run, prepare and review the Design, then use $emeth-discipline:implemen
 
 ## 추가 진단 14개
 
-[진단 스크립트](superjson-probes.mjs)의 항목별 결과다.
+측정 당시 진단 스크립트의 항목별 결과다.
 
 | 검사 | Workflow | 한 세션 |
 | --- | --- | --- |

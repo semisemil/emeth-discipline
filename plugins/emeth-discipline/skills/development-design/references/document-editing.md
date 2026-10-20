@@ -22,13 +22,15 @@ node <plugin-root>/writers/document-writer.js patch --project-root <absolute-pro
 ```json
 {"edits":[{"old":"<overview span>","new":"<replacement>"}],"documents":[
   {"path":"<existing>.md","edits":[{"old":"<span>","new":"<replacement>"}]},
-  {"path":"<new>.md","body":"<design>"},
+  {"path":"<new>.md","source":"<absolute path to the completed artifact>"},
   {"path":"<retired>.md","remove":true}]}
 ```
 
 Omit unused operations.
 Each `old` must match exactly once in its file; edits apply in order.
-`body` adds a document; `remove` retires one.
+`source` adds an existing UTF-8 artifact unchanged; use `body` for new text.
+Keep its relative links valid at the destination path.
+`remove` retires a document.
 Detailed content or membership changes require `major`, even without overview changes.
 
 Use `operational` only for metadata or work links, preserving content and membership.

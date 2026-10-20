@@ -7,6 +7,7 @@ description: Design or redesign a system's architecture, such as its boundaries,
 # Architecture Co-op
 
 Apply [design discussion](../rules/references/design-discussion.md) when working through architecture decisions with the user.
+Use [ensemble](../ensemble/SKILL.md) to generate and improve design proposals through independent candidates, comparison, and synthesis.
 Connect each choice to the overall structure and behavior, revising affected choices when gaps or conflicts emerge.
 Complete when important in-scope issues are resolved and the structure and behavior form a coherent whole; present the resulting architecture and its completion status.
 Then record the agreed decisions and structure under [Architecture Memory](../architecture-memory/SKILL.md).

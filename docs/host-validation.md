@@ -49,5 +49,5 @@ provider 준비, MCP 목록, 세션 저장·알림 큐 경계를 대체하며, �
 ## 확인 범위
 
 Codex CLI 0.159.2와 Mixdog `main`의 `f5b8dc9d4c06985133b8181f78718a61c6856b99`에서 Linux 검증을 통과했다.
-실제 외부 모델이 설계·구현 작업을 끝내는 동작, 로그인한 ChatGPT의 WebAgent 대화, Windows native 실행은 이 검사로 검증하지 않는다.
+실제 외부 모델이 설계·구현 작업을 끝내는 동작, Windows native 실행은 이 검사로 검증하지 않는다.
 Mixdog의 압축·하위 에이전트 지침 전달 제약은 [Mixdog 연동](mixdog-support.md)에 별도로 기록한다.
