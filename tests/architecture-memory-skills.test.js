@@ -7,7 +7,7 @@ const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const read = (...parts) => fs.readFileSync(path.join(pluginRoot, ...parts), 'utf8');
 const skills = ['architecture-memory-init', 'architecture-memory', 'architecture-memory-update'];
 
-test('memory context is implicitly discoverable; initialization and reconciliation require explicit invocation', () => {
+test('memory context and updates are implicitly discoverable; initialization requires explicit invocation', () => {
   for (const name of skills) {
     const source = read('skills', name, 'SKILL.md');
     const metadata = read('skills', name, 'agents', 'openai.yaml');
@@ -15,7 +15,8 @@ test('memory context is implicitly discoverable; initialization and reconciliati
     assert.ok(frontmatter, name);
     assert.ok(frontmatter[1].includes('name: ' + name));
     assert.match(frontmatter[1], /^description:\s*\S.+$/m);
-    assert.match(metadata, new RegExp('^\\s*allow_implicit_invocation: ' + (name === 'architecture-memory') + '$', 'm'));
+    assert.match(metadata, new RegExp('^\\s*allow_implicit_invocation: ' + (name !== 'architecture-memory-init') + '$', 'm'));
+    assert.equal(/^disable-model-invocation:\s*true$/m.test(frontmatter[1]), name === 'architecture-memory-init', name);
     assert.ok(metadata.includes('$' + name));
   }
 });

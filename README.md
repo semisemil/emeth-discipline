@@ -68,14 +68,19 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 
 ### 기본 지침
 
-Emeth의 `Rules` 스킬에 담긴 기본 지침은 새 작업을 시작하거나 `/clear`, `/compact`를 실행할 때 자동으로 불러옵니다. 기존 작업을 재개할 때(`resume`)는 공통 기준을 다시 불러오지 않지만, 대시보드 서버 확인과 아키텍처 메모리 연결 훅은 실행됩니다. 하위 에이전트에도 `SubagentStart` 훅으로 공통 기준을 전달합니다.
+새 작업을 시작하면 기본 지침이 자동으로 적용됩니다.
+따로 스킬을 호출할 필요는 없습니다.
 
-Codex에서 특정 요청에 공통 기준을 명시하려면 스킬 이름을 적으세요.
+### 기존 프로젝트 파악하기
+
+`architecture-memory-init`은 기존 코드와 문서를 읽고 프로젝트 구조, 주요 결정과 운영 제약을 아키텍처 문서로 정리합니다.
+기존 프로젝트의 배경을 정리하고 싶을 때 호출하세요.
 
 ```text
-$emeth-discipline:rules
-이 문서를 처음 읽는 사람도 이해할 수 있게 고쳐줘.
+$emeth-discipline:architecture-memory-init
 ```
+
+생성한 문서는 이후 설계와 구현에서 참고합니다.
 
 ## 🧩 포함된 스킬
 
@@ -101,7 +106,7 @@ $emeth-discipline:rules
 | `$emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
 | `$emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
 | `$emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
-| `$emeth-discipline:architecture-memory-update` | 커밋된 코드 변경을 아키텍처 문서에 반영할 때 | 마지막 확인 커밋 이후의 변경 검토와 문서 갱신 |
+| `$emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
 
 ### Workflow
 
@@ -189,21 +194,16 @@ Design의 개요는 기본적으로 `.emeth/designs/<DESIGN-ID>-<이름>/DESIGN.
 
 ## 🏛️ 아키텍처 메모리
 
-아키텍처 메모리는 프로젝트 구조, 운영 환경, 제약, 주요 결정과 그 이유를 Markdown 문서로 관리합니다. 첫 Design 저장부터 작은 Memory가 시작됩니다. 기존 프로젝트 전반의 분석이 필요하면 선택적으로 init을 요청합니다.
-
-```text
-$emeth-discipline:architecture-memory-init
-```
+아키텍처 메모리는 프로젝트 구조, 운영 환경, 제약, 주요 결정과 그 이유를 Markdown 문서로 관리합니다.
+첫 Design을 저장하면 관련 맥락부터 기록합니다.
+기존 프로젝트 전반을 정리하려면 [초기화 스킬](#기존-프로젝트-파악하기)을 호출하세요.
 
 기본 위치는 `docs/architecture/`입니다. 코드·기존 문서·현재 대화를 바탕으로 프로젝트 구조와 설계 결정, 운영 제약을 정리합니다.
 
 첫 Design 저장 또는 초기화에 성공하면 `.emeth/architecture.json`에 문서 위치를 저장합니다. 이후 이 연결이 있는 프로젝트에서만 훅을 통해 메모리 스킬을 안내합니다. 개발 판단에 필요한 부분을 검색해 읽고, 앞으로도 참고할 결정이나 운영 정보가 생기면 관련 문서에 반영합니다. 일반 프로젝트 대화의 중요한 맥락도 기록합니다. 출처·범위·확정 여부를 보존하고, 읽기 전용 또는 기록 금지 요청에서는 문서를 수정하지 않습니다. 프로젝트 설정의 `enabled: false`나 비활성 Memory도 유지합니다.
 
-커밋된 코드 변경을 문서에 반영하려면 별도로 갱신을 요청합니다.
-
-```text
-$emeth-discipline:architecture-memory-update
-```
+커밋한 뒤에는 에이전트가 `architecture-memory-update`로 아키텍처 문서 갱신이 필요한지 확인합니다.
+문서에 영향을 주는 변경이 있으면 해당 내용을 반영합니다.
 
 Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화를 재시도하지 않습니다. 초기화 실패를 해결한 뒤 Design을 다시 저장하거나 Memory 초기화를 명시적으로 실행하면 연결을 재시도할 수 있습니다.
 

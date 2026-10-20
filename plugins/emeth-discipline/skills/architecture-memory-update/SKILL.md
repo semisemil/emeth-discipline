@@ -1,11 +1,10 @@
 ---
 name: architecture-memory-update
-when_to_use: "Explicit request only: reconcile connected project architecture documents with committed changes."
-disable-model-invocation: true
-description: Reconcile project architecture documents connected through .emeth/architecture.json with Git, including an initial collection created by a Design save.
+when_to_use: "After a commit in a project with connected architecture documents, or an explicit update request."
+description: Check whether committed changes require updates to architecture documents connected through .emeth/architecture.json, and reconcile affected documents. Use after commits or on explicit update requests.
 ---
 
-Explicit requests only. Resolve `<workflow>` to `<plugin-root>/skills/architecture-memory/scripts/workflow.js` from this file. Append `--project-root <project>` to each command.
+Resolve `<workflow>` to `<plugin-root>/skills/architecture-memory/scripts/workflow.js` from this file. Append `--project-root <project>` to each command.
 
 Run `node <workflow> update` before code or document reads. `current` and `ignored` finish without edits; report the unchanged checkpoint. `applying` resumes with `apply`. For `draft`, reuse saved classifications and the returned draft; committed evidence is fixed at `source_revision` even when HEAD or working files change.
 

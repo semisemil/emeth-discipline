@@ -4,4 +4,4 @@ interface:
   default_prompt: "Use $architecture-memory-update to reconcile the project architecture documents connected through .emeth/architecture.json with committed Git changes."
 
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

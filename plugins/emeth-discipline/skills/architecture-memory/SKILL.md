@@ -42,4 +42,4 @@ Capture durable information needed to interpret or change the system that code a
 Follow [recording](references/recording.md) to distinguish capture value from document placement when the connected architecture documents need new durable context and recording is permitted.
 Patch at a settled decision or meaningful work boundary; unchanged information needs no write.
 
-Recording during conversation leaves the Git checkpoint unchanged. Explicit `architecture-memory-update` reconciles committed changes. Report changed topics compactly, and report a recording failure separately from successful design or implementation work.
+Recording during conversation leaves the Git checkpoint unchanged. `architecture-memory-update` reconciles committed changes. Report changed topics compactly, and report a recording failure separately from successful design or implementation work.
