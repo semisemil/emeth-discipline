@@ -8,8 +8,6 @@ const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const host = require('../plugins/emeth-discipline/lib/host');
 const { composeMixdogPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt');
-const { prepareMixdogLaunch } = require('../plugins/emeth-discipline/skills/start-implementation/scripts/prepare-launch');
-const { fixture, git } = require('./helpers/implementation-fixture');
 
 const repoRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 
@@ -88,34 +86,8 @@ test('Mixdog agent spawns receive rules without losing task, route, file, or use
   assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'shell', tool_input: args }), {});
 });
 
-test('Mixdog implementation CLI prepares a real Design worker without writes or unsupported model fields', t => {
-  const f = fixture(t);
-  const before = git(f.cwd, 'status', '--porcelain=v1');
-  const script = path.join(repoRoot, 'skills/start-implementation/scripts/prepare-launch.js');
-  const result = spawnSync(process.execPath, [script, '--host', 'mixdog', '--cwd', f.cwd,
-    '--design', 'DESIGN-0001', '--agent', 'worker'], { encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
-  const launch = JSON.parse(result.stdout);
-  assert.deepEqual(Object.keys(launch).sort(), ['agent', 'context', 'cwd', 'prompt', 'tag', 'type']);
-  assert.equal(launch.type, 'spawn');
-  assert.equal(launch.agent, 'worker');
-  assert.equal(launch.tag, 'emeth-implementation-design-0001');
-  assert.equal(launch.cwd, f.cwd);
-  assert.match(launch.prompt, /implement\.md.*DESIGN-0001/);
-  assert.equal(launch.context, composeMixdogPrompt());
-  assert.equal(git(f.cwd, 'status', '--porcelain=v1'), before);
-  assert.equal(git(f.cwd, 'rev-parse', 'HEAD'), f.initialHead);
-  assert.deepEqual(fs.readFileSync(path.join(f.cwd, '.git/index')), f.initialIndex);
-  const options = { cwd: f.cwd, design: 'DESIGN-0001', agent: 'worker' };
-  assert.equal(prepareMixdogLaunch({ ...options, tag: 'stable' }).tag, 'stable');
-  assert.throws(() => prepareMixdogLaunch({ ...options, model: 'gpt-6-astra' }), /configured agent route/);
-  assert.throws(() => prepareMixdogLaunch({ ...options, reasoning: 'high' }), /configured agent route/);
-  assert.throws(() => prepareMixdogLaunch({ ...options, agent: '' }), /workflow agent ID/);
-  assert.throws(() => prepareMixdogLaunch({ ...options, design: 'DESIGN-9999' }));
-});
-
 test('Mixdog host references and WebAgent native procedure resolve without Codex-only execution', () => {
-  for (const file of ['skills/rules/mixdog.md', 'skills/start-implementation/references/mixdog.md',
+  for (const file of ['skills/rules/mixdog.md', 'skills/start-implementation/SKILL.md',
     'skills/dashboard-server/references/mixdog.md', 'skills/webagent/references/mixdog.md']) {
     const source = fs.readFileSync(path.join(repoRoot, file), 'utf8');
     for (const match of source.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)) {

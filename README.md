@@ -8,6 +8,7 @@ Emeth는 코딩 에이전트가 요청받은 작업 범위를 끝까지 지키�
 
 - **대화와 결과물 품질 관리**: 요청한 범위와 수정 권한을 지키고, 확인한 근거를 바탕으로 결과를 보고합니다.
 - **기획부터 구현까지**: 아이디어를 기획서와 구현 명세로 정리하고, 구현·검증으로 이어갑니다.
+- **코드 이해와 후보 비교**: 코드의 동작과 설계 이유를 설명하고, 독립 후보를 비교해 결과를 개선합니다.
 - **리팩터링과 코드 이식 검증**: 실제 구조가 바뀌었는지, 원본 동작이 보존됐는지 확인합니다.
 - **프로젝트 기록 관리**: 이슈, 기획서, 구현 명세를 파일로 남겨 다음 작업에서 참고합니다.
 - **아키텍처 관리**: 프로젝트 구조와 설계 결정, 운영 제약을 기록·갱신하고 설계·구현·검토에 활용합니다.
@@ -184,8 +185,15 @@ $emeth-discipline:webagent
 | --- | --- | --- |
 | `$emeth-discipline:development-design` | 개발설계문서를 작성하거나 수정할 때 | 작업에 맞는 문서 형식으로 개요와 상세 설계를 여러 파일에 연결해 작성 |
 | `$emeth-discipline:tenet-me` | 설계나 구현이 요구 결과를 보장하는지 검토할 때 | 결과에서 필요한 조건과 근거를 역추적하고, 발견한 빈틈을 정방향 사례로 확인 |
-| `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현 작업 생성, 요청하면 현재 세션에서 구현 |
-| `$emeth-discipline:start-implementation` | 준비된 설계의 구현을 새 작업에서 시작할 때 | 모델과 추론 수준을 정하고 현재 프로젝트 폴더에 새 작업 생성 |
+| `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현과 검증까지 진행 |
+| `$emeth-discipline:start-implementation` | 준비된 설계를 구현할 때 | 기능 개발, 버그 수정, 리팩터링에 맞는 절차로 구현 조율과 검증 |
+
+### 코드 이해와 후보 비교
+
+| 스킬 | 이런 때 사용합니다 | 하는 일 |
+| --- | --- | --- |
+| `$emeth-discipline:code-exploration` | 코드의 동작과 설계 이유를 이해하거나 배우고 싶을 때 | 질문에 맞춰 how, why, teach 모드로 코드와 변경 이력을 조사하고 설명 |
+| `$emeth-discipline:ensemble` | 설계나 구현에 여러 후보를 비교하고 싶을 때 | 독립 후보 생성, 교차 평가, 좋은 부분의 합성, 결과 검증 |
 
 ## 🔁 기획부터 구현까지
 
@@ -207,38 +215,32 @@ $emeth-discipline:figure-it-out
 사용자 알림 설정 개선을 설계부터 구현과 검증까지 완료해줘.
 ```
 
-현재 작업에서 필요한 설계를 준비하고, `tenet-me`로 요구 결과의 보장 조건과 근거를 역추적합니다. `start-implementation`은 설계 문서를 새 구현 작업에 전달하고,
-새 작업이 내부 `implement.md` 절차에 따라 해당 계약을 읽어 구현·검증합니다. 구현 중 전제가 달라지면 같은 작업에서 영향을 받는 설계만 수정하며, 중요한 사용자 선택은 확인합니다.
+현재 대화에서 필요한 설계를 준비하고, `tenet-me`로 요구 결과의 보장 조건과 근거를 역추적합니다.
+`start-implementation`은 준비된 Design을 읽고 기능 개발, 버그 수정, 리팩터링에 맞는 절차를 선택합니다.
+현재 대화에서 작업을 조율하며 조사와 코드 작성을 하위 에이전트에게 맡기고, 결과를 검토하고 검증합니다.
 
 ```text
 $emeth-discipline:tenet-me DESIGN-0001
 $emeth-discipline:start-implementation DESIGN-0001
 ```
 
-위 명령은 각각 별도로 호출합니다. 병렬 구현이 필요하면 모델에 작업 분할과 병렬 처리를 직접 요청하세요.
+위 명령은 각각 별도로 호출합니다.
+`development-design`만 요청하면 설계에서 끝납니다.
+설계부터 구현까지 맡기려면 `figure-it-out`을 사용하세요.
 
-모델은 [모델 선택 기준](plugins/emeth-discipline/skills/start-implementation/assets/model-routing.md)과 사용자 설정·실행 환경의 제한에 따라 정합니다.
-
-### 한 세션에서 진행하기
-
-별도 구현 작업을 만들지 않고 현재 세션에서 끝내려면 최초 요청에 진행 방식을 명시합니다.
+코드를 먼저 이해하려면 질문과 함께 `code-exploration`을 호출합니다.
 
 ```text
-$emeth-discipline:figure-it-out
-사용자 알림 설정 개선을 설계부터 구현까지 완료해줘.
-Design을 준비하고 검토한 뒤, start-implementation의 implement.md를 읽고 준비된 Design에 적용해
-현재 세션에서 구현부터 완료 처리와 결과 보고까지 진행해줘.
-새 세션이나 하위 에이전트는 만들지 마.
+$emeth-discipline:code-exploration
+알림 요청이 저장되고 사용자에게 전달되는 흐름과, 현재 구조를 선택한 이유를 설명해줘.
 ```
 
-`development-design`만 요청하면 설계에서 끝납니다. 설계부터 같은 세션의 구현까지 원한다면 구현 절차도 함께 명시할 수 있습니다.
+설계안을 비교하고 개선하려면 `ensemble`을 사용할 수 있습니다.
+아키텍처와 개발 설계를 만들거나 개선할 때도 이 방식을 사용합니다.
 
 ```text
-$emeth-discipline:development-design
-사용자 알림 설정 개선을 설계해줘.
-Design이 준비되면 $emeth-discipline:tenet-me로 검토하고,
-중요한 결정이 해결되면 start-implementation의 implement.md를 읽고 현재 세션에서 구현과 완료 처리까지 진행해줘.
-새 세션이나 하위 에이전트는 만들지 마.
+$emeth-discipline:ensemble
+알림 재시도 정책의 독립 후보를 만들고 비교한 뒤 최종안을 정리해줘.
 ```
 
 

@@ -1,6 +1,6 @@
 # Model Routing
 
-Use this policy for new implementation sessions. Preparation and independent Reviewers follow their own settings contracts. Explicit user model, reasoning, and usage limits take precedence; select only unspecified settings. Check support and permission to apply both settings in the execution environment. Report unsupported selections or conflicting limits instead of silently substituting them.
+Use this policy for implementation delegates. Ensemble candidates and judges, challenge reviewers, and exploration roles follow the settings in [execution](../../skills/start-implementation/SKILL.md#subagents). Explicit user model, reasoning, and usage limits take precedence; select only unspecified settings. Check support and permission to apply both settings in the execution environment. Report unsupported selections or conflicting limits instead of silently substituting them.
 
 Default to Sol `high`; select Luna with fixed `xhigh` reasoning when the change method and scope are settled and clear tests or comparison can verify the result. Select Astra and its reasoning effort based on the complexity of the remaining judgment. The rows are selection criteria, not an empirical ranking of model/effort combinations.
 

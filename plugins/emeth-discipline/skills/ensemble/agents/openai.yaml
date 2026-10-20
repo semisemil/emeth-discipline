@@ -1,0 +1,6 @@
+interface:
+  display_name: "Emeth: Ensemble"
+  short_description: "Compare independent candidates and combine their strengths"
+  default_prompt: "Use $ensemble to generate independent candidates for this task, compare them, and produce one verified result."
+policy:
+  allow_implicit_invocation: false

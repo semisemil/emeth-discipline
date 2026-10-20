@@ -1,7 +1,7 @@
 interface:
   display_name: "Emeth: Start Implementation"
-  short_description: "Start a new implementation session for a ready Design"
-  default_prompt: "Use $start-implementation to select model and reasoning and launch this ready Design in a new session in the current project folder."
+  short_description: "Implement a Design with pstack playbooks"
+  default_prompt: "Use $start-implementation to implement a ready Design with scoped delegation, independent review, and verification."
 
 policy:
   allow_implicit_invocation: false

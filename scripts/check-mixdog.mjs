@@ -41,10 +41,10 @@ try {
   const skills = collectSkills(projectRoot).filter(skill => skill.plugin === plugin.id);
   assert.deepEqual(skills.map(skill => skill.name).sort(), expected);
   assert.ok(skills.every(skill => skill.whenToUse));
-  assert.match(buildSkillManifest(skills), /Explicit request only: launch an implementation worker/);
+  assert.match(buildSkillManifest(skills), /implement a ready Design with pstack playbooks/);
   const loaded = loadSkillResource('start-implementation', projectRoot);
   assert.equal(loaded.filePath, join(pluginRoot, 'skills/start-implementation/SKILL.md'));
-  assert.match(loaded.content, /references\/mixdog\.md/);
+  assert.match(loaded.content, /references\/playbooks\/feature\.md/);
   console.log(`Plugin ${plugin.version}: ${skills.length} skills discovered with selection triggers`);
 
   const require = createRequire(import.meta.url);
