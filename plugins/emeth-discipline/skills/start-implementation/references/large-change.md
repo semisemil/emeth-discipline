@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 When the task matches no playbook, design one. The deliverable before any code is the workflow itself: a sequence of phases that scales rigor to the task, runs the scientific method, and leaves a decision trail a human can audit after stepping away.
 
+Retain the ownership and independent verification roles of the selected [implementation workflow](../SKILL.md#implementation-workflow) when composing its task-specific phases.
+
 ## Start
 
 Open a todolist whose first item is to read the [guidance index](../SKILL.md#principles). Then add the phases below as todos.

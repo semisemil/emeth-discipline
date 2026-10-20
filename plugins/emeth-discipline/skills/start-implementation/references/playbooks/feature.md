@@ -1,20 +1,18 @@
 ### Feature
 
-**You own the design. Plan, review, verify.** Delegate implementation. Stay in the lead.
+The calling conversation owns the feature's design, code, integration and final verification.
+Carry its source evidence and accepted decisions through the selected [implementation workflow](../../SKILL.md#implementation-workflow).
 
-1. [how](../../../code-exploration/references/how.md) over the affected subsystem.
-2. [blueprint](../blueprint.md) for parallel design exploration.
-3. Write the throughput checkpoint as four todo items. A dimension that genuinely does not apply (single file, no fan-out) keeps its item with `n/a: <reason>` rather than being dropped:
-   - **Blocking first steps.** Gates run before fan-out.
-   - **Independent workstreams.** Disjoint files, services, or layers parallelize. Shared writes serialize.
-   - **Shared mutable state.** Default to splitting the target (the [separate-before-serializing-shared-state](../../../../references/pstack/guidance/separate-before-serializing-shared-state.md) principle skill). Serialize only for real invariants.
-   - **Smallest safe decomposition.** If one worker is best, name why.
-4. Delegate code-writing to a subagent using the implementation model selected through [execution](../../SKILL.md#subagents) with a specific scope (file paths, named data shape and its organizing structure per [model-the-domain](../../../../references/pstack/guidance/model-the-domain.md), a state machine over scattered booleans, a table/registry over branching, a typed model over repeated shape assumptions, chosen before the delegate writes logic, and success criteria). Pick each subagent's reasoning level and fast or standard speed for the job, per [execution](../../SKILL.md#subagents). When the implementation admits multiple valid shapes (error handling, abstraction layer, test structure), delegate via the [ensemble](../../../ensemble/SKILL.md) skill instead so the runners surface the alternatives and the cross-judge guards the pick. Mandatory: no skip-with-reason escape, and Laziness Protocol does not override it (the gain is review separation, not lines saved). A subagent forbidden to spawn satisfies this by owning the diff directly with the same review separation. No "standing by" reply that waits on a nested agent. Comments per [execution](../../SKILL.md#comments). Surgical edits, re-ground against the source for upstream-derived files. Port shared-primitive improvements to all consumers and verify each. Commit liberally.
-5. Verify on the matching surface. "Inconclusive" or wrong-surface is not a pass. Flag it.
-6. Rebase into small, ordered commits. Stack follow-ups.
-   Use the [sequence-verifiable-units](../../../../references/pstack/guidance/sequence-verifiable-units.md) principle skill, building, verifying, and committing each small unit before the next.
-7. If the design is contested, [challenge](../challenge.md) before shipping.
+1. Complete [Ground and Sketch](../blueprint.md), reusing a reviewed Design and its still-valid evidence.
+   Select the design before dependent implementation, with independent review at the selected workflow's boundary.
+2. Settle blocking contracts and assign distinct paths for artifacts that can progress independently.
+   Keep coupled code and integration with the current owner.
+3. Implement the selected contract and run the selected workflow's independent work.
+   Derive expected test results from the original requirements and affected existing behavior.
+4. Integrate the artifacts and resolve material findings against those contracts.
+   Trace required interactions through the public interface and verify the real built artifact, including the task's required checks.
+   Reuse unaffected verification and rerun checks affected by corrections.
+5. Keep the Design consistent with delivered behavior and complete the requested repository delivery.
+   Use [challenge](../challenge.md) before shipping when the design remains contested.
 
-Code-coupled work (one feature, one migration) goes to a single owner with the checkpoint inline. That owner fans out internally after the blocking phase. Parent-level fan-out is for slices that produce independent artifacts (audits, cross-subsystem investigations, competing experiments). Rewrite the checkpoint at phase boundaries. Spawn a fresh owner rather than chaining interrupts.
-
-**Reply:** what you built, what you chose and why, the throughput checkpoint, open decisions. Tables for design alternatives.
+Report the delivered change, material decisions, verification evidence and unresolved limits.

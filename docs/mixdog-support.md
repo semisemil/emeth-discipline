@@ -24,7 +24,7 @@ Mixdog의 매니페스트 로더는 등록 루트의 `.codex-plugin/plugin.json`
 | 세션 시작 | 규칙·아키텍처 연결 안내·스토리지 이전과 공통 대시보드 시작. resume은 규칙 재주입 생략 |
 | 사용자 요청 | 규칙 복구·아키텍처 안내·명시 문서 요청의 다음 번호 안내 |
 | 하위 에이전트 | `PreToolUse`가 `agent` spawn의 context에 규칙 추가. prompt·file·tag·cwd와 기존 context 보존 |
-| 구현 작업 | `start-implementation`이 현재 대화에서 Design을 읽고 Feature, Bug fix, Refactoring 중 해당 절차를 실행. 조사와 코드 작성은 `agent`로 위임 |
+| 구현 작업 | `start-implementation`이 현재 대화에서 Design을 읽고 Feature, Bug fix, Refactoring 중 해당 절차를 실행. 작업의 복잡도에 따라 실행 흐름을 선택하고 현재 대화가 구현과 통합을 소유하며, 독립 설계와 검증 산출물은 `agent`로 위임 |
 | 모델과 추론 | Mixdog workflow agent의 설정된 route 사용. spawn에 미지원 필드를 보내지 않음 |
 | 기록·대시보드 | 기존 문서 도구, 저장 형식과 HTTP 서버를 공통으로 사용 |
 

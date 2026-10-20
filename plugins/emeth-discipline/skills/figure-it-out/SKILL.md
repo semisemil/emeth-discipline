@@ -5,6 +5,7 @@ disable-model-invocation: true
 description: Think through a project change and carry it through the full Emeth Discipline development workflow.
 ---
 
+Select the [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) before design exploration.
 Run these skills in order, starting at the first incomplete stage:
 
 1. [development-design](../development-design/SKILL.md): prepare or revise the Design until it is `ready`.

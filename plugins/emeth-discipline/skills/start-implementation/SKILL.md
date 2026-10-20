@@ -14,6 +14,27 @@ Use the original task and accepted user directives as scope, with the reviewed D
 node <plugin-root>/dashboard/records/development-contracts.js --project-root <project> --id <DESIGN-ID> --format paths
 ```
 
+## Implementation workflow
+
+The calling conversation owns design selection, coupled code, integration and final verification.
+Choose the workflow from the required behavior before design exploration.
+
+| Workflow | Selection | Independent work |
+| --- | --- | --- |
+| Integrated owner | A bounded change whose outcomes and surrounding contracts are straightforward to verify | Two design candidates; the calling conversation selects the design, implements and verifies it, then one ensemble judge reviews the completed result |
+| Continuous owner | Other work, including interacting requirements, state transitions or integrations that need independent test derivation | Two design candidates and one ensemble judge settle the design before implementation; a fresh test author works alongside the calling conversation's implementation |
+
+Use the selected workflow throughout the task's playbook, retaining its reproduction, behavior-preservation and delivery checks.
+Reuse a reviewed Design, candidate artifacts and verification while their contracts and source evidence remain valid.
+
+For Continuous owner, assign independent public-contract tests through the [implementation delegate prompt](../../references/pstack/implementation-prompt.md).
+Supply requirement and baseline source paths, test conventions and distinct owned test paths under that role's input contract.
+Implement in parallel, then integrate the tests and resolve failures against their contract basis.
+
+For Integrated owner, give ensemble's single judge the completed implementation, candidate artifacts and verification evidence.
+Resolve material findings and obtain that judge's review of the affected corrections before delivery.
+Both workflows finish with verification of the complete public result on the real artifact.
+
 ## Principles
 
 Read the leaf guidance document in full for any principle you apply. Each entry names when it applies.
@@ -54,22 +75,30 @@ Read the leaf guidance document in full for any principle you apply. Each entry 
 
 ## Subagents
 
-Use the [implementation delegate prompt](../../references/pstack/implementation-prompt.md) for code-writing delegates and ad-hoc helpers inside a playbook step. The calling conversation runs the playbook. Never spawn a delegate to run the playbook itself. Routed workflows keep their own roles and role prompts.
+Use the [implementation delegate prompt](../../references/pstack/implementation-prompt.md) for separable implementation or verification artifacts inside a playbook step.
+The calling conversation runs the playbook and retains coupled implementation and integration.
+Routed workflows keep their own roles and role prompts.
 
-**Defaults for every subagent call.** Use background execution and file pointers rather than inlined context. Keep connected tools available when the role needs them. Model selection uses the table below.
+**Defaults for every subagent call.** Pass the role prompt and [delegated-work contract](#delegated-work) by path, with the assignment's source and owned artifact paths.
+Use background execution and keep connected tools available when the role needs them.
+Model selection uses the table below.
 
 | Role | Model settings |
 |---|---|
-| Ensemble candidates and cross-judge, including blueprint exploration | `gpt-6.1-sol`, reasoning effort suited to the task |
+| Ensemble candidates and cross-judge, including blueprint exploration | `gpt-6.1-sol`, medium by default; high for a specific unresolved interaction |
 | Challenge reviewers | Two independent `gpt-6.1-sol` reviewers, reasoning effort suited to the review |
 | Implementation delegates | User or owning workflow settings; otherwise [Emeth model routing](../../references/pstack/model-routing.md) |
 | Explorers, explainers, investigators and synthesizers | User or owning workflow settings; otherwise inherit the parent model |
 
 **Match the model to the job.** Use the current host's supported model and reasoning arguments. Explicit user settings take precedence. Apply Emeth model routing only to unspecified implementation settings. Report an unsupported required setting instead of silently substituting it.
 
-You own every subagent's work. The implementation owner delivers the coupled code, tests, implementation documentation, fixes, and verification evidence. While it works, handle contract decisions and concrete blockers. At completed-artifact handoff, review the diff and write your own summary, don't pass through what it said. Return consolidated findings to the owner for correction and affected verification. For the fixed-model ensemble and challenge seats, a second opinion uses the same prompt in an independent context. Attribute agreement to the independent reviewers.
+Review a delegated artifact against its assigned contract and resolve material findings with affected verification.
+For the fixed-model ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
+Attribute agreement to the independent reviewers.
 
-**Fresh subagents by default.** Give new work to a fresh subagent with consolidated scope, meaning the original brief, every later directive, and the prior agent's report and branch. This holds for a fix round, a follow-up, a retry, and the next queue item. Resume, message, or queue a follow-up on an existing subagent only when the new work strictly needs state that lives in that agent and is costly to move: its local checkout, its uncommitted changes, or a process it still runs, such as a dev server, a simulator, or a babysit watcher. A stop or hold order to a running agent is not reuse. A role such as a PR owner outlives its agent. Once that agent returns, a fresh agent takes the role's next round. Interrupt-chained resumes silently drop directives, so fire a fresh subagent with consolidated scope rather than trusting a "done" summary.
+**Independent assignments use fresh contexts.** Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
+Pass changed contracts, source paths and stopping conditions with the follow-up.
+Start a fresh assignment for new work and carry still-valid decisions by path.
 
 ## Harness
 
@@ -91,7 +120,8 @@ Comments follow the same rule as the reply. Write them clean as you go. Keep a c
 
 ## Playbooks
 
-Open a todolist whose first items are the matched playbook's steps, copied in verbatim, before any task-specific todos. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Match the task to a playbook below and open its full steps at `references/playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
+Select the playbook for the requested behavior and read its steps.
+Track the current stage, remaining dependencies and completion evidence in the host's task plan.
 
 A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the [large-change procedure](references/large-change.md) even when a narrower playbook like Feature fits. Use the [large-change procedure](references/large-change.md) whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task.
 
@@ -110,6 +140,11 @@ Use the [delegated-work return contract](#delegated-work) without replacing a ro
 ### Delegated work
 
 Own the assigned artifacts until completion or a concrete blocker.
+The assignment defines the recovery scope and stopping conditions, with retry or cost limits when needed.
+Resolve errors within that scope.
+Deliver artifacts needed by other work and problems requiring the coordinator's judgment as soon as they arise.
+At a stopping condition, return the information needed to resolve the blocker.
+Collect routine progress in the final result.
 Return decisions, artifact paths, verification evidence, and unresolved issues concisely.
 Keep the complete artifact at its declared path and identify its completed version when the host supports it.
 Refer to shared requirements and grounding instead of restating them.
