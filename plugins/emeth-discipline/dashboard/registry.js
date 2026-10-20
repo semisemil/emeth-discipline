@@ -389,6 +389,10 @@ function registerProject(projectRoot, options = {}) {
   const normalizedRoot = normalizeProjectRoot(projectRoot);
   migrateProject(normalizedRoot);
   const registryPath = options.registryPath || getRegistryPath(options);
+  const current = readRegistry({ ...options, registryPath }).registry.projects.find(
+    (project) => rootKey(project.root, platform) === rootKey(normalizedRoot, platform)
+  );
+  if (current) return { status: 'no-op', project: current, registryPath };
   return withRegistryLock(registryPath, options, () => {
     const { registry } = readRegistry({ ...options, registryPath });
     const existing = registry.projects.find(

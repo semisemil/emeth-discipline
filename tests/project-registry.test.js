@@ -81,6 +81,37 @@ test('registry normalizes real roots, deduplicates aliases, and atomically retai
   }
 });
 
+test('existing registration remains usable without registry write permission', t => {
+  const root = makeRoot(t);
+  const projectRoot = path.join(root, 'project');
+  const otherRoot = path.join(root, 'other');
+  fs.mkdirSync(projectRoot);
+  fs.mkdirSync(otherRoot);
+  const options = registryOptions(path.join(root, 'config'));
+  const first = registerProject(projectRoot, options);
+  const registryPath = first.registryPath;
+  const original = fs.readFileSync(registryPath);
+  const open = fs.openSync;
+  fs.openSync = (file, ...args) => {
+    if (path.resolve(String(file)) === `${registryPath}.lock`) {
+      const error = new Error('Registry is read-only');
+      error.code = 'EPERM';
+      throw error;
+    }
+    return open(file, ...args);
+  };
+  try {
+    const reused = registerProject(projectRoot, options);
+    assert.equal(reused.status, 'no-op');
+    assert.deepEqual(reused.project, first.project);
+    assert.deepEqual(fs.readFileSync(registryPath), original);
+    assert.throws(() => registerProject(otherRoot, options), error => error.code === 'registry-lock-failed');
+    assert.deepEqual(fs.readFileSync(registryPath), original);
+  } finally {
+    fs.openSync = open;
+  }
+});
+
 test('concurrent registration retains every distinct project', async (t) => {
   const root = makeRoot(t);
   const configRoot = path.join(root, 'config');
