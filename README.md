@@ -26,11 +26,10 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | --- | --- | ---: | ---: | ---: | ---: |
 | 6 Astra low | None | 196/196 | 3/14 | 4분 57초 | $0.973 |
 | 6 Astra low | Core | 196/196 | 5/14 | 4분 23초 | $0.929 |
-| 6 Astra low | Workflow | 196/196 | 7/14 | 7분 54초 | $1.990 |
-| 6 Astra low | Workflow (한 세션) | 196/196 | 4/14 | 6분 43초 | $1.611 |
-| 6.1 Sol medium | Core (1회) | 196/196 | 6/14 | 5분 34초 | $0.309 |
-| 6.1 Sol medium | Workflow (기본) | 196/196 | 7/14 | 8분 39초 | $0.914 |
-| 6.1 Sol medium | Workflow (확장) | 196/196 | 9/14 | 9분 27초 | $1.131 |
+| 6 Astra low | Workflow | 196/196 | 9/14 | 12분 48초 | $6.164 |
+| 6.1 Sol medium | None | 196/196 | 6/14 | 5분 6초 | $0.269 |
+| 6.1 Sol medium | Core | 196/196 | 6/14 | 5분 34초 | $0.309 |
+| 6.1 Sol medium | Workflow | 196/196 | 9/14 | 9분 27초 | $1.131 |
 
 
 [측정 조건과 회차별 결과](docs/benchmarks/README.md)
