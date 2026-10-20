@@ -135,7 +135,10 @@ function report(state, directory) {
 }
 function begin(project, mode, options = {}) {
   const found = locate(project, options.root);
-  if (mode === 'update' && (!found.existing || !found.existing.manifest.managed || S.binding(project)?.enabled === false)) S.fail('memory-not-initialized', 'Memory must be connected and enabled before Git reconciliation.');
+  if (mode === 'update') {
+    const linked = S.binding(project);
+    if (!linked || linked.enabled === false || !found.existing || !found.existing.manifest.managed) S.fail('memory-not-initialized', 'Memory must be connected and enabled before Git reconciliation.');
+  }
   if (!found.existing && fs.existsSync(found.directory) && !fs.existsSync(statePath(found.directory))
       && fs.readdirSync(found.directory).some((name) => !['.architecture-memory', '.emeth-project.json'].includes(name))) {
     S.fail('memory-root-conflict', 'Existing documents are not managed; choose an empty --root or establish an integration scope.');

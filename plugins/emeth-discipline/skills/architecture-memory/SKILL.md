@@ -1,7 +1,7 @@
 ---
 name: architecture-memory
-when_to_use: "Consult or update project architecture documents for project purpose, operating conditions, and prior design decisions."
-description: Consult or update project architecture documents connected through .emeth/architecture.json when design, implementation, or project conversation needs project purpose, operating conditions, domain meanings, or reasons for prior decisions, or when new context needs preservation for later work.
+when_to_use: "Consult or record project context when architecture memory is enabled for the project."
+description: When architecture memory is enabled for the project, consult or record project architecture context for project purpose, operating conditions, domain meanings, prior decision reasons, or durable new context.
 ---
 
 # Architecture Memory

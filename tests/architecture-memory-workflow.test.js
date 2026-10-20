@@ -196,6 +196,53 @@ test('unmanaged collections require init; completed init refreshes only the bind
   assert.doesNotMatch(fs.readFileSync(path.join(f.root, S.BINDING), 'utf8'), /old-plugin|Users|SKILL/);
 });
 
+test('update CLI rejects a missing connection even when managed documents remain', (t) => {
+  const f = fixture(t);
+  initialize(f);
+  f.write('src/server.js', 'const store = "database";\n');
+  f.git('add', 'src'); f.git('commit', '-qm', 'changed storage');
+  const memoryRoot = path.join(f.root, 'docs/architecture');
+  const stateFile = path.join(memoryRoot, S.WORK, 'state.json');
+  const stateBefore = fs.readFileSync(stateFile, 'utf8');
+  const manifestBefore = f.manifest();
+  const documentBefore = fs.readFileSync(path.join(memoryRoot, '04-context.md'), 'utf8');
+  fs.unlinkSync(path.join(f.root, S.BINDING));
+
+  const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
+  const result = spawnSync(process.execPath, [cli, 'update', '--project-root', f.root], { encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 1, result.stdout);
+  assert.equal(JSON.parse(result.stderr).error.code, 'memory-not-initialized');
+  assert.equal(fs.existsSync(path.join(f.root, S.BINDING)), false);
+  assert.equal(fs.readFileSync(stateFile, 'utf8'), stateBefore);
+  assert.deepEqual(f.manifest(), manifestBefore);
+  assert.equal(fs.readFileSync(path.join(memoryRoot, '04-context.md'), 'utf8'), documentBefore);
+});
+
+test('disconnecting a pending update blocks publication until the connection is restored', (t) => {
+  const f = fixture(t);
+  initialize(f);
+  f.write('src/server.js', 'const store = "database";\n');
+  f.git('add', 'src'); f.git('commit', '-qm', 'changed storage');
+  const begun = W.begin(f.root, 'update');
+  W.classify(f.root, { path: 'src/server.js', effect: 'architecture', reason: 'Persistent storage changes the operating context.' });
+  fs.appendFileSync(path.join(begun.draft, '04-context.md'), '\nStorage now persists between runs.\n');
+  const document = path.join(f.root, 'docs/architecture/04-context.md');
+  const documentBefore = fs.readFileSync(document, 'utf8');
+  const manifestBefore = f.manifest();
+  const bindingFile = path.join(f.root, S.BINDING);
+  const bindingBefore = fs.readFileSync(bindingFile, 'utf8');
+  fs.unlinkSync(bindingFile);
+
+  assert.throws(() => W.apply(f.root));
+  assert.equal(fs.readFileSync(document, 'utf8'), documentBefore);
+  assert.deepEqual(f.manifest(), manifestBefore);
+  assert.equal(fs.existsSync(bindingFile), false);
+
+  fs.writeFileSync(bindingFile, bindingBefore);
+  assert.equal(W.apply(f.root).status, 'applied');
+  assert.match(fs.readFileSync(document, 'utf8'), /Storage now persists between runs\./);
+});
+
 test('hook emits nothing before init, resolves the current plugin and suppresses repeat notices', (t) => {
   const f = fixture(t);
   const dataRoot = path.join(f.root, '.test-hook-data');
