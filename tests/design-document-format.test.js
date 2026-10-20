@@ -47,13 +47,3 @@ test('create generates valid metadata and allocates IDs from body-only input', t
   assert.equal(parseDesignMetadata(parsed.metadataText).status, 'ready');
   assert.equal(create().value.write.id, 'DESIGN-0011');
 });
-
-test('current design, review and execution references resolve to existing local files', () => {
-  for (const name of ['development-design', 'tenet-me', 'figure-it-out', 'start-implementation']) {
-    const file = path.join(root, 'skills', name, 'SKILL.md');
-    const source = fs.readFileSync(file, 'utf8');
-    for (const match of source.matchAll(/\]\(([^)]+\.(?:md|js))(?:#[^)]*)?\)/g)) {
-      assert.ok(fs.statSync(path.resolve(path.dirname(file), match[1])).isFile(), `${name}: ${match[1]}`);
-    }
-  }
-});

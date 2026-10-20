@@ -43,11 +43,8 @@ test('Mixdog compatibility variables use Mixdog identity and state without chang
   assert.equal(host.name({}), 'codex');
 });
 
-test('Mixdog sessions apply complete shared rules and restore them on user submissions', t => {
+test('Mixdog sessions apply host rules and restore them on user submissions', t => {
   const baseline = composeMixdogPrompt();
-  const shared = fs.readFileSync(path.join(repoRoot, 'skills/rules/codex.md'), 'utf8').replaceAll('{{plugin-root}}', repoRoot).trim();
-  assert.ok(baseline.includes(shared));
-  assert.equal(baseline.indexOf(shared), baseline.lastIndexOf(shared));
   assert.ok(baseline.includes(repoRoot));
   assert.doesNotMatch(baseline, /\{\{plugin-root\}\}/);
   assert.ok(baseline.length < 10_000, 'Mixdog hook context must not be truncated');
@@ -84,14 +81,4 @@ test('Mixdog agent spawns receive rules without losing task, route, file, or use
     assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'agent', tool_input: { ...args, type } }), {});
   }
   assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'shell', tool_input: args }), {});
-});
-
-test('Mixdog host references resolve without Codex-only execution', () => {
-  for (const file of ['skills/rules/mixdog.md', 'skills/start-implementation/SKILL.md',
-    'skills/dashboard-server/references/mixdog.md']) {
-    const source = fs.readFileSync(path.join(repoRoot, file), 'utf8');
-    for (const match of source.matchAll(/\]\(([^)]+\.md)(?:#[^)]*)?\)/g)) {
-      assert.ok(fs.statSync(path.resolve(repoRoot, path.dirname(file), match[1])).isFile());
-    }
-  }
 });

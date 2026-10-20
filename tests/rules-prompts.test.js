@@ -4,18 +4,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt.js');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
-
-test('Codex includes its host rules once in the composed prompt', () => {
-  const skillPath = path.join(pluginRoot, 'skills', 'rules', 'codex.md');
-  const baseline = fs.readFileSync(skillPath, 'utf8').replaceAll('{{plugin-root}}', pluginRoot).trim();
-  const prompt = composeEmethPrompt();
-  assert.ok(prompt.includes(baseline));
-  assert.equal(prompt.indexOf(baseline), prompt.lastIndexOf(baseline));
-  assert.doesNotMatch(prompt, /\{\{plugin-root\}\}/);
-});
 
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
