@@ -7,10 +7,12 @@ node <plugin-root>/writers/document-writer.js create --project-root <absolute-pr
 ```
 
 ```json
-{"body":"<DESIGN.md overview with relative links>","documents":[{"path":"<topic>.md","body":"<detailed design>"}]}
+{"body":"<DESIGN.md overview with relative links>","documents":[{"path":"<topic>.md","source":"<absolute path to the completed artifact>"}]}
 ```
 
 Detailed paths are relative to the Design directory; overview links must reach all members.
+Use `source` to copy an existing UTF-8 artifact without rewriting its content, or `body` for new text, with one per entry.
+Keep the package's relative links valid at the destination paths.
 
 Kinds are `feature | bug | refactor | exact_port | maintenance`.
 Supply `--id DESIGN-NNNN` only when a particular unused ID is required.

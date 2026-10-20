@@ -26,8 +26,8 @@ function fixture(t) {
   const create = input => run('create', input, ['--title', '알림 개발 설계', '--slug', 'notification', '--status', 'ready', '--input-format', 'documents']);
   const directory = path.join(project, '.emeth/designs/DESIGN-0001-notification');
   const read = name => fs.readFileSync(path.join(directory, name), 'utf8');
-  const execute = () => {
-    const result = spawnSync(process.execPath, [contracts, '--project-root', project, '--id', 'DESIGN-0001'], { env, encoding: 'utf8', windowsHide: true });
+  const execute = (extra = []) => {
+    const result = spawnSync(process.execPath, [contracts, '--project-root', project, '--id', 'DESIGN-0001', ...extra], { env, encoding: 'utf8', windowsHide: true });
     return { ...result, value: JSON.parse(result.status === 0 ? result.stdout : result.stderr) };
   };
   return { project, directory, env, run, create, read, execute };
@@ -37,6 +37,77 @@ const overview = '# 알림 개발 설계\n\n[접수 계약](contracts/request.md
 const request = '# 접수 계약\n\n접수 성공 시 요청 ID를 반환한다.\n';
 const delivery = '# 전달 설계\n\n저장 완료 후 알림을 전송한다.\n';
 const input = { body: overview, documents: [{ path: 'contracts/request.md', body: request }, { path: 'delivery.md', body: delivery }] };
+
+test('the contract path view locates every complete artifact without echoing its body', t => {
+  const f = fixture(t);
+  assert.equal(f.create(input).status, 0);
+  const handoff = f.execute(['--format', 'paths']);
+  assert.equal(handoff.status, 0, handoff.stderr);
+  assert.equal(handoff.value.status, 'ready');
+  assert.equal(handoff.value.revision, 1);
+  assert.equal(handoff.value.absolute_path, path.join(f.directory, 'DESIGN.md'));
+  assert.ok(fs.readFileSync(handoff.value.absolute_path, 'utf8').endsWith(overview));
+  assert.deepEqual(handoff.value.documents.map(d => [d.absolute_path, fs.readFileSync(d.absolute_path, 'utf8')]), [
+    [path.join(f.directory, 'contracts/request.md'), request],
+    [path.join(f.directory, 'delivery.md'), delivery],
+  ]);
+  for (const body of [overview, request, delivery]) assert.equal(handoff.stdout.includes(JSON.stringify(body).slice(1, -1)), false);
+  fs.writeFileSync(path.join(f.directory, '.design-set-pending.json'), '{}');
+  const interrupted = f.execute(['--format', 'paths']);
+  assert.equal(interrupted.status, 1);
+  assert.equal(interrupted.value.error.code, 'design-document-set-pending');
+});
+
+test('existing design artifacts are saved byte-for-byte and reach the implementation reader', t => {
+  const f = fixture(t);
+  const source = path.join(f.project, 'chosen sketch.md');
+  const bytes = Buffer.from('\ufeff# 선택한 설계\r\n\r\n[근거](rationale.md)\r\n`send(input): Receipt`\r\n', 'utf8');
+  fs.writeFileSync(source, bytes);
+  const result = f.create({ body: '# 설계\n\n[구현 계약](sketch.md)과 [근거](rationale.md).\n', documents: [
+    { path: 'sketch.md', source }, { path: 'rationale.md', body: '# 근거\n\n호출자는 접수 ID만 필요하다.\n' },
+  ] });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(fs.readFileSync(path.join(f.directory, 'sketch.md')), bytes);
+  assert.deepEqual(fs.readFileSync(source), bytes);
+  const handoff = f.execute();
+  assert.equal(handoff.status, 0, handoff.stderr);
+  assert.equal(handoff.value.documents.find(d => d.path.endsWith('/sketch.md')).body, bytes.toString('utf8').replace(/^\ufeff/, ''));
+});
+
+test('a Design revision can adopt an existing artifact without rewriting it or its prior contract', t => {
+  const f = fixture(t);
+  assert.equal(f.create(input).status, 0);
+  const source = path.join(f.project, 'verification.md');
+  const text = '# 검증 시나리오\r\n\r\n저장에 실패하면 알림을 보내지 않는다.\r\n';
+  fs.writeFileSync(source, text);
+  const oldOverview = f.read('DESIGN.md');
+  const result = f.run('patch', { edits: [{ old: overview, new: overview + '\n[검증](verification.md)\n' }], documents: [
+    { path: 'verification.md', source },
+  ] }, ['--change-kind', 'major']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.value.write.revision, 2);
+  assert.equal(f.read('verification.md'), text);
+  assert.equal(f.read('revisions/REV-1/DESIGN.md'), oldOverview);
+  assert.equal(f.read('contracts/request.md'), request);
+  assert.equal(f.execute().value.documents.find(d => d.path.endsWith('/verification.md')).body, text);
+});
+
+test('an unreadable or ambiguous source cannot partially publish a Design', t => {
+  const f = fixture(t);
+  const missing = path.join(f.project, 'missing.md');
+  const failed = f.create({ body: overview, documents: [{ path: 'delivery.md', body: delivery }, { path: 'contracts/request.md', source: missing }] });
+  assert.notEqual(failed.status, 0);
+  assert.equal(fs.existsSync(f.directory), false);
+  const source = path.join(f.project, 'source.md');
+  fs.writeFileSync(source, Buffer.from([0xc3, 0x28]));
+  const invalidUtf8 = f.create({ body: overview, documents: [{ path: 'contracts/request.md', source }] });
+  assert.equal(invalidUtf8.value.error.code, 'document-invalid-utf8');
+  assert.equal(fs.existsSync(f.directory), false);
+  fs.writeFileSync(source, request);
+  const ambiguous = f.create({ body: overview, documents: [{ path: 'contracts/request.md', source, body: request }] });
+  assert.equal(ambiguous.value.error.code, 'document-content-invalid');
+  assert.equal(fs.existsSync(f.directory), false);
+});
 
 test('a saved overview and detailed designs reach both editing and implementation readers intact', t => {
   const f = fixture(t);

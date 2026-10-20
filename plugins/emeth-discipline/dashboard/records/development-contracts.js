@@ -88,14 +88,19 @@ if (require.main === module) {
     const options = {};
     const args = process.argv.slice(2);
     for (let i = 0; i < args.length; i += 2) {
-      if (!['--project-root', '--id'].includes(args[i]) || Object.hasOwn(options, args[i]) || !args[i + 1]) fail('contract-argument-invalid', 'Supply --project-root and --id once');
+      if (!['--project-root', '--id', '--format'].includes(args[i]) || Object.hasOwn(options, args[i]) || !args[i + 1]) fail('contract-argument-invalid', 'Supply --project-root and --id once, with optional --format full|paths');
       options[args[i]] = args[i + 1];
     }
+    if (options['--format'] && !['full', 'paths'].includes(options['--format'])) fail('contract-argument-invalid', 'Use --format full|paths');
     const root = fs.realpathSync(options['--project-root']);
     const record = resolveContract(root, options['--id']);
+    const pathsOnly = options['--format'] === 'paths';
     process.stdout.write(JSON.stringify({ id: record.id, title: record.title, path: record.relativePath,
-      ...(roots.designStorage(root).configured ? { absolute_path: record.source.filePath } : {}),
-      revision: record.revision, status: record.status, metadata: record.metadata, body: record.body, documents: record.documents,
+      ...(pathsOnly || roots.designStorage(root).configured ? { absolute_path: record.source.filePath } : {}),
+      revision: record.revision, status: record.status, metadata: record.metadata,
+      ...(!pathsOnly ? { body: record.body } : {}),
+      documents: pathsOnly ? record.documents.map((document, index) => ({ path: document.path,
+        absolute_path: path.join(path.dirname(record.source.filePath), ...record.metadata.documents[index].split('/')) })) : record.documents,
       memory: require('../../lib/architecture-memory.js').connectionStatus(root) }) + '\n');
   } catch (error) { process.stderr.write(JSON.stringify({ error: { code: error.code || 'contract-unavailable', message: error.message } }) + '\n'); process.exitCode = 1; }
 }

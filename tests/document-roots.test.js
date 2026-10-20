@@ -59,6 +59,12 @@ test('one external root owns Design creation, reads, revisions, status, numberin
   const contract = f.cli('dashboard/records/development-contracts.js', ['--project-root', f.project, '--id', 'DESIGN-0001']);
   assert.equal(contract.status, 0, contract.stderr);
   assert.equal(JSON.parse(contract.stdout).documents[0].body, '# Contract\n\nReturn the receipt ID.');
+  const pointers = f.cli('dashboard/records/development-contracts.js', ['--project-root', f.project, '--id', 'DESIGN-0001', '--format', 'paths']);
+  assert.equal(pointers.status, 0, pointers.stderr);
+  const paths = JSON.parse(pointers.stdout);
+  assert.equal(paths.absolute_path, path.join(directory, 'DESIGN.md'));
+  assert.equal(paths.documents[0].absolute_path, path.join(directory, 'contract.md'));
+  assert.equal(fs.readFileSync(paths.documents[0].absolute_path, 'utf8'), '# Contract\n\nReturn the receipt ID.');
   assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['$emeth-discipline:development-design']), 'DESIGN-0002');
   const registryPath = path.join(f.temporary, 'projects.json');
   f.write(registryPath, JSON.stringify({ schema_version: 1, projects: [{ ...f.projectRecord, registered_at: '2026-10-12T00:00:00.000Z' }] }));

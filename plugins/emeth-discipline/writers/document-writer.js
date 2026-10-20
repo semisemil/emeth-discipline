@@ -606,6 +606,28 @@ function writeDocument(options, sourceBuffer) {
   return withDocumentLock(options, () => writeDocumentUnlocked(options, sourceBuffer));
 }
 
+function validDocumentContent(document) {
+  return ['body', 'source'].filter(key => Object.hasOwn(document, key)).length === 1
+    && (Object.hasOwn(document, 'body') ? typeof document.body === 'string' && !!document.body.trim()
+      : typeof document.source === 'string' && path.isAbsolute(document.source));
+}
+
+function documentContent(document) {
+  if (Object.hasOwn(document, 'body')) return Buffer.from(document.body, 'utf8');
+  let buffer;
+  try {
+    if (fs.statSync(document.source).size > MAX_RECORD_BYTES) {
+      throw writerError('document-too-large', '문서가 2 MiB 한도를 초과합니다.');
+    }
+    buffer = fs.readFileSync(document.source);
+  } catch (error) {
+    if (error instanceof DocumentWriterError) throw error;
+    throw writerError('document-source-read-failed', `문서 원본을 읽지 못했습니다: ${document.source}`, error);
+  }
+  if (!decodeContent(buffer).trim()) throw writerError('document-content-invalid', '문서 원본에 본문이 필요합니다.');
+  return buffer;
+}
+
 function createDocument(options, sourceBuffer) {
   let body = decodeContent(sourceBuffer);
   let documents;
@@ -618,13 +640,13 @@ function createDocument(options, sourceBuffer) {
         || typeof input.body !== 'string' || !input.body.trim()
         || !Array.isArray(input.documents)
         || input.documents.some(document => !document || typeof document !== 'object' || Array.isArray(document)
-          || Object.keys(document).some(key => !['path', 'body'].includes(key))
-          || typeof document.body !== 'string' || !document.body.trim())) {
-      throw writerError('document-content-invalid', 'Supply an overview body and detailed document path/body entries');
+          || Object.keys(document).some(key => !['path', 'body', 'source'].includes(key))
+          || !validDocumentContent(document))) {
+      throw writerError('document-content-invalid', 'Supply an overview body and detailed entries with path and either body or an absolute source file');
     }
     validateDocumentPaths(input.documents.map(document => document.path));
     body = input.body;
-    documents = input.documents;
+    documents = input.documents.map(document => ({ path: document.path, content: documentContent(document) }));
   }
   return withDocumentLock({ ...options, kind: 'design' }, () => {
     const root = canonicalProjectRoot(options.project_root);
@@ -641,7 +663,7 @@ function createDocument(options, sourceBuffer) {
     };
     const content = Buffer.from(`---\n${JSON.stringify(metadata, null, 2)}\n---\n\n${body}`, 'utf8');
     return writeDocumentUnlocked({ ...options, kind: 'design', relative_path: relativePath }, content, undefined,
-      (documents || []).map(document => ({ path: document.path, expected: null, content: Buffer.from(document.body, 'utf8') })));
+      (documents || []).map(document => ({ path: document.path, expected: null, content: document.content })));
   });
 }
 
@@ -736,10 +758,10 @@ function patchDocument(options, buffer) {
       || !Array.isArray(patch.documents === undefined ? [] : patch.documents)
       || !(patch.edits?.length || patch.documents?.length)
       || (patch.documents || []).some(document => !document || typeof document !== 'object' || Array.isArray(document)
-        || Object.keys(document).some(key => !['path', 'edits', 'body', 'remove'].includes(key))
-        || ['edits', 'body', 'remove'].filter(key => Object.hasOwn(document, key)).length !== 1
+        || Object.keys(document).some(key => !['path', 'edits', 'body', 'source', 'remove'].includes(key))
+        || ['edits', 'body', 'source', 'remove'].filter(key => Object.hasOwn(document, key)).length !== 1
         || Object.hasOwn(document, 'edits') && (!validEdits(document.edits) || !document.edits.length)
-        || Object.hasOwn(document, 'body') && (typeof document.body !== 'string' || !document.body.trim())
+        || (Object.hasOwn(document, 'body') || Object.hasOwn(document, 'source')) && !validDocumentContent(document)
         || Object.hasOwn(document, 'remove') && document.remove !== true)) {
     throw writerError('document-patch-invalid', 'Supply nonempty edits containing old/new strings');
   }
@@ -752,9 +774,9 @@ function patchDocument(options, buffer) {
       const target = path.join(path.dirname(record.source.filePath), ...document.path.split('/'));
       const before = readExisting(record.source.root || root, target);
       let content = null;
-      if (Object.hasOwn(document, 'body')) {
+      if (Object.hasOwn(document, 'body') || Object.hasOwn(document, 'source')) {
         if (before || membership.includes(document.path)) throw writerError('document-exists', 'Use edits for an existing detailed document');
-        content = Buffer.from(document.body, 'utf8');
+        content = documentContent(document);
         membership.push(document.path);
       } else {
         if (!before || !membership.includes(document.path)) throw writerError('contract-unavailable', `Detailed document not found: ${document.path}`);
