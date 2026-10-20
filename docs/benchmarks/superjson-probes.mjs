@@ -5,17 +5,20 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
-const [seedArg,noneArg,coreArg,workflowArg,outputArg] = process.argv.slice(2);
-if (!outputArg) throw new Error('Usage: node docs/benchmarks/superjson-probes.mjs SEED NONE CORE WORKFLOW OUTPUT');
+const single=process.argv[2]==='--single';
+const [seedArg,noneArg,coreArg,workflowArg,outputArg] = single
+  ? [process.argv[3],process.argv[4],process.argv[4],process.argv[4],process.argv[5]]
+  : process.argv.slice(2);
+if (!outputArg) throw new Error('Usage: node docs/benchmarks/superjson-probes.mjs SEED NONE CORE WORKFLOW OUTPUT\n   or: node docs/benchmarks/superjson-probes.mjs --single SEED SUBMISSION OUTPUT');
 const seed=path.resolve(seedArg);
 const root=path.resolve(outputArg);
-const sourceRoots={none:path.resolve(noneArg),'core':path.resolve(coreArg),workflow:path.resolve(workflowArg)};
+const sourceRoots={none:path.resolve(noneArg),'core':path.resolve(coreArg),workflow:path.resolve(workflowArg),submission:path.resolve(noneArg)};
 const require = createRequire(path.join(seed, 'package.json'));
 const esbuild = require('esbuild');
 const built = path.join(root, 'built');
 fs.mkdirSync(built, {recursive:true});
 const variants = {};
-for (const name of ['seed', 'none', 'core', 'workflow']) {
+for (const name of single?['seed','submission']:['seed', 'none', 'core', 'workflow']) {
   const variantRoot = sourceRoots[name];
   const src = path.join(name === 'seed' ? seed : variantRoot, 'src');
   const outfile = path.join(built, name+'.mjs');
