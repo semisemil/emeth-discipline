@@ -4,7 +4,7 @@
 
 This plugin includes adapted instructions and supporting files from [backnotprop/pstack](https://github.com/backnotprop/pstack/tree/6f131f137de64fdaf928278c0fd9ecec520ccbee), version 0.15.25, commit `6f131f137de64fdaf928278c0fd9ecec520ccbee`.
 The source is distributed under the MIT License.
-The adapted files are in `skills/start-implementation/`, `skills/ensemble/`, `skills/code-exploration/`, and `references/pstack/`.
+The adapted files are in `skills/start-implementation/`, `skills/ensemble/`, `skills/code-exploration/`, `references/pstack/`, and `references/model-routing/`.
 
 The original license follows in full.
 

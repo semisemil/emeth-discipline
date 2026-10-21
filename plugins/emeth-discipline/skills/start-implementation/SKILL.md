@@ -81,19 +81,19 @@ Routed workflows keep their own roles and role prompts.
 
 **Defaults for every subagent call.** Pass the role prompt and [delegated-work contract](#delegated-work) by path, with the assignment's source and owned artifact paths.
 Use background execution and keep connected tools available when the role needs them.
-Model selection uses the table below.
 
-| Role | Model settings |
-|---|---|
-| Ensemble candidates and cross-judge, including blueprint exploration | `gpt-6.1-sol`, medium by default; high for a specific unresolved interaction |
-| Challenge reviewers | Two independent `gpt-6.1-sol` reviewers, reasoning effort suited to the review |
-| Implementation delegates | User or owning workflow settings; otherwise [Emeth model routing](../../references/pstack/model-routing.md) |
-| Explorers, explainers, investigators and synthesizers | User or owning workflow settings; otherwise inherit the parent model |
+**Model selection.** Explicit user settings take precedence over workflow settings and role defaults.
+For settings left unspecified by the user or owning workflow, run:
 
-**Match the model to the job.** Use the current host's supported model and reasoning arguments. Explicit user settings take precedence. Apply Emeth model routing only to unspecified implementation settings. Report an unsupported required setting instead of silently substituting it.
+```text
+node "<plugin-root>/lib/model-routing.js"
+```
+
+Apply the returned guidance through the host's supported model and reasoning arguments, within the user's usage limits.
+Report unsupported explicit requirements instead of substituting them.
 
 Review a delegated artifact against its assigned contract and resolve material findings with affected verification.
-For the fixed-model ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
+For ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
 Attribute agreement to the independent reviewers.
 
 **Independent assignments use fresh contexts.** Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
@@ -106,9 +106,8 @@ Start a fresh assignment for new work and carry still-valid decisions by path.
 
 pstack was written for Cursor. In another harness (Claude Code, Codex, Pi, OpenCode, and others), read Cursor-specific instructions in this skill, its playbooks, and the routed skills through these mappings. If you can't tell which harness you are, check which of the paths below exist.
 
-- **Subagents.** `Task` means your subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. For a fresh Codex assignment, use `fork_turns: "none"` with the prescribed role prompt and paths to its task, grounding, and output artifacts; set the selected model and reasoning effort explicitly. Drop parameters your tool doesn't have. `environment: "cloud"` means a Cursor cloud agent. Elsewhere, run that agent locally in its own worktree. If your harness has no subagent tool, as in Pi without an extension, do each delegated step yourself, one after another.
+- **Subagents.** `Task` means your subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. For a fresh Codex assignment, use `fork_turns: "none"` with the prescribed role prompt and paths to its task, grounding, and output artifacts. Drop parameters your tool doesn't have. `environment: "cloud"` means a Cursor cloud agent. Elsewhere, run that agent locally in its own worktree. If your harness has no subagent tool, as in Pi without an extension, do each delegated step yourself, one after another.
 - **Implementation delegates.** Where the source names `poteto-agent`, use a general subagent with the [implementation delegate prompt](../../references/pstack/implementation-prompt.md). Give it the active plugin's absolute start-implementation path.
-- **Model settings.** Use the role settings above and the host's supported model and effort fields. Omit Cursor-only parameters.
 - **Transcripts.** Read only the active workspace's sessions, never other projects'. Cursor: the `agent-transcripts/` directory the system prompt names. Claude Code: `~/.claude/projects/<slug>/*.jsonl`, where `<slug>` is the workspace path with every character that isn't a letter or digit turned into "-". Pi: `~/.pi/agent/sessions/--<slug>--/*.jsonl`, where `<slug>` is the workspace path with the leading slash dropped and each "/" turned into "-". Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, keeping files whose first line has `payload.cwd` equal to the workspace path. OpenCode: `~/.local/share/opencode/storage/`.
 - **Skill folders.** Project: `.cursor/skills/` (Cursor), `.claude/skills/` (Claude Code), `.pi/skills/` (Pi), `.agents/skills/` (Codex, OpenCode, and others). User: `~/.cursor/skills/`, `~/.claude/skills/`, `~/.pi/agent/skills/`, `~/.codex/skills/`, `~/.agents/skills/`.
 - **Questions.** `AskQuestion` means the host's structured-question tool, such as `request_user_input_async` in Codex. Without one, ask in chat with numbered options.

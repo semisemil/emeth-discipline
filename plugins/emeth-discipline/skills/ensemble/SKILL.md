@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 Set one common task from the user's requirements and the current source evidence.
 State the artifact and open boundary each candidate owns, with distinct output paths.
-Use two independent candidates and one independent judge on GPT-6.1 Sol.
+Use two independent candidates and one independent judge.
 Select their settings through [Subagents](../start-implementation/SKILL.md#subagents).
 
 ## Phase B: Fan out

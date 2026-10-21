@@ -3,7 +3,7 @@
 const os = require('node:os');
 const path = require('node:path');
 
-function name(env = process.env) {
+function name(env = process.env, { fallback = 'codex' } = {}) {
   // Mixdog supplies Claude compatibility variables as well.
   if (env.MIXDOG_PLUGIN_DATA || env.MIXDOG_PLUGIN_ROOT) return 'mixdog';
   // Codex also supplies CLAUDE_PLUGIN_* compatibility variables.
@@ -11,7 +11,10 @@ function name(env = process.env) {
   if (env.CLAUDE_PLUGIN_DATA || env.CLAUDE_PLUGIN_ROOT) return 'claude';
   // Native Mixdog shell tools retain the data dir but not hook-only variables.
   if (env.MIXDOG_DATA_DIR || env.MIXDOG_ROOT || env.MIXDOG_HOME) return 'mixdog';
-  return 'codex'; // Preserve standalone use by existing Codex scripts.
+  const codexSession = Boolean(env.CODEX_THREAD_ID);
+  const claudeSession = env.CLAUDECODE === '1';
+  if (codexSession !== claudeSession) return codexSession ? 'codex' : 'claude';
+  return fallback; // Existing standalone callers retain the Codex fallback.
 }
 
 function dataDir(options = {}) {
