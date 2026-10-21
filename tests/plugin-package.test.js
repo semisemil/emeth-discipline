@@ -99,11 +99,27 @@ test('isolated package starts its dashboard and serves packaged assets', async t
     const running = await control.startServer({ directory, startTimeoutMs: 15000 });
     assert.equal(running.ok, true, JSON.stringify(running));
     assert.equal(running.version, JSON.parse(fs.readFileSync(path.join(f.plugin, '.codex-plugin/plugin.json'), 'utf8')).version);
-    const page = await fetch(`http://127.0.0.1:${running.port}/`);
-    assert.equal(page.status, 200);
-    assert.match(await page.text(), /<html/i);
-    const vendor = await fetch(`http://127.0.0.1:${running.port}/vendor/mermaid.min.js`);
-    assert.equal(vendor.status, 200);
+    const origin = `http://127.0.0.1:${running.port}`;
+    for (const [route, file] of [
+      [`/?expected_version=${running.version}`, 'index.html'],
+      ['/dashboard?project=11111111-1111-4111-8111-111111111111', 'dashboard.html'],
+      ['/architecture?project=11111111-1111-4111-8111-111111111111&document=system-context', 'architecture.html'],
+    ]) {
+      const page = await fetch(origin + route);
+      assert.equal(page.status, 200, route);
+      assert.equal(await page.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', file), 'utf8'));
+    }
+    for (const asset of ['core.js', 'motion.js', 'app.js', 'intro.js', 'architecture.js', 'styles.css', 'vendor/mermaid.min.js']) {
+      const response = await fetch(`${origin}/${asset}`);
+      assert.equal(response.status, 200, asset);
+      assert.equal(await response.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', asset), 'utf8'));
+    }
+    const font = await fetch(`${origin}/fonts/PretendardVariable.woff2`);
+    assert.equal(font.status, 200);
+    assert.equal(font.headers.get('content-type'), 'font/woff2');
+    const bytes = Buffer.from(await font.arrayBuffer());
+    assert.equal(bytes.subarray(0, 4).toString(), 'wOF2');
+    assert.equal(bytes.length, fs.statSync(path.join(f.plugin, 'dashboard/assets/fonts/PretendardVariable.woff2')).size);
   } finally {
     await control.stopServer({ directory });
   }

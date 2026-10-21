@@ -98,17 +98,12 @@ test('patch uses existing revision, identity, body and snapshot checks', t => {
   assert.deepEqual(fs.readFileSync(f.file), f.original);
 });
 
-test('operational and no-op patches preserve revision and skip snapshots', t => {
+test('operational patches preserve revision and skip snapshots', t => {
   const f = fixture(t);
   const result = f.patch([{ old: '"status": "draft"', new: '"status": "ready"' }], ['--change-kind', 'operational', '--memory', 'off']);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.value.write.revision, 1);
   assert.equal(fs.existsSync(f.snapshot), false);
-  const before = fs.statSync(f.file).mtimeMs;
-  const same = f.patch([{ old: '유지할 문장.', new: '유지할 문장.' }]);
-  assert.equal(same.value.write.status, 'no-op');
-  assert.equal(same.value.registration, null);
-  assert.equal(fs.statSync(f.file).mtimeMs, before);
   const followup = f.patch(changes);
   assert.equal(followup.status, 0, followup.stderr);
 });

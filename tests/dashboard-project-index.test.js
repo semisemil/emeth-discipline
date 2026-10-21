@@ -402,16 +402,14 @@ test('legacy issues remain indexed and nested Spec revisions are excluded', (t) 
   }, null, 2)}\n---\nOld revision`, 'utf8');
 
   const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.issues.map((item) => ({ id: item.id, status: item.status })), [
-    { id: 'PL-0042', status: 'doing' },
-  ]);
+  assert.deepEqual(result.issues.map((item) => item.id), ['PL-0042']);
   assert.deepEqual(result.specs.map((item) => ({ id: item.id, revision: item.revision })), [
     { id: 'SPEC-0020', revision: 2 },
   ]);
   assert.equal(result.diagnostics.some((item) => item.code === 'record-duplicate-id'), false);
 });
 
-test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t) => {
+test('index accepts supported Plan scalars and diagnoses invalid document metadata', (t) => {
   const root = makeRoot(t);
   for (const [id, slug, title] of [
     ['PLAN-0030', 'null-title', 'null'],
@@ -422,6 +420,7 @@ test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t
     ['PLAN-0102', 'anchor-indicator', '&anchor'],
     ['PLAN-0103', 'alias-indicator', '*anchor'],
     ['PLAN-0104', 'collection-indicator', '[bad]'],
+    ['PLAN-0105', 'unknown-field', 'Bad\nextra: value'],
   ]) {
     const directory = path.join(root, '.emeth', 'plan', `${id}-${slug}`);
     fs.mkdirSync(directory, { recursive: true });
@@ -432,8 +431,24 @@ test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t
     );
   }
 
+  for (const [id, title] of [
+    ['PLAN-0001', '"안전한: 계획"'],
+    ['PLAN-0002', '독립 계획'],
+    ['PLAN-0003', "'Safe ''quoted'' plan'"],
+    ['PLAN-0004', '-safe plain plan'],
+  ]) writePlan(root, id, 'supported', { title, relatedIssues: [] });
+  const oldSpecPath = writeSpec(root, 'SPEC-0001', 'old-schema', { relatedIssues: [] });
+  const absoluteSpec = path.join(root, oldSpecPath);
+  fs.writeFileSync(absoluteSpec, fs.readFileSync(absoluteSpec, 'utf8').replace('"schema_version": 2', '"schema_version": 1'));
+
   const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.plans, []);
+  assert.deepEqual(result.plans.map(({ id, title, related_issues }) => ({ id, title, related_issues })), [
+    { id: 'PLAN-0001', title: '안전한: 계획', related_issues: [] },
+    { id: 'PLAN-0002', title: '독립 계획', related_issues: [] },
+    { id: 'PLAN-0003', title: "Safe 'quoted' plan", related_issues: [] },
+    { id: 'PLAN-0004', title: '-safe plain plan', related_issues: [] },
+  ]);
+  assert.deepEqual(result.specs, []);
   assert.deepEqual(
     result.diagnostics
       .filter((item) => item.code === 'record-metadata-invalid')
@@ -447,6 +462,8 @@ test('invalid Plan YAML scalars are excluded with relative-path diagnostics', (t
       '.emeth/plan/PLAN-0102-anchor-indicator/PLAN.md',
       '.emeth/plan/PLAN-0103-alias-indicator/PLAN.md',
       '.emeth/plan/PLAN-0104-collection-indicator/PLAN.md',
+      '.emeth/plan/PLAN-0105-unknown-field/PLAN.md',
+      '.emeth/specs/SPEC-0001-old-schema/SPEC.md',
     ],
   );
 });

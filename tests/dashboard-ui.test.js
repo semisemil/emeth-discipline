@@ -2,7 +2,6 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
@@ -10,7 +9,6 @@ const test = require('node:test');
 const { dashboard, project, index } = require('./helpers/dashboard-page');
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
-const { createDashboardHttpServer } = require('../plugins/emeth-discipline/dashboard/server.js');
 
 const ASSET_ROOT = path.join(__dirname, '..', 'plugins', 'emeth-discipline', 'dashboard', 'assets');
 const AVAILABLE_ID = '11111111-1111-4111-8111-111111111111';
@@ -100,7 +98,6 @@ function deferred() {
   return { promise, reject, resolve };
 }
 
-
 const planKey = '[data-focus-key="documents:item:plan:PLAN-0002"]';
 const specKey = '[data-focus-key="documents:item:spec:SPEC-0005"]';
 const detail = (kind, id, body) => ({ kind, id, title: id, body, status: 'ready', relative_path: id + '.md' });
@@ -112,165 +109,6 @@ async function documentPage(t, routes = {}) {
   return page;
 }
 const documentRoute = (kind, id) => '/api/v1/projects/' + AVAILABLE_ID + '/documents/' + kind + '/' + id;
-
-function request(server, requestPath, options = {}) {
-  const { port } = server.address();
-  const origin = `http://127.0.0.1:${port}`;
-  return new Promise((resolve, reject) => {
-    const requestValue = http.request({
-      host: '127.0.0.1',
-      port,
-      path: requestPath,
-      method: options.method || 'GET',
-      headers: {
-        Host: `127.0.0.1:${port}`,
-        ...(options.origin ? { Origin: origin } : {}),
-      },
-    }, (response) => {
-      const chunks = [];
-      response.on('data', (chunk) => chunks.push(chunk));
-      response.on('end', () => resolve({
-        status: response.statusCode,
-        headers: response.headers,
-        body: Buffer.concat(chunks).toString('utf8'),
-      }));
-    });
-    requestValue.on('error', reject);
-    requestValue.end();
-  });
-}
-
-async function uiServer(t) {
-  const forgotten = [];
-  const projectService = {
-    listProjects: () => projects,
-    getIndex: (id) => {
-      assert.equal(id, AVAILABLE_ID);
-      return indexFixture;
-    },
-    getDocument: (projectId, kind, id) => ({
-      kind,
-      id,
-      title: 'Pulse 화면 계약',
-      status: 'ready',
-      metadata: { revision: 2, related_issues: ['PL-0002'] },
-      content_type: 'text/markdown',
-      body: '# 안전한 본문\n\n[공식 문서](https://example.com)',
-      relative_path: '.emeth/specs/SPEC-0005/SPEC.md',
-      updated_at: '2026-08-19T05:00:00.000Z',
-      projectId,
-    }),
-    forgetUnavailableProject: (id) => forgotten.push(id),
-  };
-  const server = createDashboardHttpServer({
-    instanceId: '33333333-3333-4333-8333-333333333333',
-    version: '0.6.3',
-    assetRoot: ASSET_ROOT,
-    projectService,
-  });
-  await new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
-  });
-  t.after(() => new Promise((resolve) => server.close(resolve)));
-  return { forgotten, server };
-}
-
-test('actual dashboard assets are served with the real API fixture', async (t) => {
-  const { forgotten, server } = await uiServer(t);
-  const root = await request(server, '/?expected_version=0.6.3');
-  assert.equal(root.status, 200);
-  assert.match(root.headers['content-type'], /^text\/html/);
-  assert.equal(root.body, readAsset('index.html'));
-  assert.match(root.body, /href="\/dashboard"/);
-  assert.match(root.body, /href="\/architecture"/);
-
-  const dashboard = await request(
-    server,
-    `/dashboard?project=${AVAILABLE_ID}&expected_version=0.6.3`,
-  );
-  assert.equal(dashboard.status, 200);
-  assert.equal(dashboard.body, readAsset('dashboard.html'));
-  assert.match(dashboard.body, /src="\/core\.js"/);
-  assert.match(dashboard.body, /src="\/vendor\/mermaid\.min\.js"/);
-  assert.match(dashboard.body, /src="\/app\.js"/);
-  assert.match(dashboard.body, /href="\/styles\.css"/);
-
-  for (const asset of ['core.js', 'motion.js', 'app.js', 'intro.js', 'styles.css', 'vendor/mermaid.min.js']) {
-    const response = await request(server, `/${asset}`);
-    assert.equal(response.status, 200, asset);
-    assert.equal(response.body, readAsset(asset));
-  }
-  const font = await request(server, '/fonts/PretendardVariable.woff2');
-  assert.equal(font.status, 200);
-  assert.equal(font.headers['content-type'], 'font/woff2');
-  assert.equal(font.body.slice(0, 4), 'wOF2');
-  assert.equal(Number(font.headers['content-length']), fs.statSync(path.join(ASSET_ROOT, 'fonts/PretendardVariable.woff2')).size);
-
-  const listed = JSON.parse((await request(server, '/api/v1/projects')).body);
-  assert.deepEqual(listed.projects, projects);
-  const loadedIndex = JSON.parse((await request(server, `/api/v1/projects/${AVAILABLE_ID}/index`)).body);
-  assert.equal(loadedIndex.issues[0].id, 'PL-0002');
-  const detail = JSON.parse((await request(
-    server,
-    `/api/v1/projects/${AVAILABLE_ID}/documents/spec/SPEC-0005`,
-  )).body);
-  assert.equal(detail.content_type, 'text/markdown');
-
-  const removed = await request(server, `/api/v1/projects/${UNAVAILABLE_ID}`, { method: 'DELETE', origin: true });
-  assert.equal(removed.status, 204);
-  assert.deepEqual(forgotten, [UNAVAILABLE_ID]);
-});
-
-test('project choice, search, independent issue axes, documents, and flow ordering use API fields', () => {
-  assert.deepEqual(Object.keys(core.ISSUE_TYPES), [
-    'bug', 'task', 'feature', 'research', 'documentation', 'maintenance',
-  ]);
-  assert.deepEqual(Object.keys(core.RISKS), ['critical', 'high', 'medium', 'low']);
-  assert.deepEqual(
-    ['open', 'doing', 'blocked', 'resolved', 'cancelled', 'superseded'].map((status) => core.STATUSES[status]),
-    ['정의됨', '작업 중', '보류', '완료', '취소', '대체됨'],
-  );
-  assert.equal(core.initialProjectId(projects, UNAVAILABLE_ID), AVAILABLE_ID);
-  assert.deepEqual(core.projectOptions(projects, 'gone').map((item) => item.id), [UNAVAILABLE_ID]);
-  assert.deepEqual(core.projectOptions(projects).map((item) => item.root), ['C:\\work\\same', 'C:\\gone\\same']);
-
-  assert.deepEqual(core.selectIssues(indexFixture, {
-    quick: 'active', type: 'task', status: 'doing', risk: 'high', search: 'Pulse 화면 계약', sort: 'risk-asc',
-  }).map((item) => item.id), ['PL-0002']);
-  assert.deepEqual(core.selectIssues(indexFixture, {
-    quick: 'blocked', type: 'bug', status: 'blocked', risk: 'critical', sort: 'id-asc',
-  }).map((item) => item.id), ['PL-0001']);
-  assert.deepEqual(core.selectIssues(indexFixture, { quick: 'completed-group' }).map((item) => item.id), ['PL-0003']);
-  assert.deepEqual(core.selectIssues(indexFixture, { quick: 'all', sort: 'date-desc' }).map((item) => item.id), [
-    'PL-0002', 'PL-0001', 'PL-0003',
-  ]);
-  assert.deepEqual(core.selectIssues(indexFixture, { quick: 'all', sort: 'risk-asc' }).map((item) => item.id), [
-    'PL-0001', 'PL-0002', 'PL-0003',
-  ]);
-
-  const documents = core.selectDocuments(indexFixture, { kind: 'spec', status: 'ready', search: 'PL-9999' });
-  assert.deepEqual(documents.map((item) => item.id), ['SPEC-0005']);
-  assert.deepEqual(core.relatedState(documents[0]), {
-    label: 'PL-0002, PL-9999 · 연결 확인 필요',
-    mismatch: true,
-  });
-  assert.deepEqual(
-    core.selectDocuments(indexFixture, { kind: 'spec', status: 'completed' }).map((item) => item.id),
-    ['SPEC-0006'],
-  );
-  assert.equal(core.STATUSES.completed, '완료');
-  assert.equal(core.STATUSES.cancelled, '취소');
-  assert.equal(core.STATUSES.superseded, '대체됨');
-  assert.equal(Object.hasOwn(core.STATUSES, 'complete'), false);
-  assert.deepEqual(core.signalLabels(indexFixture.issues[0].flow_signal_ids), ['구현 가능']);
-  assert.deepEqual(core.signalLabels(indexFixture.issues[1].flow_signal_ids), ['연결 확인 필요']);
-  assert.doesNotMatch(core.signalLabels(indexFixture.issues[0].flow_signal_ids).join(' '), /issue:|implementation-ready/);
-  assert.deepEqual(core.selectSignals(indexFixture).map((item) => item.signal), [
-    'link-mismatch',
-    'implementation-ready',
-  ]);
-});
 
 test('production index schema feeds full signal IDs and canonical completed Spec status to UI', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-dashboard-ui-schema-'));
@@ -521,16 +359,6 @@ test('background mode and image replacement are separate keyboard controls', asy
   assert.equal(page.document.documentElement.dataset.background, 'color');
 });
 
-test('dashboard shows Korean artifact labels and direct registration guidance', async t => {
-  const page = await dashboard(t, { projects: [] });
-  assert.equal(page.get('#global-search').placeholder, '검색');
-  assert.match(page.get('#view-panel').textContent, /이슈, 플랜 또는 스펙 추가 시 프로젝트가 등록됩니다/);
-  const loaded = await documentPage(t);
-  assert.match(loaded.get('#view-panel').textContent, /플랜/);
-  assert.match(loaded.get('#view-panel').textContent, /스펙/);
-  assert.doesNotMatch(loaded.get('#view-panel').textContent, /(?:Issue|Plan|Spec)(?:없음|과|또는|→)/);
-});
-
 test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
   const rendered = core.renderMarkdown([
     '# 제목',
@@ -556,7 +384,6 @@ test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
   assert.match(rendered, /href="https:\/\/example\.com\/path\?a=1&amp;b=2"/);
   assert.match(rendered, /target="_blank" rel="noopener noreferrer"/);
   assert.doesNotMatch(rendered, /href="javascript:/i);
-  assert.doesNotMatch(rendered, /<img\s/i);
   assert.match(rendered, /<table>/);
   assert.match(rendered, /<code>&lt;b&gt;<\/code>/);
   assert.match(rendered, /<pre><code class="language-html">&lt;iframe/);
@@ -598,7 +425,15 @@ test('work columns sort independently in both directions with a stable ID tie br
 });
 
 test('dashboard controls keep keyboard focus, sort state and independent list visibility', async t => {
-  const page = await documentPage(t);
+  const page = await dashboard(t, {
+    projects, query: `?project=${UNAVAILABLE_ID}`,
+    routes: { ['/api/v1/projects/' + AVAILABLE_ID + '/index']: indexFixture },
+  });
+  assert.equal(page.get('[data-project-id][aria-selected="true"]').dataset.projectId, AVAILABLE_ID);
+  page.change('#project-search', 'gone', 'input');
+  assert.deepEqual([...page.document.querySelectorAll('[data-project-id]')].map(node => node.dataset.projectId), [UNAVAILABLE_ID]);
+  page.change('#project-search', '', 'input');
+  page.click('[data-view="documents"]');
   const tabs = page.get('#view-tabs');
   page.get('[data-view="documents"]').focus();
   page.key(page.document.activeElement, 'ArrowLeft');
@@ -615,6 +450,16 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
   assert.equal(page.get('[data-focus-key="work:sort:title"]').closest('th').getAttribute('aria-sort'), 'ascending');
   page.click('.issue-toggle');
   assert.match(page.get('.issue-detail').textContent, /구현 가능/);
+  page.change('#global-search', 'Pulse 화면 계약', 'input');
+  assert.match(page.get('.issue-table').textContent, /PL-0002/);
+  page.change('#global-search', '', 'input');
+  for (const key of ['type', 'status', 'risk']) page.change(`[data-focus-key="work:${key}"]`, 'all');
+  page.click('[data-quick="blocked"]');
+  assert.match(page.get('.issue-table').textContent, /PL-0001/);
+  assert.doesNotMatch(page.get('.issue-table').textContent, /PL-0002|PL-0003/);
+  page.click('[data-quick="completed-group"]');
+  assert.match(page.get('.issue-table').textContent, /PL-0003/);
+  assert.doesNotMatch(page.get('.issue-table').textContent, /PL-0001|PL-0002/);
   page.click('[data-focus-key="work:list-toggle"]');
   assert.equal(page.get('#work-list').hidden, true);
   page.click('[data-view="documents"]');
@@ -624,11 +469,19 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
     assert.equal(page.document.activeElement, page.get(selector));
   }
   assert.match(page.get('#document-list').textContent, /SPEC-0006/);
+  assert.match(page.get('#document-list').textContent, /스펙/);
   assert.doesNotMatch(page.get('#document-list').textContent, /SPEC-0005|PLAN/);
   page.click('[data-focus-key="documents:list-toggle"]');
   assert.equal(page.get('#document-list').hidden, true);
   assert.equal(tabs.querySelector('[aria-selected="true"]').dataset.view, 'documents');
   assert.equal(new URL(page.get('#architecture-link').href).searchParams.get('project'), AVAILABLE_ID);
+  page.change('[data-focus-key="documents:status"]', 'ready');
+  page.change('#global-search', 'PL-9999', 'input');
+  assert.match(page.get('#document-list').textContent, /SPEC-0005/);
+  assert.match(page.get('#document-list').textContent, /연결 확인 필요/);
+  page.change('#global-search', '', 'input');
+  page.click('[data-view="flow"]');
+  assert.deepEqual([...page.document.querySelectorAll('.signal-name')].map(node => node.textContent), ['연결 확인 필요', '구현 가능']);
   page.click('#panel-toggle');
   assert.equal(page.get('#app-shell').classList.contains('project-panel-collapsed'), true);
   assert.equal(page.window.localStorage.getItem('emeth.dashboard.sidebar'), 'collapsed');
@@ -667,6 +520,7 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   removal.click('.danger-button'); await removal.settle();
   assert.equal(removal.calls.find(call => call.method === 'DELETE').url, '/api/v1/projects/gone');
   assert.match(removal.get('#view-panel').textContent, /등록 프로젝트 없음/);
+  assert.match(removal.get('#view-panel').textContent, /추가.*등록/);
 });
 
 test('actual markup and styles expose responsive, keyboard, tooltip, and state contracts', () => {

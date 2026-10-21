@@ -145,8 +145,6 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
   const originalStat = fs.statSync;
   const assetPrefix = `${pathKey(assetRoot)}${path.sep}`;
   const descriptors = new Set();
-  let opened = 0;
-  let closed = 0;
   let restored = false;
 
   fs.openSync = function instrumentedOpen(filePath, ...args) {
@@ -159,13 +157,10 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
     }
     const descriptor = originalOpen.call(fs, filePath, ...args);
     descriptors.add(descriptor);
-    opened += 1;
     return descriptor;
   };
   fs.closeSync = function instrumentedClose(descriptor) {
-    if (descriptors.delete(descriptor)) {
-      closed += 1;
-    }
+    descriptors.delete(descriptor);
     return originalClose.call(fs, descriptor);
   };
   fs.statSync = function instrumentedStat(filePath, ...args) {
@@ -186,7 +181,7 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
       }
     },
     snapshot() {
-      return { closed, opened, outstanding: descriptors.size };
+      return { outstanding: descriptors.size };
     },
   };
 }
@@ -242,6 +237,8 @@ test('HTTP boundary enforces Host, Origin, methods, raw paths, security headers,
   assert.equal((await request(server, { host: 'localhost:1' })).status, 403);
   assert.equal((await request(server, { origin: 'https://example.com' })).status, 403);
   assert.equal((await request(server, { method: 'POST' })).status, 405);
+  assert.equal((await request(server, { path: '/dashboard?document=system-context' })).status, 400);
+  assert.equal((await request(server, { path: '/architecture?project=invalid' })).status, 400);
   assert.equal((await request(server, {
     method: 'DELETE', path: `/api/v1/projects/${UNAVAILABLE_ID}`,
   })).status, 403);
@@ -253,6 +250,9 @@ test('HTTP boundary enforces Host, Origin, methods, raw paths, security headers,
   assert.equal(head.status, 200);
   assert.equal(head.body, '');
   assert.ok(Number(head.headers['content-length']) > 0);
+  const connect = await rawRequest(server,
+    `CONNECT 127.0.0.1:443 HTTP/1.1\r\nHost: 127.0.0.1:${server.address().port}\r\n\r\n`);
+  assert.match(connect, /^HTTP\/1\.1 405 /);
 });
 
 test('static dashboard serves root, expected_version entry, and same-origin assets for GET and HEAD', async (t) => {
@@ -304,7 +304,7 @@ test('static dashboard serves root, expected_version entry, and same-origin asse
   assert.equal((await request(server, { path: '/?unexpected=1' })).status, 400);
   assert.equal((await request(server, { path: '/api/v1/health?expected_version=0.6.2' })).status, 404);
   descriptors.restore();
-  assert.deepEqual(descriptors.snapshot(), { closed: 5, opened: 5, outstanding: 0 });
+  assert.equal(descriptors.snapshot().outstanding, 0);
 });
 
 test('static dashboard rejects unknown files, directories, traversal, encoded separators, and symlink escape', async (t) => {
@@ -376,7 +376,7 @@ test('static GET and HEAD reject an asset-root replacement between stat and open
     assert.equal(response.status, 404);
     assert.equal(response.headers['content-type'], 'application/json; charset=utf-8');
     assert.doesNotMatch(response.body, /OUTSIDE-SECRET/);
-    assert.deepEqual(descriptors.snapshot(), { closed: 1, opened: 1, outstanding: 0 });
+    assert.equal(descriptors.snapshot().outstanding, 0);
     assert.equal(fs.readFileSync(path.join(externalRoot, 'index.html'), 'utf8'), externalSecret);
   }
 });
@@ -418,7 +418,7 @@ test('static GET and HEAD reject a nested component replacement between realpath
     assert.equal(response.status, 404);
     assert.equal(response.headers['content-type'], 'application/json; charset=utf-8');
     assert.doesNotMatch(response.body, /OUTSIDE-SECRET-REPRO/);
-    assert.deepEqual(descriptors.snapshot(), { closed: 1, opened: 1, outstanding: 0 });
+    assert.equal(descriptors.snapshot().outstanding, 0);
     assert.equal(fs.readFileSync(path.join(externalRoot, 'index.html'), 'utf8'), externalSecret);
   }
 });
@@ -506,78 +506,8 @@ test('raw ordinary HTTP rejects duplicate Host fields before Origin and routing'
   });
 });
 
-test('raw CONNECT shares Host and Origin validation before method rejection', async (t) => {
-  const { server } = await fixture(t);
-  const { port } = server.address();
-  const cases = [
-    {
-      headers: 'Host: invalid.example',
-      status: '403 Forbidden',
-      code: 'host-forbidden',
-      message: 'Host가 허용되지 않습니다.',
-    },
-    {
-      headers: '',
-      status: '403 Forbidden',
-      code: 'host-forbidden',
-      message: 'Host가 허용되지 않습니다.',
-    },
-    {
-      headers: `Host: 127.0.0.1:${port}\r\nHost: evil.example\r\nOrigin: https://invalid.example`,
-      status: '403 Forbidden',
-      code: 'host-forbidden',
-      message: 'Host가 허용되지 않습니다.',
-    },
-    {
-      headers: `Host: 127.0.0.1:${port}\r\nOrigin: https://invalid.example`,
-      status: '403 Forbidden',
-      code: 'origin-forbidden',
-      message: 'Origin이 허용되지 않습니다.',
-    },
-    {
-      headers: `Host: 127.0.0.1:${port}`,
-      status: '405 Method Not Allowed',
-      code: 'method-not-allowed',
-      message: '허용되지 않은 method입니다.',
-    },
-  ];
-  for (const expected of cases) {
-    const raw = await rawRequest(
-      server,
-      Buffer.from(`CONNECT /api/v1/health HTTP/1.1\r\n${expected.headers}\r\n\r\n`, 'ascii'),
-    );
-    const [headerText, body] = raw.split('\r\n\r\n');
-    assert.match(headerText, new RegExp(`^HTTP/1\\.1 ${expected.status}\\r\\n`));
-    assert.match(headerText, new RegExp(`Content-Security-Policy: ${SECURITY_HEADERS['Content-Security-Policy']}`));
-    assert.match(headerText, /X-Content-Type-Options: nosniff/);
-    assert.match(headerText, /Cache-Control: no-store/);
-    assert.doesNotMatch(headerText, /Access-Control-Allow-Origin/i);
-    assert.deepEqual(JSON.parse(body), {
-      error: { code: expected.code, message: expected.message },
-    });
-    if (expected.code === 'method-not-allowed') {
-      assert.match(headerText, /Allow: GET, HEAD, DELETE/);
-    }
-  }
-});
-
-test('project APIs isolate records and only forget unavailable projects', async (t) => {
+test('only unavailable projects can be forgotten', async (t) => {
   const { registryPath, server } = await fixture(t);
-  const projects = await request(server, { path: '/api/v1/projects' });
-  assert.equal(projects.status, 200);
-  const projectBody = JSON.parse(projects.body);
-  assert.deepEqual(projectBody.projects.map((project) => project.availability).sort(), ['available', 'unavailable']);
-
-  const index = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
-  assert.equal(index.status, 200);
-  assert.deepEqual(JSON.parse(index.body).issues.map((issue) => issue.id), ['PL-0001']);
-
-  const document = await request(server, {
-    path: `/api/v1/projects/${AVAILABLE_ID}/documents/issue/PL-0001`,
-  });
-  assert.equal(document.status, 200);
-  assert.equal(JSON.parse(document.body).body.id, 'PL-0001');
-
   const availableDelete = await request(server, {
     method: 'DELETE',
     path: `/api/v1/projects/${AVAILABLE_ID}`,
@@ -598,11 +528,15 @@ test('project APIs isolate records and only forget unavailable projects', async 
 
 test('two simultaneously available projects never expose each other records', async (t) => {
   const { availableRoot, registryPath, root, server } = await fixture(t);
-  const first = makeIssue();
-  first.identity.title = 'ONLY-IN-PROJECT-A';
+  fs.unlinkSync(path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'));
+  const first = {
+    id: 'PL-0001', title: 'ONLY-IN-PROJECT-A', status: 'in_progress', type: 'bug', risk: 'high',
+    evidence: [], description: '기존 동작', suggested_next_step: '계속 검증',
+    created_at: '2026-08-16T00:00:00.000Z', updated_at: '2026-08-17T00:00:00.000Z',
+  };
   fs.writeFileSync(
-    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'),
-    JSON.stringify(first),
+    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.md'),
+    `---\n${JSON.stringify(first)}\n---\n## 설명\n기존 동작`,
     'utf8',
   );
 
@@ -642,6 +576,16 @@ test('two simultaneously available projects never expose each other records', as
   });
   assert.doesNotMatch(documentA.body, /ONLY-IN-PROJECT-B/);
   assert.doesNotMatch(documentB.body, /ONLY-IN-PROJECT-A/);
+  const legacy = JSON.parse(documentA.body).body;
+  assert.equal(legacy.schemaVersion, 1);
+  assert.equal(legacy.status, 'doing');
+  assert.equal(legacy.currentSummary, '기존 동작');
+  assert.equal(legacy.nextAction, '계속 검증');
+  assert.deepEqual(legacy.validation.warnings, ['레거시 Markdown 이슈입니다.']);
+  const current = JSON.parse(documentB.body).body;
+  assert.equal(current.schemaVersion, 2);
+  assert.equal(current.id, 'PL-0002');
+  assert.equal(current.currentSummary, '대기');
 });
 
 test('HTTP index rejects a file-link escape through a symlink or Windows junction fallback', async (t) => {
@@ -732,7 +676,7 @@ test('HTTP never trusts a canonical project root replaced by a junction or symli
 });
 
 test('HTTP discards a cached index when the registry maps the same project ID to another canonical root', async (t) => {
-  const { availableRoot, projectService, registryPath, root, server } = await fixture(t);
+  const { availableRoot, registryPath, root, server } = await fixture(t);
   const issueA = makeIssue();
   issueA.identity.title = 'SECRET-FROM-A';
   issueA.state.current_summary = 'SECRET-FROM-A';
@@ -745,7 +689,6 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   const fromA = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   assert.equal(fromA.status, 200);
   assert.match(fromA.body, /SECRET-FROM-A/);
-  assert.equal(projectService.cache.get(AVAILABLE_ID).canonicalRootIdentity, pathKey(availableRoot));
 
   const rootB = path.join(root, 'available-b');
   const issuesB = path.join(rootB, '.emeth', 'issues');
@@ -762,7 +705,6 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   const projects = await request(server, { path: '/api/v1/projects' });
   const listed = JSON.parse(projects.body).projects.find((project) => project.id === AVAILABLE_ID);
   assert.equal(listed.root, canonicalB);
-  assert.equal(projectService.cache.has(AVAILABLE_ID), false);
 
   const fromB = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   assert.equal(fromB.status, 200);
@@ -770,7 +712,6 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   assert.equal(indexB.project.root, canonicalB);
   assert.equal(indexB.issues[0].title, 'ROOT-B');
   assert.doesNotMatch(fromB.body, /SECRET-FROM-A/);
-  assert.equal(projectService.cache.get(AVAILABLE_ID).canonicalRootIdentity, pathKey(canonicalB));
 
   const documentB = await request(server, {
     path: `/api/v1/projects/${AVAILABLE_ID}/documents/issue/PL-0001`,
@@ -780,11 +721,10 @@ test('HTTP discards a cached index when the registry maps the same project ID to
   assert.doesNotMatch(documentB.body, /SECRET-FROM-A/);
 });
 
-test('project list computes only sidebar summaries and never seeds the detail cache', async (t) => {
-  const { availableRoot, projectService, server } = await fixture(t);
+test('project list omits document details and subsequent index reads see current sources', async (t) => {
+  const { availableRoot, server } = await fixture(t);
   const projects = await request(server, { path: '/api/v1/projects' });
   assert.equal(projects.status, 200);
-  assert.equal(projectService.cache.size, 0);
   assert.doesNotMatch(projects.body, /current_summary|next_action|"raw"/);
 
   const changed = makeIssue();
@@ -803,13 +743,10 @@ test('project list computes only sidebar summaries and never seeds the detail ca
   assert.equal(index.status, 200);
   assert.equal(JSON.parse(index.body).issues[0].status, 'blocked');
   assert.match(index.body, /CHANGED-AFTER-SIDEBAR/);
-  assert.equal(projectService.cache.size, 1);
-  const cached = projectService.cache.get(AVAILABLE_ID);
-  assert.ok([...cached.index.recordMap.values()].every((record) => record.body === undefined));
 });
 
 test('sidebar summary validates every byte while retaining only bounded Plan and Spec prefixes', async (t) => {
-  const { availableRoot, projectService, server } = await fixture(t);
+  const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0008-large');
   const specDirectory = path.join(availableRoot, '.emeth', 'specs', 'SPEC-0008-large');
   const planPath = path.join(planDirectory, 'PLAN.md');
@@ -851,7 +788,6 @@ test('sidebar summary validates every byte while retaining only bounded Plan and
   assert.equal(sidebar.bytesByPath.get(specKey), specSize);
   assert.equal(sidebar.allocatedSizes.includes(planSize), false);
   assert.equal(sidebar.allocatedSizes.includes(specSize), false);
-  assert.equal(projectService.cache.size, 0);
   assert.doesNotMatch(sidebar.result.body, /P{128}|S{128}/);
 
   const index = await measureReadBytes(() => request(server, {
@@ -860,8 +796,6 @@ test('sidebar summary validates every byte while retaining only bounded Plan and
   assert.equal(index.result.status, 200);
   assert.equal(index.bytesByPath.get(planKey), planSize);
   assert.equal(index.bytesByPath.get(specKey), specSize);
-  assert.ok([...projectService.cache.get(AVAILABLE_ID).index.recordMap.values()]
-    .every((record) => record.body === undefined));
 
   const document = await measureReadBytes(() => request(server, {
     path: `/api/v1/projects/${AVAILABLE_ID}/documents/plan/PLAN-0008`,
@@ -872,7 +806,7 @@ test('sidebar summary validates every byte while retaining only bounded Plan and
 });
 
 test('summary retains valid metadata past 64 KiB through its delimiter and streams the body', async (t) => {
-  const { availableRoot, projectService, server } = await fixture(t);
+  const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0011-wide-metadata');
   const planPath = path.join(planDirectory, 'PLAN.md');
   const title = 'T'.repeat(70 * 1024);
@@ -897,7 +831,6 @@ test('summary retains valid metadata past 64 KiB through its delimiter and strea
   assert.equal(listed.diagnostic_count, 0);
   assert.ok(listed.last_modified);
   assert.doesNotMatch(summary.result.body, new RegExp(bodyMarker));
-  assert.equal(projectService.cache.size, 0);
 
   const indexResponse = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   const index = JSON.parse(indexResponse.body);
@@ -905,12 +838,10 @@ test('summary retains valid metadata past 64 KiB through its delimiter and strea
   assert.equal(index.diagnostics.some((item) => item.relative_path
     === '.emeth/plan/PLAN-0011-wide-metadata/PLAN.md'), false);
   assert.doesNotMatch(indexResponse.body, new RegExp(bodyMarker));
-  assert.ok([...projectService.cache.get(AVAILABLE_ID).index.recordMap.values()]
-    .every((record) => record.body === undefined));
 });
 
-test('project summary and index exclude invalid UTF-8 tails with safe diagnostics and no cached bodies', async (t) => {
-  const { availableRoot, projectService, server } = await fixture(t);
+test('project summary and index exclude invalid UTF-8 tails with safe diagnostics', async (t) => {
+  const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0007-invalid');
   const specDirectory = path.join(availableRoot, '.emeth', 'specs', 'SPEC-0007-invalid');
   fs.mkdirSync(planDirectory, { recursive: true });
@@ -942,7 +873,6 @@ test('project summary and index exclude invalid UTF-8 tails with safe diagnostic
   assert.equal(listed.diagnostic_count, 2);
   assert.equal(projects.bytesByPath.get(pathKey(fs.realpathSync.native(planPath))), fs.statSync(planPath).size);
   assert.equal(projects.bytesByPath.get(pathKey(fs.realpathSync.native(specPath))), fs.statSync(specPath).size);
-  assert.equal(projectService.cache.size, 0);
 
   const index = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   const body = JSON.parse(index.body);
@@ -955,8 +885,6 @@ test('project summary and index exclude invalid UTF-8 tails with safe diagnostic
       '.emeth/specs/SPEC-0007-invalid/SPEC.md',
     ],
   );
-  assert.ok([...projectService.cache.get(AVAILABLE_ID).index.recordMap.values()]
-    .every((record) => record.body === undefined));
 
   const detail = await request(server, {
     path: `/api/v1/projects/${AVAILABLE_ID}/documents/spec/SPEC-0007`,

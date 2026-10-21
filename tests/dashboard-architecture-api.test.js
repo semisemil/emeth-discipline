@@ -335,29 +335,3 @@ test('architecture document reads reject canonical paths outside the project', a
   assert.equal(JSON.parse(response.body).error.code, 'architecture-path-outside-project');
   assert.doesNotMatch(response.body, /EXTERNAL SECRET/);
 });
-
-test('root, dashboard, and architecture routes serve separate static entry files', async (t) => {
-  const { server } = await fixture(t, {
-    assets: {
-      'index.html': 'INTRO',
-      'dashboard.html': 'DASHBOARD',
-      'architecture.html': 'ARCHITECTURE',
-    },
-  });
-  assert.equal((await request(server, '/')).body, 'INTRO');
-  assert.equal((await request(server, '/dashboard')).body, 'DASHBOARD');
-  assert.equal((await request(server, '/architecture')).body, 'ARCHITECTURE');
-  assert.equal(
-    (await request(server, `/dashboard?project=${PROJECT_ID}`)).body,
-    'DASHBOARD',
-  );
-  assert.equal(
-    (await request(
-      server,
-      `/architecture?project=${PROJECT_ID}&document=system-context`,
-    )).body,
-    'ARCHITECTURE',
-  );
-  assert.equal((await request(server, '/dashboard?document=system-context')).status, 400);
-  assert.equal((await request(server, '/architecture?project=invalid')).status, 400);
-});

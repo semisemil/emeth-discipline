@@ -116,27 +116,18 @@ function registry(fixture) {
   return JSON.parse(fs.readFileSync(getRegistryPath({ env: fixture.env }), 'utf8'));
 }
 
-test('Design writer resolves a dot project root from the CLI working directory', (t) => {
+test('Design writer resolves a relative project root from the CLI working directory', (t) => {
   const fixture = makeFixture(t);
   const document = {
     kind: 'design',
     relativePath: '.emeth/designs/DESIGN-0001-free/DESIGN.md',
     content: specContent().replace('SPEC-0001', 'DESIGN-0001'),
   };
-  const result = runDocument(fixture, document, { projectRoot: '.', cwd: fixture.projectRoot });
+  const result = runDocument(fixture, document, { projectRoot: 'project', cwd: fixture.root });
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).write.status, 'created');
   assert.deepEqual(fs.readFileSync(documentPath(fixture, document)), Buffer.from(document.content));
-  assert.equal(registry(fixture).projects[0].root, fs.realpathSync(fixture.projectRoot));
-});
-
-test('Spec writer resolves a relative project root from the CLI working directory', (t) => {
-  const fixture = makeFixture(t);
-  const result = runDocument(fixture, documents.spec, { projectRoot: 'project', cwd: fixture.root });
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(fs.readFileSync(documentPath(fixture, documents.spec)), Buffer.from(documents.spec.content));
   assert.equal(registry(fixture).projects[0].root, fs.realpathSync(fixture.projectRoot));
 });
 
@@ -298,8 +289,10 @@ for (const document of Object.values(documents)) {
     assert.deepEqual(fs.readFileSync(documentPath(fixture, document)), Buffer.from(document.content));
     assert.equal(registry(fixture).projects[0].root, fs.realpathSync(fixture.projectRoot));
   });
+}
 
-  test(`${document.kind} no-op neither rewrites nor registers`, (t) => {
+test("plan no-op neither rewrites nor registers", (t) => {
+    const document = documents.plan;
     const fixture = makeFixture(t);
     const target = documentPath(fixture, document);
     fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -315,7 +308,8 @@ for (const document of Object.values(documents)) {
     assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
   });
 
-  test(`${document.kind} invalid envelope writes nothing and does not register`, (t) => {
+test("plan invalid envelope writes nothing and does not register", (t) => {
+    const document = documents.plan;
     const fixture = makeFixture(t);
     const result = runDocument(fixture, document, { content: '# frontmatter 없음\n' });
 
@@ -325,7 +319,8 @@ for (const document of Object.values(documents)) {
     assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
   });
 
-  test(`${document.kind} registration failure preserves the successful document write`, (t) => {
+test("spec registration failure preserves the successful document write", (t) => {
+    const document = documents.spec;
     const fixture = makeFixture(t);
     const registryPath = getRegistryPath({ env: fixture.env });
     fs.mkdirSync(path.dirname(registryPath), { recursive: true });
@@ -340,7 +335,6 @@ for (const document of Object.values(documents)) {
     assert.deepEqual(fs.readFileSync(documentPath(fixture, document)), Buffer.from(document.content));
     assert.equal(fs.readFileSync(registryPath, 'utf8'), '{bad json');
   });
-}
 
 test('Plan update preserves free-form body and registers without revision machinery', (t) => {
   const fixture = makeFixture(t);

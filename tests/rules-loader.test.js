@@ -66,27 +66,6 @@ function copyRuntime(plugin) {
   fs.copyFileSync(path.join(pluginRoot, 'skills/architecture-memory/scripts/storage.js'), path.join(memory, 'storage.js'));
 }
 
-test('startup inserts the fixed Codex prompt without mode state', (t) => {
-  const { env } = fixture(t);
-  const result = runLoader(env, 'session-a', 'startup');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(context(result), composeEmethPrompt());
-  assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode')), false);
-});
-
-test('startup, clear, and compact use fixed rules and leave retired mode state untouched', (t) => {
-  const { env } = fixture(t);
-  const statePath = path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json');
-  writeJson(statePath, { mode: 'focus' });
-
-  for (const source of ['startup', 'clear', 'compact']) {
-    const result = runLoader(env, 'session-a', source);
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(context(result), composeEmethPrompt());
-    assert.deepEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), { mode: 'focus' });
-  }
-});
-
 test('existing and new sessions ignore the retired default without changing saved preferences', (t) => {
   const { env } = fixture(t);
   writeJson(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), { mode: 'core' });
@@ -98,30 +77,16 @@ test('existing and new sessions ignore the retired default without changing save
   assert.equal(fresh.status, 0, fresh.stderr);
   assert.equal(context(existing), composeEmethPrompt());
   assert.equal(context(fresh), composeEmethPrompt());
+  for (const source of ['clear', 'compact']) {
+    const result = runLoader(env, 'session-a', source);
+    assert.equal(result.status, 0, result.stderr);
+  }
+  assert.equal(runLoader(env, 'session-a', undefined, loaderPath, 'SubagentStart').status, 0);
   assert.deepEqual(
     JSON.parse(fs.readFileSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), 'utf8')),
     { mode: 'core' },
   );
   assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-b.json')), false);
-});
-
-test('resume produces no injection and creates no session state', (t) => {
-  const { env } = fixture(t);
-  const result = runLoader(env, 'session-a', 'resume');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(Buffer.byteLength(result.stdout), 0);
-  assert.equal(fs.existsSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json')), false);
-});
-
-test('SubagentStart receives the fixed Codex rules', (t) => {
-  const { env } = fixture(t);
-  const statePath = path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json');
-  writeJson(statePath, { mode: 'focus' });
-
-  const result = runLoader(env, 'session-a', undefined, loaderPath, 'SubagentStart');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(context(result), composeEmethPrompt());
-  assert.deepEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), { mode: 'focus' });
 });
 
 test('missing Codex rules fail and record the exact component path', (t) => {

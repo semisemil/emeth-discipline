@@ -89,9 +89,6 @@ test('Markdown keeps default link hardening and permits resolver-approved Archit
   });
   assert.doesNotMatch(refused, /href=/);
 
-  const external = core.renderMarkdown('[공식](https://example.com)');
-  assert.match(external, /target="_blank" rel="noopener noreferrer"/);
-
   const unresolved = [];
   core.renderMarkdown('[없음](missing.md)', {
     resolveLink: () => null,

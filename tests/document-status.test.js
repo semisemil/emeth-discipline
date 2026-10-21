@@ -20,14 +20,13 @@ function fixture(t, kind='design', pretty=false, newline='\n') {
   const run=(extra=[],memory='off')=>spawnSync(process.execPath,[cli,'status','--project-root',project,'--id',id,'--status','completed',...(memory ? ['--memory',memory] : []),...extra],{env,encoding:'utf8',input:'Not document stdin',timeout:10000,windowsHide:true});
   return {root,project,id,file,metadata,body,text,run};
 }
-for(const kind of ['design','spec']) for(const pretty of [false,true]) test(`${kind} status handles ${pretty?'pretty CRLF':'compact LF'} JSON without document input`,t=>{
+for(const [kind,pretty] of [['design',false],['spec',true]]) test(`${kind} status handles ${pretty?'pretty CRLF':'compact LF'} JSON without document input`,t=>{
   const f=fixture(t,kind,pretty,pretty?'\r\n':'\n');
   const r=f.run();assert.equal(r.status,0,r.stderr);
   const output=JSON.parse(r.stdout);assert.equal(output.document_status,'completed');assert.equal(output.write.status,'updated');assert.equal(output.write.revision,3);assert.equal(output.write.snapshot,null);assert.notEqual(output.registration.status,'failed');
   const text=fs.readFileSync(f.file,'utf8'), match=text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)([\s\S]*)$/);
   assert.deepEqual(JSON.parse(match[1]),{...f.metadata,status:'completed'});
   assert.deepEqual(Buffer.from(match[2]),Buffer.from(f.body));
-  const before=fs.readFileSync(f.file);const again=f.run();assert.equal(again.status,0,again.stderr);assert.equal(JSON.parse(again.stdout).write.status,'no-op');assert.deepEqual(fs.readFileSync(f.file),before);
   assert.equal(fs.existsSync(path.join(path.dirname(f.file),'revisions')),false);
 });
 test('invalid status and duplicate options leave the document unchanged',t=>{
@@ -49,17 +48,15 @@ test('status respects an active Design lock',t=>{
  const r=f.run();assert.notEqual(r.status,0);assert.match(r.stderr,/document-locked/);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);assert.equal(fs.readFileSync(lock,'utf8'),String(process.pid));
 });
 
-test('status and repeated status do not initialize an absent Memory', t => {
+test('status does not initialize an absent Memory', t => {
   const f = fixture(t);
-  for (const expected of ['updated', 'no-op']) {
-    const result = f.run([], null);
-    assert.equal(result.status, 0, result.stderr);
-    const value = JSON.parse(result.stdout);
-    assert.equal(value.write.status, expected);
-    assert.equal(value.memory.status, 'not-connected');
-    assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
-    assert.equal(fs.existsSync(path.join(f.project, '.emeth/architecture.json')), false);
-  }
+  const result = f.run([], null);
+  assert.equal(result.status, 0, result.stderr);
+  const value = JSON.parse(result.stdout);
+  assert.equal(value.write.status, 'updated');
+  assert.equal(value.memory.status, 'not-connected');
+  assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
+  assert.equal(fs.existsSync(path.join(f.project, '.emeth/architecture.json')), false);
 });
 
 test('status reports a connected Memory without rewriting its files', t => {

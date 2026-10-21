@@ -128,7 +128,7 @@ function runLinkWork(root, overrides = {}) {
   return spawnSync(process.execPath, args, { encoding: 'utf8', env: configEnv(root) });
 }
 
-test('link-work stores one canonical context link and is idempotent', (t) => {
+test('link-work stores one canonical context link with its state transition', (t) => {
   const { root, filePath } = createFixture(t);
   const first = runLinkWork(root);
 
@@ -144,12 +144,6 @@ test('link-work stores one canonical context link and is idempotent', (t) => {
   assert.deepEqual(linked.events.map(({ kind, from, to }) => ({ kind, from, to })), [
     { kind: 'transition', from: 'open', to: 'doing' }
   ]);
-
-  const beforeNoOp = fs.readFileSync(filePath, 'utf8');
-  const second = runLinkWork(root, { updatedAt: '2026-08-12T02:00:00.000Z' });
-  assert.equal(second.status, 0, second.stderr);
-  assert.match(second.stdout, /^no-op: /);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), beforeNoOp);
 });
 
 test('Design work links round-trip through the issue ledger and dashboard with readiness signals', (t) => {

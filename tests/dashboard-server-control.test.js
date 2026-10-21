@@ -34,20 +34,6 @@ function tempDirectory(t) {
   return directory;
 }
 
-test('status, open, and stop do not create a stopped dashboard directory', async (t) => {
-  const root = tempDirectory(t);
-  const directory = path.join(root, 'missing-dashboard');
-
-  const status = await inspectServer({ directory });
-  const opened = await openDashboard({ directory });
-  const stopped = await stopServer({ directory });
-
-  assert.equal(status.status, 'stopped');
-  assert.equal(opened.ok, false);
-  assert.equal(opened.action, 'unchanged');
-  assert.equal(stopped.action, 'unchanged');
-  assert.equal(fs.existsSync(directory), false);
-});
 test('open uses expected_version and preserves server and project state', async (t) => {
   const directory = tempDirectory(t);
   fs.mkdirSync(directory, { recursive: true });
@@ -107,6 +93,7 @@ test('open, status, and stop have stable stopped stdout, stderr, and exit codes'
   assert.equal(JSON.parse(status.stdout).status, 'stopped');
   assert.equal(status.stderr, '');
   assert.equal(open.status, 1);
+  assert.equal(JSON.parse(open.stdout).ok, false);
   assert.equal(JSON.parse(open.stdout).action, 'unchanged');
   assert.equal(open.stderr, '');
   assert.equal(stop.status, 0);
