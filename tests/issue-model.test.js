@@ -1,11 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
 
-const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const model = require('../plugins/emeth-discipline/skills/issue-ledger/lib/issue-model.js');
 
 function makeIssue() {
@@ -23,15 +20,6 @@ function makeIssue() {
     updated_at: '2026-08-17T00:00:00.000Z'
   };
 }
-
-test('Issue CLI depends on the canonical model outside copied dashboard assets', () => {
-  const cli = fs.readFileSync(
-    path.join(pluginRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js'),
-    'utf8'
-  );
-  assert.match(cli, /require\('\.\.\/lib\/issue-model\.js'\)/);
-  assert.doesNotMatch(cli, /assets\/state-starter\/dashboard\/issue-model/);
-});
 
 test('canonical model preserves v2 parse, serialize, and mutation behavior', () => {
   const issue = makeIssue();

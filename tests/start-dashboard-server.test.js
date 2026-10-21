@@ -75,7 +75,8 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
     fs.rmSync(root, { recursive: true, force: true });
   });
   const config = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'hooks/codex-hooks.json'), 'utf8'));
-  const command = config.hooks.SessionStart[0].hooks[0].commandWindows;
+  const hook = config.hooks.SessionStart[0].hooks[0];
+  const command = hook.commandWindows;
   const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', command], {
     env,
     windowsHide: true,
@@ -88,7 +89,7 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
   child.stdout.on('data', (chunk) => { stdout += chunk; });
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   const exitCode = await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('PowerShell hook output did not close.')), 5000);
+    const timer = setTimeout(() => reject(new Error('PowerShell hook output did not close.')), hook.timeout * 1000);
     child.once('error', (error) => { clearTimeout(timer); reject(error); });
     child.once('close', (code) => { clearTimeout(timer); resolve(code); });
     child.stdin.end(JSON.stringify({ cwd: root, hook_event_name: 'SessionStart', source: 'startup' }));
@@ -99,18 +100,6 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
   assert.equal(JSON.parse(stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
   assert.equal((await inspectServer({ directory })).status, 'running');
   assert.equal(fs.readdirSync(directory).some((name) => /^server-start-/.test(name)), false);
-});
-
-test('hook registration covers SessionStart only and all sources', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
-  const config = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8'));
-  const entry = config.hooks.SessionStart.find((candidate) => candidate.hooks.some((hook) => (
-    hook.command.includes('run.js')
-  )));
-
-  assert.equal(entry.matcher, 'startup|resume|clear|compact');
-  assert.equal(config.hooks.SessionEnd, undefined);
-  assert.equal(entry.hooks[0].commandWindows.includes('run.js'), true);
 });
 
 test('benchmark mode completes without starting a dashboard server', async (t) => {

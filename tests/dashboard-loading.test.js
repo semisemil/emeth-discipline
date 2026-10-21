@@ -1,68 +1,40 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
 const test = require('node:test');
-const core = require('../plugins/emeth-discipline/dashboard/assets/core');
-const source = fs.readFileSync(path.join(__dirname, '../plugins/emeth-discipline/dashboard/assets/app.js'), 'utf8');
+const { dashboard, index, project, deferred } = require('./helpers/dashboard-page');
 
-function functionSource(start, end) {
-  return source.slice(source.indexOf(start), source.indexOf(end));
-}
-
-test('pending project switches preserve the current body even when rendering is requested', () => {
-  const body = ['existing project'];
-  const state = { projectTransition: {}, loading: true, index: null, view: 'work' };
-  const context = vm.createContext({
-    state, document: {}, updateContext() {},
-    elements: { viewPanel: { querySelector() {}, replaceChildren() { body.length = 0; } } },
-    selectedProject: () => ({ availability: 'available' }),
-    commitView: (content) => body.push(content), renderWork: () => 'new project',
-  });
-  vm.runInContext(functionSource('  function renderView(', '  function updateTabs()'), context);
-  context.renderView();
-  assert.deepEqual(body, ['existing project']);
-  state.loading = false;
-  state.index = {};
-  context.renderView();
-  assert.deepEqual(body, ['new project']);
+test('pending project switches preserve the current body without a loading banner', async t => {
+  const page = await dashboard(t);
+  const pending = deferred();
+  page.routes['/api/v1/projects/beta/index'] = pending.promise;
+  const body = page.get('#view-panel');
+  const original = body.innerHTML;
+  page.click('[data-project-id="beta"]');
+  page.change('#global-search', 'still pending', 'input');
+  assert.equal(body.innerHTML, original);
+  assert.equal(body.getAttribute('aria-busy'), 'true');
+  assert.equal(page.get('#status-stack').textContent, '');
+  page.change('#global-search', '', 'input');
+  pending.resolve(index(project('beta'), 'Loaded beta'));
+  await page.settle();
+  assert.match(body.textContent, /Loaded beta/);
+  assert.doesNotMatch(body.textContent, /alpha/);
+  assert.equal(body.hasAttribute('aria-busy'), false);
 });
 
-test('project loading does not insert a banner above the existing body', () => {
-  const messages = [];
-  const context = vm.createContext({
-    state: { projectTransition: {}, loading: true, notice: '프로젝트 작업을 읽습니다.' },
-    elements: { status: { replaceChildren() { messages.length = 0; }, append(value) { messages.push(value); } } },
-    make() { throw new Error('A transition must not create a layout-shifting banner'); },
-  });
-  vm.runInContext(functionSource('  function renderStatus()', '  async function loadProjects('), context);
-  context.renderStatus();
-  assert.equal(messages.length, 0);
-});
-
-test('background refresh cannot supersede a pending project switch; a failed switch settles', async () => {
-  let reject;
-  let calls = 0;
-  let renders = 0;
-  const state = { projectTransition: {}, selectedProjectId: 'new', index: null, loading: false };
-  const context = vm.createContext({
-    state, indexRequestGate: core.createLatestRequestGate(),
-    selectedProject: () => ({ id: 'new', availability: 'available' }),
-    setLoading(value) { state.loading = value; },
-    setError(error) { state.error = error; },
-    api() { calls++; return new Promise((_resolve, rejectRequest) => { reject = rejectRequest; }); },
-    renderStatus() {}, updateContext() {}, renderProjects() {}, renderView() { renders++; },
-  });
-  vm.runInContext(functionSource('  async function loadIndex(', '  async function selectProject('), context);
-  const request = context.loadIndex();
-  assert.equal(state.loading, true);
-  await context.loadIndex(false, true);
-  assert.equal(calls, 1);
-  reject(new Error('Offline'));
-  await request;
-  assert.equal(state.loading, false);
-  assert.equal(state.error.message, 'Offline');
-  assert.equal(renders, 1);
+test('background refresh cannot supersede a pending project switch and a failed switch settles', async t => {
+  const page = await dashboard(t);
+  const pending = deferred();
+  page.routes['/api/v1/projects/beta/index'] = pending.promise;
+  page.click('[data-project-id="beta"]');
+  page.document.dispatchEvent(new page.window.Event('visibilitychange'));
+  page.intervals[0].callback();
+  assert.equal(page.calls.filter(call => call.url === '/api/v1/projects/beta/index').length, 1);
+  pending.resolve({ error: { code: 'project-unavailable', message: 'Offline' } });
+  await page.settle();
+  assert.equal(page.get('#view-panel').hasAttribute('aria-busy'), false);
+  assert.equal(page.get('#refresh-button').disabled, false);
+  assert.match(page.get('#status-stack').textContent, /프로젝트를 읽을 수 없습니다/);
+  assert.match(page.get('#view-panel').textContent, /프로젝트를 표시할 수 없음/);
 });

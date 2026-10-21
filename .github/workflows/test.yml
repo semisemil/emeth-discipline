@@ -29,5 +29,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           package-manager-cache: false
+      - name: Install test dependencies
+        run: npm ci --ignore-scripts
       - name: Run tests
         run: npm test

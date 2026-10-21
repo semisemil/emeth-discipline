@@ -253,8 +253,10 @@ test('watchers invalidate only one project and watcher failure leaves signature 
   }), 'utf8');
 
   const listeners = new Map();
+  let readAt = '2026-08-18T00:00:00.000Z';
   const service = new ProjectIndexService({
     registryOptions: { registryPath },
+    now: () => readAt,
     watch: (directory, listener) => {
       listeners.set(directory, listener);
       return { close() {} };
@@ -262,17 +264,14 @@ test('watchers invalidate only one project and watcher failure leaves signature 
   });
   t.after(() => service.close());
   service.listProjects();
-  service.getIndex(PROJECT_ID);
-  service.getIndex(secondId);
-  assert.equal(service.summaryCache.size, 2);
-  assert.equal(service.cache.size, 2);
+  assert.equal(service.getIndex(PROJECT_ID).read_at, readAt);
+  const secondReadAt = service.getIndex(secondId).read_at;
 
   const firstIssues = fs.realpathSync(path.join(firstRoot, '.emeth', 'issues'));
+  readAt = '2026-08-18T00:01:00.000Z';
   listeners.get(firstIssues)('change', 'PL-0001.json');
-  assert.equal(service.summaryCache.has(PROJECT_ID), false);
-  assert.equal(service.cache.has(PROJECT_ID), false);
-  assert.equal(service.summaryCache.has(secondId), true);
-  assert.equal(service.cache.has(secondId), true);
+  assert.equal(service.getIndex(PROJECT_ID).read_at, readAt);
+  assert.equal(service.getIndex(secondId).read_at, secondReadAt);
 
   const failingService = new ProjectIndexService({
     registryOptions: { registryPath },

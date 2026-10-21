@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { openPage, project } = require('./helpers/dashboard-page');
 
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 
@@ -17,47 +18,39 @@ const documents = [
   { id: 'system-context', kind: 'system-context', title: '시스템 맥락', relative_path: 'docs/architecture/01-system-context.md', order: 2 },
 ];
 
-test('root intro separates Dashboard and Architecture without starting another application', () => {
-  const intro = readAsset('index.html');
-  const dashboard = readAsset('dashboard.html');
-
-  assert.match(intro, /<main class="intro-shell"/);
-  assert.match(intro, /href="\/dashboard"/);
-  assert.match(intro, /href="\/architecture"/);
-  assert.match(intro, /src="\/intro\.js"/);
-  assert.doesNotMatch(intro, /src="\/app\.js"/);
-
-  const introApp = readAsset('intro.js');
-  assert.match(introApp, /get\('expected_version'\)/);
-  assert.match(introApp, /emeth\.dashboard\.project/);
-
-  assert.match(dashboard, /id="app-shell"/);
-  assert.match(dashboard, /src="\/app\.js"/);
-  assert.match(dashboard, /id="architecture-link" href="\/architecture"/);
+test('intro links carry the saved project and requested version without starting the dashboard', async t => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const page = await openPage(t, { page: 'intro', query: '?expected_version=1.2.3',
+    storage: { 'emeth.dashboard.project': id } });
+  assert.equal(new URL(page.get('#intro-dashboard-link').href).pathname, '/dashboard');
+  assert.equal(new URL(page.get('#intro-dashboard-link').href).search, `?expected_version=1.2.3&project=${id}`);
+  assert.equal(new URL(page.get('#intro-architecture-link').href).search, `?project=${id}`);
+  assert.deepEqual(page.calls, []);
+  assert.equal(page.get('script[src="/app.js"]'), null);
 });
 
-test('Architecture page is a read-only local viewer with local Mermaid loading', () => {
-  const html = readAsset('architecture.html');
-  const app = readAsset('architecture.js');
-
-  assert.match(html, /src="\/vendor\/mermaid\.min\.js"/);
-  assert.match(html, /src="\/architecture\.js"/);
-  assert.match(html, /aria-live="polite"/);
-  assert.match(html, /id="architecture-document" tabindex="-1"/);
-  assert.doesNotMatch(html, /contenteditable|<textarea/i);
-
-  assert.match(app, /\/architecture\/index/);
-  assert.match(app, /\/architecture\/documents\//);
-  assert.match(app, /securityLevel: 'strict'/);
-  assert.match(app, /\['ADR 상태', decisionStatus\(item, markdown\)\]/);
-  assert.match(app, /\['Git 브랜치', checkpoint\.branch_at_check\]/);
-  assert.match(app, /\['Git 커밋', checkpoint\.revision\]/);
-  assert.match(app, /\['Git 동기화', checkpoint\.checked_at\]/);
-  assert.match(app, /querySelectorAll\('pre > code\.language-mermaid'\)/);
-  assert.match(app, /emeth\.dashboard\.project/);
-  assert.match(app, /new URLSearchParams\(globalThis\.location\.search\)/);
-  assert.doesNotMatch(app, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
-  assert.doesNotMatch(app, /https?:\/\/[^'"`\s]+mermaid/i);
+test('Architecture viewer reads the selected document, renders metadata and local Mermaid without writes', async t => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const page = await openPage(t, { page: 'architecture', query: `?project=${id}&document=decision`, routes: {
+    '/api/v1/projects': { projects: [project(id)] },
+    [`/api/v1/projects/${id}/architecture/index`]: { documents: [{ id: 'decision', kind: 'decision', relative_path: 'docs/adr.md' }],
+      git_checkpoint: { branch_at_check: 'main', revision: 'abc123', checked_at: '2026-08-30' } },
+    [`/api/v1/projects/${id}/architecture/documents/decision`]: { id: 'decision', body: '# Decision\n- Status: accepted\n\n```mermaid\ngraph LR\n A --> B\n```' },
+  } });
+  const detail = page.get('#architecture-document');
+  assert.equal(detail.tabIndex, -1);
+  assert.equal(page.get('[aria-live="polite"]') !== null, true);
+  assert.equal(page.get('textarea, [contenteditable]'), null);
+  assert.match(detail.textContent, /ADR 상태accepted/);
+  assert.match(detail.textContent, /Git 브랜치main/);
+  assert.match(detail.textContent, /Git 커밋abc123/);
+  assert.match(detail.textContent, /Git 동기화2026-08-30/);
+  assert.match(page.diagrams[0], /A --> B/);
+  assert.equal(page.mermaidOptions[0].securityLevel, 'strict');
+  assert.equal(page.get('script[src="/vendor/mermaid.min.js"]') !== null, true);
+  assert.ok(page.calls.every(call => call.method === 'GET'));
+  assert.equal(page.window.localStorage.getItem('emeth.dashboard.project'), id);
+  assert.equal(new URL(page.get('#dashboard-link').href).search, `?project=${id}`);
 });
 
 test('Architecture documents use manifest order and stable selection', () => {

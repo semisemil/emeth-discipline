@@ -396,11 +396,6 @@ test('registered hook CLI emits bounded valid context and stays empty without a 
   const f = fixture(t);
   const plugin = path.resolve(__dirname, '../plugins/emeth-discipline');
   const hook = path.join(plugin, 'hooks/run.js');
-  const manifest = JSON.parse(fs.readFileSync(path.join(plugin, '.codex-plugin/plugin.json')));
-  const config = JSON.parse(fs.readFileSync(path.join(plugin, manifest.hooks)));
-  for (const event of ['SessionStart', 'SubagentStart', 'UserPromptSubmit']) {
-    assert.ok(config.hooks[event].some((group) => group.hooks.some((command) => command.command.includes('/hooks/run.js'))));
-  }
   const run = () => spawnSync(process.execPath, [hook], { input: JSON.stringify({ cwd: f.root, session_id: 'cli', hook_event_name: 'UserPromptSubmit' }), encoding: 'utf8', env: { ...process.env, PLUGIN_DATA: path.join(f.root, '.test-hook') } });
   assert.equal(run().stdout, '');
   initialize(f);

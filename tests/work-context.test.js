@@ -5,13 +5,16 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const {spawnSync}=require('node:child_process');
-const {WorkContext,describeArtifacts,delegationContract}=require('../plugins/emeth-discipline/lib/work-context');
+const {WorkContext,describeArtifacts}=require('../plugins/emeth-discipline/lib/work-context');
 const helper=path.resolve(__dirname,'../plugins/emeth-discipline/lib/work-context.js');
 
-test('the helper exports only the return contract from the merged instruction document',()=>{
- assert.match(delegationContract,/^# Delegated work\n/);
- assert.match(delegationContract,/artifact paths, verification evidence, and unresolved issues/);
- assert.doesNotMatch(delegationContract,/### Work context|## Playbooks|### Delegated work/);
+test('return contract extraction preserves its body and excludes adjacent sections',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const lib=path.join(dir,'lib');fs.mkdirSync(lib);
+ const copied=path.join(lib,'work-context.js');fs.copyFileSync(helper,copied);
+ const skill=path.join(dir,'skills/start-implementation/SKILL.md');fs.mkdirSync(path.dirname(skill),{recursive:true});
+ fs.writeFileSync(skill,'# Skill\r\nBefore.\r\n### Delegated work\r\n\r\nReturn the result.\r\n#### Evidence\r\nKeep exact paths.\r\n### Following section\r\nExcluded.\r\n');
+ assert.equal(require(copied).delegationContract,'# Delegated work\n\nReturn the result.\n#### Evidence\nKeep exact paths.\n');
 });
 
 test('versioned public reads preserve content, return changes and allow refresh after recovery',t=>{

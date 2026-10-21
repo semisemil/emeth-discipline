@@ -18,6 +18,7 @@ test('hook registration keeps lifecycle boundaries and removes legacy owners', (
     assert.ok(groups[0].hooks[0].command.includes('/hooks/run.js'), event);
     assert.ok(groups[0].hooks[0].commandWindows.includes('\\hooks\\run.js'), event);
   }
+  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'refresh-dashboard.js')), false);
   assert.equal(hooks.PreToolUse, undefined);
   assert.equal(hooks.SessionEnd, undefined);
   assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'load-baseline.js')), false);

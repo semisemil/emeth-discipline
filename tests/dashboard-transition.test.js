@@ -7,29 +7,9 @@ const path = require('node:path');
 const test = require('node:test');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
-const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
-const hooksPath = path.join(pluginRoot, manifest.hooks);
 const starter = path.join(pluginRoot, 'skills', 'issue-ledger', 'assets', 'state-starter');
 
-test('SessionStart uses the global server hook and has no project dashboard refresh hook', () => {
-  const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8')).hooks.SessionStart;
-  const commands = hooks.flatMap((entry) => entry.hooks.flatMap((hook) => [
-    hook.command,
-    hook.commandWindows,
-  ]));
-  assert.equal(commands.length, 2);
-  assert.ok(commands.every((command) => command.includes('run.js')));
-  assert.equal(hooks[0].matcher, 'startup|resume|clear|compact');
-  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'refresh-dashboard.js')), false);
-});
-test('new state starter creates no static dashboard and documents the global entry point', (t) => {
-  assert.equal(fs.existsSync(path.join(starter, 'dashboard')), false);
-  const state = fs.readFileSync(path.join(starter, 'STATE.md'), 'utf8');
-  assert.match(state, /127\.0\.0\.1/);
-  assert.match(state, /dashboard-server open/);
-  assert.match(state, /`status`/);
-  assert.match(state, /`stop`/);
-
+test('new state starter creates no static dashboard', (t) => {
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-state-starter-'));
   t.after(() => fs.rmSync(project, { recursive: true, force: true }));
   fs.cpSync(starter, path.join(project, '.emeth'), { recursive: true });

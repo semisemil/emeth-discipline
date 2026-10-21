@@ -152,8 +152,6 @@ test('registration, child server, project switching, refresh, and unavailable re
   assert.match(browserShell.headers['content-security-policy'], /default-src 'self'/);
   const browserApp = await request(running.port, '/app.js');
   assert.equal(browserApp.status, 200);
-  assert.match(browserApp.body, /visibilitychange/);
-  assert.match(browserApp.body, /setInterval[\s\S]*30000/);
 
   const listed = JSON.parse((await request(running.port, '/api/v1/projects')).body).projects;
   assert.deepEqual(new Set(listed.map((project) => project.id)), new Set([firstId, secondId]));

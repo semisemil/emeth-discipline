@@ -286,13 +286,6 @@ test('Issue link-work no-op does not register or rewrite', (t) => {
   assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
 });
 
-test('Issue writer executes the shared register command instead of the registry module', () => {
-  const content = fs.readFileSync(issueCli, 'utf8');
-  assert.match(content, /register-project\.js/);
-  assert.match(content, /spawnSync\(process\.execPath/);
-  assert.doesNotMatch(content, /require\(['"]\.\.\/\.\.\/\.\.\/dashboard\/registry\.js['"]\)/);
-});
-
 for (const document of Object.values(documents)) {
   test(`${document.kind} writer preserves the complete source bytes and registers after create`, (t) => {
     const fixture = makeFixture(t);
@@ -479,10 +472,27 @@ test('document writer rejects a linked .emeth directory without writing outside 
   assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
 });
 
-test('document writer owns mechanical writes and direct post-write registration', () => {
-  const writer = fs.readFileSync(documentCli, 'utf8');
-  assert.match(writer, /require\(['"]\.\.\/dashboard\/registry\.js['"]\)/);
-  assert.match(writer, /registerProject\(projectRoot\)/);
-  assert.match(writer, /fs\.renameSync\(temporary, target\)/);
-  assert.doesNotMatch(writer, /register-project\.js/);
+test('a failed document replacement preserves the original bytes and does not register the project', (t) => {
+  const fixture = makeFixture(t);
+  const target = documentPath(fixture, documents.plan);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, documents.plan.content);
+  const source = `
+    const fs = require('node:fs');
+    const rename = fs.renameSync;
+    fs.renameSync = (from, to) => {
+      if (to === process.argv[2]) throw Object.assign(new Error('disk failure'), { code: 'EIO' });
+      return rename(from, to);
+    };
+    require(process.argv[1]).main(process.argv.slice(3));
+  `;
+  const result = spawnSync(process.execPath, ['-e', source, documentCli, target,
+    'write', '--kind', 'plan', '--project-root', fixture.projectRoot,
+    '--relative-path', documents.plan.relativePath], {
+    env: fixture.env, encoding: 'utf8', input: planContent({ body: 'Replacement body' }),
+  });
+  assert.equal(result.status, 1, result.stdout);
+  assert.equal(JSON.parse(result.stderr).error.code, 'document-write-failed');
+  assert.deepEqual(fs.readFileSync(target), Buffer.from(documents.plan.content));
+  assert.equal(fs.existsSync(getRegistryPath({ env: fixture.env })), false);
 });

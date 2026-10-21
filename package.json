@@ -6,5 +6,8 @@
   },
   "scripts": {
     "test": "node scripts/check-versions.js && node tests/run-tests.js"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
   }
 }

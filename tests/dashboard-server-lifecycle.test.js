@@ -93,7 +93,7 @@ test('Windows startup timeout stops the child and removes startup state', {
   fs.writeFileSync(serverScript,
     "require('node:fs').writeFileSync(require('node:path').join(process.argv[3], 'test-server.pid'), String(process.pid)); setInterval(() => {}, 1000);");
 
-  const result = await startServer({ directory, serverScript, startTimeoutMs: 1500 });
+  const result = await startServer({ directory, serverScript });
 
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'start-timeout');

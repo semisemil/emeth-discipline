@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
+const { dashboard, project, index } = require('./helpers/dashboard-page');
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 const { createDashboardHttpServer } = require('../plugins/emeth-discipline/dashboard/server.js');
@@ -98,6 +99,19 @@ function deferred() {
   });
   return { promise, reject, resolve };
 }
+
+
+const planKey = '[data-focus-key="documents:item:plan:PLAN-0002"]';
+const specKey = '[data-focus-key="documents:item:spec:SPEC-0005"]';
+const detail = (kind, id, body) => ({ kind, id, title: id, body, status: 'ready', relative_path: id + '.md' });
+async function documentPage(t, routes = {}) {
+  const page = await dashboard(t, { projects: [projects[1]], routes: {
+    ['/api/v1/projects/' + AVAILABLE_ID + '/index']: { ...indexFixture, read_at: 'initial' }, ...routes,
+  } });
+  page.click('[data-view="documents"]');
+  return page;
+}
+const documentRoute = (kind, id) => '/api/v1/projects/' + AVAILABLE_ID + '/documents/' + kind + '/' + id;
 
 function request(server, requestPath, options = {}) {
   const { port } = server.address();
@@ -325,215 +339,73 @@ test('production index schema feeds full signal IDs and canonical completed Spec
   assert.equal(core.STATUSES[index.specs.find((document) => document.id === 'SPEC-0006').status], '완료');
 });
 
-test('latest project index gate ignores delayed prior success and error', async () => {
-  const gate = core.createLatestRequestGate();
-  const view = { projectId: 'A', index: null, error: null, loading: false };
-  const load = async (projectId, pending) => {
-    const request = gate.begin(projectId);
-    view.loading = true;
-    view.error = null;
-    try {
-      const index = await pending;
-      if (!gate.isCurrent(request, view.projectId)) return;
-      view.index = index;
-      view.loading = false;
-    } catch (error) {
-      if (!gate.isCurrent(request, view.projectId)) return;
-      view.error = error.message;
-      view.loading = false;
-    }
-  };
-
-  const delayedA = deferred();
-  const currentB = deferred();
-  const loadA = load('A', delayedA.promise);
-  view.projectId = 'B';
-  gate.invalidate();
-  const loadB = load('B', currentB.promise);
-  currentB.resolve({ project: 'B' });
-  await loadB;
-  delayedA.resolve({ project: 'A' });
-  await loadA;
-  assert.deepEqual(view, { projectId: 'B', index: { project: 'B' }, error: null, loading: false });
-
-  const delayedError = deferred();
-  const currentAgain = deferred();
-  view.projectId = 'A';
-  gate.invalidate();
-  const staleLoad = load('A', delayedError.promise);
-  view.projectId = 'B';
-  gate.invalidate();
-  const currentLoad = load('B', currentAgain.promise);
-  currentAgain.resolve({ project: 'B-current' });
-  await currentLoad;
-  delayedError.reject(new Error('A failure'));
-  await staleLoad;
-  assert.deepEqual(view, { projectId: 'B', index: { project: 'B-current' }, error: null, loading: false });
+test('project switches ignore delayed prior success and error through the actual app', async t => {
+  for (const outcome of ['success', 'error']) {
+    const page = await dashboard(t);
+    const pending = deferred();
+    page.routes['/api/v1/projects/beta/index'] = pending.promise;
+    page.click('[data-project-id="beta"]');
+    page.click('[data-project-id="alpha"]');
+    await page.settle();
+    pending.resolve(outcome === 'success' ? index(project('beta'), 'STALE-BETA') : { error: { message: 'STALE-ERROR' } });
+    await page.settle();
+    assert.match(page.get('#view-panel').textContent, /alpha/);
+    assert.doesNotMatch(page.get('#view-panel').textContent + page.get('#status-stack').textContent, /STALE/);
+    assert.equal(page.get('#current-project').textContent, 'alpha');
+  }
 });
 
-test('document response disposition caches captured key without replacing current detail', async () => {
-  const projectId = AVAILABLE_ID;
-  const plan = deferred();
-  const spec = deferred();
-  const gate = core.createDocumentRequestGate();
-  const view = { projectId, selected: 'plan:PLAN-0002', detail: null, cache: new Map() };
-  const renderOrder = [];
-  const load = async (key, pending) => {
-    const requestProjectId = view.projectId;
-    const requestKey = key;
-    const request = gate.begin(requestProjectId, requestKey);
-    const detail = await pending;
-    const disposition = gate.disposition(
-      request,
-      view.projectId,
-      view.selected,
-    );
-    if (!disposition.cache) return;
-    view.cache.set(requestKey, detail);
-    if (!disposition.render) return;
-    view.detail = detail;
-    renderOrder.push(requestKey);
-  };
-
-  const planLoad = load('plan:PLAN-0002', plan.promise);
-  view.selected = 'spec:SPEC-0005';
-  const specLoad = load('spec:SPEC-0005', spec.promise);
-  spec.resolve({ id: 'SPEC-0005' });
-  await specLoad;
-  plan.resolve({ id: 'PLAN-0002' });
-  await planLoad;
-
-  assert.deepEqual(view.detail, { id: 'SPEC-0005' });
-  assert.deepEqual(renderOrder, ['spec:SPEC-0005']);
-  assert.deepEqual(view.cache.get('plan:PLAN-0002'), { id: 'PLAN-0002' });
-  assert.deepEqual(view.cache.get('spec:SPEC-0005'), { id: 'SPEC-0005' });
+test('late document response is cached for its own key without replacing selected detail', async t => {
+  const plan = deferred(), spec = deferred();
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: plan.promise, [documentRoute('spec', 'SPEC-0005')]: spec.promise });
+  page.click(planKey); page.click(specKey);
+  spec.resolve(detail('spec', 'SPEC-0005', 'CURRENT-SPEC')); await page.settle();
+  plan.resolve(detail('plan', 'PLAN-0002', 'CACHED-PLAN')); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /CURRENT-SPEC/);
+  assert.doesNotMatch(page.get('.document-detail').textContent, /CACHED-PLAN/);
+  page.click(planKey); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /CACHED-PLAN/);
+  assert.equal(page.calls.filter(call => call.url === documentRoute('plan', 'PLAN-0002')).length, 1);
 });
 
-test('newest same-document success wins over an older late success', async () => {
-  const projectId = AVAILABLE_ID;
-  const older = deferred();
-  const newest = deferred();
-  const gate = core.createDocumentRequestGate();
-  const key = 'plan:PLAN-0002';
-  const view = { projectId, selected: key, detail: null, cache: new Map() };
-  const renderOrder = [];
-  const load = async (pending) => {
-    const request = gate.begin(projectId, key);
-    const detail = await pending;
-    const disposition = gate.disposition(request, view.projectId, view.selected);
-    if (!disposition.cache) return;
-    view.cache.set(key, detail);
-    if (!disposition.render) return;
-    view.detail = detail;
-    renderOrder.push(detail.body);
-  };
-
-  const olderLoad = load(older.promise);
-  const newestLoad = load(newest.promise);
-  newest.resolve({ id: 'PLAN-0002', body: 'newest detail' });
-  await newestLoad;
-  older.resolve({ id: 'PLAN-0002', body: 'older late detail' });
-  await olderLoad;
-
-  assert.equal(view.cache.get(key).body, 'newest detail');
-  assert.equal(view.detail.body, 'newest detail');
-  assert.deepEqual(renderOrder, ['newest detail']);
+test('newest same-document success wins over an older late success', async t => {
+  const older = deferred(), newest = deferred(); let attempts = 0;
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
+  page.click(planKey); page.click(planKey);
+  newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
+  older.resolve(detail('plan', 'PLAN-0002', 'STALE')); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /NEWEST/);
+  assert.doesNotMatch(page.get('.document-detail').textContent, /STALE/);
+  page.click(planKey); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /NEWEST/);
+  assert.equal(attempts, 2);
 });
 
-test('newest same-document success is not replaced by an older late error', async () => {
-  const projectId = AVAILABLE_ID;
-  const older = deferred();
-  const newest = deferred();
-  const gate = core.createDocumentRequestGate();
-  const key = 'plan:PLAN-0002';
-  const view = {
-    projectId,
-    selected: key,
-    detail: null,
-    error: null,
-    cache: new Map(),
-  };
-  const load = async (pending) => {
-    const request = gate.begin(projectId, key);
-    try {
-      const detail = await pending;
-      const disposition = gate.disposition(request, view.projectId, view.selected);
-      if (!disposition.cache) return;
-      view.cache.set(key, detail);
-      if (!disposition.render) return;
-      view.detail = detail;
-      view.error = null;
-    } catch (error) {
-      const disposition = gate.disposition(request, view.projectId, view.selected);
-      if (!disposition.render) return;
-      view.error = error.message;
-    }
-  };
-
-  const olderLoad = load(older.promise);
-  const newestLoad = load(newest.promise);
-  newest.resolve({ id: 'PLAN-0002', body: 'newest detail' });
-  await newestLoad;
-  older.reject(new Error('record-unavailable'));
-  await olderLoad;
-
-  assert.equal(view.cache.get(key).body, 'newest detail');
-  assert.equal(view.detail.body, 'newest detail');
-  assert.equal(view.error, null);
+test('newest same-document success is not replaced by an older late error', async t => {
+  const older = deferred(), newest = deferred(); let attempts = 0;
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
+  page.click(planKey); page.click(planKey);
+  newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
+  older.resolve({ error: { message: 'STALE-ERROR' } }); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /NEWEST/);
+  assert.doesNotMatch(page.get('.document-detail').textContent + page.get('#status-stack').textContent, /STALE-ERROR/);
 });
 
-test('index completion reloads the document selected during refresh after clearing its early detail', async () => {
-  const projectId = AVAILABLE_ID;
-  const index = deferred();
-  const earlyPlan = deferred();
-  const reloadedPlan = deferred();
-  const gate = core.createDocumentRequestGate();
-  const view = {
-    projectId,
-    selected: 'plan:PLAN-0001',
-    cache: new Map(),
-    detail: null,
-  };
-  let reloadStarted = false;
-
-  const loadDocument = async (key, pending) => {
-    const request = gate.begin(view.projectId, key);
-    const detail = await pending;
-    const disposition = gate.disposition(request, view.projectId, view.selected);
-    if (!disposition.cache) return;
-    view.cache.set(key, detail);
-    if (disposition.render) view.detail = detail;
-  };
-  const refresh = async () => {
-    await index.promise;
-    gate.invalidate();
-    view.cache.clear();
-    view.detail = null;
-    const reloadKey = view.selected;
-    if (reloadKey && reloadKey === view.selected) {
-      reloadStarted = true;
-      await loadDocument(reloadKey, reloadedPlan.promise);
-    }
-  };
-
-  const pendingRefresh = refresh();
-  view.selected = 'plan:PLAN-0002';
-  const pendingEarlyPlan = loadDocument(view.selected, earlyPlan.promise);
-  earlyPlan.resolve({ id: 'PLAN-0002', body: 'detail before index completion' });
-  await pendingEarlyPlan;
-  assert.equal(view.cache.get('plan:PLAN-0002').body, 'detail before index completion');
-
-  index.resolve({ read_at: '2026-08-19T00:00:01.000Z' });
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(reloadStarted, true);
-  assert.equal(view.selected, 'plan:PLAN-0002');
-  assert.equal(view.cache.has('plan:PLAN-0002'), false);
-  assert.equal(view.detail, null);
-
-  reloadedPlan.resolve({ id: 'PLAN-0002', body: 'detail after index completion' });
-  await pendingRefresh;
-  assert.equal(view.cache.get('plan:PLAN-0002').body, 'detail after index completion');
-  assert.equal(view.detail.body, 'detail after index completion');
+test('index completion reloads the document selected during refresh after clearing its early detail', async t => {
+  const refresh = deferred(), early = deferred(), reloaded = deferred(); let attempts = 0;
+  const page = await documentPage(t, {
+    ['/api/v1/projects/' + AVAILABLE_ID + '/index?refresh=1']: refresh.promise,
+    [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? early.promise : reloaded.promise,
+  });
+  page.click('#refresh-button'); page.click(planKey);
+  early.resolve(detail('plan', 'PLAN-0002', 'EARLY')); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /EARLY/);
+  refresh.resolve({ ...indexFixture, read_at: 'refreshed' }); await page.settle();
+  assert.equal(attempts, 2);
+  assert.doesNotMatch(page.get('.document-detail').textContent, /EARLY/);
+  assert.match(page.get('.document-detail').textContent, /불러오는 중/);
+  reloaded.resolve(detail('plan', 'PLAN-0002', 'RELOADED')); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /RELOADED/);
 });
 
 test('collapsed rail cues distinguish same-name projects before selection', () => {
@@ -562,142 +434,101 @@ test('collapsed rail cues distinguish same-name projects before selection', () =
   assert.deepEqual(core.projectRailCue({ name: 'solo', availability: 'unavailable' }, []), { primary: 'so', secondary: '' });
 });
 
-test('focus restoration transitions preserve controls at 768 and keep 390 drawer return focus', () => {
-  const focusState = { active: 'BODY' };
-  const rootFor = (focusKeys) => ({
-    querySelectorAll() {
-      return focusKeys.map((focusKey) => ({
-        dataset: { focusKey },
-        disabled: false,
-        focus() { focusState.active = focusKey; },
-      }));
-    },
-  });
-
-  const projectKey768 = core.projectSelectionFocusKey(AVAILABLE_ID, 768);
-  assert.equal(projectKey768, `project:${AVAILABLE_ID}`);
-  assert.equal(core.restoreFocusByKey(rootFor([projectKey768]), projectKey768), true);
-  assert.equal(focusState.active, projectKey768);
-  assert.equal(core.projectSelectionFocusKey(AVAILABLE_ID, 681), projectKey768);
-
-  focusState.active = 'menu-button';
-  const projectKey390 = core.projectSelectionFocusKey(AVAILABLE_ID, 390);
-  assert.equal(projectKey390, null);
-  assert.equal(core.projectSelectionFocusKey(AVAILABLE_ID, 680), null);
-  assert.equal(core.restoreFocusByKey(rootFor([`project:${AVAILABLE_ID}`]), projectKey390), false);
-  assert.equal(focusState.active, 'menu-button');
-
-  const filterKeys = [
-    'work:quick:active',
-    'work:type',
-    'work:status',
-    'work:risk',
-    'work:sort:id', 'work:sort:title', 'work:sort:type', 'work:sort:status', 'work:sort:risk', 'work:sort:date',
-    'documents:kind',
-    'documents:status',
-    'documents:sort',
-  ];
-  for (const focusKey of filterKeys) {
-    focusState.active = 'BODY';
-    assert.equal(core.restoreFocusByKey(rootFor(filterKeys), focusKey), true, focusKey);
-    assert.equal(focusState.active, focusKey, focusKey);
-  }
+test('project selection restores desktop focus and returns mobile focus to the drawer opener', async t => {
+  const page = await dashboard(t, { width: 768 });
+  page.click('[data-project-id="beta"]'); await page.settle();
+  assert.equal(page.document.activeElement.dataset.projectId, 'beta');
+  page.resize(390);
+  const menu = page.get('#menu-button'); menu.focus(); menu.click();
+  assert.equal(page.get('.workspace').inert, true);
+  page.click('[data-project-id="alpha"]'); await page.settle();
+  assert.equal(page.document.activeElement, menu);
+  assert.equal(page.get('.workspace').inert, false);
+  assert.equal(page.get('#project-panel').inert, true);
+  const requested = await dashboard(t, { query: '?project=beta&expected_version=older' });
+  assert.equal(requested.get('#current-project').textContent, 'beta');
+  assert.match(requested.get('#status-stack').textContent, /서버 재시작 필요/);
 });
 
-test('document DOM replacements restore focus for loading, success, failure, fallback, and stale discard', () => {
-  const focusDocument = { body: { id: 'BODY' }, activeElement: null };
-  focusDocument.activeElement = focusDocument.body;
-  const focusNode = (focusKey) => ({
-    dataset: { focusKey },
-    disabled: false,
-    isConnected: false,
-    focus() { focusDocument.activeElement = this; },
-  });
-  const root = {
-    children: [],
-    querySelectorAll() { return this.children; },
-    replaceChildren(...children) {
-      if (this.children.includes(focusDocument.activeElement)) {
-        focusDocument.activeElement = focusDocument.body;
-      }
-      for (const child of this.children) child.isConnected = false;
-      this.children = children;
-      for (const child of this.children) child.isConnected = true;
-    },
+test('document loading, success and failure preserve focus and stale responses cannot steal it', async t => {
+  const plan = deferred(), spec = deferred();
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: plan.promise, [documentRoute('spec', 'SPEC-0005')]: spec.promise });
+  page.get(planKey).focus(); page.click(planKey);
+  assert.equal(page.document.activeElement, page.get(planKey));
+  page.get(specKey).focus(); page.click(specKey);
+  spec.resolve({ error: { code: 'record-not-found', message: 'missing' } }); await page.settle();
+  assert.match(page.get('.document-detail').textContent, /문서를 읽을 수 없음/);
+  assert.equal(page.document.activeElement, page.get(specKey));
+  plan.resolve(detail('plan', 'PLAN-0002', 'CACHED')); await page.settle();
+  assert.equal(page.document.activeElement, page.get(specKey));
+  page.click(planKey); await page.settle();
+  assert.equal(page.document.activeElement, page.get(planKey));
+  const fallback = deferred();
+  page.routes[documentRoute('spec', 'SPEC-0006')] = fallback.promise;
+  page.click('[data-focus-key="documents:item:spec:SPEC-0006"]');
+  const filter = '[data-focus-key="documents:kind"]';
+  page.change(filter, 'plan');
+  fallback.resolve(detail('spec', 'SPEC-0006', 'Selected document is filtered out'));
+  await page.settle();
+  assert.equal(page.document.activeElement, page.get(filter));
+});
+
+test('background mode and image replacement are separate keyboard controls', async t => {
+  const stored = new Map(), opened = [];
+  const setup = window => {
+    window.Blob = Blob;
+    window.URL.createObjectURL = () => 'blob:stored-background';
+    window.URL.revokeObjectURL = () => {};
+    window.indexedDB = { open(name) {
+      opened.push(name);
+      const request = {};
+      queueMicrotask(() => {
+        request.result = { close() {}, transaction() {
+          const transaction = { objectStore: () => ({
+            get(key) {
+              const read = {};
+              queueMicrotask(() => { read.result = stored.get(key); read.onsuccess(); });
+              return read;
+            },
+            put(blob, key) { stored.set(key, blob); queueMicrotask(() => transaction.oncomplete()); },
+          }) };
+          return transaction;
+        } };
+        request.onsuccess();
+      });
+      return request;
+    } };
   };
-  const planKey = core.documentOptionFocusKey('plan', 'PLAN-0002');
-  const specKey = core.documentOptionFocusKey('spec', 'SPEC-0005');
-
-  const originalPlan = focusNode(planKey);
-  root.replaceChildren(originalPlan);
-  originalPlan.focus();
-  assert.equal(focusDocument.activeElement, originalPlan);
-
-  for (const phase of ['loading', 'success', 'failure']) {
-    const replacement = focusNode(planKey);
-    root.replaceChildren(replacement);
-    assert.equal(focusDocument.activeElement, focusDocument.body, phase);
-    assert.equal(core.restoreFocusByKey(root, planKey, 'documents:kind'), true, phase);
-    assert.equal(focusDocument.activeElement, replacement, phase);
-  }
-
-  const kindFilter = focusNode('documents:kind');
-  root.replaceChildren(kindFilter);
-  assert.equal(focusDocument.activeElement, focusDocument.body);
-  assert.equal(core.restoreFocusByKey(root, planKey, 'documents:kind'), true);
-  assert.equal(focusDocument.activeElement, kindFilter);
-
-  const currentSpec = focusNode(specKey);
-  root.replaceChildren(currentSpec);
-  currentSpec.focus();
-  const stalePlan = core.documentRequestDisposition(
-    AVAILABLE_ID,
-    'plan:PLAN-0002',
-    AVAILABLE_ID,
-    'spec:SPEC-0005',
-  );
-  assert.deepEqual(stalePlan, { cache: true, render: false });
-  assert.equal(focusDocument.activeElement, currentSpec);
+  const page = await dashboard(t, { setup });
+  const input = page.get('#background-file'), mode = page.get('#background-mode'), button = page.get('#background-button');
+  assert.equal(input.tabIndex, -1); assert.equal(input.hidden, true); assert.equal(input.getAttribute('aria-hidden'), 'true');
+  for (const node of [mode, button]) { assert.equal(node.tabIndex, 0); assert.equal(node.hidden, false); assert.notEqual(node.getAttribute('aria-hidden'), 'true'); }
+  assert.deepEqual([...mode.options].map(option => option.textContent), ['단색 배경', '이미지 배경']);
+  let picks = 0; input.addEventListener('click', event => { event.preventDefault(); picks++; });
+  button.click(); assert.equal(picks, 1);
+  page.change('#background-mode', 'image'); assert.equal(picks, 2);
+  assert.equal(mode.value, 'color');
+  const image = new Blob(['image bytes'], { type: 'image/png' });
+  Object.defineProperty(input, 'files', { value: [image] });
+  input.dispatchEvent(new page.window.Event('change')); await page.settle();
+  assert.equal(page.document.documentElement.dataset.background, 'image');
+  assert.equal(page.window.localStorage.getItem('emeth.dashboard.background'), 'image');
+  const restored = await dashboard(t, { setup, storage: { 'emeth.dashboard.background': 'image' } });
+  assert.equal(restored.document.documentElement.dataset.background, 'image');
+  assert.match(restored.document.documentElement.style.getPropertyValue('--background-image'), /blob:stored-background/);
+  assert.deepEqual(opened, ['emeth-dashboard', 'emeth-dashboard', 'emeth-dashboard']);
+  page.change('#background-mode', 'color');
+  assert.equal(page.document.documentElement.dataset.background, 'color');
 });
 
-test('background mode and image replacement are separate keyboard controls', () => {
-  const html = readAsset('dashboard.html');
-  const app = readAsset('app.js');
-  const fileInput = html.match(/<input id="background-file"[\s\S]*?>/)?.[0] || '';
-  const visibleButton = html.match(/<button class="icon-button" id="background-button"[^>]*>/)?.[0] || '';
-  const modeSelect = html.match(/<select id="background-mode"[\s\S]*?<\/select>/)?.[0] || '';
-  assert.match(fileInput, /tabindex="-1"/);
-  assert.match(fileInput, /aria-hidden="true"/);
-  assert.match(fileInput, /\shidden(?:\s|>)/);
-  assert.doesNotMatch(visibleButton, /tabindex="-1"|aria-hidden="true"|\shidden(?:\s|>)/);
-  assert.match(modeSelect, /단색 배경/);
-  assert.match(modeSelect, /이미지 배경/);
-  assert.match(app, /elements\.background\.addEventListener\('click', \(\) => elements\.backgroundFile\.click\(\)\)/);
-  assert.match(app, /elements\.backgroundMode\.addEventListener\('change'/);
-
-  let pickerActivations = 0;
-  const focusNodes = [
-    { id: 'background-mode', tabIndex: 0, ariaHidden: false, hidden: false, click() {} },
-    { id: 'background-button', tabIndex: 0, ariaHidden: false, hidden: false, click() { pickerActivations += 1; } },
-    { id: 'background-file', tabIndex: -1, ariaHidden: true, hidden: true, click() { pickerActivations += 1; } },
-  ];
-  assert.deepEqual(
-    focusNodes.filter((node) => node.tabIndex >= 0 && !node.ariaHidden && !node.hidden).map((node) => node.id),
-    ['background-mode', 'background-button'],
-  );
-  focusNodes[2].click();
-  assert.equal(pickerActivations, 1);
-});
-
-test('dashboard user-facing artifact names are Korean and registration guidance is direct', () => {
-  const html = readAsset('dashboard.html');
-  const app = readAsset('app.js');
-  const visibleSource = `${html}\n${app}`;
-
-  assert.match(html, /id="global-search"[^>]*placeholder="검색"/);
-  assert.match(app, /이슈, 플랜 또는 스펙 추가 시 프로젝트가 등록됩니다\./);
-  assert.doesNotMatch(html, /프로젝트 원본은 이 화면에서 변경하지 않습니다\./);
-  assert.doesNotMatch(visibleSource, /['">](?:Issue|Plan|Spec)(?:\s|<|없음|과|또는|→)/);
+test('dashboard shows Korean artifact labels and direct registration guidance', async t => {
+  const page = await dashboard(t, { projects: [] });
+  assert.equal(page.get('#global-search').placeholder, '검색');
+  assert.match(page.get('#view-panel').textContent, /이슈, 플랜 또는 스펙 추가 시 프로젝트가 등록됩니다/);
+  const loaded = await documentPage(t);
+  assert.match(loaded.get('#view-panel').textContent, /플랜/);
+  assert.match(loaded.get('#view-panel').textContent, /스펙/);
+  assert.doesNotMatch(loaded.get('#view-panel').textContent, /(?:Issue|Plan|Spec)(?:없음|과|또는|→)/);
 });
 
 test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
@@ -766,10 +597,81 @@ test('work columns sort independently in both directions with a stable ID tie br
   assert.deepEqual(core.selectIssues(tied, { quick: 'all', sort: 'title-desc' }).map((item) => item.id), ['PL-0001', 'PL-0002', 'PL-0003']);
 });
 
+test('dashboard controls keep keyboard focus, sort state and independent list visibility', async t => {
+  const page = await documentPage(t);
+  const tabs = page.get('#view-tabs');
+  page.get('[data-view="documents"]').focus();
+  page.key(page.document.activeElement, 'ArrowLeft');
+  assert.equal(page.document.activeElement.dataset.view, 'work');
+  assert.equal(page.document.activeElement.getAttribute('aria-selected'), 'true');
+  for (const [key, value] of [['work:type', 'task'], ['work:status', 'doing'], ['work:risk', 'high']]) {
+    const selector = `[data-focus-key="${key}"]`;
+    page.get(selector).focus(); page.change(selector, value);
+    assert.equal(page.document.activeElement, page.get(selector));
+    assert.match(page.get('.issue-table').textContent, /검색 가능한 구현/);
+    assert.doesNotMatch(page.get('.issue-table').textContent, /중단 버그/);
+  }
+  page.click('[data-focus-key="work:sort:title"]');
+  assert.equal(page.get('[data-focus-key="work:sort:title"]').closest('th').getAttribute('aria-sort'), 'ascending');
+  page.click('.issue-toggle');
+  assert.match(page.get('.issue-detail').textContent, /구현 가능/);
+  page.click('[data-focus-key="work:list-toggle"]');
+  assert.equal(page.get('#work-list').hidden, true);
+  page.click('[data-view="documents"]');
+  for (const [key, value] of [['documents:kind', 'spec'], ['documents:status', 'completed'], ['documents:sort', 'id-asc']]) {
+    const selector = `[data-focus-key="${key}"]`;
+    page.get(selector).focus(); page.change(selector, value);
+    assert.equal(page.document.activeElement, page.get(selector));
+  }
+  assert.match(page.get('#document-list').textContent, /SPEC-0006/);
+  assert.doesNotMatch(page.get('#document-list').textContent, /SPEC-0005|PLAN/);
+  page.click('[data-focus-key="documents:list-toggle"]');
+  assert.equal(page.get('#document-list').hidden, true);
+  assert.equal(tabs.querySelector('[aria-selected="true"]').dataset.view, 'documents');
+  assert.equal(new URL(page.get('#architecture-link').href).searchParams.get('project'), AVAILABLE_ID);
+  page.click('#panel-toggle');
+  assert.equal(page.get('#app-shell').classList.contains('project-panel-collapsed'), true);
+  assert.equal(page.window.localStorage.getItem('emeth.dashboard.sidebar'), 'collapsed');
+  page.click('.appearance-settings summary');
+  assert.equal(page.get('#app-shell').classList.contains('project-panel-collapsed'), false);
+});
+
+test('mobile drawer traps Tab focus and Escape restores its opener', async t => {
+  const page = await dashboard(t, { width: 390 });
+  const menu = page.get('#menu-button'); menu.focus(); menu.click();
+  const first = page.get('#project-panel a[href="/"]'), last = page.get('#panel-toggle');
+  last.focus(); page.key(last, 'Tab'); assert.equal(page.document.activeElement, first);
+  page.key(first, 'Tab', { shiftKey: true }); assert.equal(page.document.activeElement, last);
+  page.key(last, 'Escape');
+  assert.equal(page.document.activeElement, menu);
+  assert.equal(page.get('#project-panel').inert, true);
+  assert.equal(page.get('.workspace').hasAttribute('aria-hidden'), false);
+});
+
+test('visible-page refresh, unavailable removal and Markdown rendering use real event handlers', async t => {
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: detail('plan', 'PLAN-0002', '<img src=x onerror=alert(1)>\n\n```mermaid\ngraph LR\n A --> B\n```') });
+  page.click(planKey); await page.settle();
+  assert.equal(page.get('.markdown-body img'), null);
+  assert.match(page.diagrams[0], /A --> B/);
+  assert.equal(page.mermaidOptions[0].securityLevel, 'strict');
+  const before = page.calls.length;
+  assert.equal(page.intervals[0].delay, 30000);
+  page.intervals[0].callback(); await page.settle();
+  page.document.dispatchEvent(new page.window.Event('visibilitychange')); await page.settle();
+  assert.equal(page.calls.slice(before).filter(call => call.url.endsWith('/index')).length, 2);
+  const gone = { ...project('gone'), availability: 'unavailable' };
+  const removal = await dashboard(t, { projects: [gone] });
+  removal.window.confirm = () => true;
+  removal.routes['/api/v1/projects/gone'] = {};
+  removal.routes['/api/v1/projects'] = { projects: [] };
+  removal.click('.danger-button'); await removal.settle();
+  assert.equal(removal.calls.find(call => call.method === 'DELETE').url, '/api/v1/projects/gone');
+  assert.match(removal.get('#view-panel').textContent, /등록 프로젝트 없음/);
+});
+
 test('actual markup and styles expose responsive, keyboard, tooltip, and state contracts', () => {
   const html = readAsset('dashboard.html');
   const css = readAsset('styles.css');
-  const app = readAsset('app.js');
 
   assert.match(html, /role="tablist"/);
   assert.match(html, /aria-label="등록 프로젝트"/);
@@ -795,53 +697,4 @@ test('actual markup and styles expose responsive, keyboard, tooltip, and state c
   assert.doesNotMatch(css, /backdrop-filter:/);
   assert.match(html, /<details class="appearance-settings">[\s\S]*?<summary[^>]*>/);
 
-  assert.match(app, /new URLSearchParams\(globalThis\.location\.search\)\.get\('expected_version'\)/);
-  assert.match(app, /new URLSearchParams\(globalThis\.location\.search\)\.get\('project'\)/);
-  assert.match(app, /architectureParams\.set\('project', projectId\)/);
-  assert.match(app, /method: 'DELETE'/);
-  assert.match(app, /indexRequestGate\.isCurrent\(request, state\.selectedProjectId\)/);
-  assert.match(app, /state\.documents\.set\(requestKey, detail\)/);
-  assert.match(app, /documentRequestGate\.invalidate\(\)[\s\S]*state\.documents\.clear\(\)[\s\S]*state\.selectedDocument/);
-  assert.match(app, /openDocument\([\s\S]*\{ force: true \}/);
-  assert.match(app, /state\.documentErrors\.set\(requestKey/);
-  assert.match(app, /문서를 읽을 수 없음/);
-  assert.match(app, /documentRequestGate\.disposition\([\s\S]*?documentRequest,[\s\S]*?state\.selectedDocument/);
-  assert.match(app, /elements\.panel\.inert = true/);
-  assert.match(app, /setWorkspaceInert\(true\)/);
-  assert.match(app, /event\.key === 'Tab'[\s\S]*?containDrawerFocus\(event\)/);
-  assert.match(app, /event\.shiftKey \? last : first/);
-  assert.match(app, /state\.drawerReturnFocus = document\.activeElement/);
-  assert.match(app, /setProjectPanelCollapsed\(!state\.projectPanelCollapsed\)/);
-  assert.match(app, /state\.workListCollapsed = !state\.workListCollapsed/);
-  assert.match(app, /state\.documentListCollapsed = !state\.documentListCollapsed/);
-  assert.match(app, /querySelectorAll\('pre > code\.language-mermaid'\)/);
-  assert.match(app, /mermaid\.run\(\{ nodes:/);
-  assert.match(app, /firstProject \|\| elements\.projectSearch/);
-  assert.match(app, /focusTarget\.focus\(\)/);
-  assert.match(app, /event\.key === 'Escape'/);
-  assert.match(app, /ArrowLeft/);
-  assert.match(app, /indexedDB\.open\('emeth-dashboard'/);
-  assert.match(app, /setInterval\([\s\S]*?30000/);
-  assert.match(app, /visibilitychange[\s\S]*?visibilityState === 'visible'[\s\S]*?loadIndex\(false, true\)/);
-  assert.equal((app.match(/\.innerHTML\s*=/g) || []).length, 1);
-  assert.match(app, /body\.innerHTML = core\.renderMarkdown/);
-  assert.match(app, /cell\.setAttribute\('aria-sort'/);
-  assert.match(app, /make\('table', 'issue-table'\)/);
-  assert.doesNotMatch(app, /selectControl\('정렬 기준', state\.issueSort/);
-  assert.match(app, /core\.signalLabels\(issue\.flow_signal_ids\)/);
-  assert.doesNotMatch(app, /\['complete', '완료'\]/);
-  assert.match(app, /\['completed', '완료'\]/);
-  assert.match(app, /option\.setAttribute\('aria-label', `\$\{project\.name\}/);
-  assert.match(app, /option\.dataset\.focusKey = `project:\$\{project\.id\}`/);
-  assert.match(app, /projectSelectionFocusKey\(project\.id, globalThis\.innerWidth\)/);
-  assert.match(app, /core\.restoreFocusByKey\(elements\.projectList, focusKey\)/);
-  assert.match(app, /core\.restoreFocusByKey\(elements\.viewPanel, focusKey, fallbackFocusKey\)/);
-  assert.match(app, /option\.dataset\.focusKey = core\.documentOptionFocusKey/);
-  assert.equal((app.match(/renderView\(focusKey, 'documents:kind'\)/g) || []).length, 2);
-  for (const focusKey of [
-    'work:type', 'work:status', 'work:risk',
-    'documents:kind', 'documents:status', 'documents:sort',
-  ]) {
-    assert.match(app, new RegExp(`['\"]${focusKey}['\"]`), focusKey);
-  }
 });
