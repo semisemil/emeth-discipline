@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion [how](how.md) skill answers what the code does and how it works. [why](why.md) answers what forces led to its shape.
 
-Select each investigator's and synthesizer's model and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents).
+Select each investigator's and synthesizer's model and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
 
 Every spawn is `generalPurpose` with `readonly: false` (agent mode). **Do not use readonly/Ask mode.** It strips MCP access, which disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
 
@@ -46,14 +46,12 @@ Map each available MCP to one evidence category:
 
 Source control is always available through git and `gh`. For the other six, classify using the MCP name, server instructions, tool names, and resource descriptors. If an MCP could fit more than one category, choose the one matching its primary evidence. Record ambiguous cases in the coverage map.
 
-Spawn one investigator per category that has a matching MCP, all in a single message so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Select the investigator model through [execution](../../start-implementation/SKILL.md#subagents).
+Spawn one investigator per category that has a matching MCP, all in a single message so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs.
 
 Each investigator's prompt is `<plugin-root>/skills/code-exploration/references/why/investigator-prompt.md` filled in, plus:
 - the category playbook `references/sources/<source>.md` for the selected MCP, adapted from the examples in `<plugin-root>/skills/code-exploration/references/why/source-playbook.md`
 - `<plugin-root>/skills/code-exploration/references/why/sources/incident-postmortem.md` **if the target code looks defensive** (null checks, retry logic, timeout handling, rate limiting, feature flags, egress guards, OOM handlers)
 - the code anchor and the user's original question
-
-**Other harnesses.** The spawns in this skill use Cursor's `Task` tool. In another harness, use its subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. Keep the prompt and the model. Drop parameters your tool doesn't have. If your harness has no subagent tool, as in Pi without an extension, run each investigator yourself, one after another.
 
 ### Investigator roster, one per available evidence category
 
@@ -78,7 +76,7 @@ If your scope assessment suggests a single-commit trivial target where the PR de
 
 ## Step 4. Synthesize
 
-Spawn one synthesizer. Select its model through [execution](../../start-implementation/SKILL.md#subagents). It gets:
+Spawn one synthesizer. It gets:
 1. The investigator findings, including any null results and any categories skipped with justification
 2. The code anchor
 3. The user's original question

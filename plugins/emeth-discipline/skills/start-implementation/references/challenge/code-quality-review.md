@@ -2,23 +2,11 @@
 
 Each reviewer applies this code-quality lens in addition to the rubric. It is a strict standard focused on implementation quality, maintainability, abstraction quality, and codebase health.
 
-Above all, be ambitious about code structure. Do not merely identify local cleanup. Actively search for "code judo" moves, restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
-
-## Core Prompt
-
-Start from this baseline:
-
-> Perform a deep code quality audit of the current branch's changes.
-> Rethink how to structure / implement the changes to meaningfully improve code quality without impacting behavior.
-> Work to improve abstractions, modularity, reduce Spaghetti code, improve succinctness and legibility.
-> Be ambitious, if there is a clear path to improving the implementation that involves restructuring some of the codebase, go for it.
-> Be extremely thorough and rigorous. Measure twice, cut once.
-
 ## Dimensions
 
 Each dimension is stated once. Apply the ones that are relevant.
 
-0. **Be ambitious about structural simplification.** Do not stop at "this could be a bit cleaner." Look for reframings that make whole branches, helpers, modes, conditionals, or layers disappear. Assume a "code judo" move is often available. It uses the existing architecture more effectively and makes the change dramatically simpler. If you can delete complexity rather than rearrange it, push hard for that.
+0. **Be ambitious about structural simplification while preserving behavior.** Do not stop at "this could be a bit cleaner." Look for reframings that make whole branches, helpers, modes, conditionals, or layers disappear. Assume a "code judo" move is often available. It uses the existing architecture more effectively and makes the change dramatically simpler. If you can delete complexity rather than rearrange it, push hard for that.
 
 1. **Do not let a PR push a file from under 1k lines to over 1k lines without a very strong reason.** Treat this as a strong smell. Prefer extracting helpers, subcomponents, or modules. If the diff crosses that threshold, ask whether the code should be decomposed first. Waive only for a compelling structural reason where the resulting file stays clearly organized.
 

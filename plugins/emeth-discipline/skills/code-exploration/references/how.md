@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents).
+Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
 
 ## 1. Assess complexity
 
@@ -18,8 +18,6 @@ If the scope is ambiguous, state your interpretation and explore. The user can r
 - **Complex** (a subsystem spanning multiple files or services, a cross-cutting feature, a full architectural overview): go to step 2.
 
 When in doubt, take the simple path.
-
-**Other harnesses.** The spawns in this skill use Cursor's `Task` tool. In another harness, use its subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. Keep the prompt and the model. Drop parameters your tool doesn't have. If your harness has no subagent tool, as in Pi without an extension, run each role yourself, one after another.
 
 ## 2. Explore (complex only)
 

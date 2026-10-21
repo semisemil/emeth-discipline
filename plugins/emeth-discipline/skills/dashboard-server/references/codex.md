@@ -14,11 +14,17 @@ The directory contains `projects.json`, lock and temporary files, and server sta
 
 ## Configure write access
 
-1. Check the current sandbox's writable roots and applicable Codex configuration. If they already cover the directory, reuse that access. For `workspace-write`, locate the user configuration at `$CODEX_HOME/config.toml`, falling back to `~/.codex/config.toml`.
-2. When access is missing, tell the user that dashboard setup needs to modify that `config.toml` to allow writes to the resolved directory. Merge the directory into `[sandbox_workspace_write].writable_roots`, preserving existing entries and other settings. Use an absolute TOML path, not an environment-variable expression. Add only the dashboard directory; keep the current sandbox mode. Configuration edits must use the environment's permitted edit or approval mechanism. If editing is unavailable or denied, provide the exact path and required addition and report setup as pending.
+1. Check the current sandbox's writable roots and applicable Codex configuration. If they already cover the directory, reuse that access. Otherwise select the setting that applies:
+
+   | Configuration | Write-access setting |
+   |---|---|
+   | `default_permissions` selects a permission profile | The profile's supported filesystem settings |
+   | `workspace-write` without a selected permission profile | `[sandbox_workspace_write].writable_roots` in `$CODEX_HOME/config.toml`, falling back to `~/.codex/config.toml` |
+
+2. When access is missing, tell the user that dashboard setup needs to modify the selected configuration to allow writes to the resolved directory. Merge the directory into the selected write-access setting, preserving existing entries and other settings. For TOML, use an absolute path, not an environment-variable expression. Add only the dashboard directory; keep the current sandbox mode. Configuration edits must use the environment's permitted edit or approval mechanism. If editing is unavailable or denied, provide the exact path and required addition and report setup as pending.
 3. Verify access in the session that performs registration. A saved configuration change alone does not establish access in the current session; if its writable roots remain unchanged, tell the user to start a new Codex session with the updated configuration before retrying. Report registration as complete only when the registration command returns `registered` or `no-op`.
 
-If `default_permissions` selects a permission profile, configure the same directory through that profile's supported filesystem settings; do not combine it with `[sandbox_workspace_write]`. Managed restrictions remain authoritative.
+Managed restrictions remain authoritative.
 
 ## Recover a failed registration
 

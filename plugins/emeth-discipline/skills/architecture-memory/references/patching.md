@@ -1,6 +1,6 @@
 # Exact record patches
 
-For ordinary creation and section edits, use [authoring](recording.md). This interface remains available for exact replacements, section retirement and allowed ADR lifecycle edits.
+For ordinary creation and section edits, use [authoring](recording.md). Outside init/update, this interface remains available for exact replacements, section retirement and allowed ADR lifecycle edits. During init/update, use authoring commands or edit the returned draft directly, then workflow `apply`.
 
 For existing sections, use the `receipt` from `memory.js read` or `author.js read` as `expected`; new sections use `null`. Send UTF-8 JSON on stdin:
 
@@ -18,4 +18,4 @@ An `intro` edit uses `{"before":"<exact trimmed preamble>","after":"<replacement
 
 For related documents, omit `--document` and send `{"documents":[{"document":"context","edits":[...]},{"document":"adr-001","intro":{"before":"...","after":"..."},"edits":[]}]}`. New documents additionally need `path` and `kind`.
 
-On conflict, reread and reconcile the affected section. Resume interrupted publication with `record.js ensure --project-root <project>`. During init/update, this low-level interface is unavailable; use authoring commands or edit the returned draft directly, then workflow `apply`.
+On conflict, reread and reconcile the affected section. Resume interrupted publication with `record.js ensure --project-root <project>`.
