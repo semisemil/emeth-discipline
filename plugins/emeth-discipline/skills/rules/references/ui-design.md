@@ -38,6 +38,9 @@ Coordinate stroke widths, corner shapes, internal spacing, borders, and surface 
 
 ### Interaction feedback
 
+Make the result of an action easy to identify and relate to its control.
+Keep information needed to complete an action available where it is used.
+
 Apply the same design rules to selected, pressed, disabled, loading, error, and completed states, as well as panel opening. Match the scale and speed of feedback to the action's role, and do not leave individual states in default component styling.
 
 ## Polish in the actual screen
