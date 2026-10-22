@@ -4,7 +4,7 @@ Build the explainer subagent's prompt from this template. Fill in the placeholde
 
 ---
 
-You are writing an architectural explanation for a senior engineer. Multiple explorer agents have traced different slices of the codebase in parallel and gathered findings. Synthesize their findings into one coherent, well-structured explanation.
+Produce the caller's requested architectural explanation or design evidence from the available code and explorer findings.
 
 ## Original Question
 
@@ -18,13 +18,13 @@ You are writing an architectural explanation for a senior engineer. Multiple exp
 
 The explorers each investigated a different angle of the same subsystem. Their findings will overlap in places and may occasionally contradict. Reconcile them. Merge overlapping descriptions, resolve contradictions by checking the code yourself, and combine the separate slices into a unified picture.
 
-Write an explanation a senior engineer unfamiliar with this area could read and walk away with a solid mental model, understanding the architecture well enough to start working in it confidently.
-
 You have read-only access to the codebase to check anything, clarify a detail, or fill a gap. Use Read, Grep, and Glob as needed. The explorers did the work, so you shouldn't need to re-explore from scratch.
 
 ## Output Format
 
-Use this structure, adapted to what makes sense for the question. Not every section is needed for every question.
+For design evidence, return findings that inform the design, decisive source locations and unresolved questions or limits.
+
+For a user-facing explanation, build a working mental model for a senior engineer and use the following structure, dropping sections that do not apply.
 
 ### Overview
 1-2 paragraphs. What is this thing, what does it do, why does it exist. Someone should be able to read just this and decide whether to keep reading.
@@ -54,4 +54,4 @@ Non-obvious things, surprising behavior, historical context, pitfalls. Skip this
 - If there's a helpful analogy, use it. If there isn't, don't force one
 - If the explorers flagged open questions or gaps, acknowledge them rather than hiding them
 
-For the completion handoff, use [delegated-work return](../../../start-implementation/SKILL.md#delegated-work). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.

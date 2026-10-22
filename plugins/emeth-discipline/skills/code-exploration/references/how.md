@@ -1,12 +1,14 @@
 ---
 name: how
-description: "Use for \"how does X work\", code walkthroughs before changing something, and placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"). Explains subsystem architecture, runtime flow, onboarding mental models. Use why for motivation."
+description: "Use for \"how does X work\", code evidence for design, code walkthroughs before changing something, and placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"). Explains subsystem architecture and runtime flow, or returns findings for design. Use why for motivation."
 disable-model-invocation: true
 ---
 
 # How
 
-Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
+Explore the codebase to explain how it works or return findings for design.
+For user-facing explanations, build a working mental model for a senior engineer onboarding onto a subsystem.
+Tell the explainer whether the requested output is an explanation or design evidence.
 
 Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
 
@@ -14,7 +16,7 @@ Every spawn is a general subagent with read-only access. Select the explorer and
 
 If the scope is ambiguous, state your interpretation and explore. The user can redirect.
 
-- **Simple** (a single module, a small utility, a narrow question such as "how does function X work"): no explorers. Spawn one explainer that explores and explains in one pass, built from `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md` without the explorer-findings section. Go to step 4.
+- **Simple** (a single module, a small utility, a narrow question such as "how does function X work"): no explorers. Spawn one explainer that explores and produces the requested output in one pass, built from `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md` without the explorer-findings section. Go to step 4.
 - **Complex** (a subsystem spanning multiple files or services, a cross-cutting feature, a full architectural overview): go to step 2.
 
 When in doubt, take the simple path.
@@ -25,12 +27,13 @@ Decompose the question into 2 to 4 angles, each a distinct slice of the subsyste
 
 ## 3. Synthesize (complex only)
 
-Once all explorers have returned, spawn one explainer with `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md` and every explorer's findings filled in.
+Once all explorers have returned, spawn one explainer with `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md`, every explorer's findings and the requested output purpose.
 
-## 4. Present
+## 4. Deliver
 
-Present the explainer's output. Light edits for clarity or context from the conversation are fine. Do not substantially rewrite it.
+For a user-facing explanation, present the explainer's output with light edits for clarity or conversation context.
+For design work, return the synthesized findings, evidence locations and unresolved limits to the calling workflow.
 
 ## Output format
 
-The explanation uses the sections defined in `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md`, dropping any that do not apply: Overview, Key Concepts, How It Works, Where Things Live, Gotchas.
+Use the output contract in `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md` for the requested output purpose.

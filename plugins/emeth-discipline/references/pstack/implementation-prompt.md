@@ -20,4 +20,4 @@ Show how each expected result follows from its contract, including when operatio
 Unimplemented behavior can remain red when handing the tests to the integration owner.
 The owner integrates artifacts and verifies the complete public result.
 
-Return artifact paths, material findings, verification evidence and unresolved limits through the [delegated-work contract](../../skills/start-implementation/SKILL.md#delegated-work).
+Return artifact paths, material findings, verification evidence and unresolved limits through the [delegated-work contract](../delegated-work.md).

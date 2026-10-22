@@ -4,13 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash, randomUUID } = require('node:crypto');
 
-const implementationSkill = fs.readFileSync(path.join(__dirname, '../skills/start-implementation/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
-const contractHeading = '### Delegated work\n';
-const contractStart = implementationSkill.indexOf(contractHeading);
-if (contractStart < 0) throw new Error('Delegated work section missing from start-implementation');
-const contractTail = implementationSkill.slice(contractStart + contractHeading.length);
-const contractEnd = contractTail.search(/^#{1,3} /m);
-const delegationContract = '# Delegated work\n\n' + contractTail.slice(0, contractEnd < 0 ? undefined : contractEnd).trim() + '\n';
+const delegationContract = fs.readFileSync(path.join(__dirname, '../references/delegated-work.md'), 'utf8').replace(/\r\n/g, '\n');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 class WorkContext {

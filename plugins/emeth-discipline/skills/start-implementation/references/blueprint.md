@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: "Resolve implementation boundaries with two independent designs and synthesize the selected contract."
+description: "Explore design possibilities through independent candidates and synthesize the selected contract."
 disable-model-invocation: true
 ---
 
@@ -8,14 +8,15 @@ disable-model-invocation: true
 
 ## Phase A: Ground the problem
 
-Read the affected source and establish the inputs, outputs, state ownership and existing contracts that constrain the change.
-Carry source paths and decisive observations into design.
-Reuse valid source evidence and fill the gaps needed for open decisions.
-Use [how](../../code-exploration/references/how.md) for a requested architectural explanation and [why](../../code-exploration/references/why.md) when historical reasons affect a decision.
+Establish the design goal, accepted constraints and relevant evidence.
+Carry evidence locations and decisive observations into design.
+Reuse valid evidence and fill the gaps needed for open decisions.
+Use [how](../../code-exploration/references/how.md) when understanding the existing system informs the design or the user requests an architectural explanation, and [why](../../code-exploration/references/why.md) when historical reasons affect a decision.
 
 ## Phase B: Sketch
 
-Run [ensemble](../../ensemble/SKILL.md) with the common task, source evidence and [candidate prompt](blueprint/runner-prompt.md).
+Run [ensemble](../../ensemble/SKILL.md) with the common task, relevant evidence and [candidate prompt](blueprint/runner-prompt.md).
+Apply [design exploration](../../../references/design-exploration.md) to its candidate assignments and synthesis.
 For implementation, use the selected [implementation workflow](../SKILL.md#implementation-workflow) to assign the independent review's timing and target.
 Select the design before dependent implementation.
 The selected artifact records the boundaries, decisions and verification criteria.
@@ -24,7 +25,9 @@ Screen proposed boundaries against [design red flags](blueprint/design-red-flags
 For a requested full design rationale, use the [rationale template](blueprint/rationale-template.md).
 Reuse the synthesis as the Design contract.
 
-Proceed to implementation unless the user requested a design checkpoint or a material decision needs their answer.
+Proceed to implementation when the user's request or accepted follow-ups authorize it and the selected workflow's required design checks are complete.
+For a requested design checkpoint, present the selected design, its material effects and tradeoffs, and wait for explicit approval to implement.
+Resolve required user decisions through [design discussion](../../rules/references/design-discussion.md).
 Use [challenge](challenge.md) when the contract remains contested.
 
 ## Phase D: Implement and revise

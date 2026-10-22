@@ -8,12 +8,12 @@ const {spawnSync}=require('node:child_process');
 const {WorkContext,describeArtifacts}=require('../plugins/emeth-discipline/lib/work-context');
 const helper=path.resolve(__dirname,'../plugins/emeth-discipline/lib/work-context.js');
 
-test('return contract extraction preserves its body and excludes adjacent sections',t=>{
+test('return contract loads its complete dedicated reference without the implementation skill',t=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
  const lib=path.join(dir,'lib');fs.mkdirSync(lib);
  const copied=path.join(lib,'work-context.js');fs.copyFileSync(helper,copied);
- const skill=path.join(dir,'skills/start-implementation/SKILL.md');fs.mkdirSync(path.dirname(skill),{recursive:true});
- fs.writeFileSync(skill,'# Skill\r\nBefore.\r\n### Delegated work\r\n\r\nReturn the result.\r\n#### Evidence\r\nKeep exact paths.\r\n### Following section\r\nExcluded.\r\n');
+ const reference=path.join(dir,'references/delegated-work.md');fs.mkdirSync(path.dirname(reference),{recursive:true});
+ fs.writeFileSync(reference,'# Delegated work\r\n\r\nReturn the result.\r\n#### Evidence\r\nKeep exact paths.\r\n');
  assert.equal(require(copied).delegationContract,'# Delegated work\n\nReturn the result.\n#### Evidence\nKeep exact paths.\n');
 });
 

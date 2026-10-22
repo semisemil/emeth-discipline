@@ -34,4 +34,4 @@ Anything surprising, historically motivated, or easy to get wrong. Things that l
 ### Open Questions
 Anything you couldn't fully trace or understand. Be honest about gaps.
 
-For the completion handoff, use [delegated-work return](../../../start-implementation/SKILL.md#delegated-work). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.

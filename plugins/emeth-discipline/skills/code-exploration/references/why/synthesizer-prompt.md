@@ -128,4 +128,4 @@ Revise if any item fails:
 
 The value of this output is its honesty, not its authority. A reader who takes it to the original author, an engineering lead, or a product manager should know what's known, what's inferred, and what's missing, so they can ask the right follow-up questions. Optimize for being useful, not for looking decisive.
 
-For the completion handoff, use [delegated-work return](../../../start-implementation/SKILL.md#delegated-work). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.

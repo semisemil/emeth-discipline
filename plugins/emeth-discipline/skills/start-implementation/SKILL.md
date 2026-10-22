@@ -79,7 +79,7 @@ Use the [implementation delegate prompt](../../references/pstack/implementation-
 The calling conversation runs the playbook and retains coupled implementation and integration.
 Routed workflows keep their own roles and role prompts.
 
-**Defaults for every subagent call.** Pass the role prompt and [delegated-work contract](#delegated-work) by path, with the assignment's source and owned artifact paths.
+**Defaults for every subagent call.** Pass the role prompt and [delegated-work contract](../../references/delegated-work.md) by path, with the assignment's source and owned artifact paths.
 Use background execution and keep connected tools available when the role needs them.
 
 **Model selection.** Explicit user settings take precedence over workflow settings and role defaults.
@@ -107,7 +107,7 @@ Start a fresh assignment for new work and carry still-valid decisions by path.
 pstack was written for Cursor. In another harness (Claude Code, Codex, Pi, OpenCode, and others), read Cursor-specific instructions in this skill, its playbooks, and the routed skills through these mappings. If you can't tell which harness you are, check which of the paths below exist.
 
 - **Subagents.** `Task` means your subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. For a fresh Codex assignment, use `fork_turns: "none"` with the prescribed role prompt and paths to its task, grounding, and output artifacts. Drop parameters your tool doesn't have. `environment: "cloud"` means a Cursor cloud agent. Elsewhere, run that agent locally in its own worktree. If your harness has no subagent tool, as in Pi without an extension, do each delegated step yourself, one after another.
-- **Implementation delegates.** Where the source names `poteto-agent`, use a general subagent with the [implementation delegate prompt](../../references/pstack/implementation-prompt.md). Give it the active plugin's absolute start-implementation path.
+- **Implementation delegates.** Where the source names `poteto-agent`, use a general subagent with the [implementation delegate prompt](../../references/pstack/implementation-prompt.md).
 - **Transcripts.** Read only the active workspace's sessions, never other projects'. Cursor: the `agent-transcripts/` directory the system prompt names. Claude Code: `~/.claude/projects/<slug>/*.jsonl`, where `<slug>` is the workspace path with every character that isn't a letter or digit turned into "-". Pi: `~/.pi/agent/sessions/--<slug>--/*.jsonl`, where `<slug>` is the workspace path with the leading slash dropped and each "/" turned into "-". Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, keeping files whose first line has `payload.cwd` equal to the workspace path. OpenCode: `~/.local/share/opencode/storage/`.
 - **Skill folders.** Project: `.cursor/skills/` (Cursor), `.claude/skills/` (Claude Code), `.pi/skills/` (Pi), `.agents/skills/` (Codex, OpenCode, and others). User: `~/.cursor/skills/`, `~/.claude/skills/`, `~/.pi/agent/skills/`, `~/.codex/skills/`, `~/.agents/skills/`.
 - **Questions.** `AskQuestion` means the host's structured-question tool, such as `request_user_input_async` in Codex. Without one, ask in chat with numbered options.
@@ -134,19 +134,7 @@ User-facing output follows the user's language.
 
 Before fan-out, retain the original task and accepted directives by source path; save their exact text when they exist only in the conversation. Pass those paths and the shared grounding with each role's prescribed prompt. Extend the grounding with source ranges needed to answer a new question; reuse the evidence while its sources and conditions remain unchanged.
 
-Use the [delegated-work return contract](#delegated-work) without replacing a role's required prompt, artifact, findings or verification. Reuse delivered context and unchanged evidence. Keep stage, accepted decisions and artifact versions through the [work-context helper](#work-context).
-
-### Delegated work
-
-Own the assigned artifacts until completion or a concrete blocker.
-The assignment defines the recovery scope and stopping conditions, with retry or cost limits when needed.
-Resolve errors within that scope.
-Deliver artifacts needed by other work and problems requiring the coordinator's judgment as soon as they arise.
-At a stopping condition, return the information needed to resolve the blocker.
-Collect routine progress in the final result.
-Return decisions, artifact paths, verification evidence, and unresolved issues concisely.
-Keep the complete artifact at its declared path and identify its completed version when the host supports it.
-Refer to shared requirements and grounding instead of restating them.
+Use the [delegated-work return contract](../../references/delegated-work.md) without replacing a role's required prompt, artifact, findings or verification. Reuse delivered context and unchanged evidence. Keep stage, accepted decisions and artifact versions through the [work-context helper](#work-context).
 
 ### Work context
 

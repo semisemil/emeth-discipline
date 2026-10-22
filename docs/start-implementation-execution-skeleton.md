@@ -22,6 +22,8 @@ pstack 0.15.25, 커밋 `6f131f137de64fdaf928278c0fd9ecec520ccbee`에서 가져�
 
 [figure-it-out](../plugins/emeth-discipline/skills/figure-it-out/SKILL.md)은 실행 흐름 선택, Design 준비, `tenet-me` 검토와 [start-implementation](../plugins/emeth-discipline/skills/start-implementation/SKILL.md)을 조율한다.
 이미 검토한 Design과 유효한 산출물은 이어서 사용한다.
+구현은 사용자 요청과 이후 합의에서 허용한 범위에서 시작하며, 선택한 흐름의 필수 설계 검토를 먼저 마친다.
+사용자가 설계 확인 단계를 요청했다면 선택한 설계와 주요 영향 및 장단점을 제시하고 명시적인 구현 승인을 기다린다.
 
 | 작업 | 절차가 보존하는 검증 |
 | --- | --- |
@@ -37,7 +39,9 @@ pstack 0.15.25, 커밋 `6f131f137de64fdaf928278c0fd9ecec520ccbee`에서 가져�
 
 [ensemble](../plugins/emeth-discipline/skills/ensemble/SKILL.md)은 독립 후보 둘의 생성, 비교와 합성 및 독립 검토를 담당한다.
 호출한 실행 흐름이 검토 시점과 대상을 정한다.
-[blueprint](../plugins/emeth-discipline/skills/start-implementation/references/blueprint.md)는 필요한 구현 경계와 결정만 구체화한다.
+[blueprint](../plugins/emeth-discipline/skills/start-implementation/references/blueprint.md)는 목표, 합의된 제약과 관련 근거에서 필요한 설계 경계와 결정을 구체화한다.
+architecture-coop과 blueprint는 [공통 설계 탐색](../plugins/emeth-discipline/references/design-exploration.md)을 기존 ensemble 후보의 배정과 종합에 적용한다.
+후보들은 과제에 맞는 열린 질문에서 조사와 설계를 진행하고, 서로의 조사 결과를 종합에 활용한다.
 [구현 위임 프롬프트](../plugins/emeth-discipline/references/pstack/implementation-prompt.md)는 분리할 수 있는 구현 또는 검증 산출물에 적용한다.
 
 역할별 전달문에는 해당 역할의 계약과 작업에 필요한 원문, 근거와 담당 경로를 전달한다.

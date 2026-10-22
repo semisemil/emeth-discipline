@@ -38,13 +38,34 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 ### Codex CLI에서 설치
 
+Codex CLI 0.163.0 이상을 사용합니다.
 `emeth-discipline` 마켓플레이스를 추가한 다음 Emeth 플러그인을 설치합니다.
 
 ```bash
 codex plugin marketplace add semisemil/emeth-discipline
 codex plugin add emeth-discipline@emeth-discipline
+```
+
+부모 대화를 상속하는 하위 에이전트가 코드 조회 결과와 입력 캐시를 재사용할 수 있도록, 사용자 설정 파일 `~/.codex/config.toml`에 다음 설정을 추가합니다.
+Windows의 기본 경로는 `%USERPROFILE%\.codex\config.toml`입니다.
+`CODEX_HOME`을 지정했다면 해당 폴더의 `config.toml`을 수정합니다.
+기존 섹션이 있으면 아래 항목을 해당 섹션에 합칩니다.
+
+```toml
+[features]
+incremental_tools = true
+
+[features.multi_agent_v2]
+enabled = true
+preserve_fork_prefix = true
+```
+
+설정을 저장한 뒤 Codex를 시작합니다.
+
+```bash
 codex
 ```
+
 Codex가 열리면 다음 순서로 마무리합니다.
 
 1. `/hooks`를 엽니다.

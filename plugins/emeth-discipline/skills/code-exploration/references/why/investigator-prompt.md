@@ -83,4 +83,4 @@ What you searched for and didn't find, specifically: "Searched the issue tracker
 ### Additional Leads
 Anything that suggests further investigation in a different source, for its investigator or a follow-up pass. For example, a chat thread that a PR mentions.
 
-For the completion handoff, use [delegated-work return](../../../start-implementation/SKILL.md#delegated-work). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.
