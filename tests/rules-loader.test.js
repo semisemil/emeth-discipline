@@ -17,7 +17,6 @@ function fixture(t) {
     root,
     env: {
       ...process.env,
-      EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
       APPDATA: configRoot,
       XDG_CONFIG_HOME: configRoot,
       PLUGIN_DATA: path.join(root, 'plugin-data'),

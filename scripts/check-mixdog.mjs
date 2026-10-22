@@ -22,8 +22,8 @@ const dataDir = join(root, 'mixdog-data');
 process.env.MIXDOG_ROOT = join(mixdogRoot, 'src');
 process.env.MIXDOG_DATA_DIR = dataDir;
 process.env.XDG_CONFIG_HOME = join(root, 'config');
+process.env.APPDATA = join(root, 'config');
 delete process.env.MIXDOG_HOOKS_FILE;
-delete process.env.EMETH_BENCHMARK_DISABLE_DASHBOARD;
 
 const upstream = relative => import(pathToFileURL(join(mixdogRoot, relative)).href);
 let control;
@@ -73,15 +73,19 @@ try {
   process.stdout.write(delivery.stdout);
 
   control = require(join(pluginRoot, 'dashboard/control.js'));
-  const status = await control.inspectServer();
+  assert.equal((await control.inspectServer()).status, 'stopped');
+  let openedUrl;
+  const status = await control.openDashboard({ browserLauncher(url) { openedUrl = url; } });
+  assert.equal(status.action, 'opened');
   assert.equal(status.status, 'running');
+  assert.equal(new URL(openedUrl).port, '43127');
   assert.equal(status.version, plugin.version);
   for (const route of ['/api/v1/health', '/', '/dashboard', '/architecture']) {
     const response = await fetch(`http://127.0.0.1:${status.port}${route}`);
     assert.equal(response.status, 200, route);
     assert.ok((await response.text()).length, route);
   }
-  console.log('Packaged dashboard: health and all three pages respond successfully');
+  console.log('SessionStart leaves dashboard stopped; explicit open and all three pages verified');
   setPluginEnabled(plugin.id, false, { dataDir });
   assert.equal(collectSkills(projectRoot).filter(skill => skill.plugin === plugin.id).length, 0);
   const disabled = await bus.dispatch('UserPromptSubmit', { cwd: projectRoot, prompt: 'Continue.' });
@@ -90,7 +94,6 @@ try {
   assert.deepEqual(bus.status().configuredEvents, []);
   console.log('Plugin disable: contributed skills and hooks are removed');
 } finally {
-  // SessionStart can start the server before a later assertion fails.
   control ||= createRequire(import.meta.url)(join(pluginRoot, 'dashboard/control.js'));
   await control.stopServer();
   rmSync(root, { recursive: true, force: true, maxRetries: 10 });

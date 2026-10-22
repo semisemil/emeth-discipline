@@ -40,11 +40,6 @@ function parseArguments(argv) {
     if (!key || !key.startsWith('--')) {
       throw new Error('Invalid dashboard server arguments.');
     }
-    if (key === '--save-port') {
-      values['save-port'] = true;
-      index += 1;
-      continue;
-    }
     const value = argv[index + 1];
     if (value === undefined || value.startsWith('--')) {
       throw new Error('Invalid dashboard server arguments.');
@@ -66,7 +61,6 @@ function parseArguments(argv) {
     directory: values.directory,
     instanceId: values['instance-id'],
     port,
-    savePort: Object.hasOwn(values, 'save-port'),
     version: values.version,
   };
 }
@@ -570,7 +564,6 @@ function createDashboardHttpServer(options) {
 }
 
 function startServer(options) {
-  const settingsPath = path.join(options.directory, 'settings.json');
   const statePath = path.join(options.directory, 'server.json');
   const lockPath = path.join(options.directory, 'server-start.lock');
   let closing = false;
@@ -620,9 +613,6 @@ function startServer(options) {
       const address = server.address();
       const port = address.port;
       fs.mkdirSync(options.directory, { recursive: true });
-      if (options.savePort) {
-        writeJsonAtomic(settingsPath, { schema_version: 1, port });
-      }
       writeJsonAtomic(statePath, {
         schema_version: 1,
         instance_id: options.instanceId,

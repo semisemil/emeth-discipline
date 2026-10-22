@@ -1,6 +1,8 @@
 # Dashboard sandbox setup in Codex
 
-Use for a registration failure reporting `EPERM` or `EACCES`, or an explicit manual setup request. Normal registration initializes missing storage and returns `registered` or `no-op`; those results complete registration. This also applies to writers that register after saving a project document.
+Use for a registration or server-start failure reporting `EPERM` or `EACCES`, or an explicit manual setup request.
+Normal registration initializes missing storage and returns `registered` or `no-op`; those results complete registration.
+This also applies to writers that register after saving a project document.
 
 ## Resolve the required directory
 
@@ -22,12 +24,17 @@ The directory contains `projects.json`, lock and temporary files, and server sta
    | `workspace-write` without a selected permission profile | `[sandbox_workspace_write].writable_roots` in `$CODEX_HOME/config.toml`, falling back to `~/.codex/config.toml` |
 
 2. When access is missing, tell the user that dashboard setup needs to modify the selected configuration to allow writes to the resolved directory. Merge the directory into the selected write-access setting, preserving existing entries and other settings. For TOML, use an absolute path, not an environment-variable expression. Add only the dashboard directory; keep the current sandbox mode. Configuration edits must use the environment's permitted edit or approval mechanism. If editing is unavailable or denied, provide the exact path and required addition and report setup as pending.
-3. Verify access in the session that performs registration. A saved configuration change alone does not establish access in the current session; if its writable roots remain unchanged, tell the user to start a new Codex session with the updated configuration before retrying. Report registration as complete only when the registration command returns `registered` or `no-op`.
+3. Verify access in the session that retries the operation.
+   A saved configuration change alone does not establish access in the current session; if its writable roots remain unchanged, tell the user to start a new Codex session with the updated configuration before retrying.
+   Registration completes on `registered` or `no-op`; opening the dashboard completes on `opened`.
 
 Managed restrictions remain authoritative.
 
-## Recover a failed registration
+## Recover a failed operation
 
-For registration errors reporting `EPERM` or `EACCES`, including `registry-lock-failed`, check sandbox access to the resolved directory before retrying. If access already covers it, report the remaining error for filesystem permission or lock diagnosis; the error alone does not prove a sandbox cause. Preserve a completed Issue, Design, or Memory write and retry only `dashboard/register-project.js register --project-root <absolute-project-root>` after access is available. Report the document write and registration outcomes separately.
+For errors reporting `EPERM` or `EACCES`, including `registry-lock-failed`, check sandbox access to the resolved directory before retrying.
+If access already covers it, report the remaining error for filesystem permission or lock diagnosis; the error alone does not prove a sandbox cause.
+After access is available, retry the failed dashboard command.
+For a completed Issue, Design, or Memory write, retry only `dashboard/register-project.js register --project-root <absolute-project-root>` and report registration separately.
 
 Configuration reference: [Codex config.toml](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml).

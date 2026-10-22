@@ -17,7 +17,7 @@ function fixture(t) {
   const env = {
     ...process.env, HOME: root, USERPROFILE: root,
     APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
-    PLUGIN_DATA: path.join(root, 'plugin-data'), EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
+    PLUGIN_DATA: path.join(root, 'plugin-data'),
   };
   const write = (name, text) => {
     const target = path.join(root, name);
@@ -144,17 +144,17 @@ function copyPlugin(f) {
   return plugin;
 }
 
-test('dashboard startup failure leaves the prompt and memory available', (t) => {
+test('session startup delivers the prompt and memory without loading dashboard code', (t) => {
   const f = fixture(t); f.memory();
   const plugin = copyPlugin(f);
-  f.write('plugin/dashboard/control.js', 'exports.startServer = async () => { throw new Error("dashboard unavailable"); };');
+  f.write('plugin/dashboard/control.js', 'throw new Error("dashboard code loaded");');
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
-    hook: path.join(plugin, 'hooks/run.js'), env: { EMETH_BENCHMARK_DISABLE_DASHBOARD: '0' },
+    hook: path.join(plugin, 'hooks/run.js'),
   });
   const response = output(result);
   assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ pluginRoot: plugin }) + '\n\n'));
   assert.match(response.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
-  assert.match(result.stderr, /dashboard unavailable/);
+  assert.equal(result.stderr, '');
 });
 
 test('a prompt failure reports the error without consuming an undelivered memory notice', (t) => {

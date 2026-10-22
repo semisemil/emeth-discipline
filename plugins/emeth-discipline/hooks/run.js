@@ -42,16 +42,6 @@ async function run(input) {
   } catch (error) {
     process.stderr.write(`Architecture memory connection unavailable: ${error.code || error.message}\n`);
   }
-  if (event === 'SessionStart' && process.env.EMETH_BENCHMARK_DISABLE_DASHBOARD !== '1') {
-    try {
-      const result = await require('../dashboard/control').startServer();
-      if (!result.ok && result.reason !== 'start-in-progress') throw new Error(result.reason);
-    } catch (error) {
-      // The dashboard must not suppress the prompt or memory connection.
-      process.stderr.write(`Emeth Discipline dashboard server not started: ${error.message}\n`);
-    }
-  }
-
   if (failure) {
     if (!contexts.length && !response.systemMessage) throw failure;
     const message = `Emeth Discipline prompt unavailable: ${failure.message}`;

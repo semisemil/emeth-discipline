@@ -1,6 +1,6 @@
 interface:
   display_name: "Emeth: Dashboard Server"
-  short_description: "Open, inspect, or stop the running dashboard server"
+  short_description: "Start and open, inspect, or stop the dashboard server"
   default_prompt: "Use $dashboard-server to report the running Emeth dashboard server status."
 
 policy:

@@ -141,7 +141,7 @@ test('registration, child server, project switching, refresh, and unavailable re
   const firstId = register(firstRoot, env);
   const secondId = register(secondRoot, env);
 
-  running = await startServer({ directory: serverDirectory, expectedVersion: '0.6.2' });
+  running = await startServer({ directory: serverDirectory, port: 0, expectedVersion: '0.6.2' });
   assert.equal(running.ok, true);
   assert.equal(running.action, 'started');
   assert.match(running.url, /^http:\/\/127\.0\.0\.1:/);

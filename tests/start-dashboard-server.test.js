@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
-const { randomUUID } = require('node:crypto');
 const test = require('node:test');
 
 const {
@@ -28,7 +27,7 @@ function isolatedEnvironment(root) {
   };
 }
 
-test('all four SessionStart sources reuse one server without project mutation', async (t) => {
+test('all four SessionStart sources leave the dashboard stopped without creating state', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-server-'));
   const project = path.join(root, 'project');
   const env = isolatedEnvironment(root);
@@ -38,8 +37,6 @@ test('all four SessionStart sources reuse one server without project mutation', 
     await stopServer({ directory });
     fs.rmSync(root, { recursive: true, force: true });
   });
-  const instanceIds = [];
-
   for (const source of ['startup', 'resume', 'clear', 'compact']) {
     const result = spawnSync(process.execPath, [hookPath], {
       encoding: 'utf8',
@@ -54,16 +51,15 @@ test('all four SessionStart sources reuse one server without project mutation', 
     assert.equal(result.stdout ? JSON.parse(result.stdout).hookSpecificOutput.additionalContext : '',
       source === 'resume' ? '' : composeEmethPrompt());
     const status = await inspectServer({ directory });
-    assert.equal(status.status, 'running');
-    instanceIds.push(status.instance_id);
+    assert.equal(status.status, 'stopped');
+    assert.equal(fs.existsSync(directory), false);
   }
 
-  assert.equal(new Set(instanceIds).size, 1);
   assert.equal(fs.existsSync(path.join(project, '.emeth')), false);
   assert.equal(fs.existsSync(path.join(directory, 'projects.json')), false);
 });
 
-test('Windows PowerShell hook closes its output while the dashboard stays running', {
+test('Windows PowerShell hook closes its output without starting the dashboard', {
   skip: process.platform !== 'win32',
 }, async (testContext) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth powershell '한글-"));
@@ -98,64 +94,38 @@ test('Windows PowerShell hook closes its output while the dashboard stays runnin
   assert.equal(exitCode, 0, stderr);
   assert.equal(stderr, '');
   assert.equal(JSON.parse(stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
-  assert.equal((await inspectServer({ directory })).status, 'running');
-  assert.equal(fs.readdirSync(directory).some((name) => /^server-start-/.test(name)), false);
-});
-
-test('benchmark mode completes without starting a dashboard server', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-benchmark-'));
-  const env = {
-    ...isolatedEnvironment(root),
-    EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
-  };
-  const directory = dashboardDirectory({ env });
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-
-  const result = spawnSync(process.execPath, [hookPath], {
-    encoding: 'utf8',
-    env,
-    input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: root }),
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
   assert.equal((await inspectServer({ directory })).status, 'stopped');
   assert.equal(fs.existsSync(directory), false);
 });
 
-test('startup replaces an expired lock whose owner PID was reused', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hook-stale-lock-'));
-  const project = path.join(root, 'project');
+test('Windows PowerShell explicit startup closes its output while the dashboard keeps running', {
+  skip: process.platform !== 'win32',
+}, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth explicit '한글-"));
   const env = isolatedEnvironment(root);
   const directory = dashboardDirectory({ env });
-  const lockPath = path.join(directory, 'server-start.lock');
-  fs.mkdirSync(project, { recursive: true });
-  fs.mkdirSync(directory, { recursive: true });
-  fs.writeFileSync(lockPath, JSON.stringify({
-    schema_version: 1,
-    instance_id: randomUUID(),
-    owner_pid: process.pid,
-    started_at: new Date(Date.now() - 60_000).toISOString(),
-  }));
   t.after(async () => {
     await stopServer({ directory });
     fs.rmSync(root, { recursive: true, force: true });
   });
 
-  const result = spawnSync(process.execPath, [hookPath], {
+  const controlPath = path.join(pluginRoot, 'dashboard/control.js');
+  const quotedControl = `'${controlPath.replace(/'/g, "''")}'`;
+  const result = spawnSync('powershell.exe', [
+    '-NoLogo', '-NoProfile', '-NonInteractive', '-Command', `& node ${quotedControl} start`,
+  ], {
     encoding: 'utf8',
     env,
-    input: JSON.stringify({
-      cwd: project,
-      hook_event_name: 'SessionStart',
-      source: 'startup',
-    }),
+    windowsHide: true,
+    timeout: 20_000,
   });
   const status = await inspectServer({ directory });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
+  assert.equal(result.stderr, '');
+  assert.equal(JSON.parse(result.stdout).action, 'started');
   assert.equal(status.status, 'running');
+  assert.equal(status.port, 43127);
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), true);
-  assert.equal(fs.existsSync(lockPath), false);
+  assert.equal(fs.readdirSync(directory).some((name) => /^server-start-/.test(name)), false);
 });

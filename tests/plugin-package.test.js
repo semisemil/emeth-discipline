@@ -23,7 +23,6 @@ function fixture(t) {
     ...process.env, APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
     HOME: path.join(root, 'home'), USERPROFILE: path.join(root, 'home'),
     PLUGIN_ROOT: plugin, PLUGIN_DATA: path.join(root, 'data'),
-    EMETH_BENCHMARK_DISABLE_DASHBOARD: '1',
   };
   function run(relative, args = [], input, overrides = {}) {
     const result = spawnSync(process.execPath, [path.join(plugin, relative), ...args], {
@@ -96,7 +95,7 @@ test('isolated package starts its dashboard and serves packaged assets', async t
   const control = require(path.join(f.plugin, 'dashboard/control.js'));
   const directory = path.join(f.root, 'dashboard-state');
   try {
-    const running = await control.startServer({ directory, startTimeoutMs: 15000 });
+    const running = await control.startServer({ directory, port: 0, startTimeoutMs: 15000 });
     assert.equal(running.ok, true, JSON.stringify(running));
     assert.equal(running.version, JSON.parse(fs.readFileSync(path.join(f.plugin, '.codex-plugin/plugin.json'), 'utf8')).version);
     const origin = `http://127.0.0.1:${running.port}`;

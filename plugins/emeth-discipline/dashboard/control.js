@@ -8,6 +8,7 @@ const { execFile, spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 
 const HOST = '127.0.0.1';
+const PORT = 43127;
 const START_TIMEOUT_MS = 5000;
 const STOP_TIMEOUT_MS = 3000;
 const HEALTH_TIMEOUT_MS = 500;
@@ -30,7 +31,6 @@ function dashboardPaths(options = {}) {
     directory,
     lock: path.join(directory, 'server-start.lock'),
     server: path.join(directory, 'server.json'),
-    settings: path.join(directory, 'settings.json'),
   };
 }
 
@@ -75,20 +75,6 @@ function readServerState(paths) {
     return error.code === 'ENOENT'
       ? { ok: false, reason: 'stopped' }
       : { ok: false, reason: 'server-state-invalid' };
-  }
-}
-
-function readSettings(paths) {
-  try {
-    const settings = readJson(paths.settings);
-    if (!settings || settings.schema_version !== 1 || !isPort(settings.port)) {
-      return { ok: false, reason: 'settings-invalid' };
-    }
-    return { ok: true, port: settings.port };
-  } catch (error) {
-    return error.code === 'ENOENT'
-      ? { ok: true, port: 0, firstSelection: true }
-      : { ok: false, reason: 'settings-invalid' };
   }
 }
 
@@ -358,9 +344,10 @@ async function startWindowsServer(args, paths, instanceId, timeoutMs) {
 
 async function startServer(options = {}) {
   const paths = dashboardPaths(options);
+  const port = options.port ?? PORT;
   const expectedVersion = options.expectedVersion || pluginVersion(options);
   const before = await inspectServer({ ...options, expectedVersion });
-  if (before.status === 'running') {
+  if (before.status === 'running' && (port === 0 || before.port === port)) {
     return { ...before, action: 'reused' };
   }
 
@@ -375,14 +362,16 @@ async function startServer(options = {}) {
 
   try {
     const afterLock = await inspectServer({ ...options, expectedVersion });
-    if (afterLock.status === 'running') {
+    if (afterLock.status === 'running' && (port === 0 || afterLock.port === port)) {
       releaseLock(paths, instanceId);
       return { ...afterLock, action: 'reused' };
     }
-    const settings = readSettings(paths);
-    if (!settings.ok) {
-      releaseLock(paths, instanceId);
-      return { ok: false, status: 'stopped', reason: settings.reason, expected_version: expectedVersion };
+    if (afterLock.status === 'running') {
+      const stopped = await stopServer({ ...options, expectedVersion });
+      if (!stopped.ok) {
+        releaseLock(paths, instanceId);
+        return stopped;
+      }
     }
     unlinkIfExists(paths.server);
 
@@ -391,12 +380,9 @@ async function startServer(options = {}) {
       serverScript,
       '--directory', paths.directory,
       '--instance-id', instanceId,
-      '--port', String(settings.port),
+      '--port', String(port),
       '--version', expectedVersion,
     ];
-    if (settings.firstSelection) {
-      args.push('--save-port');
-    }
     let child;
     let result;
     const timeoutMs = options.startTimeoutMs || START_TIMEOUT_MS;
@@ -429,6 +415,7 @@ async function startServer(options = {}) {
         ok: false,
         status: 'stopped',
         reason: result.reason || 'start-failed',
+        port,
         expected_version: expectedVersion,
       };
     }
@@ -474,8 +461,8 @@ function defaultBrowserLauncher(url) {
 }
 
 async function openDashboard(options = {}) {
-  const result = await inspectServer(options);
-  if (result.status !== 'running') {
+  const result = await startServer(options);
+  if (!result.ok) {
     return { ...result, ok: false, action: 'unchanged' };
   }
   const url = serverUrl(result.port, result.expected_version);
@@ -553,12 +540,14 @@ if (require.main === module) {
 
 module.exports = {
   HOST,
+  PORT,
   dashboardDirectory,
   dashboardPaths,
   health,
   inspectServer,
   openDashboard,
   pluginVersion,
+  runCli,
   serverUrl,
   startServer,
   stopServer,

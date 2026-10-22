@@ -9,13 +9,14 @@
 | 설치·스킬 등록 | 실제 CLI로 로컬 마켓플레이스 설치, app-server에서 스킬 15개 확인 | 실제 plugin-admin과 skill catalog에서 스킬 15개·선택 트리거 확인 |
 | 지침 전달 | 정상 해시 승인 후 실제 턴의 모델 요청에 전체 공통 규칙·번호 안내·선택한 스킬 본문 포함 | 실제 세션 시작 bridge가 기록에 규칙 삽입, user-turn bridge가 기존 context·규칙·번호 안내 전달 |
 | worker 요청 | 공통 테스트에서 구현 요청의 Design·모델·추론·프로젝트 설정 확인 | 실제 worker turn runner에서 prompt·context·cwd가 세션 실행기로 전달되는지 확인 |
-| 대시보드 | 실제 Codex SessionStart가 서버 시작, 상태 API와 세 화면 HTTP 응답 확인 | 실제 Mixdog 훅이 서버 시작, 상태 API와 세 화면 HTTP 응답 확인 |
+| 대시보드 | 실제 Codex SessionStart 후 서버 중지 상태 확인, 명시적 열기로 시작 후 상태 API와 세 화면 HTTP 응답 확인 | 실제 Mixdog 훅 실행 후 서버 중지 상태 확인, 명시적 열기로 시작 후 상태 API와 세 화면 HTTP 응답 확인 |
 | 호출 제한·비활성화 | CLI가 등록한 훅 3개와 초기 미승인 상태 확인 | 플러그인 비활성화 시 스킬·훅 제거 확인 |
 
 ## 실행
 
 저장소 루트에서 공통 회귀 테스트를 실행한다.
-대시보드를 실행 중인 개발 환경에서는 테스트 전용 XDG 디렉터리로 상태를 분리한다.
+테스트 전용 XDG 디렉터리로 상태를 분리한다.
+고정 포트 검사에는 비어 있는 `127.0.0.1:43127`이 필요하다.
 
 ```bash
 task_config=$(mktemp -d /tmp/emeth-test-config.XXXXXX)

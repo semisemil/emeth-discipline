@@ -20,8 +20,8 @@ const projectRoot = join(root, 'project');
 mkdirSync(projectRoot);
 mkdirSync(join(root, 'codex'));
 // CODEX_HOME is the CLI's supported per-process configuration location.
-const env = { ...process.env, CODEX_HOME: join(root, 'codex'), XDG_CONFIG_HOME: join(root, 'config') };
-delete env.EMETH_BENCHMARK_DISABLE_DASHBOARD;
+const env = { ...process.env, CODEX_HOME: join(root, 'codex'),
+  APPDATA: join(root, 'config'), XDG_CONFIG_HOME: join(root, 'config') };
 for (const name of ['MIXDOG_PLUGIN_ROOT', 'MIXDOG_PLUGIN_DATA', 'MIXDOG_DATA_DIR', 'MIXDOG_ROOT', 'MIXDOG_HOME',
   'PLUGIN_ROOT', 'PLUGIN_DATA', 'CLAUDE_PLUGIN_ROOT', 'CLAUDE_PLUGIN_DATA']) delete env[name];
 const cli = process.argv[2] || 'codex';
@@ -184,8 +184,12 @@ try {
   console.log('Native Codex turn: shared rules, document numbering, and selected skill reach the provider boundary');
   control = createRequire(import.meta.url)(join(installedRoot, 'dashboard/control.js'));
   const directory = control.dashboardDirectory({ env });
-  const status = await control.inspectServer({ directory });
+  assert.equal((await control.inspectServer({ directory })).status, 'stopped');
+  let openedUrl;
+  const status = await control.openDashboard({ directory, browserLauncher(url) { openedUrl = url; } });
+  assert.equal(status.action, 'opened');
   assert.equal(status.status, 'running');
+  assert.equal(new URL(openedUrl).port, '43127');
   assert.equal(status.version, version);
   for (const route of ['/api/v1/health', '/', '/dashboard', '/architecture']) {
     const response = await fetch(`http://127.0.0.1:${status.port}${route}`);
@@ -195,7 +199,7 @@ try {
   await control.stopServer({ directory });
   assert.equal((await control.inspectServer({ directory })).status, 'stopped');
   stopped = true;
-  console.log('Native Codex SessionStart: dashboard health and all three pages verified');
+  console.log('Native Codex SessionStart leaves dashboard stopped; explicit open and all three pages verified');
 } finally {
   await disconnect();
   if (control && !stopped) await control.stopServer({ directory: control.dashboardDirectory({ env }) });

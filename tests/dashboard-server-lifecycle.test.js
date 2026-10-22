@@ -10,6 +10,8 @@ const { randomUUID } = require('node:crypto');
 const {
   health,
   inspectServer,
+  openDashboard,
+  runCli,
   startServer,
   stopServer,
 } = require('../plugins/emeth-discipline/dashboard/control');
@@ -45,15 +47,16 @@ function cannotConnect(host, port) {
   });
 }
 
-test('first start selects one IPv4 loopback port and reuses its instance', async (t) => {
+test('startup uses fixed IPv4 port 43127 despite legacy settings and keeps it after restart', async (t) => {
   const directory = tempDirectory(t);
+  const settingsPath = path.join(directory, 'settings.json');
+  fs.writeFileSync(settingsPath, JSON.stringify({ schema_version: 1, port: 12345 }));
   const first = await startServer({ directory });
 
   assert.equal(first.ok, true);
   assert.equal(first.action, 'started');
-  const settings = JSON.parse(fs.readFileSync(path.join(directory, 'settings.json'), 'utf8'));
+  assert.equal(first.port, 43127);
   const state = JSON.parse(fs.readFileSync(path.join(directory, 'server.json'), 'utf8'));
-  assert.deepEqual(settings, { schema_version: 1, port: first.port });
   assert.equal(state.instance_id, first.instance_id);
   assert.equal((await health(first.port)).value.instance_id, first.instance_id);
   assert.equal(await cannotConnect('::1', first.port), true);
@@ -62,26 +65,64 @@ test('first start selects one IPv4 loopback port and reuses its instance', async
   assert.equal(reused.action, 'reused');
   assert.equal(reused.instance_id, first.instance_id);
   assert.equal(reused.port, first.port);
+
+  await stopServer({ directory });
+  const restarted = await startServer({ directory });
+  assert.equal(restarted.ok, true);
+  assert.equal(restarted.port, 43127);
+  assert.notEqual(restarted.instance_id, first.instance_id);
+  assert.equal(JSON.parse(fs.readFileSync(settingsPath, 'utf8')).port, 12345);
 });
 
-test('stored port owned by another process is reported and never replaced', async (t) => {
+test('fixed port owned by another process is reported without selecting another port', async (t) => {
   const directory = tempDirectory(t);
   const occupant = net.createServer((socket) => socket.end('occupied'));
   t.after(() => close(occupant));
-  const address = await listen(occupant);
-  fs.mkdirSync(directory, { recursive: true });
-  fs.writeFileSync(
-    path.join(directory, 'settings.json'),
-    JSON.stringify({ schema_version: 1, port: address.port }),
-  );
+  await listen(occupant, '127.0.0.1', 43127);
 
   const result = await startServer({ directory });
 
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'port-unavailable');
-  assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'settings.json'))).port, address.port);
+  assert.equal(result.port, 43127);
+  assert.equal(fs.existsSync(path.join(directory, 'settings.json')), false);
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), false);
   assert.equal(occupant.listening, true);
+});
+
+test('open moves a verified legacy server to the fixed port', async (t) => {
+  const directory = tempDirectory(t);
+  const legacy = await startServer({ directory, port: 0 });
+  assert.equal(legacy.ok, true);
+  let launchedUrl;
+
+  const opened = await openDashboard({ directory, browserLauncher(url) { launchedUrl = url; } });
+
+  assert.equal(opened.ok, true);
+  assert.equal(opened.action, 'opened');
+  assert.equal(opened.port, 43127);
+  assert.notEqual(opened.instance_id, legacy.instance_id);
+  assert.equal(new URL(launchedUrl).port, '43127');
+  assert.throws(() => process.kill(legacy.pid, 0), { code: 'ESRCH' });
+  assert.equal((await health(43127)).value.instance_id, opened.instance_id);
+});
+
+test('explicit startup replaces an expired lock whose owner PID was reused', async (t) => {
+  const directory = tempDirectory(t);
+  const lockPath = path.join(directory, 'server-start.lock');
+  fs.writeFileSync(lockPath, JSON.stringify({
+    schema_version: 1,
+    instance_id: randomUUID(),
+    owner_pid: process.pid,
+    started_at: new Date(Date.now() - 60_000).toISOString(),
+  }));
+
+  const result = await runCli(['start'], { directory, port: 0 });
+
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.result.action, 'started');
+  assert.equal((await inspectServer({ directory })).instance_id, result.result.instance_id);
+  assert.equal(fs.existsSync(lockPath), false);
 });
 
 test('Windows startup timeout stops the child and removes startup state', {
@@ -93,7 +134,7 @@ test('Windows startup timeout stops the child and removes startup state', {
   fs.writeFileSync(serverScript,
     "require('node:fs').writeFileSync(require('node:path').join(process.argv[3], 'test-server.pid'), String(process.pid)); setInterval(() => {}, 1000);");
 
-  const result = await startServer({ directory, serverScript });
+  const result = await startServer({ directory, port: 0, serverScript });
 
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'start-timeout');
@@ -145,7 +186,7 @@ test('stale PID state is replaced without preserving its identity', async (t) =>
     started_at: new Date().toISOString(),
   }));
 
-  const result = await startServer({ directory });
+  const result = await startServer({ directory, port: 0 });
 
   assert.equal(result.ok, true);
   assert.equal(result.action, 'started');
@@ -155,10 +196,10 @@ test('stale PID state is replaced without preserving its identity', async (t) =>
 test('concurrent starts produce at most one new instance', async (t) => {
   const directory = tempDirectory(t);
   const results = await Promise.all([
-    startServer({ directory }),
-    startServer({ directory }),
-    startServer({ directory }),
-    startServer({ directory }),
+    startServer({ directory, port: 0 }),
+    startServer({ directory, port: 0 }),
+    startServer({ directory, port: 0 }),
+    startServer({ directory, port: 0 }),
   ]);
   const started = results.filter((result) => result.action === 'started');
   const status = await inspectServer({ directory });
@@ -171,12 +212,12 @@ test('concurrent starts produce at most one new instance', async (t) => {
 
 test('normal and abnormal exits preserve identity cleanup rules', async (t) => {
   const directory = tempDirectory(t);
-  const first = await startServer({ directory });
+  const first = await startServer({ directory, port: 0 });
   const normal = await stopServer({ directory });
   assert.equal(normal.action, 'stopped');
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), false);
 
-  const second = await startServer({ directory });
+  const second = await startServer({ directory, port: 0 });
   process.kill(second.pid, 'SIGKILL');
   let afterKill;
   for (let attempt = 0; attempt < 80; attempt += 1) {
@@ -189,7 +230,7 @@ test('normal and abnormal exits preserve identity cleanup rules', async (t) => {
   assert.equal(afterKill.status, 'stopped');
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), true);
 
-  const restarted = await startServer({ directory });
+  const restarted = await startServer({ directory, port: 0 });
   assert.equal(restarted.action, 'started');
   assert.notEqual(restarted.instance_id, second.instance_id);
   assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
