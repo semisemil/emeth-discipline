@@ -1,10 +1,11 @@
 ---
 name: architecture-memory-update
-when_to_use: "After a successful commit or an update request when architecture memory is enabled for the project."
-description: When architecture memory is enabled for the project, offer to update its architecture documents after a successful commit, or update them on user request.
+when_to_use: "After a commit that requires architecture document changes, or on an update request, when architecture memory is enabled for the project."
+description: When architecture memory is enabled, offer updates for commits that require architecture document changes, or update the documents on user request.
 ---
 
-After a commit, ask whether to update the architecture documents, and start the workflow if the user agrees.
+Use the completed work's context to judge whether a commit requires architecture document changes.
+When document changes are needed, ask whether to update the affected topics unless the user has already requested or authorized the update.
 
 Resolve `<workflow>` to `<plugin-root>/skills/architecture-memory/scripts/workflow.js` from this file. Append `--project-root <project>` to each command.
 
