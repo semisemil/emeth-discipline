@@ -6,6 +6,7 @@ const path = require('node:path');
 const { execFile, spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { getDashboardConfigDir } = require('./registry.js');
+const { withFileLock } = require('../lib/file-lock.js');
 
 const HOST = '127.0.0.1';
 const PORT = 43127;
@@ -215,54 +216,78 @@ function readLock(paths) {
   }
 }
 
-function acquireLock(paths, instanceId) {
+function withStartLock(paths, action) {
   fs.mkdirSync(paths.directory, { recursive: true });
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      const descriptor = fs.openSync(paths.lock, 'wx');
-      fs.writeFileSync(descriptor, JSON.stringify({
-        schema_version: 1,
-        instance_id: instanceId,
-        owner_pid: process.pid,
-        started_at: new Date().toISOString(),
-      }), 'utf8');
-      fs.closeSync(descriptor);
-      return { ok: true };
-    } catch (error) {
-      if (error.code !== 'EEXIST') {
-        throw error;
-      }
-      const current = readLock(paths);
-      if (current.ok) {
-        const age = Math.abs(Date.now() - Date.parse(current.value.started_at));
-        if (age < START_TIMEOUT_MS && pidExists(current.value.owner_pid)) {
-          return { ok: false, reason: 'start-in-progress' };
+  return withFileLock(`${paths.lock}.guard`, action, {
+    code: 'start-in-progress',
+    message: 'Dashboard startup state is being changed.',
+  });
+}
+
+function acquireLock(paths, instanceId) {
+  return withStartLock(paths, () => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const descriptor = fs.openSync(paths.lock, 'wx');
+        fs.writeFileSync(descriptor, JSON.stringify({
+          schema_version: 1,
+          instance_id: instanceId,
+          owner_pid: process.pid,
+          started_at: new Date().toISOString(),
+        }), 'utf8');
+        fs.closeSync(descriptor);
+        return { ok: true };
+      } catch (error) {
+        if (error.code !== 'EEXIST') {
+          throw error;
         }
-      }
-      if (!current.ok) {
-        try {
-          const age = Date.now() - fs.statSync(paths.lock).mtimeMs;
-          if (age < START_TIMEOUT_MS) {
+        const current = readLock(paths);
+        if (current.ok) {
+          const age = Math.abs(Date.now() - Date.parse(current.value.started_at));
+          if (age < START_TIMEOUT_MS && pidExists(current.value.owner_pid)) {
             return { ok: false, reason: 'start-in-progress' };
           }
-        } catch (statError) {
-          if (statError.code === 'ENOENT') {
-            continue;
-          }
-          throw statError;
         }
+        if (!current.ok) {
+          try {
+            const age = Date.now() - fs.statSync(paths.lock).mtimeMs;
+            if (age < START_TIMEOUT_MS) {
+              return { ok: false, reason: 'start-in-progress' };
+            }
+          } catch (statError) {
+            if (statError.code === 'ENOENT') {
+              continue;
+            }
+            throw statError;
+          }
+        }
+        unlinkIfExists(paths.lock);
       }
-      unlinkIfExists(paths.lock);
     }
-  }
-  return { ok: false, reason: 'start-in-progress' };
+    return { ok: false, reason: 'start-in-progress' };
+  });
 }
 
 function releaseLock(paths, instanceId) {
-  const current = readLock(paths);
-  if (current.ok && current.value.instance_id === instanceId) {
-    unlinkIfExists(paths.lock);
-  }
+  withStartLock(paths, () => {
+    const current = readLock(paths);
+    if (current.ok && current.value.instance_id === instanceId) {
+      unlinkIfExists(paths.lock);
+    }
+  });
+}
+
+function updateLockOwner(paths, instanceId, pid) {
+  withStartLock(paths, () => {
+    const current = readLock(paths);
+    if (current.ok && current.value.instance_id === instanceId) {
+      fs.writeFileSync(paths.lock, JSON.stringify({
+        ...current.value,
+        owner_pid: pid,
+        started_at: new Date().toISOString(),
+      }), 'utf8');
+    }
+  });
 }
 
 function waitForChild(child, timeoutMs) {
@@ -320,12 +345,7 @@ async function startWindowsServer(args, paths, instanceId, timeoutMs) {
     });
     pid = Number(output.trim());
     if (!Number.isInteger(pid) || pid <= 0) return { ok: false, reason: 'start-failed' };
-    fs.writeFileSync(paths.lock, JSON.stringify({
-      schema_version: 1,
-      instance_id: instanceId,
-      owner_pid: pid,
-      started_at: new Date().toISOString(),
-    }), 'utf8');
+    updateLockOwner(paths, instanceId, pid);
     while (Date.now() < deadline) {
       try {
         const result = readJson(resultPath);
@@ -401,12 +421,7 @@ async function startServer(options = {}) {
         stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
         windowsHide: true,
       });
-      fs.writeFileSync(paths.lock, JSON.stringify({
-        schema_version: 1,
-        instance_id: instanceId,
-        owner_pid: child.pid,
-        started_at: new Date().toISOString(),
-      }), 'utf8');
+      updateLockOwner(paths, instanceId, child.pid);
       result = await waitForChild(child, timeoutMs);
       child.unref();
     }
@@ -554,6 +569,7 @@ module.exports = {
   inspectServer,
   openDashboard,
   pluginVersion,
+  releaseLock,
   runCli,
   serverUrl,
   startServer,

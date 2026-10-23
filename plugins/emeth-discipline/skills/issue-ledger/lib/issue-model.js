@@ -226,10 +226,10 @@
     }
 
     addError(errors, criteria.length > 0, 'criteria', '하나 이상의 완료 조건이 필요합니다.');
-    const claimIds = uniqueIds(claims, /^P\d+$/, 'problem.claims', errors);
+    uniqueIds(claims, /^P\d+$/, 'problem.claims', errors);
     const criterionIds = uniqueIds(criteria, /^C\d+$/, 'criteria', errors);
     const evidenceIds = uniqueIds(evidence, /^E\d+$/, 'evidence', errors);
-    const milestoneIds = uniqueIds(milestones, /^M\d+$/, 'milestones', errors);
+    uniqueIds(milestones, /^M\d+$/, 'milestones', errors);
     const eventIds = uniqueIds(events, /^(D|T)\d+$/, 'events', errors);
 
     for (const [index, claim] of claims.entries()) {
@@ -440,11 +440,6 @@
       errors,
       warnings,
       indexes: {
-        claimIds,
-        criterionIds,
-        evidenceIds,
-        milestoneIds,
-        eventIds,
         supersededDecisions,
         supersededEvidence
       }
@@ -847,6 +842,19 @@
     return JSON.parse(JSON.stringify(issue));
   }
 
+  // Issue files may have any name, so both file names and stored IDs count.
+  function nextIssueId(fileNames, issues) {
+    let largest = 0n;
+    for (const value of [...fileNames, ...issues.map((issue) => issue.id)]) {
+      const match = /^PL-(\d{4,})(?:$|[.-])/.exec(value || '');
+      if (match) {
+        const number = BigInt(match[1]);
+        if (number > largest) largest = number;
+      }
+    }
+    return `PL-${String(largest + 1n).padStart(4, '0')}`;
+  }
+
   function nextLocalId(items, prefix) {
     const highest = asArray(items).reduce((maximum, item) => {
       const match = new RegExp(`^${prefix}(\\d+)$`).exec(item?.id || '');
@@ -916,6 +924,7 @@
         return false;
       }
       matchingContext = item;
+      matchingContext.kind = work.kind;
       matchingContext.location = work.location;
       return true;
     });
@@ -1026,6 +1035,7 @@
     terminalStatuses,
     issueStatuses,
     isIssueFileName,
+    nextIssueId,
     parseIssueContent,
     parseLegacyMarkdown,
     parseV2Json,

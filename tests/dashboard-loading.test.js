@@ -39,3 +39,35 @@ test('background refresh cannot supersede a pending project switch and a failed 
   assert.ok(page.get('#view-panel .empty-state'));
   assert.equal(page.get('#view-panel .issue-table'), null);
 });
+
+test('failed preference writes preserve saved controls and allow loading and project selection', async t => {
+  const page = await dashboard(t, {
+    storage: { 'emeth.dashboard.project': 'beta', 'emeth.dashboard.theme': 'dark', 'emeth.dashboard.accent': '#123456' },
+    setup(window) {
+      window.Storage.prototype.setItem = () => { throw new window.DOMException('Storage quota exceeded', 'QuotaExceededError'); };
+    },
+  });
+  assert.match(page.get('#view-panel').textContent, /beta/);
+  assert.equal(page.document.documentElement.dataset.theme, 'dark');
+  assert.equal(page.get('#accent-color').value, '#123456');
+  assert.equal(page.get('#background-mode').value, 'color');
+  page.click('#theme-button');
+  page.change('#accent-color', '#654321', 'input');
+  page.click('[data-project-id="alpha"]'); await page.settle();
+  assert.equal(page.document.documentElement.dataset.theme, 'light');
+  assert.equal(page.get('#accent-color').value, '#654321');
+  assert.match(page.get('#view-panel').textContent, /alpha/);
+  assert.equal(new URL(page.window.location.href).searchParams.get('project'), 'alpha');
+});
+
+test('unavailable preference storage still loads the default project and permits switching', async t => {
+  const page = await dashboard(t, { setup(window) {
+    const unavailable = () => { throw new window.DOMException('Storage disabled', 'SecurityError'); };
+    window.Storage.prototype.getItem = unavailable;
+    window.Storage.prototype.setItem = unavailable;
+  } });
+  assert.match(page.get('#view-panel').textContent, /alpha/);
+  page.click('[data-project-id="beta"]'); await page.settle();
+  assert.match(page.get('#view-panel').textContent, /beta/);
+  assert.equal(page.get('#view-panel').hasAttribute('aria-busy'), false);
+});

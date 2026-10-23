@@ -136,7 +136,39 @@ test('Architecture project changes reject a late response for the same document 
   assert.doesNotMatch(page.get('#architecture-document').textContent, /First project context/);
 });
 
+test('a late diagram failure cannot warn on another Architecture document while current failures retain the source', async t => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const older = deferred(), current = deferred();
+  let attempts = 0;
+  const page = await openPage(t, { page: 'architecture', query: `?project=${id}&document=readme`,
+    setup(window) { window.testMermaid.run = () => ++attempts === 1 ? older.promise : current.promise; }, routes: {
+      '/api/v1/projects': { projects: [project(id)] },
+      [`/api/v1/projects/${id}/architecture/index`]: { documents },
+      [`/api/v1/projects/${id}/architecture/documents/readme`]: {
+        id: 'readme', kind: 'index', path: 'README.md', body: '# Earlier diagram\n\n```mermaid\ngraph LR\n A --> B\n```',
+      },
+      [`/api/v1/projects/${id}/architecture/documents/context`]: {
+        id: 'context', kind: 'context', path: '04-context.md', body: '# Current context',
+      },
+    } });
+  page.click('[data-document-id="context"]'); await page.settle();
+  older.reject(new Error('Earlier diagram failed')); await page.settle();
+  assert.equal(page.get('#architecture-status').textContent, '');
+  assert.match(page.get('#architecture-document').textContent, /Current context/);
+
+  page.routes[`/api/v1/projects/${id}/architecture/documents/context`].body = '# Current diagram\n\n```mermaid\ngraph LR\n C --> D\n```';
+  page.click('#architecture-refresh'); await page.settle();
+  current.reject(new Error('Current diagram failed')); await page.settle();
+  assert.match(page.get('#architecture-status').textContent, /Mermaid/);
+  assert.match(page.get('#architecture-document pre > code').textContent, /C --> D/);
+});
+
 test('relative links resolve only to registered Architecture documents', () => {
+  const registered = [...documents,
+    { id: 'space', path: 'project context.md' },
+    { id: 'korean', path: 'components/한글.md' },
+    { id: 'percent', path: 'rate%.md' },
+  ];
   assert.equal(
     core.resolveArchitectureDocumentId(documents, 'README.md', '04-context.md'),
     'context',
@@ -148,6 +180,12 @@ test('relative links resolve only to registered Architecture documents', () => {
   assert.equal(core.resolveArchitectureDocumentId(documents, 'README.md', 'missing.md'), null);
   assert.equal(core.resolveArchitectureDocumentId(documents, 'README.md', 'https://example.com'), null);
   assert.equal(core.resolveArchitectureDocumentId(documents, 'README.md', '/docs/architecture/04-context.md'), null);
+  assert.equal(core.resolveArchitectureDocumentId(registered, 'README.md', 'project%20context.md'), 'space');
+  assert.equal(core.resolveArchitectureDocumentId(registered, 'README.md', 'components/%ED%95%9C%EA%B8%80.md'), 'korean');
+  assert.equal(core.resolveArchitectureDocumentId(registered, 'README.md', 'rate%.md'), 'percent');
+  for (const href of ['components%2F한글.md', 'components%5C한글.md', 'components/%2e%2e/project%20context.md']) {
+    assert.equal(core.resolveArchitectureDocumentId(registered, 'README.md', href), null);
+  }
 });
 
 test('Markdown keeps default link hardening and permits resolver-approved Architecture routes', () => {

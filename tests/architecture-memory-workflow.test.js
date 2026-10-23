@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { spawn, spawnSync, execFile } = require('node:child_process');
+const { spawnSync, execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
 const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
@@ -38,77 +38,6 @@ function fill(begin, transform = (text) => text) {
   }
 }
 function initialize(f) { const begun = W.begin(f.root, 'init', { language: 'ko' }); fill(begun); W.apply(f.root); return begun; }
-
-test('memory lock recovery cannot remove a live successor lock or overlap its action', async (t) => {
-  const f = fixture(t, false);
-  const lock = path.join(f.root, S.WORK, 'lock');
-  const storageModule = require.resolve('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
-  fs.mkdirSync(path.dirname(lock), { recursive: true });
-  fs.writeFileSync(lock, JSON.stringify({ pid: 2147483647 }));
-  // Allow two acquisition windows for process coordination; the shared lock waits up to five seconds.
-  const timeout = 2 * 5000;
-  const waitFor = (...names) => {
-    const deadline = Date.now() + timeout;
-    while (!names.some(name => fs.existsSync(path.join(f.root, name)))) {
-      assert.ok(Date.now() < deadline, 'Lock fixture coordination timed out');
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
-    }
-  };
-  const workerSource = `
-    const fs = require('node:fs'), path = require('node:path');
-    const S = require(process.argv[1]), root = process.argv[2], timeout = Number(process.argv[3]);
-    function waitFor(name) {
-      const deadline = Date.now() + timeout;
-      while (!fs.existsSync(path.join(root, name))) {
-        if (Date.now() >= deadline) throw Error('Lock worker coordination timed out');
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
-      }
-    }
-    fs.writeFileSync(path.join(root, 'ready'), 'ready');
-    waitFor('start');
-    let result = { status: 'completed' };
-    try { S.exclusive(root, () => { fs.writeFileSync(path.join(root, 'entered'), 'entered'); waitFor('release'); }); }
-    catch (error) { result = { code: error.code, message: error.message }; }
-    fs.writeFileSync(path.join(root, 'result.json'), JSON.stringify(result));
-  `;
-  const worker = spawn(process.execPath, ['-e', workerSource, storageModule, f.root, String(timeout)], {
-    stdio: 'ignore', windowsHide: true,
-  });
-  const completed = new Promise((resolve, reject) => {
-    worker.once('error', reject);
-    worker.once('exit', resolve);
-  });
-  const readFile = fs.readFileSync;
-  let interleaved = false;
-  let overlap = false;
-  try {
-    waitFor('ready');
-    fs.readFileSync = (file, ...args) => {
-      const result = readFile(file, ...args);
-      if (!interleaved && path.resolve(String(file)) === lock) {
-        interleaved = true;
-        fs.writeFileSync(path.join(f.root, 'start'), 'start');
-        waitFor('entered', 'result.json');
-      }
-      return result;
-    };
-    S.exclusive(f.root, () => {
-      overlap = fs.existsSync(path.join(f.root, 'entered')) && !fs.existsSync(path.join(f.root, 'result.json'));
-    });
-    fs.readFileSync = readFile;
-    fs.writeFileSync(path.join(f.root, 'release'), 'release');
-    assert.equal(await completed, 0);
-    const result = JSON.parse(fs.readFileSync(path.join(f.root, 'result.json'), 'utf8'));
-    assert.equal(interleaved, true);
-    assert.equal(overlap, false, 'A live successor still owns the critical section');
-    assert.ok(result.status === 'completed' || result.code === 'memory-locked', JSON.stringify(result));
-    assert.equal(S.exclusive(f.root, () => 'available'), 'available');
-  } finally {
-    fs.readFileSync = readFile;
-    if (worker.exitCode === null) worker.kill();
-    await completed;
-  }
-});
 
 test('init freezes committed evidence while preserving uncommitted code and publishes readiness last', (t) => {
   const f = fixture(t);

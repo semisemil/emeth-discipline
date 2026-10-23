@@ -232,6 +232,13 @@ function directoryEntries(directory, rootReal, relativePath, diagnostics) {
   }
 }
 
+function recordDirectoryId(definition, name) {
+  const id = definition.directoryName === 'designs' && DESIGN_ID.test(name)
+    ? name
+    : name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
+  return id && definition.idPattern.test(id) ? id : null;
+}
+
 function collectCandidates(projectState, diagnostics) {
   const { rootReal } = projectState;
   const candidates = [];
@@ -270,10 +277,8 @@ function collectCandidates(projectState, diagnostics) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) {
         continue;
       }
-      const id = definition.directoryName === 'designs' && DESIGN_ID.test(entry.name)
-        ? entry.name
-        : entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
-      if (!id || !definition.idPattern.test(id)) {
+      const id = recordDirectoryId(definition, entry.name);
+      if (!id) {
         continue;
       }
       const directory = path.join(recordsDirectory, entry.name);
@@ -335,7 +340,6 @@ function parseCandidates(projectState, diagnostics, options = {}) {
   try {
     const next = supersessionMap(records);
     for (const record of records) if (next.has(record.id)) {
-      record.originalStatus = record.status;
       record.status = 'superseded';
       record.supersededBy = next.get(record.id);
     }
@@ -559,10 +563,7 @@ function projectSourceSignature(project) {
       continue;
     }
     for (const entry of entries) {
-      const id = definition.directoryName === 'designs' && DESIGN_ID.test(entry.name)
-        ? entry.name
-        : entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
-      if (!id || !definition.idPattern.test(id)) {
+      if (!recordDirectoryId(definition, entry.name)) {
         continue;
       }
       const recordDirectory = path.join(directory, entry.name);
@@ -621,7 +622,7 @@ function projectWatcherPaths(project) {
       continue;
     }
     for (const entry of entries) {
-      if (!entry.isDirectory()) {
+      if (!entry.isDirectory() || !recordDirectoryId(definition, entry.name)) {
         continue;
       }
       try {
@@ -964,6 +965,11 @@ class ProjectIndexService {
       canonicalRootIdentity: canonicalProjectRootIdentity(project),
       index: result,
       sourceSignature,
+    });
+    this.summaryCache.set(project.id, {
+      canonicalRootIdentity: canonicalProjectRootIdentity(project),
+      sourceSignature,
+      summary: result.publicIndex.project,
     });
     return result;
   }

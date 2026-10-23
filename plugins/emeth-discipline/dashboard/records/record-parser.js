@@ -70,21 +70,23 @@ function findClosingDelimiter(window) {
 function retainSummaryMetadata(state, bytes, complete) {
   let remaining = bytes;
   if (state.opening === 'pending') {
-    const needed = Math.min(5 - state.openingProbe.length, remaining.length);
+    const needed = Math.min(8 - state.openingProbe.length, remaining.length);
     state.openingProbe = Buffer.concat([
       state.openingProbe,
       remaining.subarray(0, needed),
     ]);
     remaining = remaining.subarray(needed);
-    const unixOpening = state.openingProbe.length >= 4
-      && state.openingProbe.subarray(0, 4).equals(Buffer.from('---\n'));
-    const windowsOpening = state.openingProbe.length >= 5
-      && state.openingProbe.subarray(0, 5).equals(Buffer.from('---\r\n'));
+    const bom = state.openingProbe.subarray(0, 3).equals(Buffer.from('\uFEFF'));
+    const opening = bom ? state.openingProbe.subarray(3) : state.openingProbe;
+    const unixOpening = opening.length >= 4
+      && opening.subarray(0, 4).equals(Buffer.from('---\n'));
+    const windowsOpening = opening.length >= 5
+      && opening.subarray(0, 5).equals(Buffer.from('---\r\n'));
     if (unixOpening || windowsOpening) {
       state.opening = 'valid';
       appendRetainedChunk(state, state.openingProbe);
       state.searchTail = state.openingProbe.subarray(-5);
-    } else if (state.openingProbe.length === 5 || complete) {
+    } else if (state.openingProbe.length === 8 || complete) {
       state.opening = 'invalid';
       state.metadataComplete = true;
       appendRetainedChunk(state, state.openingProbe);
@@ -193,7 +195,6 @@ function readSecureRecord(filePath, options) {
 
   return {
     content: decodeUtf8(buffer),
-    fileReal,
     stat,
   };
 }

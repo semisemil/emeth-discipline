@@ -113,7 +113,6 @@
       'project-unavailable': '프로젝트를 읽을 수 없습니다. 등록된 경로를 확인하세요.',
       'record-not-found': '요청한 문서를 더 이상 찾을 수 없습니다. 다시 읽어 주세요.',
       'project-available': '사용 가능한 프로젝트는 목록에서 지울 수 없습니다.',
-      'version-mismatch': '실행 서버 버전이 열려고 한 버전과 다릅니다. 서버를 재시작해야 합니다.',
     };
     return messages[error?.code] || error?.message || fallback;
   }
@@ -195,12 +194,11 @@
     setError(null);
     try {
       state.projects = (await api('/api/v1/projects')).projects || [];
-      state.selectedProjectId = core.initialProjectId(
-        state.projects,
-        options.keepSelection
-          ? state.selectedProjectId
-          : state.requestedProjectId || localStorage.getItem(STORAGE.project),
-      );
+      let requestedProjectId = options.keepSelection ? state.selectedProjectId : state.requestedProjectId;
+      if (!options.keepSelection && !requestedProjectId) {
+        try { requestedProjectId = localStorage.getItem(STORAGE.project); } catch { /* Optional preference. */ }
+      }
+      state.selectedProjectId = core.initialProjectId(state.projects, requestedProjectId);
       renderProjects();
       const project = selectedProject();
       if (!project) {
@@ -305,7 +303,9 @@
     documentRequestGate.invalidate();
     state.documents.clear();
     state.documentErrors.clear();
-    if (options.save !== false) localStorage.setItem(STORAGE.project, project.id);
+    if (options.save !== false) {
+      try { localStorage.setItem(STORAGE.project, project.id); } catch { /* The URL retains the selection. */ }
+    }
     state.requestedProjectId = project.id;
     updateProjectLocation(project.id);
     if (mobile) closeDrawer(options.focusReturn !== false);
@@ -336,7 +336,7 @@
     try {
       await api(`/api/v1/projects/${project.id}`, { method: 'DELETE' });
       state.selectedProjectId = null;
-      localStorage.removeItem(STORAGE.project);
+      try { localStorage.removeItem(STORAGE.project); } catch { /* Optional preference. */ }
       await loadProjects({ notice: '프로젝트를 목록에서 지웠습니다.' });
     } catch (error) {
       state.loading = false;
@@ -444,8 +444,14 @@
     const controls = make('section', 'filters', '');
     controls.setAttribute('aria-label', '작업 필터');
     const quick = controlGroup('프로젝트 전체 작업 · 상태별 보기', 'quick-filter');
+    const counts = { active: 0, blocked: 0, 'completed-group': 0, all: state.index.issues.length };
+    for (const issue of state.index.issues) {
+      if (core.ACTIVE_STATUSES.has(issue.status)) counts.active += 1;
+      else if (issue.status === 'blocked') counts.blocked += 1;
+      else if (core.COMPLETE_STATUSES.has(issue.status)) counts['completed-group'] += 1;
+    }
     for (const [value, label] of [['active', '활성'], ['blocked', '보류'], ['completed-group', '완료'], ['all', '전체']]) {
-      const count = core.selectIssues(state.index, { quick: value }).length;
+      const count = counts[value];
       const item = button('', 'segmented-button');
       item.dataset.quick = value;
       item.dataset.empty = String(count === 0);
@@ -773,6 +779,9 @@
     const mermaid = globalThis.mermaid;
     const codeBlocks = [...root.querySelectorAll('pre > code.language-mermaid')];
     if (codeBlocks.length === 0 || !mermaid) return;
+    const projectId = state.selectedProjectId;
+    const view = state.view;
+    const documentKey = state.selectedDocument;
     const replacements = codeBlocks.map((code) => {
       const original = code.parentElement;
       const diagram = make('div', 'mermaid');
@@ -784,9 +793,11 @@
       mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
       await mermaid.run({ nodes: replacements.map(({ diagram }) => diagram) });
     } catch {
+      let restored = false;
       for (const { diagram, original } of replacements) {
-        if (diagram.isConnected) diagram.replaceWith(original);
+        if (diagram.isConnected) { diagram.replaceWith(original); restored = true; }
       }
+      if (!restored || projectId !== state.selectedProjectId || view !== state.view || documentKey !== state.selectedDocument) return;
       state.notice = '일부 Mermaid 다이어그램을 코드로 표시합니다.';
       renderStatus();
     }
@@ -1078,27 +1089,27 @@
   function applyTheme(theme) {
     const resolved = theme === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.theme = resolved;
-    localStorage.setItem(STORAGE.theme, resolved);
     const next = resolved === 'dark' ? '라이트' : '다크';
     elements.theme.setAttribute('aria-label', `${next} 테마로 전환`);
     elements.theme.dataset.tooltip = `${next} 테마로 전환`;
+    try { localStorage.setItem(STORAGE.theme, resolved); } catch { /* Optional preference. */ }
   }
 
   function applyAccent(value) {
     if (!/^#[0-9a-f]{6}$/i.test(value || '')) return;
     document.documentElement.style.setProperty('--accent', value);
     elements.accent.value = value;
-    localStorage.setItem(STORAGE.accent, value);
+    try { localStorage.setItem(STORAGE.accent, value); } catch { /* Optional preference. */ }
   }
 
   function setBackgroundMode(mode) {
     const image = mode === 'image' && state.backgroundUrl;
     document.documentElement.dataset.background = image ? 'image' : 'color';
-    localStorage.setItem(STORAGE.background, image ? 'image' : 'color');
     elements.backgroundMode.value = image ? 'image' : 'color';
     const label = state.backgroundUrl ? '배경 이미지 변경' : '배경 이미지 선택';
     elements.background.setAttribute('aria-label', label);
     elements.background.dataset.tooltip = label;
+    try { localStorage.setItem(STORAGE.background, image ? 'image' : 'color'); } catch { /* Optional preference. */ }
   }
 
   function openPreferenceDatabase() {
@@ -1146,16 +1157,21 @@
   }
 
   async function loadPreferences() {
-    applyTheme(localStorage.getItem(STORAGE.theme) || 'light');
-    applyAccent((localStorage.getItem(STORAGE.accent) || '').replace(/^#3459e6$/i, '#c93686') || '#c93686');
-    const backgroundMode = localStorage.getItem(STORAGE.background) || 'color';
+    let theme, accent, backgroundMode;
+    try {
+      theme = localStorage.getItem(STORAGE.theme);
+      accent = localStorage.getItem(STORAGE.accent);
+      backgroundMode = localStorage.getItem(STORAGE.background);
+    } catch { /* Use defaults when storage is unavailable. */ }
+    applyTheme(theme || 'light');
+    applyAccent((accent || '').replace(/^#3459e6$/i, '#c93686') || '#c93686');
     try {
       const blob = await readBackground();
       if (blob) applyBackgroundBlob(blob, false);
     } catch {
       // Color background remains fully usable when IndexedDB is unavailable.
     }
-    setBackgroundMode(backgroundMode);
+    setBackgroundMode(backgroundMode || 'color');
   }
 
   function bindEvents() {

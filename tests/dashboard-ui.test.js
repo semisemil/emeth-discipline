@@ -516,3 +516,25 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   assert.equal(removal.get('.project-option'), null);
   assert.ok(removal.get('#view-panel .empty-state p').textContent.trim());
 });
+
+test('a late diagram failure leaves a different dashboard view alone and current failures retain the source', async t => {
+  const older = deferred(), current = deferred();
+  let attempts = 0;
+  const page = await dashboard(t, { projects: [projects[1]],
+    setup(window) { window.testMermaid.run = () => ++attempts === 1 ? older.promise : current.promise; }, routes: {
+      ['/api/v1/projects/' + AVAILABLE_ID + '/index']: { ...indexFixture, read_at: 'initial' },
+      [documentRoute('plan', 'PLAN-0002')]: detail('plan', 'PLAN-0002', '# Diagram\n\n```mermaid\ngraph LR\n A --> B\n```'),
+    } });
+  page.click('[data-view="documents"]');
+  page.click(planKey); await page.settle();
+  page.click('[data-view="work"]'); await page.settle();
+  older.reject(new Error('Earlier diagram failed')); await page.settle();
+  assert.doesNotMatch(page.get('#status-stack').textContent, /Mermaid/);
+  assert.equal(page.get('[data-view="work"]').getAttribute('aria-selected'), 'true');
+  assert.ok(page.get('.issue-table'));
+
+  page.click('[data-view="documents"]'); await page.settle();
+  current.reject(new Error('Current diagram failed')); await page.settle();
+  assert.match(page.get('#status-stack').textContent, /Mermaid/);
+  assert.match(page.get('.markdown-body pre > code').textContent, /A --> B/);
+});

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
 const { inside } = require('../lib/document-roots.js');
+const { releaseLock } = require('./control.js');
 
 const {
   ProjectApiError,
@@ -565,7 +566,7 @@ function startServer(options) {
 
   const cleanup = () => {
     unlinkOwned(statePath, options.instanceId);
-    unlinkOwned(lockPath, options.instanceId);
+    releaseLock({ directory: options.directory, lock: lockPath }, options.instanceId);
   };
 
   const server = createDashboardHttpServer({
@@ -616,7 +617,7 @@ function startServer(options) {
         started_at: new Date().toISOString(),
       });
       ready = true;
-      unlinkOwned(lockPath, options.instanceId);
+      releaseLock({ directory: options.directory, lock: lockPath }, options.instanceId);
       sendParent({ ok: true, pid: process.pid, port });
     } catch (error) {
       cleanup();

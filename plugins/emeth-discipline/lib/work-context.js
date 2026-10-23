@@ -29,11 +29,13 @@ class WorkContext {
   }
 
   progress(update = {}) {
-    for (const field of Object.keys(update)) if (!['stage', 'decisions', 'pending', 'artifacts'].includes(field)) throw new Error('Unknown progress field: ' + field);
+    const fields = Object.keys(update);
+    for (const field of fields) if (!['stage', 'decisions', 'pending', 'artifacts'].includes(field)) throw new Error('Unknown progress field: ' + field);
     if (update.stage !== undefined && typeof update.stage !== 'string') throw new Error('Stage must be text');
     for (const field of ['decisions', 'pending', 'artifacts']) if (update[field] !== undefined && (!Array.isArray(update[field]) || update[field].some(x => typeof x !== 'string'))) throw new Error(field + ' must contain text');
+    const changed = fields.some(field => JSON.stringify(this.state.progress[field]) !== JSON.stringify(update[field]));
     Object.assign(this.state.progress, update);
-    if (Object.keys(update).length) this.save();
+    if (changed) this.save();
     return { ...this.state.progress };
   }
 

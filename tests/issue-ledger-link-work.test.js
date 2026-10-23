@@ -83,16 +83,13 @@ function runLinkWork(root, overrides = {}) {
     status: 'doing',
     updatedAt: '2026-08-12T01:00:00.000Z',
     relatedIssues: null,
-    planInline: false,
     ...overrides
   };
   const projectRoot = path.dirname(path.dirname(root));
   const artifactPath = path.resolve(projectRoot, values.workPath.replace(/\\/g, '/'));
   if (!fs.existsSync(artifactPath)) {
     const relatedIssues = values.relatedIssues === null ? [values.issueId] : values.relatedIssues;
-    const planLinks = values.planInline
-      ? `related_issues: [${relatedIssues.join(', ')}]\n`
-      : `related_issues:\n${relatedIssues.map((id) => `  - ${id}\n`).join('')}`;
+    const planLinks = `related_issues:\n${relatedIssues.map((id) => `  - ${id}\n`).join('')}`;
     const metadata = values.kind === 'plan'
       ? `---\nid: ${values.workId}\ntitle: Example\nstatus: ready\n${planLinks}---\n`
       : `---\n${JSON.stringify({
@@ -128,8 +125,9 @@ function runLinkWork(root, overrides = {}) {
   return spawnSync(process.execPath, args, { encoding: 'utf8', env: configEnv(root) });
 }
 
-test('link-work stores one canonical context link with its state transition', (t) => {
+test('link-work accepts a BOM-prefixed Issue and stores one canonical link with its state transition', (t) => {
   const { root, filePath } = createFixture(t);
+  fs.writeFileSync(filePath, '\uFEFF' + fs.readFileSync(filePath, 'utf8'));
   const first = runLinkWork(root);
 
   assert.equal(first.status, 0, first.stderr);
@@ -151,8 +149,10 @@ test('link-work stores one canonical context link with its state transition', (t
 });
 
 test('Design work links round-trip through the issue ledger and dashboard with readiness signals', (t) => {
-  const { root, projectRoot, filePath } = createFixture(t);
   const overrides = { kind: 'design', workId: 'DESIGN-0001', workPath: '.emeth/designs/DESIGN-0001/DESIGN.md' };
+  const source = makeIssue();
+  source.context = [{ kind: 'reference', location: overrides.workPath.replace(/\//g, '\\') }];
+  const { root, projectRoot, filePath } = createFixture(t, source);
   const result = runLinkWork(root, overrides);
   assert.equal(result.status, 0, result.stderr);
   const issue = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -199,24 +199,7 @@ test('link-work accepts a Plan without changing the active issue status', (t) =>
   assert.deepEqual(linked.events, []);
 });
 
-test('link-work accepts an inline Plan related_issues array', (t) => {
-  const { root, filePath } = createFixture(t);
-  const result = runLinkWork(root, {
-    kind: 'plan',
-    workId: 'PLAN-0002',
-    workPath: '.emeth/plan/PLAN-0002-inline/PLAN.md',
-    currentSummary: 'PLAN-0002가 준비되었다.',
-    nextAction: '명세 여부를 결정한다.',
-    status: null,
-    planInline: true
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  assert.equal(linked.context[0].location, '.emeth/plan/PLAN-0002-inline/PLAN.md');
-});
-
-test('link-work decodes quoted Plan IDs and backlinks before saving the issue', (t) => {
+test('link-work decodes quoted IDs and inline Plan backlinks before saving the issue', (t) => {
   const { projectRoot, root, filePath } = createFixture(t);
   const workPath = '.emeth/plan/PLAN-0001-quoted/PLAN.md';
   const artifactPath = path.join(projectRoot, workPath);

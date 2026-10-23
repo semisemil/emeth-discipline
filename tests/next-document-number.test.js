@@ -57,13 +57,19 @@ test('unrelated prompts and non-invocation mentions emit zero stdout bytes', (t)
   }
 });
 
-test('issue-ledger receives the next issue number from issue filenames', (t) => {
+test('issue-ledger reserves filenames and stored IDs when announcing the next number', (t) => {
   const root = fixture(t);
   touch(root, '.emeth/issues/PL-0002.json');
   touch(root, '.emeth/issues/PL-0012-old.md');
   touch(root, '.emeth/issues/not-an-issue.json');
 
   assert.deepEqual(context(runHook(root, '$emeth-discipline:issue-ledger\nRegister this work.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0013']);
+  const template = fs.readFileSync(path.join(pluginRoot, 'skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8');
+  const issue = JSON.parse(template.replace(/REPLACE: [^"]*/g, 'Fixture value'));
+  issue.identity.id = 'PL-0020';
+  issue.created_at = issue.updated_at = '2026-08-12T00:00:00.000Z';
+  fs.writeFileSync(path.join(root, '.emeth', 'issues', 'renamed-task.json'), JSON.stringify(issue));
+  assert.deepEqual(context(runHook(root, '$emeth-discipline:issue-ledger')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0021']);
 });
 
 test('development-design receives the next number from Design directories', (t) => {

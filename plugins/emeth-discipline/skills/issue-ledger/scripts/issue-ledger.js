@@ -92,13 +92,15 @@ function readAllIssues(root) {
 }
 
 function findIssue(root, id) {
-  const matches = listIssueFiles(root).filter((filePath) => {
+  const matches = [];
+  for (const filePath of listIssueFiles(root)) {
     try {
-      return readIssue(filePath).id === id;
+      const issue = readIssue(filePath);
+      if (issue.id === id) matches.push({ filePath, issue });
     } catch {
-      return false;
+      // Invalid files cannot identify the requested issue.
     }
-  });
+  }
 
   if (matches.length === 0) {
     fail(`이슈를 찾지 못했습니다: ${id}`);
@@ -216,7 +218,7 @@ function commandShow(options) {
     fail('show 명령에는 이슈 ID가 필요합니다.');
   }
   const root = resolveIssuesRoot(options.root);
-  const issue = readIssue(findIssue(root, id));
+  const { issue } = findIssue(root, id);
 
   if (options.evidence) {
     const ids = String(options.evidence).split(',').map((value) => value.trim()).filter(Boolean);
@@ -326,16 +328,6 @@ function fillGeneratedFields(issue) {
   return Boolean(issue?.identity && (issue.identity.id === undefined || issue.identity.id === 'PL-0000'));
 }
 
-// Issue files may have any name, so both file names and stored IDs count.
-function nextIssueId(root, issues) {
-  let largest = 0;
-  for (const value of [...fs.readdirSync(root), ...issues.map((item) => item.id)]) {
-    const match = /^PL-(\d{4,})(?:$|[.-])/.exec(value || '');
-    if (match) largest = Math.max(largest, Number(match[1]));
-  }
-  return `PL-${String(largest + 1).padStart(4, '0')}`;
-}
-
 // Readers see either no file or the complete Issue.
 function publishNewIssue(filePath, issue) {
   const temporary = `${filePath}.${crypto.randomUUID()}.tmp`;
@@ -352,13 +344,13 @@ function createUnderLock(root, issue, generatedId) {
   const loaded = readAllIssues(root);
   if (loaded.errors.length) return { error: loaded.errors.join('\n') };
   const existing = loaded.issues;
-  if (generatedId) issue.identity.id = nextIssueId(root, existing);
+  if (generatedId) issue.identity.id = model.nextIssueId(fs.readdirSync(root), existing);
   const validation = model.validateV2Issue(issue);
   if (!validation.valid) return { error: validation.errors.join('\n') };
   if (existing.some((item) => item.id === issue.identity.id)) {
     return { error: `이미 존재하는 이슈 ID입니다: ${issue.identity.id}` };
   }
-  const candidate = model.toViewModel(issue, `${issue.identity.id}.json`);
+  const candidate = model.toViewModel(issue, `${issue.identity.id}.json`, validation);
   const relationErrors = validateRelations([...existing, candidate]);
   if (relationErrors.length) return { error: relationErrors.join('\n') };
   const filePath = path.join(root, `${issue.identity.id}.json`);
@@ -394,7 +386,7 @@ function commandUpdate(options) {
     fail('update 명령에는 이슈 ID가 필요합니다.');
   }
   const root = resolveIssuesRoot(options.root);
-  const filePath = findIssue(root, id);
+  const { filePath, issue } = findIssue(root, id);
   if (path.extname(filePath) !== '.json') {
     fail('레거시 Markdown은 먼저 검토 기반 마이그레이션이 필요합니다.');
   }
@@ -402,7 +394,7 @@ function commandUpdate(options) {
   if (containsLinkWork(operation)) {
     fail('link_work는 역링크를 검증하는 link-work 명령으로 실행해야 합니다.');
   }
-  const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const raw = issue.raw;
   let result;
   try {
     result = model.applyOperation(raw, operation);
@@ -413,7 +405,7 @@ function commandUpdate(options) {
   if (loaded.errors.length) {
     fail(loaded.errors.join('\n'));
   }
-  const candidate = model.toViewModel(result.issue, path.basename(filePath));
+  const candidate = model.toViewModel(result.issue, path.basename(filePath), result.validation);
   const issues = loaded.issues.map((issue) => issue.id === id ? candidate : issue);
   const relationErrors = validateRelations(issues);
   if (relationErrors.length) {
@@ -431,11 +423,11 @@ function commandLinkWork(options) {
     fail('link-work 명령에는 이슈 ID가 필요합니다.');
   }
   const root = resolveIssuesRoot(options.root);
-  const filePath = findIssue(root, id);
+  const { filePath, issue } = findIssue(root, id);
   if (path.extname(filePath) !== '.json') {
     fail('레거시 Markdown은 먼저 검토 기반 마이그레이션이 필요합니다.');
   }
-  const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const raw = issue.raw;
   const operation = {
     type: 'link_work',
     current_summary: requireOption(options, 'current_summary', '--current-summary'),

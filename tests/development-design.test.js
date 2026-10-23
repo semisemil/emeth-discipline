@@ -179,6 +179,8 @@ test('Design listing preserves valid records and reports duplicate IDs and inval
   assert.equal(designs[1].error.code, 'contract-unavailable');
   assert.equal(designs[2].error.code, 'record-metadata-invalid');
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-unavailable');
+  assert.throws(() => resolveContract(f.project, 'DESIGN-0004'),
+    error => error.code === 'contract-unavailable');
 });
 
 test('disabled or prohibited Memory is preserved, and recording failure is separate from a successful Design write', t => {

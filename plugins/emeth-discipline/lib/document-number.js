@@ -6,6 +6,7 @@ const path = require('node:path');
 const { logDiagnostic } = require('./rules-state');
 const host = require('./host');
 const { designStorage } = require('./document-roots');
+const issueModel = require('../skills/issue-ledger/lib/issue-model');
 
 const ISSUE_DOCUMENT = Object.freeze({
   directory: ['.emeth', 'issues'],
@@ -52,6 +53,17 @@ function nextDocumentId(projectRoot, documentSkill) {
     }
     error.filePath = directory;
     throw error;
+  }
+
+  if (documentSkill.prefix === 'PL') {
+    const issues = [];
+    for (const entry of entries) {
+      if ((!entry.isFile() && !entry.isSymbolicLink()) || !issueModel.isIssueFileName(entry.name)) continue;
+      const content = fs.readFileSync(path.join(directory, entry.name), 'utf8');
+      try { issues.push(issueModel.parseIssueContent(content, entry.name)); }
+      catch { /* Invalid files still reserve their filename's number. */ }
+    }
+    return issueModel.nextIssueId(entries.map((entry) => entry.name), issues);
   }
 
   const pattern = new RegExp(`^${documentSkill.prefix}-(\\d{4,})(?:$|[.-])`);

@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { randomUUID } = require('node:crypto');
+const { execFile } = require('node:child_process');
 
 const {
   health,
@@ -193,21 +194,36 @@ test('stale PID state is replaced without preserving its identity', async (t) =>
   assert.notEqual(result.instance_id, staleInstance);
 });
 
-test('concurrent starts produce at most one new instance', async (t) => {
+test('concurrent starter processes recover an expired lock without competing servers', async (t) => {
   const directory = tempDirectory(t);
-  const results = await Promise.all([
-    startServer({ directory, port: 0 }),
-    startServer({ directory, port: 0 }),
-    startServer({ directory, port: 0 }),
-    startServer({ directory, port: 0 }),
-  ]);
-  const started = results.filter((result) => result.action === 'started');
+  fs.writeFileSync(path.join(directory, 'server-start.lock'), JSON.stringify({
+    schema_version: 1,
+    instance_id: randomUUID(),
+    owner_pid: process.pid,
+    started_at: new Date(Date.now() - 60_000).toISOString(),
+  }));
+  const control = require.resolve('../plugins/emeth-discipline/dashboard/control');
+  const script = `require(process.argv[1]).startServer({ directory: process.argv[2], port: 0 })
+    .then(result => console.log(JSON.stringify(result)))
+    .catch(error => { console.error(error); process.exitCode = 1; });`;
+  const results = await Promise.all(Array.from({ length: 4 }, () => new Promise((resolve, reject) => {
+    execFile(process.execPath, ['-e', script, control, directory], { windowsHide: true }, (error, stdout) => {
+      if (error) return reject(error);
+      const result = JSON.parse(stdout);
+      if (result.action === 'started') t.after(() => {
+        try { process.kill(result.pid); } catch (failure) { if (failure.code !== 'ESRCH') throw failure; }
+      });
+      resolve(result);
+    });
+  })));
+  const started = results.filter(result => result.action === 'started');
   const status = await inspectServer({ directory });
 
   assert.equal(started.length, 1);
   assert.equal(status.status, 'running');
   assert.equal(status.instance_id, started[0].instance_id);
-  assert.equal(new Set(results.filter((result) => result.instance_id).map((result) => result.instance_id)).size, 1);
+  assert.equal(new Set(results.filter(result => result.instance_id).map(result => result.instance_id)).size, 1);
+  assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
 });
 
 test('normal and abnormal exits preserve identity cleanup rules', async (t) => {

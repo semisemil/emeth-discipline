@@ -124,8 +124,8 @@ function candidate(project, directory, requireBaseline = true) {
   const manifest = parseManifest(S.textFile(S.safePath(draft, MANIFEST), 256 * 1024) || '');
   const sources = new Map(manifest.documents.map((document) => [document.path, S.textFile(S.safePath(draft, document.path))]));
   if (requireBaseline) baseline(manifest, sources);
-  const corpus = recordsFromSources({ projectRoot: project, architectureRoot: directory, manifest }, sources);
-  return { manifest, sources, corpus };
+  recordsFromSources({ projectRoot: project, architectureRoot: directory, manifest }, sources);
+  return { manifest, sources };
 }
 function report(state, directory) {
   const pending = state.changes.filter((change) => !change.paths.every((name) => state.classifications[name]));

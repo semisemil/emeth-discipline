@@ -31,13 +31,13 @@ function readDevelopmentRecord(root, id) {
     throw error;
   }
 }
-function readDesigns(root, { includeErrors = false } = {}) {
+function readDesigns(root, { includeErrors = false, requiredId } = {}) {
   migrateProject(root);
   const storage = roots.designStorage(root);
   const directory = storage.directory;
-  if (!fs.existsSync(directory)) return [];
+  const entries = fs.existsSync(directory) ? fs.readdirSync(directory, { withFileTypes: true }) : [];
   const filesById = new Map();
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+  for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     const id = /^(DESIGN-\d{4,})(?:-|$)/.exec(entry.name)?.[1];
     const file = path.join(directory, entry.name, 'DESIGN.md');
@@ -45,7 +45,7 @@ function readDesigns(root, { includeErrors = false } = {}) {
     if (!filesById.has(id)) filesById.set(id, []);
     filesById.get(id).push(file);
   }
-  return [...filesById].map(([id, files]) => {
+  function readRecord(id, files) {
     try {
       if (files.length !== 1) fail('contract-unavailable', `Ambiguous document ID: ${id}`);
       return parseCurrentRecord({ root: storage.root, directory, filePath: files[0], expectedId: id, kind: 'design',
@@ -55,7 +55,10 @@ function readDesigns(root, { includeErrors = false } = {}) {
       if (!includeErrors) throw error;
       return { id, error: { code: error.code || 'contract-unavailable', message: error.message } };
     }
-  });
+  }
+  if (requiredId && !filesById.has(requiredId)) fail('contract-unavailable', `Document not found: ${requiredId}`);
+  const required = requiredId ? readRecord(requiredId, filesById.get(requiredId)) : null;
+  return [...filesById].map(([id, files]) => id === requiredId ? required : readRecord(id, files));
 }
 function supersessionMap(records) {
   const next = new Map();
@@ -89,8 +92,9 @@ function assertDesignWrite(root, metadata, relativePath) {
 }
 function resolveContract(root, id) {
   if (!DESIGN_ID.test(id)) fail('contract-id-invalid', 'Supply a Design ID');
-  const record = readDevelopmentRecord(root, id);
-  const next = supersessionMap(readDesigns(root));
+  const records = readDesigns(root, { requiredId: id });
+  const record = records.find(record => record.id === id);
+  const next = supersessionMap(records);
   if (next.has(id) || record.metadata.superseded_by) {
     fail('contract-superseded', `${id} is replaced by ${next.get(id) || record.metadata.superseded_by}`);
   }

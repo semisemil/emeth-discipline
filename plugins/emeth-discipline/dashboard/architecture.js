@@ -8,7 +8,6 @@ const roots = require('../lib/document-roots.js');
 const { rootKey } = require('./registry.js');
 const { ProjectApiError } = require('./records/project-index.js');
 
-const MANIFEST_RELATIVE_PATH = 'docs/architecture/.architecture-memory/manifest.json';
 const MANIFEST_NAME = 'manifest.json';
 const MEMORY_DIRECTORY = '.architecture-memory';
 const MAX_MANIFEST_BYTES = 256 * 1024;
@@ -422,7 +421,6 @@ function readArchitectureDocument(state, documentId) {
 module.exports = {
   ArchitectureService,
   DOCUMENT_KINDS,
-  MANIFEST_RELATIVE_PATH,
   MAX_DOCUMENT_BYTES,
   MAX_MANIFEST_BYTES,
   discoverManifest,

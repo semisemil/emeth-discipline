@@ -180,6 +180,8 @@
     const mermaid = globalThis.mermaid;
     const codeBlocks = [...elements.detail.querySelectorAll('pre > code.language-mermaid')];
     if (codeBlocks.length === 0 || !mermaid) return;
+    const projectId = state.projectId;
+    const documentId = state.documentId;
     const replacements = codeBlocks.map((code) => {
       const original = code.parentElement;
       const diagram = make('div', 'mermaid');
@@ -191,9 +193,11 @@
       mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
       await mermaid.run({ nodes: replacements.map(({ diagram }) => diagram) });
     } catch {
+      let restored = false;
       for (const { diagram, original } of replacements) {
-        if (diagram.isConnected) diagram.replaceWith(original);
+        if (diagram.isConnected) { diagram.replaceWith(original); restored = true; }
       }
+      if (!restored || projectId !== state.projectId || documentId !== state.documentId) return;
       setStatus('일부 Mermaid 다이어그램을 코드로 표시합니다.', true);
     }
   }

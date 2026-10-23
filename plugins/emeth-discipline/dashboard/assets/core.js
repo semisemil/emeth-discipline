@@ -64,7 +64,7 @@
 
   function projectOptions(projects, query = '') {
     const needle = normalize(query);
-    return [...(projects || [])]
+    return (projects || [])
       .filter((project) => !needle || normalize(`${project.name} ${project.root}`).includes(needle))
       .sort((left, right) => Number(right.availability === 'available') - Number(left.availability === 'available')
         || Number((right.counts?.active || 0) > 0) - Number((left.counts?.active || 0) > 0)
@@ -225,9 +225,9 @@
   }
 
   function selectIssues(index, filters = {}) {
-    const documents = documentLookup(index);
     const needle = normalize(filters.search);
-    return [...(index?.issues || [])]
+    const documents = needle ? documentLookup(index) : null;
+    return (index?.issues || [])
       .filter((issue) => matchesQuickStatus(issue.status, filters.quick || 'active'))
       .filter((issue) => !filters.type || filters.type === 'all' || issue.type === filters.type)
       .filter((issue) => !filters.status || filters.status === 'all' || issue.status === filters.status)
@@ -267,7 +267,7 @@
 
   function selectSignals(index, search = '') {
     const needle = normalize(search);
-    return [...(index?.flow_signals || [])]
+    return (index?.flow_signals || [])
       .filter((item) => !needle || normalize([
         item.signal,
         SIGNALS[item.signal],
@@ -493,10 +493,16 @@
         || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(candidate)) return null;
     const withoutSuffix = candidate.split(/[?#]/, 1)[0];
     if (!withoutSuffix) return null;
+    const segments = withoutSuffix.split('/');
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      try { segments[index] = decodeURIComponent(segment); } catch { /* Keep literal percent characters in registered filenames. */ }
+      if (segments[index] !== segment && (/[/\\]/.test(segments[index]) || segments[index] === '.' || segments[index] === '..')) return null;
+    }
     const current = normalizeArchitecturePath(currentPath);
     if (!current) return null;
     const directory = current.includes('/') ? current.slice(0, current.lastIndexOf('/') + 1) : '';
-    const resolved = normalizeArchitecturePath(`${directory}${withoutSuffix}`);
+    const resolved = normalizeArchitecturePath(`${directory}${segments.join('/')}`);
     if (!resolved) return null;
     return (documents || []).find(
       (document) => normalizeArchitecturePath(document.path) === resolved,

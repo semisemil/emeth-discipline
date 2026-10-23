@@ -770,6 +770,40 @@ test('summary and index omit large Plan and Spec bodies while detail returns the
   assert.equal(JSON.parse(document.body).body, 'P'.repeat(128 * 1024));
 });
 
+test('project summary and document routes accept BOM-prefixed Markdown', async (t) => {
+  const { availableRoot, server } = await fixture(t);
+  const documents = [
+    { kind: 'plan', directory: 'plan', id: 'PLAN-0020', file: 'PLAN.md' },
+    { kind: 'spec', directory: 'specs', id: 'SPEC-0020', file: 'SPEC.md' },
+    { kind: 'design', directory: 'designs', id: 'DESIGN-0020', file: 'DESIGN.md' },
+  ];
+  for (const document of documents) {
+    const directory = path.join(availableRoot, '.emeth', document.directory, `${document.id}-bom`);
+    fs.mkdirSync(directory, { recursive: true });
+    const metadata = document.kind === 'plan'
+      ? `id: ${document.id}\r\ntitle: ${document.id}\r\nstatus: ready`
+      : JSON.stringify({ schema_version: 2, id: document.id, title: document.id, kind: 'feature', status: 'ready',
+        revision: 1, supersedes: [], superseded_by: null, related_issues: [] });
+    fs.writeFileSync(path.join(directory, document.file), `\uFEFF---\r\n${metadata}\r\n---\r\n# ${document.id}`);
+  }
+
+  const summaryResponse = await request(server, { path: '/api/v1/projects' });
+  assert.equal(summaryResponse.status, 200);
+  const summary = JSON.parse(summaryResponse.body).projects.find(project => project.id === AVAILABLE_ID);
+  assert.equal(summary.diagnostic_count, 0);
+  assert.ok(summary.last_modified);
+  const indexResponse = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
+  assert.equal(indexResponse.status, 200);
+  const index = JSON.parse(indexResponse.body);
+  assert.deepEqual(index.diagnostics, []);
+  for (const document of documents) {
+    assert.ok(index[`${document.kind}s`].some(record => record.id === document.id));
+    const response = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/documents/${document.kind}/${document.id}` });
+    assert.equal(response.status, 200);
+    assert.equal(JSON.parse(response.body).body, `# ${document.id}`);
+  }
+});
+
 test('summary and index accept metadata past 64 KiB without returning document bodies', async (t) => {
   const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0011-wide-metadata');
