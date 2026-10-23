@@ -113,6 +113,7 @@ $emeth-discipline:architecture-memory-init
 | --- | --- | --- |
 | `$emeth-discipline:rules` | 대화와 결과물 전반 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
 | `$emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
+| `$emeth-discipline:slop-check` | 기존 코드에 맞춰 작성하거나 불필요한 코드를 찾을 때 | 불필요한 처리, 중복 구현과 관례 이탈을 근거로 판정하고 정리 방향 제시 |
 | `$emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
 | `$emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `$emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |

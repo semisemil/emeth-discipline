@@ -1,0 +1,4 @@
+interface:
+  display_name: "Emeth: Slop Check"
+  short_description: "Find and prevent slop that does not fit the codebase"
+  default_prompt: "Use $slop-check to audit this code for slop and report only findings proven by evidence."
