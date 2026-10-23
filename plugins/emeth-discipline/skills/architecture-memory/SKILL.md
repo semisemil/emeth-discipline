@@ -32,6 +32,7 @@ Each returned section includes a `receipt`. On later reads, pass `--seen <receip
 Known IDs can be read directly; repeat `--id` or `--path` as needed. Pointers are locations, not evidence. Read the selected record with its conditions and required links.
 
 For no matches, paging, output limits, or tool failure, use [retrieval](references/retrieval.md).
+For maintenance requests or excessive unrelated content in partial retrieval, use [architecture-memory-maintain](../architecture-memory-maintain/SKILL.md).
 
 New implementation requirements enter the Design through its owning revision workflow.
 

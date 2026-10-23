@@ -122,6 +122,7 @@ function recordsFromSources(state, sources) {
       const status = header.match(STATE);
       records.push({
         id: meta?.id || `${document.id}@${section.line}`,
+        document: document.id,
         stable: Boolean(meta),
         path: path.relative(root, path.join(state.architectureRoot, document.path)).split(path.sep).join('/'),
         line: section.line,
@@ -162,15 +163,18 @@ function folded(text) { return text.normalize('NFKC').toLowerCase(); }
 function overlaps(left, right) {
   return left === right || left.startsWith(`${right}/`) || right.startsWith(`${left}/`);
 }
-
-function search(corpus, options = {}) {
-  const query = folded(options.query || '');
-  const terms = [...new Set(query.match(/[\p{L}\p{N}_.-]+/gu) || [])];
-  const paths = (options.paths || []).map((item) => {
+function queryPaths(options) {
+  return (options.paths || []).map(item => {
     const normalized = normalizePath(item);
     if (!normalized) fail('memory-query-path-invalid', `Expected repository-relative path: ${item}`);
     return normalized;
   });
+}
+
+function search(corpus, options = {}) {
+  const query = folded(options.query || '');
+  const terms = [...new Set(query.match(/[\p{L}\p{N}_.-]+/gu) || [])];
+  const paths = queryPaths(options);
   if (!terms.length && !paths.length) fail('memory-query-required', 'Use --query or --path.');
   const ranked = [];
   for (const record of corpus.records) {
@@ -216,9 +220,7 @@ function receiptFor(record) {
   return `${record.id}=${hash(JSON.stringify([record.path, record.text, record.intro, record.links, record.confidence, record.lifecycle]))}`;
 }
 
-function read(corpus, options = {}) {
-  if (options.revision && options.revision !== corpus.revision) fail('memory-changed', 'Memory changed after search; search again before using its IDs.');
-  if (!options.ids?.length) fail('memory-id-required', 'Use --id from search, or --id @global to read only shared constraints.');
+function selectedRecords(corpus, ids) {
   const selected = new Map();
   function include(id) {
     const pending = [id];
@@ -232,9 +234,50 @@ function read(corpus, options = {}) {
     }
   }
   for (const record of corpus.records) if (record.always && record.lifecycle !== 'historical') include(record.id);
-  for (const id of options.ids) if (id !== '@global') include(id);
+  for (const id of ids) if (id !== '@global') include(id);
+  return [...selected.values()];
+}
+
+function inspect(corpus, options = {}) {
+  if (options.revision && options.revision !== corpus.revision) fail('memory-changed', 'Memory changed; restart inspection.');
+  for (const id of options.ids || []) if (!corpus.byId.has(id)) fail('memory-id-not-found', `Unknown memory ID: ${id}`);
+  const paths = queryPaths(options);
+  const incoming = new Map(corpus.records.map(record => [record.id, []]));
+  for (const record of corpus.records) for (const id of new Set(record.links)) incoming.get(id).push(record.id);
+  const candidates = corpus.records.filter(record =>
+    (!options.ids?.length || options.ids.includes(record.id))
+    && (!paths.length || record.paths.some(scope => paths.some(item => overlaps(item, scope)))));
+  const rows = candidates.map(record => {
+    const selected = selectedRecords(corpus, [record.id]);
+    const preambles = new Map(selected.map(item => [item.path, item.intro]));
+    return {
+      ...pointer(record), document: record.document,
+      section_chars: record.text.length, preamble_chars: record.intro.length,
+      read_chars: selected.reduce((size, item) => size + item.text.length, 0)
+        + [...preambles.values()].reduce((size, text) => size + text.length, 0),
+      required_count: selected.filter(item => item.id !== record.id).length,
+      required_by: incoming.get(record.id),
+    };
+  }).sort((a, b) => b.read_chars - a.read_chars || a.id.localeCompare(b.id));
+  const offset = options.offset ?? 0;
+  const result = { revision: corpus.revision, total: rows.length, offset, next_offset: null,
+    global_count: corpus.records.filter(record => record.always && record.lifecycle !== 'historical').length,
+    sections: [] };
+  for (const row of rows.slice(offset, offset + (options.limit ?? 5))) {
+    result.sections.push(row);
+    // Leave room for next_offset without silently truncating a dependency list.
+    if (JSON.stringify(result).length + 20 > (options.maxChars ?? 6000)) { result.sections.pop(); break; }
+  }
+  result.next_offset = offset + result.sections.length < rows.length ? offset + result.sections.length : null;
+  if (offset < rows.length && !result.sections.length) fail('memory-output-budget', 'Increase --max-chars to fit an inspection row and its incoming links.');
+  return result;
+}
+
+function read(corpus, options = {}) {
+  if (options.revision && options.revision !== corpus.revision) fail('memory-changed', 'Memory changed after search; search again before using its IDs.');
+  if (!options.ids?.length) fail('memory-id-required', 'Use --id from search, or --id @global to read only shared constraints.');
   const seen = new Set(options.seen || []);
-  const records = [...selected.values()];
+  const records = selectedRecords(corpus, options.ids);
   const cursorPrefix = `${corpus.revision}:${hash(JSON.stringify([options.ids, [...seen].sort()])).slice(0, 16)}:`;
   let start = 0;
   if (options.cursor !== undefined) {
@@ -285,10 +328,11 @@ function parseArgs(argv) {
   const names = { '--project-root': 'projectRoot', '--query': 'query', '--path': 'paths', '--id': 'ids', '--seen': 'seen', '--cursor': 'cursor', '--revision': 'revision', '--limit': 'limit', '--offset': 'offset', '--max-chars': 'maxChars' };
   const allowed = {
     search: new Set(['projectRoot', 'query', 'paths', 'limit', 'offset', 'maxChars']),
+    inspect: new Set(['projectRoot', 'ids', 'paths', 'revision', 'limit', 'offset', 'maxChars']),
     read: new Set(['projectRoot', 'ids', 'seen', 'cursor', 'revision', 'maxChars']),
     check: new Set(['projectRoot']),
   };
-  if (!allowed[command]) fail('memory-command-invalid', 'Usage: memory.js search|read|check --project-root DIR [--query TEXT] [--path PATH] [--id ID]');
+  if (!allowed[command]) fail('memory-command-invalid', 'Usage: memory.js search|read|inspect|check --project-root DIR [--query TEXT] [--path PATH] [--id ID]');
   const seen = new Set();
   for (let index = 0; index < args.length; index += 1) {
     const flag = args[index];
@@ -317,7 +361,8 @@ function main(argv = process.argv.slice(2)) {
   try {
     const { command, options } = parseArgs(argv);
     const corpus = loadRecords(options.projectRoot);
-    const result = command === 'search' ? search(corpus, options) : command === 'read' ? read(corpus, options) : {
+    const result = command === 'search' ? search(corpus, options) : command === 'read' ? read(corpus, options)
+      : command === 'inspect' ? inspect(corpus, options) : {
       valid: true, documents: corpus.state.manifest.documents.length, records: corpus.records.length,
       source_bytes: corpus.sourceBytes, revision: corpus.revision,
     };
@@ -329,4 +374,4 @@ function main(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) main();
-module.exports = { loadRecords, recordsFromSources, sections, search, read, receiptFor, parseArgs, MAX_CORPUS_BYTES };
+module.exports = { loadRecords, recordsFromSources, sections, search, read, inspect, receiptFor, parseArgs, MAX_CORPUS_BYTES };

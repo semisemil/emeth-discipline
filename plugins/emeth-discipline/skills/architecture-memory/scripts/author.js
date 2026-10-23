@@ -85,15 +85,18 @@ function plan(state, sources, command, input) {
     const fixed = W.BASE.find(([, value]) => value === kind);
     return create(kind, words[kind] || kind, fixed?.[2] || 'components/README.md', fixed?.[0] || 'component-index');
   }
-  function section(doc, value, extra = '') {
-    if (!object(value)) invalid('Each section must be an object.');
+  function editable(doc) {
     if (doc.kind === 'decision' && /^- (?:Status|상태): (?:accepted|deprecated|superseded)\s*$/m.test(M.sections(sources.get(doc.path) || '').intro)) invalid('Preserve accepted ADR bodies; create a superseding decision.');
+  }
+  function section(doc, value, extra = '', allocatedId) {
+    if (!object(value)) invalid('Each section must be an object.');
+    editable(doc);
     const old = value.id ? initial.byId.get(value.id) : null;
     if (value.id && (!old || owner(old)?.id !== doc.id || value.expected !== M.receiptFor(old))) {
       S.fail('memory-record-changed', `Read the current section before editing: ${value.id}`);
     }
     if (old && !/^## /u.test(old.text)) invalid('Add a section beneath the document preamble instead of replacing it.');
-    const id = old?.stable ? old.id : fresh('AM');
+    const id = old?.stable ? old.id : allocatedId || fresh('AM');
     const metadata = { id };
     for (const key of ['paths', 'terms', 'links', 'always']) {
       const v = value[key] ?? old?.[key];
@@ -172,6 +175,60 @@ function plan(state, sources, command, input) {
     }
   } else if (command === 'section') {
     section(select(input.document), input);
+  } else if (command === 'reorganize') {
+    if (input.revision !== initial.revision) S.fail('memory-changed', 'Read the current corpus before reorganizing.');
+    const values = input.sections ?? [];
+    const redirects = input.redirects ?? [];
+    const introductions = input.introductions ?? [];
+    if (![values, redirects, introductions].every(Array.isArray)) invalid('sections, redirects and introductions must be arrays.');
+    const refs = new Map();
+    const allocated = values.map(value => {
+      if (!object(value)) invalid('Each section must be an object.');
+      const id = initial.byId.get(value.id)?.stable ? value.id : fresh('AM');
+      if (value.ref !== undefined) {
+        if (typeof value.ref !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(value.ref) || refs.has(value.ref)) invalid('Use unique local section refs containing letters, digits, hyphens or underscores.');
+        refs.set(value.ref, id);
+      }
+      return id;
+    });
+    function resolve(id) {
+      if (typeof id !== 'string') invalid('Section links must be IDs or @refs.');
+      if (!id.startsWith('@')) return id;
+      if (!refs.has(id.slice(1))) invalid(`Unknown local section ref: ${id}`);
+      return refs.get(id.slice(1));
+    }
+    values.forEach((value, index) => {
+      const old = initial.byId.get(value.id);
+      if (old && ((value.confidence !== undefined && value.confidence !== old.confidence)
+        || (value.lifecycle !== undefined && value.lifecycle !== old.lifecycle))) invalid('Reorganization preserves existing confidence and lifecycle; reconcile factual changes through update.');
+      if (value.links !== undefined && !Array.isArray(value.links)) invalid('links must be an array.');
+      section(select(value.document), { ...value, confidence: value.confidence ?? old?.confidence,
+        lifecycle: value.lifecycle ?? old?.lifecycle, ...(value.links !== undefined ? { links: value.links.map(resolve) } : {}) }, '', allocated[index]);
+    });
+    for (const redirect of redirects) {
+      if (!object(redirect) || !Array.isArray(redirect.to) || !redirect.to.length) invalid('A redirect needs an existing id, its receipt and nonempty to IDs or @refs.');
+      const old = initial.byId.get(redirect.id);
+      if (!old) S.fail('memory-id-not-found', `Unknown memory ID: ${redirect.id}`);
+      const targets = [...new Set(redirect.to.map(resolve))];
+      if (targets.includes(old.id)) invalid('A moved section cannot refer to itself.');
+      const destinations = targets.map(id => {
+        const index = allocated.indexOf(id);
+        const target = initial.byId.get(id);
+        const doc = index < 0 ? target && owner(target) : select(values[index].document);
+        if (!doc) invalid(`Unknown destination: ${id}`);
+        return link(owner(old).path, doc.path, index < 0 ? target.title : values[index].title || target?.title || id);
+      });
+      section(owner(old), { id: old.id, expected: redirect.expected, title: old.title,
+        body: (language === 'ko' ? '내용의 현재 위치: ' : 'Content now lives in: ') + destinations.join(', ') + '.',
+        confidence: old.confidence, lifecycle: 'historical', always: false, links: targets });
+    }
+    for (const value of introductions) {
+      if (!object(value)) invalid('Each introduction must be an object.');
+      const doc = select(value.document);
+      editable(doc);
+      introduction(doc, body(value.body));
+    }
+    result.refs = Object.fromEntries(refs);
   } else if (command === 'document') {
     if (!['context', 'system-context', 'containers'].includes(input.kind)) invalid('Use document for context, system-context or containers.');
     const doc = create(input.kind, input.title);
@@ -247,6 +304,22 @@ function run(project, command, input = {}, options = {}) {
     const planned = plan(state, sources, command, input);
     if (!planned.payload.documents.length) return { status: 'no-op', target: draft ? 'draft' : 'live', ...planned.result };
     const prepared = R.preparePatch(state, sources, {}, planned.payload);
+    if (command === 'reorganize' && input.redirects?.length) {
+      const retired = new Set(input.redirects.map(item => item.id));
+      const nextSources = new Map(sources);
+      for (const entry of prepared.entries) nextSources.set(entry.path, entry.after);
+      // Historical callers keep their IDs. Current prerequisites select the actual
+      // owners instead of accumulating forwarding records in every retrieval.
+      const next = corpus(state, nextSources);
+      for (const record of next.records) {
+        if ((record.lifecycle !== 'historical' || retired.has(record.id)) && record.links.some(id => retired.has(id))) {
+          invalid(`Update required links from ${record.id} to the destination sections before redirecting.`);
+        }
+        if (retired.has(record.id) && record.links.some(id => next.byId.get(id).lifecycle === 'historical')) {
+          invalid('A moved section must point to current or planned destination sections.');
+        }
+      }
+    }
     const changed = R.publish(directory, [...prepared.entries,
       { path: W.MANIFEST, before: S.hash(manifestText), after: JSON.stringify(state.manifest, null, 2) + '\n' }]);
     return { status: changed ? 'updated' : 'no-op', target: draft ? 'draft' : 'live', ...planned.result };
@@ -255,7 +328,7 @@ function run(project, command, input = {}, options = {}) {
 function main() {
   try {
     const [command, ...args] = process.argv.slice(2);
-    if (!['scaffold', 'document', 'component', 'decision', 'section', 'read', 'recover'].includes(command)) invalid('Commands: scaffold, document, component, decision, section, read, recover.');
+    if (!['scaffold', 'document', 'component', 'decision', 'section', 'reorganize', 'read', 'recover'].includes(command)) invalid('Commands: scaffold, document, component, decision, section, reorganize, read, recover.');
     const options = {};
     for (let i = 0; i < args.length; i += 2) {
       const key = args[i].replace(/^--/, '');

@@ -12,6 +12,13 @@ With no candidates, `read --id @global` reads shared constraints. Make one groun
 
 ## Reuse and bounds
 
+For maintenance, `inspect [--id <ID>] [--path <path>]` lists sections by required retrieval size, with their registered `document` ID, `section_chars`, `preamble_chars`, `read_chars`, `required_count` and direct incoming `required_by` IDs.
+It includes historical sections; repeat selectors to cover related owners.
+Sizes are JavaScript string lengths in UTF-16 code units, including routing metadata.
+`read_chars` includes the selected section, all required links, active `always` sections and each participating document's preamble once, without receipt reuse or response envelopes.
+It is not a token count or a per-page byte size.
+Use `--limit`, `--offset`, `--max-chars` and the first page's `--revision` for bounded inspection.
+
 For `complete: false`, continue with the same IDs and original `--seen` set plus `--cursor <next_cursor>`; do not accumulate receipts for pages of one read. Keep preceding pages in context until completion. The cursor is valid only for the same corpus and selection.
 
 `--max-chars` sets the per-response limit. For a single larger section, inspect its exact source range with shared preamble and prerequisites. If the section and its prerequisites exceed the working context, leave the affected decision unresolved.

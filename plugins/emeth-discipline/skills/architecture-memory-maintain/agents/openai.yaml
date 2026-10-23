@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Architecture Memory Maintenance"
+  short_description: "Reorganize architecture documents and verify partial retrieval"
+  default_prompt: "Use $architecture-memory-maintain to reorganize the connected architecture documents, preserving meaning and evidence, and verify representative searches and partial reads."
+
+policy:
+  allow_implicit_invocation: true

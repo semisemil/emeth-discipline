@@ -129,6 +129,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
 | `/emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
 | `/emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
+| `/emeth-discipline:architecture-memory-maintain` | 문서에 여러 주제나 중복이 쌓여 필요한 내용을 찾기 어려울 때 | 의미와 근거를 보존하며 내용을 분리하거나 통합하고, 실제 검색과 부분 조회로 확인 |
 
 ### Workflow
 
