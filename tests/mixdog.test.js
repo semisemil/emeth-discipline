@@ -59,8 +59,8 @@ test('Mixdog sessions apply host rules and restore them on user submissions', t 
 });
 
 test('Mixdog document requests keep the numbering notice alongside the baseline', t => {
-  for (const prompt of ['/development-design write a design', '$emeth-discipline:development-design write a design',
-    'figure-it-out implement the change', '/issue-ledger register this bug']) {
+  for (const prompt of ['/development-design write a design', '/emeth-discipline:development-design write a design',
+    '$emeth-discipline:development-design write a design', 'figure-it-out implement the change', '/issue-ledger register this bug']) {
     const response = hook(t, { hook_event_name: 'UserPromptSubmit', prompt });
     assert.match(response.hookSpecificOutput.additionalContext, /Next (design|issue) number: (DESIGN|PL)-0001/);
     assert.ok(response.hookSpecificOutput.additionalContext.includes(composeMixdogPrompt()));

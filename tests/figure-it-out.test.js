@@ -14,5 +14,5 @@ test('figure-it-out is explicit-only and exposed by the plugin', () => {
   assert.match(metadata, /^\s*allow_implicit_invocation:\s*false$/m);
   assert.ok(manifest.interface.defaultPrompt.length <= 3);
   assert.ok(manifest.interface.defaultPrompt.every((prompt) => prompt.length <= 128));
-  assert.ok(manifest.interface.defaultPrompt.some((prompt) => prompt.startsWith('$emeth-discipline:figure-it-out')));
+  assert.ok(manifest.interface.defaultPrompt.some((prompt) => prompt.startsWith('/emeth-discipline:figure-it-out')));
 });

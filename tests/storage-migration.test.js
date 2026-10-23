@@ -119,7 +119,7 @@ test('direct document numbering and architecture access migrate without a sessio
   const storage = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage');
   assert.equal(storage.binding(f.root).enabled, false);
   const numbers = require('../plugins/emeth-discipline/lib/document-number');
-  assert.equal(numbers.nextDocumentId(f.root, numbers.DOCUMENT_SKILLS['$emeth-discipline:issue-ledger']), 'PL-0043');
+  assert.equal(numbers.nextDocumentId(f.root, numbers.DOCUMENT_SKILLS['/emeth-discipline:issue-ledger']), 'PL-0043');
   assert.equal(fs.existsSync(path.join(f.root, '.proofline')), false);
 });
 

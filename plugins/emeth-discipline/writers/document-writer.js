@@ -651,7 +651,7 @@ function createDocument(options, sourceBuffer) {
   return withDocumentLock({ ...options, kind: 'design' }, () => {
     const root = canonicalProjectRoot(options.project_root);
     const { nextDocumentId, DOCUMENT_SKILLS } = require('../lib/document-number.js');
-    const id = options.id || nextDocumentId(root, DOCUMENT_SKILLS['$emeth-discipline:development-design']);
+    const id = options.id || nextDocumentId(root, DOCUMENT_SKILLS['/emeth-discipline:development-design']);
     const relativePath = `.emeth/designs/${id}-${options.slug}/DESIGN.md`;
     const { target, storageRoot } = resolveTarget(root, 'design', relativePath);
     if (readExisting(storageRoot, target)) throw writerError('document-exists', 'Design already exists');

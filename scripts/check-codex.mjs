@@ -163,7 +163,7 @@ try {
     sandbox: 'workspace-write', modelProvider: 'emeth_fixture', model: 'gpt-6.1-sol' });
   const skill = skills.find(candidate => candidate.name === 'emeth-discipline:development-design');
   const turn = await rpc('turn/start', { threadId: thread.thread.id, input: [
-    { type: 'text', text: '$emeth-discipline:development-design Validate the loaded instructions; do not write files.' },
+    { type: 'text', text: '/emeth-discipline:development-design Validate the loaded instructions; do not write files.' },
     { type: 'skill', name: skill.name, path: skill.path },
   ] });
   await until(() => notifications.some(message => message.method === 'turn/completed' && message.params.turn.id === turn.turn.id), 'fixture turn');

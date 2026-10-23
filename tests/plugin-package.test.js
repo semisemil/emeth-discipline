@@ -66,7 +66,7 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     assert.doesNotMatch(context, /skill-prompt-authoring-principles/);
   }
   const number = f.run('hooks/run.js', [], JSON.stringify({
-    hook_event_name: 'UserPromptSubmit', prompt: '$emeth-discipline:development-design',
+    hook_event_name: 'UserPromptSubmit', prompt: '/emeth-discipline:development-design',
     cwd: f.project, session_id: 'number',
   }));
   assert.equal(number.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');

@@ -27,6 +27,8 @@ function runHook(root, prompt) {
       ...process.env,
       HOME: root,
       USERPROFILE: root,
+      // Pin Codex so the Codex log location holds wherever the suite runs.
+      PLUGIN_ROOT: pluginRoot,
     },
     input: JSON.stringify({
       hook_event_name: 'UserPromptSubmit',
@@ -48,8 +50,8 @@ test('unrelated prompts and non-invocation mentions emit zero stdout bytes', (t)
   const root = fixture(t);
   for (const prompt of [
     'Register an issue.',
-    'Please use $emeth-discipline:issue-ledger for this.',
-    'Compare $emeth-discipline:development-plan and another skill.',
+    'Please use /emeth-discipline:issue-ledger for this.',
+    'Compare /emeth-discipline:development-plan and another skill.',
   ]) {
     const result = runHook(root, prompt);
     assert.equal(result.status, 0, result.stderr);
@@ -64,7 +66,7 @@ test('issue-ledger receives the next issue number from issue filenames', (t) => 
   touch(root, '.emeth/issues/not-an-issue.json');
 
   assert.equal(
-    context(runHook(root, '$emeth-discipline:issue-ledger\nRegister this work.')),
+    context(runHook(root, '/emeth-discipline:issue-ledger\nRegister this work.')),
     'Next issue number: PL-0013',
   );
 });
@@ -75,7 +77,7 @@ test('development-design receives the next number from Design directories', (t) 
   fs.mkdirSync(path.join(root, '.emeth/designs/DESIGN-0020-another'), { recursive: true });
 
   assert.equal(
-    context(runHook(root, '  $emeth-discipline:development-design   \nDevelop a design.')),
+    context(runHook(root, '  /emeth-discipline:development-design   \nDevelop a design.')),
     'Next design number: DESIGN-0021',
   );
 });
@@ -84,13 +86,13 @@ test('Design numbering grows beyond four digits and starts at one for a new proj
   const populated = fixture(t);
   fs.mkdirSync(path.join(populated, '.emeth/designs/DESIGN-9999-roadmap'), { recursive: true });
   assert.equal(
-    context(runHook(populated, '$emeth-discipline:development-design\nDevelop a design.')),
+    context(runHook(populated, '/emeth-discipline:development-design\nDevelop a design.')),
     'Next design number: DESIGN-10000',
   );
 
   const empty = fixture(t);
   assert.equal(
-    context(runHook(empty, '$emeth-discipline:development-design')),
+    context(runHook(empty, '/emeth-discipline:development-design')),
     'Next design number: DESIGN-0001',
   );
 });
@@ -101,7 +103,7 @@ test('figure-it-out receives only a Design number independent of legacy document
   fs.mkdirSync(path.join(root, '.emeth/specs/SPEC-0011-settings'), { recursive: true });
 
   assert.equal(
-    context(runHook(root, '$emeth-discipline:figure-it-out\nTake this change through implementation.')),
+    context(runHook(root, '/emeth-discipline:figure-it-out\nTake this change through implementation.')),
     'Next design number: DESIGN-0001',
   );
 });
@@ -109,7 +111,7 @@ test('figure-it-out receives only a Design number independent of legacy document
 test('a numbering read failure is logged and leaves the skill able to fall back', (t) => {
   const root = fixture(t);
   touch(root, '.emeth/issues');
-  const result = runHook(root, '$emeth-discipline:issue-ledger');
+  const result = runHook(root, '/emeth-discipline:issue-ledger');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(Buffer.byteLength(result.stdout), 0);
 

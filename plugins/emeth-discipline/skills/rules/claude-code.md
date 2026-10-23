@@ -40,6 +40,3 @@ If their intent conflicts with this request, check with the user.
 ## Emeth skills
 
 Emeth skill files write this plugin's root directory as `<plugin-root>`: `{{plugin-root}}` (the directory that contains `skills/`)
-
-Emeth documents write skill invocations in Codex form, such as `$emeth-discipline:issue-ledger`.
-In Claude Code, the same skill is `/emeth-discipline:issue-ledger`, or `emeth-discipline:issue-ledger` through the Skill tool.

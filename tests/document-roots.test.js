@@ -65,7 +65,7 @@ test('one external root owns Design creation, reads, revisions, status, numberin
   assert.equal(paths.absolute_path, path.join(directory, 'DESIGN.md'));
   assert.equal(paths.documents[0].absolute_path, path.join(directory, 'contract.md'));
   assert.equal(fs.readFileSync(paths.documents[0].absolute_path, 'utf8'), '# Contract\n\nReturn the receipt ID.');
-  assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['$emeth-discipline:development-design']), 'DESIGN-0002');
+  assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['/emeth-discipline:development-design']), 'DESIGN-0002');
   const registryPath = path.join(f.temporary, 'projects.json');
   f.write(registryPath, JSON.stringify({ schema_version: 1, projects: [{ ...f.projectRecord, registered_at: '2026-10-12T00:00:00.000Z' }] }));
   const watched = [];
@@ -207,7 +207,7 @@ test('relocating existing collections and selecting their new root preserves doc
   }
   f.write(path.join(f.project, '.emeth/documents.json'), JSON.stringify({ schema_version: 1, root: f.vault }));
   assert.equal(f.writer('read', ['--id', 'DESIGN-0001']).text, original.text);
-  assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['$emeth-discipline:development-design']), 'DESIGN-0002');
+  assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['/emeth-discipline:development-design']), 'DESIGN-0002');
   assert.equal(W.begin(f.project, 'init').connection_only, true);
   assert.equal(W.apply(f.project).status, 'applied');
   assert.equal(fs.readFileSync(path.join(f.vault, 'architecture/04-context.md'), 'utf8'), originalContext);
