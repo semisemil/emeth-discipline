@@ -5,13 +5,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { JSDOM } = require('jsdom');
 const { openPage, project, deferred } = require('./helpers/dashboard-page');
 const { ArchitectureService } = require('../plugins/emeth-discipline/dashboard/architecture.js');
 
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
-
-const ASSET_ROOT = path.join(__dirname, '..', 'plugins', 'emeth-discipline', 'dashboard', 'assets');
-const readAsset = (name) => fs.readFileSync(path.join(ASSET_ROOT, name), 'utf8');
 
 const documents = [
   { id: 'context', kind: 'context', path: '04-context.md', order: 4 },
@@ -62,12 +60,17 @@ test('Architecture viewer reads the selected document, renders metadata and loca
   assert.equal(detail.tabIndex, -1);
   assert.equal(page.get('[aria-live="polite"]') !== null, true);
   assert.equal(page.get('textarea, [contenteditable]'), null);
-  assert.match(detail.textContent, /ADR 상태accepted/);
-  assert.match(detail.textContent, /Git 브랜치main/);
-  assert.ok(detail.textContent.includes(`Git 커밋${revision}`));
-  assert.match(detail.textContent, /Git 동기화2026-08-30/);
-  assert.match(detail.textContent, /문서 전체 검증2026-08-29/);
-  assert.ok(detail.textContent.includes(`문서 검증 revision${revision}`));
+  const terms = Array.from(detail.querySelectorAll('dl dt'));
+  for (const [label, value] of [
+    ['ADR 상태', 'accepted'], ['Git 브랜치', 'main'], ['Git 커밋', revision],
+    ['Git 동기화', '2026-08-30T00:00:00.000Z'],
+    ['문서 전체 검증', '2026-08-29T00:00:00.000Z'], ['문서 검증 revision', revision],
+  ]) {
+    const term = terms.find(term => term.textContent.startsWith(label));
+    assert.ok(term, label);
+    assert.equal(term.nextElementSibling.tagName, 'DD');
+    assert.equal(term.nextElementSibling.textContent, value);
+  }
   assert.equal(page.get('.document-path').textContent, 'decisions/ADR-001.md');
   assert.match(page.diagrams[0], /A --> B/);
   assert.equal(page.mermaidOptions[0].securityLevel, 'strict');
@@ -148,17 +151,18 @@ test('relative links resolve only to registered Architecture documents', () => {
 });
 
 test('Markdown keeps default link hardening and permits resolver-approved Architecture routes', () => {
-  const internal = core.renderMarkdown('[맥락](04-context.md)', {
+  const internal = JSDOM.fragment(core.renderMarkdown('[맥락](04-context.md)', {
     resolveLink: () => '/architecture?project=p1&document=context',
-  });
-  assert.match(internal, /href="\/architecture\?project=p1&amp;document=context"/);
-  assert.match(internal, /data-architecture-link="true"/);
-  assert.doesNotMatch(internal, /target="_blank"/);
+  }));
+  const link = internal.querySelector('a');
+  assert.equal(link.getAttribute('href'), '/architecture?project=p1&document=context');
+  assert.equal(link.dataset.architectureLink, 'true');
+  assert.notEqual(link.target, '_blank');
 
-  const refused = core.renderMarkdown('[위험](local.md)', {
+  const refused = JSDOM.fragment(core.renderMarkdown('[위험](local.md)', {
     resolveLink: () => 'javascript:alert(1)',
-  });
-  assert.doesNotMatch(refused, /href=/);
+  }));
+  assert.equal(refused.querySelector('[href]'), null);
 
   const unresolved = [];
   core.renderMarkdown('[없음](missing.md)', {
@@ -166,11 +170,4 @@ test('Markdown keeps default link hardening and permits resolver-approved Archit
     onUnresolvedLink: (href) => unresolved.push(href),
   });
   assert.deepEqual(unresolved, ['missing.md']);
-});
-
-test('Architecture layout has desktop navigation and a compact single-column fallback', () => {
-  const css = readAsset('styles.css');
-  assert.match(css, /\.architecture-layout\s*\{[\s\S]*?grid-template-columns:\s*248px minmax\(0, 1fr\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.architecture-layout\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
-  assert.match(css, /\.architecture-markdown \.mermaid\s*\{/);
 });

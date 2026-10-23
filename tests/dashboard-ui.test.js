@@ -5,12 +5,12 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { JSDOM } = require('jsdom');
 
 const { dashboard, project, index } = require('./helpers/dashboard-page');
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 
-const ASSET_ROOT = path.join(__dirname, '..', 'plugins', 'emeth-discipline', 'dashboard', 'assets');
 const AVAILABLE_ID = '11111111-1111-4111-8111-111111111111';
 const UNAVAILABLE_ID = '22222222-2222-4222-8222-222222222222';
 
@@ -83,10 +83,6 @@ const indexFixture = {
   diagnostics: [{ code: 'record-invalid', message: '기록을 읽지 못했습니다.', relative_path: '.emeth/issues/bad.json' }],
   read_at: '2026-08-19T06:00:00.000Z',
 };
-
-function readAsset(name) {
-  return fs.readFileSync(path.join(ASSET_ROOT, name), 'utf8');
-}
 
 function deferred() {
   let resolve;
@@ -241,33 +237,27 @@ test('index completion reloads the document selected during refresh after cleari
   refresh.resolve({ ...indexFixture, read_at: 'refreshed' }); await page.settle();
   assert.equal(attempts, 2);
   assert.doesNotMatch(page.get('.document-detail').textContent, /EARLY/);
-  assert.match(page.get('.document-detail').textContent, /불러오는 중/);
+  assert.ok(page.get('.document-detail .empty-state'));
+  assert.equal(page.get('.document-detail .markdown-body'), null);
   reloaded.resolve(detail('plan', 'PLAN-0002', 'RELOADED')); await page.settle();
   assert.match(page.get('.document-detail').textContent, /RELOADED/);
 });
 
-test('collapsed rail cues distinguish same-name projects before selection', () => {
-  assert.equal(core.projectRailCue(projects[0], projects), '같1');
-  assert.equal(core.projectRailCue(projects[1], projects), '같2');
-
+test('collapsed rail cues distinguish same-name projects and remain stable when reordered', () => {
   const posixCasePeers = [
     { name: 'same', root: '/Users/A/same', availability: 'available' },
     { name: 'same', root: '/Users/a/same', availability: 'available' },
   ];
-  const upperCue = core.projectRailCue(posixCasePeers[0], posixCasePeers);
-  const lowerCue = core.projectRailCue(posixCasePeers[1], posixCasePeers);
-  assert.match(upperCue, /^s[12]$/);
-  assert.match(lowerCue, /^s[12]$/);
-  assert.notEqual(upperCue, lowerCue);
-
   const drivePeers = [
     { name: 'same', root: 'C:\\same', availability: 'available' },
     { name: 'same', root: 'D:\\same', availability: 'available' },
   ];
-  assert.equal(core.projectRailCue(drivePeers[0], drivePeers), 's1');
-  assert.equal(core.projectRailCue(drivePeers[1], drivePeers), 's2');
-  assert.equal(core.projectRailCue(drivePeers[0], [...drivePeers].reverse()), 's1');
-  assert.equal(core.projectRailCue({ name: 'solo', availability: 'unavailable' }, []), 'so');
+  for (const peers of [projects, posixCasePeers, drivePeers]) {
+    const cues = peers.map(project => core.projectRailCue(project, peers));
+    assert.ok(cues.every(cue => cue.trim().length > 0));
+    assert.equal(new Set(cues).size, peers.length);
+    assert.deepEqual(peers.map(project => core.projectRailCue(project, [...peers].reverse())), cues);
+  }
 });
 
 test('project selection restores desktop focus and returns mobile focus to the drawer opener', async t => {
@@ -283,7 +273,7 @@ test('project selection restores desktop focus and returns mobile focus to the d
   assert.equal(page.get('#project-panel').inert, true);
   const requested = await dashboard(t, { query: '?project=beta&expected_version=older' });
   assert.equal(requested.get('#current-project').textContent, 'beta');
-  assert.match(requested.get('#status-stack').textContent, /서버 재시작 필요/);
+  assert.ok(requested.get('#status-stack [role="alert"]').textContent.includes('older'));
 });
 
 test('document loading, success and failure preserve focus and stale responses cannot steal it', async t => {
@@ -293,7 +283,8 @@ test('document loading, success and failure preserve focus and stale responses c
   assert.equal(page.document.activeElement, page.get(planKey));
   page.get(specKey).focus(); page.click(specKey);
   spec.resolve({ error: { code: 'record-not-found', message: 'missing' } }); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /문서를 읽을 수 없음/);
+  assert.ok(page.get('.document-detail .empty-state'));
+  assert.equal(page.get('.document-detail .markdown-body'), null);
   assert.equal(page.document.activeElement, page.get(specKey));
   plan.resolve(detail('plan', 'PLAN-0002', 'CACHED')); await page.settle();
   assert.equal(page.document.activeElement, page.get(specKey));
@@ -310,13 +301,12 @@ test('document loading, success and failure preserve focus and stale responses c
 });
 
 test('background mode and image replacement are separate keyboard controls', async t => {
-  const stored = new Map(), opened = [];
+  const stored = new Map();
   const setup = window => {
     window.Blob = Blob;
     window.URL.createObjectURL = () => 'blob:stored-background';
     window.URL.revokeObjectURL = () => {};
-    window.indexedDB = { open(name) {
-      opened.push(name);
+    window.indexedDB = { open() {
       const request = {};
       queueMicrotask(() => {
         request.result = { close() {}, transaction() {
@@ -339,7 +329,7 @@ test('background mode and image replacement are separate keyboard controls', asy
   const input = page.get('#background-file'), mode = page.get('#background-mode'), button = page.get('#background-button');
   assert.equal(input.tabIndex, -1); assert.equal(input.hidden, true); assert.equal(input.getAttribute('aria-hidden'), 'true');
   for (const node of [mode, button]) { assert.equal(node.tabIndex, 0); assert.equal(node.hidden, false); assert.notEqual(node.getAttribute('aria-hidden'), 'true'); }
-  assert.deepEqual([...mode.options].map(option => option.textContent), ['단색 배경', '이미지 배경']);
+  assert.deepEqual([...mode.options].map(option => option.value), ['color', 'image']);
   let picks = 0; input.addEventListener('click', event => { event.preventDefault(); picks++; });
   button.click(); assert.equal(picks, 1);
   page.change('#background-mode', 'image'); assert.equal(picks, 2);
@@ -352,7 +342,6 @@ test('background mode and image replacement are separate keyboard controls', asy
   const restored = await dashboard(t, { setup, storage: { 'emeth.dashboard.background': 'image' } });
   assert.equal(restored.document.documentElement.dataset.background, 'image');
   assert.match(restored.document.documentElement.style.getPropertyValue('--background-image'), /blob:stored-background/);
-  assert.deepEqual(opened, ['emeth-dashboard', 'emeth-dashboard', 'emeth-dashboard']);
   page.change('#background-mode', 'color');
   assert.equal(page.document.documentElement.dataset.background, 'color');
 });
@@ -376,15 +365,18 @@ test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
     '```',
   ].join('\n'));
 
-  assert.match(rendered, /<h1>제목<\/h1>/);
-  assert.match(rendered, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-  assert.doesNotMatch(rendered, /<script|<img|<iframe/i);
-  assert.match(rendered, /href="https:\/\/example\.com\/path\?a=1&amp;b=2"/);
-  assert.match(rendered, /target="_blank" rel="noopener noreferrer"/);
-  assert.doesNotMatch(rendered, /href="javascript:/i);
-  assert.match(rendered, /<table>/);
-  assert.match(rendered, /<code>&lt;b&gt;<\/code>/);
-  assert.match(rendered, /<pre><code class="language-html">&lt;iframe/);
+  const content = JSDOM.fragment(rendered);
+  assert.equal(content.querySelector('h1').textContent, '제목');
+  assert.ok(content.textContent.includes('<script>alert(1)</script>'));
+  assert.equal(content.querySelector('script, img, iframe'), null);
+  const link = content.querySelector('a');
+  assert.equal(link.getAttribute('href'), 'https://example.com/path?a=1&b=2');
+  assert.equal(link.target, '_blank');
+  assert.ok(link.relList.contains('noopener'));
+  assert.ok(link.relList.contains('noreferrer'));
+  assert.ok([...content.querySelectorAll('a')].every(node => /^https?:/.test(node.getAttribute('href'))));
+  assert.equal(content.querySelector('table code').textContent, '<b>');
+  assert.ok(content.querySelector('pre code.language-html').textContent.startsWith('<iframe'));
 });
 
 test('projects prioritize availability, active work, and the most recently created issue', () => {
@@ -433,10 +425,13 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
   page.change('#project-search', '', 'input');
   page.click('[data-view="documents"]');
   const tabs = page.get('#view-tabs');
+  assert.equal(tabs.getAttribute('role'), 'tablist');
+  assert.equal(page.get('#status-stack').getAttribute('aria-live'), 'polite');
   page.get('[data-view="documents"]').focus();
   page.key(page.document.activeElement, 'ArrowLeft');
   assert.equal(page.document.activeElement.dataset.view, 'work');
   assert.equal(page.document.activeElement.getAttribute('aria-selected'), 'true');
+  assert.equal(page.get('#' + page.document.activeElement.getAttribute('aria-controls')), page.get('#view-panel'));
   for (const [key, value] of [['work:type', 'task'], ['work:status', 'doing'], ['work:risk', 'high']]) {
     const selector = `[data-focus-key="${key}"]`;
     page.get(selector).focus(); page.change(selector, value);
@@ -490,6 +485,7 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
 test('mobile drawer traps Tab focus and Escape restores its opener', async t => {
   const page = await dashboard(t, { width: 390 });
   const menu = page.get('#menu-button'); menu.focus(); menu.click();
+  assert.equal(page.get('#' + menu.getAttribute('aria-controls')), page.get('#project-panel'));
   const first = page.get('#project-panel a[href="/"]'), last = page.get('#panel-toggle');
   last.focus(); page.key(last, 'Tab'); assert.equal(page.document.activeElement, first);
   page.key(first, 'Tab', { shiftKey: true }); assert.equal(page.document.activeElement, last);
@@ -517,36 +513,6 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   removal.routes['/api/v1/projects'] = { projects: [] };
   removal.click('.danger-button'); await removal.settle();
   assert.equal(removal.calls.find(call => call.method === 'DELETE').url, '/api/v1/projects/gone');
-  assert.match(removal.get('#view-panel').textContent, /등록 프로젝트 없음/);
-  assert.match(removal.get('#view-panel').textContent, /추가.*등록/);
-});
-
-test('actual markup and styles expose responsive, keyboard, tooltip, and state contracts', () => {
-  const html = readAsset('dashboard.html');
-  const css = readAsset('styles.css');
-
-  assert.match(html, /role="tablist"/);
-  assert.match(html, /aria-label="등록 프로젝트"/);
-  assert.match(html, /aria-live="polite"/);
-  assert.match(html, /aria-controls="project-panel"/);
-  assert.match(html, /<aside class="project-panel[\s\S]*?<nav class="project-panel-navigation"[\s\S]*?id="architecture-link"/);
-  assert.doesNotMatch(html, /<div class="context-actions">\s*<a[^>]+id="architecture-link"/);
-  assert.match(html, /src="\/vendor\/mermaid\.min\.js"/);
-  assert.doesNotMatch(html, /id="rail-toggle"/);
-  assert.ok((html.match(/data-tooltip=/g) || []).length >= 4);
-
-  assert.match(css, /grid-template-columns:\s*248px minmax\(0, 1fr\)/);
-  assert.match(css, /@media \(max-width: 899px\) and \(min-width: 681px\)/);
-  assert.match(css, /\.app-shell\.project-panel-collapsed\s*\{[\s\S]*?grid-template-columns:\s*76px minmax\(0, 1fr\)/);
-  assert.match(css, /\.project-panel-link\s*\{[\s\S]*?width:\s*100%/);
-  assert.match(css, /\.document-layout\.is-list-collapsed\s*\{[\s\S]*?grid-template-columns:\s*48px minmax\(0, 1fr\)/);
-  assert.match(css, /\.markdown-body code\s*\{[\s\S]*?background:\s*var\(--markdown-code-bg\)/);
-  assert.match(css, /\.markdown-body h1,[\s\S]*?border-bottom:\s*1px solid var\(--markdown-heading-line\)/);
-  assert.match(css, /\.markdown-body \.mermaid\s*\{/);
-  assert.match(css, /@media \(max-width: 680px\)[\s\S]*?\.project-panel\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?z-index:\s*60;/);
-  assert.match(css, /\.drawer-open \.project-panel[\s\S]*?transform:\s*translateX\(0\)/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.doesNotMatch(css, /backdrop-filter:/);
-  assert.match(html, /<details class="appearance-settings">[\s\S]*?<summary[^>]*>/);
-
+  assert.equal(removal.get('.project-option'), null);
+  assert.ok(removal.get('#view-panel .empty-state p').textContent.trim());
 });

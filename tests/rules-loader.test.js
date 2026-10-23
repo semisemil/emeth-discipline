@@ -4,7 +4,6 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt.js');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const loaderPath = path.join(pluginRoot, 'hooks', 'run.js');
@@ -66,21 +65,31 @@ function copyRuntime(plugin) {
 }
 
 test('existing and new sessions ignore the retired default without changing saved preferences', (t) => {
-  const { env } = fixture(t);
+  const { root, env } = fixture(t);
+  const plugin = path.join(root, 'plugin');
+  copyRuntime(plugin);
+  const rules = path.join(plugin, 'skills/rules');
+  fs.mkdirSync(rules, { recursive: true });
+  fs.writeFileSync(path.join(rules, 'SKILL.md'), 'Shared fixture rules\nApply the rules for the host running this conversation: fixture');
+  fs.writeFileSync(path.join(rules, 'codex.md'), 'Codex fixture rules');
+  const script = path.join(plugin, 'hooks/run.js');
   writeJson(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), { mode: 'core' });
   writeJson(path.join(env.APPDATA, 'emeth', 'config.json'), { defaultMode: 'focus' });
 
-  const existing = runLoader(env, 'session-a', 'startup');
-  const fresh = runLoader(env, 'session-b', 'startup');
+  const existing = runLoader(env, 'session-a', 'startup', script);
+  const fresh = runLoader(env, 'session-b', 'startup', script);
   assert.equal(existing.status, 0, existing.stderr);
   assert.equal(fresh.status, 0, fresh.stderr);
-  assert.equal(context(existing), composeEmethPrompt());
-  assert.equal(context(fresh), composeEmethPrompt());
+  assert.equal(context(existing), 'Shared fixture rules\nCodex fixture rules');
+  assert.equal(context(fresh), 'Shared fixture rules\nCodex fixture rules');
   for (const source of ['clear', 'compact']) {
-    const result = runLoader(env, 'session-a', source);
+    const result = runLoader(env, 'session-a', source, script);
     assert.equal(result.status, 0, result.stderr);
+    assert.equal(context(result), 'Shared fixture rules\nCodex fixture rules');
   }
-  assert.equal(runLoader(env, 'session-a', undefined, loaderPath, 'SubagentStart').status, 0);
+  const child = runLoader(env, 'session-a', undefined, script, 'SubagentStart');
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(context(child), 'Shared fixture rules\nCodex fixture rules');
   assert.deepEqual(
     JSON.parse(fs.readFileSync(path.join(env.PLUGIN_DATA, 'rules-mode', 'session-a.json'), 'utf8')),
     { mode: 'core' },

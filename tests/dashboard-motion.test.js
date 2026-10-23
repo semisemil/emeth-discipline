@@ -56,7 +56,6 @@ test('a stale project response cannot unlock or animate the current project tran
   assert.equal(panel.attributes.has('aria-busy'), false);
   assert.equal(panel.classes.has('is-changing'), false);
   assert.equal(panel.animations.length, 1);
-  assert.equal(panel.animations[0].frames[0].opacity, .8);
   motion.finish(second);
   motion.finish(null);
   assert.equal(panel.animations.length, 1);

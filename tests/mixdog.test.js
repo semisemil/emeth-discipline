@@ -7,9 +7,11 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const host = require('../plugins/emeth-discipline/lib/host');
-const { composeMixdogPrompt } = require('../plugins/emeth-discipline/lib/rules-prompt');
 
 const repoRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
+const hostRules = ['codex.md', 'mixdog.md'].map(file => fs.readFileSync(
+  path.join(repoRoot, 'skills/rules', file), 'utf8',
+).trim().replaceAll('{{plugin-root}}', repoRoot));
 
 function hook(t, event) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-mixdog-hook-'));
@@ -44,7 +46,8 @@ test('Mixdog compatibility variables use Mixdog identity and state without chang
 });
 
 test('Mixdog sessions apply host rules and restore them on user submissions', t => {
-  const baseline = composeMixdogPrompt();
+  const baseline = hook(t, { hook_event_name: 'SessionStart', source: 'startup' }).hookSpecificOutput.additionalContext;
+  for (const rules of hostRules) assert.ok(baseline.includes(rules));
   assert.ok(baseline.includes(repoRoot));
   assert.doesNotMatch(baseline, /\{\{plugin-root\}\}/);
   assert.ok(baseline.length < 10_000, 'Mixdog hook context must not be truncated');
@@ -59,11 +62,16 @@ test('Mixdog sessions apply host rules and restore them on user submissions', t 
 });
 
 test('Mixdog document requests keep the numbering notice alongside the baseline', t => {
-  for (const prompt of ['/development-design write a design', '$emeth-discipline:development-design write a design',
-    'figure-it-out implement the change', '/issue-ledger register this bug']) {
+  for (const [prompt, id] of [
+    ['/development-design write a design', 'DESIGN-0001'],
+    ['$emeth-discipline:development-design write a design', 'DESIGN-0001'],
+    ['figure-it-out implement the change', 'DESIGN-0001'],
+    ['/issue-ledger register this bug', 'PL-0001'],
+  ]) {
     const response = hook(t, { hook_event_name: 'UserPromptSubmit', prompt });
-    assert.match(response.hookSpecificOutput.additionalContext, /Next (design|issue) number: (DESIGN|PL)-0001/);
-    assert.ok(response.hookSpecificOutput.additionalContext.includes(composeMixdogPrompt()));
+    const context = response.hookSpecificOutput.additionalContext;
+    assert.deepEqual(context.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), [id], prompt);
+    for (const rules of hostRules) assert.ok(context.includes(rules));
   }
 });
 
@@ -74,7 +82,8 @@ test('Mixdog agent spawns receive rules without losing task, route, file, or use
   const updated = response.hookSpecificOutput.updatedInput;
   assert.equal(response.hookSpecificOutput.hookEventName, 'PreToolUse');
   assert.deepEqual({ ...updated, context: args.context }, args);
-  assert.equal(updated.context, `${args.context}\n\n${composeMixdogPrompt()}`);
+  assert.ok(updated.context.startsWith(args.context));
+  for (const rules of hostRules) assert.ok(updated.context.includes(rules));
   assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'agent', tool_input: updated }), {},
     'repeat execution does not duplicate rules');
   for (const type of ['send', 'close', 'cancel', 'read', 'status', 'list', 'cleanup']) {

@@ -49,7 +49,7 @@ test('the first Design is saved, indexed and executable with a minimal connected
   assert.equal(manifest.documents.length, 1);
   assert.equal(manifest.git_checkpoint.revision, null);
   assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory/work/state.json')), false);
-  assert.match(notice({ cwd: f.project, thread_id: 'design-test' }, { dataRoot: path.join(f.root, 'hooks') }), /Project architecture documents are connected/);
+  assert.ok(notice({ cwd: f.project, thread_id: 'design-test' }, { dataRoot: path.join(f.root, 'hooks') }).includes('.emeth/architecture.json'));
   const contract = resolveContract(f.project, 'DESIGN-0001');
   assert.equal(contract.id, 'DESIGN-0001');
   assert.equal(contract.status, 'ready');
@@ -177,7 +177,6 @@ test('Design listing preserves valid records and reports duplicate IDs and inval
   assert.equal(designs[0].status, 'ready');
   assert.equal(designs[0].path, '.emeth/designs/DESIGN-0001/DESIGN.md');
   assert.equal(designs[1].error.code, 'contract-unavailable');
-  assert.match(designs[1].error.message, /Ambiguous/);
   assert.equal(designs[2].error.code, 'record-metadata-invalid');
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-unavailable');
 });

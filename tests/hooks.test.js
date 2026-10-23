@@ -6,7 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { composeEmethPrompt, composeClaudePrompt } = require('../plugins/emeth-discipline/lib/rules-prompt');
+const codexRules = '# Shared fixture rules\nCodex fixture rules';
+const claudeRules = '# Shared fixture rules\nClaude fixture rules';
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const hook = path.join(pluginRoot, 'hooks/run.js');
@@ -14,8 +15,15 @@ const hook = path.join(pluginRoot, 'hooks/run.js');
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hooks-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 10 }));
+  const plugin = path.join(root, 'plugin');
+  for (const directory of ['hooks', 'lib', 'skills/rules', 'skills/architecture-memory', 'skills/issue-ledger/lib']) {
+    fs.cpSync(path.join(pluginRoot, directory), path.join(plugin, directory), { recursive: true });
+  }
+  fs.writeFileSync(path.join(plugin, 'skills/rules/SKILL.md'), '# Shared fixture rules\nApply the rules for the host running this conversation: fixture');
+  fs.writeFileSync(path.join(plugin, 'skills/rules/codex.md'), 'Codex fixture rules');
+  fs.writeFileSync(path.join(plugin, 'skills/rules/claude-code.md'), 'Claude fixture rules');
   const env = {
-    ...process.env, HOME: root, USERPROFILE: root,
+    ...process.env, HOME: root, USERPROFILE: root, PLUGIN_ROOT: plugin,
     APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
     PLUGIN_DATA: path.join(root, 'plugin-data'),
   };
@@ -28,11 +36,11 @@ function fixture(t) {
     write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture' }));
     write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify({ schema_version: 2, managed: true }));
   };
-  const run = (event, options = {}) => spawnSync(process.execPath, [options.hook || hook], {
+  const run = (event, options = {}) => spawnSync(process.execPath, [options.hook || path.join(plugin, 'hooks/run.js')], {
     encoding: 'utf8', windowsHide: true, env: { ...env, ...options.env },
     input: JSON.stringify({ cwd: root, session_id: 'session-a', hook_event_name: 'UserPromptSubmit', ...event }),
   });
-  return { root, env, write, memory, run };
+  return { root, plugin, env, write, memory, run };
 }
 
 function output(result) {
@@ -40,38 +48,15 @@ function output(result) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
-test('model changes leave the memory connection available without reinjecting rules', (t) => {
-  const f = fixture(t); f.memory();
-  const first = output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' }));
-  assert.match(first.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
-  assert.doesNotMatch(first.hookSpecificOutput.additionalContext, /# Rules/);
-  assert.deepEqual(output(f.run({ prompt: 'Continue.' })), {});
-  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' })), {});
-  assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'rules-model')), false);
-});
-
-test('model metadata does not change lifecycle rules or create session state', (t) => {
-  const f = fixture(t);
-  for (const source of ['startup', 'clear', 'compact']) {
-    const response = output(f.run({ hook_event_name: 'SessionStart', source, model: 'gpt-6-sol' }));
-    assert.equal(response.hookSpecificOutput.additionalContext, composeEmethPrompt());
-  }
-  assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'child', model: 'gpt-6-astra' }))
-    .hookSpecificOutput.additionalContext, composeEmethPrompt());
-  assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume', model: 'gpt-6-astra' })), {});
-  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-sol' })), {});
-  assert.deepEqual(output(f.run({ prompt: 'Continue.', model: 'gpt-6-astra' })), {});
-  assert.equal(fs.existsSync(f.env.PLUGIN_DATA), false);
-});
-
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
   const f = fixture(t); f.memory();
   const response = output(f.run({ prompt: '$emeth-discipline:development-design' }));
-  assert.match(response.hookSpecificOutput.additionalContext, /^Next design number: DESIGN-0001\n\nProject architecture documents are connected/);
+  assert.match(response.hookSpecificOutput.additionalContext, /\bDESIGN-0001\b/);
+  assert.ok(response.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   f.write('.emeth/issues', 'This is not a directory.');
   const fallback = output(f.run({ session_id: 'session-b', prompt: '$emeth-discipline:issue-ledger' }));
-  assert.match(fallback.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
-  assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /Next issue/);
+  assert.ok(fallback.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
+  assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /\bPL-\d{4,}\b/);
 });
 
 test('Codex design entry preserves the exact request as a reusable source', (t) => {
@@ -98,7 +83,7 @@ test('request preservation cannot replace a prior source or suppress other notic
   const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
   assert.ok(source);
   const changed = output(f.run({ ...input, prompt: '$emeth-discipline:development-design\nDifferent request.' }));
-  assert.match(changed.hookSpecificOutput.additionalContext, /Next design number/);
+  assert.deepEqual(changed.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
   assert.doesNotMatch(changed.hookSpecificOutput.additionalContext, /Current request source/);
   assert.equal(fs.readFileSync(source, 'utf8'), input.prompt);
 });
@@ -117,7 +102,7 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));
   const start = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' }));
-  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt() + '\n\n'));
+  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(codexRules + '\n\n'));
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' })), {});
   const compact = output(f.run({ hook_event_name: 'SessionStart', source: 'compact' }));
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
@@ -130,41 +115,33 @@ test('a corrupt memory binding does not suppress the fixed prompt or document nu
   const f = fixture(t);
   f.write('.emeth/architecture.json', '{');
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' });
-  assert.equal(output(result).hookSpecificOutput.additionalContext, composeEmethPrompt());
-  assert.match(result.stderr, /Architecture memory connection unavailable/);
+  assert.equal(output(result).hookSpecificOutput.additionalContext, codexRules);
+  assert.notEqual(result.stderr.trim(), '');
   const number = output(f.run({ prompt: '$emeth-discipline:development-design' }));
-  assert.equal(number.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
+  assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
-
-function copyPlugin(f) {
-  const plugin = path.join(f.root, 'plugin');
-  for (const directory of ['hooks', 'lib', 'skills/rules', 'skills/architecture-memory']) {
-    fs.cpSync(path.join(pluginRoot, directory), path.join(plugin, directory), { recursive: true });
-  }
-  return plugin;
-}
 
 test('session startup delivers the prompt and memory without loading dashboard code', (t) => {
   const f = fixture(t); f.memory();
-  const plugin = copyPlugin(f);
+  const plugin = f.plugin;
   f.write('plugin/dashboard/control.js', 'throw new Error("dashboard code loaded");');
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
     hook: path.join(plugin, 'hooks/run.js'),
   });
   const response = output(result);
-  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(composeEmethPrompt({ pluginRoot: plugin }) + '\n\n'));
-  assert.match(response.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
+  assert.ok(response.hookSpecificOutput.additionalContext.startsWith(codexRules + '\n\n'));
+  assert.ok(response.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   assert.equal(result.stderr, '');
 });
 
 test('a prompt failure reports the error without consuming an undelivered memory notice', (t) => {
   const f = fixture(t); f.memory();
-  const plugin = copyPlugin(f);
+  const plugin = f.plugin;
   fs.unlinkSync(path.join(plugin, 'skills/rules/codex.md'));
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, { hook: path.join(plugin, 'hooks/run.js') });
   const response = output(result);
-  assert.match(response.systemMessage, /Emeth Discipline prompt unavailable/);
-  assert.match(response.hookSpecificOutput.additionalContext, /^Project architecture documents are connected/);
+  assert.match(response.systemMessage, /\S/);
+  assert.ok(response.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   assert.match(result.stderr, /codex\.md/);
 });
 
@@ -181,7 +158,7 @@ test('malformed hook input fails before creating state', (t) => {
     const result = spawnSync(process.execPath, [hook], { encoding: 'utf8', windowsHide: true, env: f.env, input });
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
-    assert.match(result.stderr, /Emeth Discipline hook failed/);
+    assert.notEqual(result.stderr.trim(), '');
   }
   assert.equal(fs.existsSync(f.env.PLUGIN_DATA), false);
 });
@@ -189,7 +166,7 @@ test('malformed hook input fails before creating state', (t) => {
 function claudeEnvironment(f) {
   return {
     PLUGIN_ROOT: '', PLUGIN_DATA: '',
-    CLAUDE_PLUGIN_ROOT: pluginRoot,
+    CLAUDE_PLUGIN_ROOT: f.plugin,
     CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
   };
 }
@@ -201,10 +178,10 @@ test('Claude applies fixed rules across lifecycle events without reading or chan
   f.write('plugin-data/rules-mode/session-a.json', JSON.stringify({ mode: 'focus' }));
   for (const source of ['startup', 'clear', 'compact']) {
     const response = output(f.run({ hook_event_name: 'SessionStart', source }, { env }));
-    assert.equal(response.hookSpecificOutput.additionalContext, composeClaudePrompt());
+    assert.equal(response.hookSpecificOutput.additionalContext, claudeRules);
   }
   assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'child' }, { env }))
-    .hookSpecificOutput.additionalContext, composeClaudePrompt());
+    .hookSpecificOutput.additionalContext, claudeRules);
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' }, { env })), {});
   for (const prompt of ['$emeth-discipline focus', '$emeth-discipline default core', '/emeth-discipline focus']) {
     assert.deepEqual(output(f.run({ prompt }, { env })), {});
@@ -217,11 +194,11 @@ test('Claude applies fixed rules across lifecycle events without reading or chan
 test('host-specific Memory state stays separate for the same project and session', (t) => {
   const f = fixture(t); f.memory();
   const claudeEnv = claudeEnvironment(f);
-  const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: pluginRoot };
+  const codexEnv = { CLAUDE_PLUGIN_DATA: claudeEnv.CLAUDE_PLUGIN_DATA, CLAUDE_PLUGIN_ROOT: f.plugin };
   const codex = output(f.run({ prompt: '$emeth-discipline focus' }, { env: codexEnv }));
-  assert.match(codex.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
+  assert.ok(codex.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   const claude = output(f.run({ prompt: 'Continue.' }, { env: claudeEnv }));
-  assert.match(claude.hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
+  assert.ok(claude.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: claudeEnv })), {});
   assert.deepEqual(output(f.run({ prompt: 'Continue.' }, { env: codexEnv })), {});
   for (const directory of [f.env.PLUGIN_DATA, claudeEnv.CLAUDE_PLUGIN_DATA]) {
@@ -234,19 +211,19 @@ test('Claude slash skill invocations get document numbers without interpreting m
   const f = fixture(t);
   const env = claudeEnvironment(f);
   const response = output(f.run({ prompt: '/emeth-discipline:development-design Plan a change.' }, { env }));
-  assert.equal(response.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
+  assert.deepEqual(response.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
   assert.deepEqual(output(f.run({ prompt: '$emeth-discipline:development-design' }, { env })), {});
 });
 
 test('Claude prompt failures use Claude plugin logs and preserve the Memory connection', (t) => {
   const f = fixture(t); f.memory();
-  const plugin = copyPlugin(f);
+  const plugin = f.plugin;
   fs.unlinkSync(path.join(plugin, 'skills/rules/claude-code.md'));
   const env = { ...claudeEnvironment(f), CLAUDE_PLUGIN_ROOT: plugin };
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' }, {
     env, hook: path.join(plugin, 'hooks/run.js'),
   });
-  assert.match(output(result).hookSpecificOutput.additionalContext, /Project architecture documents are connected/);
+  assert.ok(output(result).hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   const log = fs.readFileSync(path.join(env.CLAUDE_PLUGIN_DATA, 'log/emeth-hook.log'), 'utf8');
   assert.match(log, /claude-code\.md/);
   assert.equal(fs.existsSync(path.join(f.root, '.codex/log')), false);

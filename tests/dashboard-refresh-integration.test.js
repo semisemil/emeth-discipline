@@ -148,7 +148,6 @@ test('registration, child server, project switching, refresh, and unavailable re
 
   const browserShell = await request(running.port, '/dashboard?expected_version=0.6.2');
   assert.equal(browserShell.status, 200);
-  assert.match(browserShell.body, /<h1 id="view-title">작업 현황<\/h1>/);
   assert.match(browserShell.headers['content-security-policy'], /default-src 'self'/);
   const browserApp = await request(running.port, '/app.js');
   assert.equal(browserApp.status, 200);

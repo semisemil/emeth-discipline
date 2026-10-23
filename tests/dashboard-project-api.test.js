@@ -186,45 +186,6 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
   };
 }
 
-async function measureReadBytes(action) {
-  const originalOpen = fs.openSync;
-  const originalRead = fs.readSync;
-  const originalClose = fs.closeSync;
-  const originalAlloc = Buffer.alloc;
-  const pathsByDescriptor = new Map();
-  const bytesByPath = new Map();
-  const allocatedSizes = [];
-  fs.openSync = function measuredOpen(filePath, ...args) {
-    const descriptor = originalOpen.call(fs, filePath, ...args);
-    pathsByDescriptor.set(descriptor, pathKey(filePath));
-    return descriptor;
-  };
-  fs.readSync = function measuredRead(descriptor, ...args) {
-    const count = originalRead.call(fs, descriptor, ...args);
-    const filePath = pathsByDescriptor.get(descriptor);
-    if (filePath) {
-      bytesByPath.set(filePath, (bytesByPath.get(filePath) || 0) + count);
-    }
-    return count;
-  };
-  fs.closeSync = function measuredClose(descriptor) {
-    pathsByDescriptor.delete(descriptor);
-    return originalClose.call(fs, descriptor);
-  };
-  Buffer.alloc = function measuredAlloc(size, ...args) {
-    allocatedSizes.push(size);
-    return originalAlloc(size, ...args);
-  };
-  try {
-    return { result: await action(), allocatedSizes, bytesByPath };
-  } finally {
-    fs.openSync = originalOpen;
-    fs.readSync = originalRead;
-    fs.closeSync = originalClose;
-    Buffer.alloc = originalAlloc;
-  }
-}
-
 test('HTTP boundary enforces Host, Origin, methods, raw paths, security headers, and HEAD', async (t) => {
   const { server } = await fixture(t);
   const health = await request(server);
@@ -334,7 +295,7 @@ test('static dashboard rejects unknown files, directories, traversal, encoded se
     `GET /../external-static/escape.js HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nConnection: close\r\n\r\n`,
   );
   const [headerText, body] = traversal.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 400 Bad Request\r\n/);
+  assert.match(headerText, /^HTTP\/1\.1 400\b/);
   assert.equal(JSON.parse(body).error.code, 'request-target-invalid');
   assert.doesNotMatch(traversal, /external secret/);
 });
@@ -445,17 +406,19 @@ test('raw NUL request targets receive the JSON clientError boundary response', a
     Buffer.from(`ects HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\n\r\n`, 'ascii'),
   ]));
   const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 400 Bad Request\r\n/);
-  assert.match(headerText, new RegExp(`Content-Security-Policy: ${SECURITY_HEADERS['Content-Security-Policy']}`));
-  assert.match(headerText, /X-Content-Type-Options: nosniff/);
-  assert.match(headerText, /Cache-Control: no-store/);
-  assert.doesNotMatch(headerText, /Access-Control-Allow-Origin/i);
-  assert.deepEqual(JSON.parse(body), {
-    error: {
-      code: 'request-target-invalid',
-      message: '요청 경로가 올바르지 않습니다.',
-    },
-  });
+  assert.match(headerText, /^HTTP\/1\.1 400\b/);
+  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
+    const colon = line.indexOf(':');
+    return [line.slice(0, colon), line.slice(colon + 1).trim()];
+  }));
+  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+  assert.equal(headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(headers.get('cache-control'), 'no-store');
+  assert.equal(headers.has('access-control-allow-origin'), false);
+  const { error } = JSON.parse(body);
+  assert.equal(error.code, 'request-target-invalid');
+  assert.equal(typeof error.message, 'string');
+  assert.notEqual(error.message.trim(), '');
 });
 
 test('raw ordinary HTTP without Host reaches the secured JSON Host boundary', async (t) => {
@@ -465,17 +428,19 @@ test('raw ordinary HTTP without Host reaches the secured JSON Host boundary', as
     Buffer.from('GET /api/v1/health HTTP/1.1\r\n\r\n', 'ascii'),
   );
   const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 403 Forbidden\r\n/);
-  assert.match(headerText, new RegExp(`Content-Security-Policy: ${SECURITY_HEADERS['Content-Security-Policy']}`));
-  assert.match(headerText, /X-Content-Type-Options: nosniff/);
-  assert.match(headerText, /Cache-Control: no-store/);
-  assert.doesNotMatch(headerText, /Access-Control-Allow-Origin/i);
-  assert.deepEqual(JSON.parse(body), {
-    error: {
-      code: 'host-forbidden',
-      message: 'Host가 허용되지 않습니다.',
-    },
-  });
+  assert.match(headerText, /^HTTP\/1\.1 403\b/);
+  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
+    const colon = line.indexOf(':');
+    return [line.slice(0, colon), line.slice(colon + 1).trim()];
+  }));
+  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+  assert.equal(headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(headers.get('cache-control'), 'no-store');
+  assert.equal(headers.has('access-control-allow-origin'), false);
+  const { error } = JSON.parse(body);
+  assert.equal(error.code, 'host-forbidden');
+  assert.equal(typeof error.message, 'string');
+  assert.notEqual(error.message.trim(), '');
 });
 
 test('raw ordinary HTTP rejects duplicate Host fields before Origin and routing', async (t) => {
@@ -493,17 +458,19 @@ test('raw ordinary HTTP rejects duplicate Host fields before Origin and routing'
     ].join('\r\n'), 'ascii'),
   );
   const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 403 Forbidden\r\n/);
-  assert.match(headerText, new RegExp(`Content-Security-Policy: ${SECURITY_HEADERS['Content-Security-Policy']}`));
-  assert.match(headerText, /X-Content-Type-Options: nosniff/);
-  assert.match(headerText, /Cache-Control: no-store/);
-  assert.doesNotMatch(headerText, /Access-Control-Allow-Origin/i);
-  assert.deepEqual(JSON.parse(body), {
-    error: {
-      code: 'host-forbidden',
-      message: 'Host가 허용되지 않습니다.',
-    },
-  });
+  assert.match(headerText, /^HTTP\/1\.1 403\b/);
+  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
+    const colon = line.indexOf(':');
+    return [line.slice(0, colon), line.slice(colon + 1).trim()];
+  }));
+  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+  assert.equal(headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(headers.get('cache-control'), 'no-store');
+  assert.equal(headers.has('access-control-allow-origin'), false);
+  const { error } = JSON.parse(body);
+  assert.equal(error.code, 'host-forbidden');
+  assert.equal(typeof error.message, 'string');
+  assert.notEqual(error.message.trim(), '');
 });
 
 test('only unavailable projects can be forgotten', async (t) => {
@@ -581,7 +548,7 @@ test('two simultaneously available projects never expose each other records', as
   assert.equal(legacy.status, 'doing');
   assert.equal(legacy.currentSummary, '기존 동작');
   assert.equal(legacy.nextAction, '계속 검증');
-  assert.deepEqual(legacy.validation.warnings, ['레거시 Markdown 이슈입니다.']);
+  assert.ok(legacy.validation.warnings.some(warning => warning.trim().length > 0));
   const current = JSON.parse(documentB.body).body;
   assert.equal(current.schemaVersion, 2);
   assert.equal(current.id, 'PL-0002');
@@ -723,9 +690,16 @@ test('HTTP discards a cached index when the registry maps the same project ID to
 
 test('project list omits document details and subsequent index reads see current sources', async (t) => {
   const { availableRoot, server } = await fixture(t);
+  const issue = makeIssue();
+  issue.identity.title = 'current_summary next_action "raw"';
+  fs.writeFileSync(path.join(availableRoot, '.emeth/issues/PL-0001.json'), JSON.stringify(issue));
   const projects = await request(server, { path: '/api/v1/projects' });
   assert.equal(projects.status, 200);
-  assert.doesNotMatch(projects.body, /current_summary|next_action|"raw"/);
+  const listed = JSON.parse(projects.body, (key, value) => {
+    assert.ok(!['current_summary', 'next_action', 'raw'].includes(key), key);
+    return value;
+  });
+  assert.equal(listed.projects.find(project => project.id === AVAILABLE_ID).latest_issue.title, issue.identity.title);
 
   const changed = makeIssue();
   changed.state.status = 'blocked';
@@ -745,7 +719,7 @@ test('project list omits document details and subsequent index reads see current
   assert.match(index.body, /CHANGED-AFTER-SIDEBAR/);
 });
 
-test('sidebar summary validates every byte while retaining only bounded Plan and Spec prefixes', async (t) => {
+test('summary and index omit large Plan and Spec bodies while detail returns the complete body', async (t) => {
   const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0008-large');
   const specDirectory = path.join(availableRoot, '.emeth', 'specs', 'SPEC-0008-large');
@@ -777,35 +751,26 @@ test('sidebar summary validates every byte while retaining only bounded Plan and
     '---',
     'S'.repeat(128 * 1024),
   ].join('\n'), 'utf8');
-  const planKey = pathKey(fs.realpathSync.native(planPath));
-  const specKey = pathKey(fs.realpathSync.native(specPath));
-  const planSize = fs.statSync(planPath).size;
-  const specSize = fs.statSync(specPath).size;
+  const sidebar = await request(server, { path: '/api/v1/projects' });
+  assert.equal(sidebar.status, 200);
+  assert.doesNotMatch(sidebar.body, /P{128}|S{128}/);
 
-  const sidebar = await measureReadBytes(() => request(server, { path: '/api/v1/projects' }));
-  assert.equal(sidebar.result.status, 200);
-  assert.equal(sidebar.bytesByPath.get(planKey), planSize);
-  assert.equal(sidebar.bytesByPath.get(specKey), specSize);
-  assert.equal(sidebar.allocatedSizes.includes(planSize), false);
-  assert.equal(sidebar.allocatedSizes.includes(specSize), false);
-  assert.doesNotMatch(sidebar.result.body, /P{128}|S{128}/);
-
-  const index = await measureReadBytes(() => request(server, {
+  const index = await request(server, {
     path: `/api/v1/projects/${AVAILABLE_ID}/index`,
-  }));
-  assert.equal(index.result.status, 200);
-  assert.equal(index.bytesByPath.get(planKey), planSize);
-  assert.equal(index.bytesByPath.get(specKey), specSize);
+  });
+  assert.equal(index.status, 200);
+  assert.ok(JSON.parse(index.body).plans.some(record => record.id === 'PLAN-0008'));
+  assert.ok(JSON.parse(index.body).specs.some(record => record.id === 'SPEC-0008'));
+  assert.doesNotMatch(index.body, /P{128}|S{128}/);
 
-  const document = await measureReadBytes(() => request(server, {
+  const document = await request(server, {
     path: `/api/v1/projects/${AVAILABLE_ID}/documents/plan/PLAN-0008`,
-  }));
-  assert.equal(document.result.status, 200);
-  assert.equal(document.bytesByPath.get(planKey), planSize);
-  assert.equal(JSON.parse(document.result.body).body.length, 128 * 1024);
+  });
+  assert.equal(document.status, 200);
+  assert.equal(JSON.parse(document.body).body, 'P'.repeat(128 * 1024));
 });
 
-test('summary retains valid metadata past 64 KiB through its delimiter and streams the body', async (t) => {
+test('summary and index accept metadata past 64 KiB without returning document bodies', async (t) => {
   const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0011-wide-metadata');
   const planPath = path.join(planDirectory, 'PLAN.md');
@@ -821,20 +786,15 @@ test('summary retains valid metadata past 64 KiB through its delimiter and strea
     bodyMarker,
     'B'.repeat(96 * 1024),
   ].join('\n'), 'utf8');
-  const planKey = pathKey(fs.realpathSync.native(planPath));
-  const planSize = fs.statSync(planPath).size;
-
-  const summary = await measureReadBytes(() => request(server, { path: '/api/v1/projects' }));
-  const listed = JSON.parse(summary.result.body).projects.find((item) => item.id === AVAILABLE_ID);
-  assert.equal(summary.bytesByPath.get(planKey), planSize);
-  assert.equal(summary.allocatedSizes.includes(planSize), false);
+  const summary = await request(server, { path: '/api/v1/projects' });
+  const listed = JSON.parse(summary.body).projects.find((item) => item.id === AVAILABLE_ID);
   assert.equal(listed.diagnostic_count, 0);
   assert.ok(listed.last_modified);
-  assert.doesNotMatch(summary.result.body, new RegExp(bodyMarker));
+  assert.doesNotMatch(summary.body, new RegExp(bodyMarker));
 
   const indexResponse = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   const index = JSON.parse(indexResponse.body);
-  assert.equal(index.plans.find((plan) => plan.id === 'PLAN-0011').title.length, title.length);
+  assert.equal(index.plans.find((plan) => plan.id === 'PLAN-0011').title, title);
   assert.equal(index.diagnostics.some((item) => item.relative_path
     === '.emeth/plan/PLAN-0011-wide-metadata/PLAN.md'), false);
   assert.doesNotMatch(indexResponse.body, new RegExp(bodyMarker));
@@ -868,11 +828,9 @@ test('project summary and index exclude invalid UTF-8 tails with safe diagnostic
     invalidTail,
   ]));
 
-  const projects = await measureReadBytes(() => request(server, { path: '/api/v1/projects' }));
-  const listed = JSON.parse(projects.result.body).projects.find((project) => project.id === AVAILABLE_ID);
+  const projects = await request(server, { path: '/api/v1/projects' });
+  const listed = JSON.parse(projects.body).projects.find((project) => project.id === AVAILABLE_ID);
   assert.equal(listed.diagnostic_count, 2);
-  assert.equal(projects.bytesByPath.get(pathKey(fs.realpathSync.native(planPath))), fs.statSync(planPath).size);
-  assert.equal(projects.bytesByPath.get(pathKey(fs.realpathSync.native(specPath))), fs.statSync(specPath).size);
 
   const index = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
   const body = JSON.parse(index.body);

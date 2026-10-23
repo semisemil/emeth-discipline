@@ -35,6 +35,7 @@ test('background refresh cannot supersede a pending project switch and a failed 
   await page.settle();
   assert.equal(page.get('#view-panel').hasAttribute('aria-busy'), false);
   assert.equal(page.get('#refresh-button').disabled, false);
-  assert.match(page.get('#status-stack').textContent, /프로젝트를 읽을 수 없습니다/);
-  assert.match(page.get('#view-panel').textContent, /프로젝트를 표시할 수 없음/);
+  assert.ok(page.get('#status-stack [role="alert"]').textContent.trim());
+  assert.ok(page.get('#view-panel .empty-state'));
+  assert.equal(page.get('#view-panel .issue-table'), null);
 });

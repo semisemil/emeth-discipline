@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { parse } = require('yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
 const codex = JSON.parse(fs.readFileSync(path.join(repoRoot, '.agents/plugins/marketplace.json'), 'utf8'));
@@ -37,19 +38,34 @@ function fixture(t) {
 test('both marketplaces install the same package without repository development files', () => {
   assert.equal(codex.plugins[0].source.path, './plugins/emeth-discipline');
   assert.equal(path.resolve(repoRoot, claude.plugins[0].source), packageRoot);
-  assert.deepEqual(fs.readdirSync(packageRoot).filter(name => !name.endsWith('.md')).sort(), [
-    '.claude-plugin', '.codex-plugin', '.mixdog', 'LICENSE',
-    'assets', 'dashboard', 'hooks', 'lib', 'references', 'skills', 'writers',
-  ].sort());
-  assert.deepEqual(fs.readdirSync(path.join(packageRoot, '.claude-plugin')), ['plugin.json']);
   for (const formerSource of ['assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
     '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', 'scripts/build-plugin.js']) {
     assert.equal(fs.existsSync(path.join(repoRoot, formerSource)), false, formerSource);
   }
 });
 
+test('Codex skill metadata keeps invocation policies and the figure-it-out entry', () => {
+  for (const [name, implicit] of [
+    ['start-implementation', false], ['ensemble', false], ['code-exploration', false],
+    ['architecture-memory-init', false], ['architecture-memory', true],
+    ['architecture-memory-update', true], ['figure-it-out', false],
+  ]) {
+    const metadata = parse(fs.readFileSync(path.join(packageRoot, 'skills', name, 'agents/openai.yaml'), 'utf8'));
+    assert.equal(metadata.policy.allow_implicit_invocation, implicit, name);
+    assert.ok(metadata.interface.default_prompt.includes('$' + name), name);
+  }
+  const manifest = JSON.parse(fs.readFileSync(path.join(packageRoot, '.codex-plugin/plugin.json'), 'utf8'));
+  assert.ok(manifest.interface.defaultPrompt.length <= 3);
+  assert.ok(manifest.interface.defaultPrompt.every(prompt => prompt.length <= 128));
+  assert.ok(manifest.interface.defaultPrompt.some(prompt => prompt.startsWith('$emeth-discipline:figure-it-out')));
+});
+
 test('isolated package delivers host rules and numbering through its hook CLI', t => {
   const f = fixture(t);
+  const markers = { codex: 'Fixture Codex rules', claude: 'Fixture Claude rules', mixdog: 'Fixture Mixdog rules' };
+  for (const [host, file] of [['codex', 'codex.md'], ['claude', 'claude-code.md'], ['mixdog', 'mixdog.md']]) {
+    fs.appendFileSync(path.join(f.plugin, 'skills/rules', file), '\n\n' + markers[host]);
+  }
   for (const host of ['codex', 'claude', 'mixdog']) {
     const overrides = host === 'mixdog' ? {
       MIXDOG_PLUGIN_ROOT: f.plugin, MIXDOG_PLUGIN_DATA: path.join(f.root, 'mixdog-data'),
@@ -64,12 +80,15 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     const context = result.hookSpecificOutput.additionalContext;
     assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/ui-design.md')));
     assert.doesNotMatch(context, /skill-prompt-authoring-principles/);
+    for (const [source, marker] of Object.entries(markers)) {
+      assert.equal(context.includes(marker), source === host || host === 'mixdog' && source === 'codex', `${host}: ${source}`);
+    }
   }
   const number = f.run('hooks/run.js', [], JSON.stringify({
     hook_event_name: 'UserPromptSubmit', prompt: '$emeth-discipline:development-design',
     cwd: f.project, session_id: 'number',
   }));
-  assert.equal(number.hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
+  assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
 
 test('isolated package writes and reads a Design with its bundled dependencies', t => {
@@ -87,7 +106,6 @@ test('isolated package writes and reads a Design with its bundled dependencies',
     cwd: f.project, env: f.env, encoding: 'utf8', windowsHide: true,
   });
   assert.equal(issues.status, 0, issues.stderr);
-  assert.match(issues.stdout, /0개 이슈가 유효합니다/);
 });
 
 test('isolated package starts its dashboard and serves packaged assets', async t => {

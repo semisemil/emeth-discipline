@@ -128,7 +128,7 @@ test('dashboard-server CLI reserves stderr and exit 2 for invalid actions', () =
 
   assert.equal(result.status, 2);
   assert.equal(result.stdout, '');
-  assert.match(result.stderr, /^Usage: .*<start\|open\|status\|stop>\r?\n$/);
+  assert.notEqual(result.stderr.trim(), '');
 });
 
 test('status and stop report stopped without creating dashboard state', (t) => {

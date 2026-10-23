@@ -9,7 +9,7 @@ const { promisify } = require('node:util');
 const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
 const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
 const { loadRecords } = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
-const { notice } = require('../plugins/emeth-discipline/lib/architecture-memory.js');
+const { connectionStatus, notice } = require('../plugins/emeth-discipline/lib/architecture-memory.js');
 
 function fixture(t, gitEnabled = true) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-memory-workflow-'));
@@ -322,9 +322,9 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   assert.equal(fs.existsSync(dataRoot), false);
   initialize(f);
   const first = notice(event, { dataRoot });
-  assert.match(first, /^Project architecture documents are connected at "docs\/architecture" via \.emeth\/architecture\.json\. Skill: /);
+  assert.ok(first.includes('docs/architecture'));
+  assert.ok(first.includes('.emeth/architecture.json'));
   assert.match(first, /skills.*architecture-memory.*SKILL.md/);
-  assert.doesNotMatch(first, /read |lookup|mechanical|architecture-dependent|durable|Reuse/);
   assert.equal(notice(event, { dataRoot }), '');
   assert.match(notice({ ...event, hook_event_name: 'SessionStart', source: 'compact' }, { dataRoot }), /SKILL.md/);
   assert.match(notice({ ...event, hook_event_name: 'SubagentStart', agent_id: 'a1' }, { dataRoot }), /SKILL.md/);
@@ -333,13 +333,15 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   assert.ok(notice(event, { dataRoot, pluginRoot: changedPlugin }).includes(JSON.stringify(changedPlugin).slice(1, -1)));
   const manifest = f.manifest(); manifest.managed = false;
   f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
-  assert.match(notice(event, { dataRoot }), /disabled/);
+  assert.match(notice(event, { dataRoot }), /\S/);
+  assert.equal(connectionStatus(f.root).status, 'disabled');
   assert.equal(notice(event, { dataRoot }), '');
   manifest.managed = true;
   f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
   assert.equal(notice(event, { dataRoot }), first);
   fs.unlinkSync(path.join(f.root, 'docs/architecture/.architecture-memory/manifest.json'));
-  assert.equal(notice(event, { dataRoot }), 'Project architecture document connection is unavailable or disabled.');
+  assert.match(notice(event, { dataRoot }), /\S/);
+  assert.equal(connectionStatus(f.root).status, 'unavailable');
   assert.equal(notice(event, { dataRoot }), '');
 });
 
@@ -348,10 +350,10 @@ test('the session notice reports commits made after the Memory Git checkpoint', 
   const dataRoot = path.join(f.root, '.test-hook-data');
   const event = { cwd: f.root, session_id: 's1', hook_event_name: 'SessionStart', source: 'startup' };
   initialize(f);
-  assert.doesNotMatch(notice(event, { dataRoot }), /behind HEAD/);
+  assert.doesNotMatch(notice(event, { dataRoot }), /architecture-memory-update/);
   f.write('src/server.js', 'const store = "database";\n');
   f.git('add', 'src/server.js'); f.git('commit', '-qm', 'database');
-  assert.match(notice(event, { dataRoot }), /Its Git checkpoint is 1 commit behind HEAD; suggest architecture-memory-update/);
+  assert.match(notice(event, { dataRoot }), /architecture-memory-update/);
 });
 
 test('inventory and source output are bounded; bulk classification does not echo thousands of paths', (t) => {

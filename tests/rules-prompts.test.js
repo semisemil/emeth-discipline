@@ -10,8 +10,10 @@ const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
   const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
-  assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
-  assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
+  assert.deepEqual(new Set(Object.keys(hooks)), new Set(['SessionStart', 'SubagentStart', 'UserPromptSubmit']));
+  const sessionMatcher = new RegExp(hooks.SessionStart[0].matcher);
+  for (const source of ['startup', 'resume', 'clear', 'compact']) assert.ok(sessionMatcher.test(source), source);
+  assert.equal(sessionMatcher.test('unrelated'), false);
   for (const [event, groups] of Object.entries(hooks)) {
     assert.equal(groups.length, 1, event);
     assert.equal(groups[0].hooks.length, 1, event);
@@ -29,8 +31,10 @@ test('Claude registers one exec-form hook per event without a shared default hoo
   const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.claude-plugin/plugin.json'), 'utf8'));
   const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
   assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks/hooks.json')), false);
-  assert.deepEqual(Object.keys(hooks), ['SessionStart', 'SubagentStart', 'UserPromptSubmit']);
-  assert.equal(hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
+  assert.deepEqual(new Set(Object.keys(hooks)), new Set(['SessionStart', 'SubagentStart', 'UserPromptSubmit']));
+  const sessionMatcher = new RegExp(hooks.SessionStart[0].matcher);
+  for (const source of ['startup', 'resume', 'clear', 'compact']) assert.ok(sessionMatcher.test(source), source);
+  assert.equal(sessionMatcher.test('unrelated'), false);
   for (const groups of Object.values(hooks)) {
     assert.equal(groups.length, 1);
     assert.equal(groups[0].hooks.length, 1);
