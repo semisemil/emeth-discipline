@@ -98,6 +98,43 @@ test('Windows PowerShell hook closes its output without starting the dashboard',
   assert.equal(fs.existsSync(directory), false);
 });
 
+for (const environment of ['inherited PATH', 'only Node on PATH']) {
+  test(`Windows Node startup exits within five seconds and leaves its server running with ${environment}`, {
+    skip: process.platform !== 'win32',
+  }, (t) => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth node '한글-"));
+    const env = isolatedEnvironment(root);
+    if (environment === 'only Node on PATH') {
+      for (const key of Object.keys(env)) {
+        if (key.toLowerCase() === 'path') delete env[key];
+      }
+      env.PATH = path.dirname(process.execPath);
+    }
+    const directory = dashboardDirectory({ env });
+    const controlPath = path.join(pluginRoot, 'dashboard/control.js');
+    const cliOptions = { encoding: 'utf8', env, windowsHide: true, timeout: 5000 };
+    t.after(() => {
+      const stopped = spawnSync(process.execPath, [controlPath, 'stop'], cliOptions);
+      assert.equal(stopped.status, 0, stopped.stderr);
+      fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    const result = spawnSync(process.execPath, [controlPath, 'start'], cliOptions);
+
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const started = JSON.parse(result.stdout);
+    const inspected = spawnSync(process.execPath, [controlPath, 'status'], cliOptions);
+    assert.equal(inspected.status, 0, inspected.stderr);
+    const status = JSON.parse(inspected.stdout);
+    assert.equal(started.action, 'started');
+    assert.equal(status.status, 'running');
+    assert.equal(status.instance_id, started.instance_id);
+    assert.equal(status.port, 43127);
+  });
+}
+
 test('Windows PowerShell explicit startup closes its output while the dashboard keeps running', {
   skip: process.platform !== 'win32',
 }, async (t) => {

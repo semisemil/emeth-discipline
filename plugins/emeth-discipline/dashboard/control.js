@@ -290,9 +290,23 @@ async function startWindowsServer(args, paths, instanceId, timeoutMs) {
   const argumentList = args.map((argument) => (
     `"${argument.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`
   )).join(' ');
-  const command = `$ErrorActionPreference = 'Stop'; (Start-Process -FilePath ${literal(process.execPath)} -ArgumentList ${literal(argumentList)} -WindowStyle Hidden -PassThru).Id`;
-  const powershell = path.join(process.env.SystemRoot || 'C:\\Windows',
-    'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  // Avoid PowerShell module discovery and output formatting during startup.
+  const command = [
+    "$ErrorActionPreference = 'Stop'",
+    "$PSModuleAutoLoadingPreference = 'None'",
+    '$startInfo = [System.Diagnostics.ProcessStartInfo]::new()',
+    `$startInfo.FileName = ${literal(process.execPath)}`,
+    `$startInfo.Arguments = ${literal(argumentList)}`,
+    '$startInfo.UseShellExecute = $true',
+    '$startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden',
+    '[Console]::Out.WriteLine([System.Diagnostics.Process]::Start($startInfo).Id)',
+  ].join('; ');
+  const powershell = (process.env.PATH || '').split(path.delimiter)
+    .filter(Boolean)
+    .map((directory) => path.join(directory.replace(/^"|"$/g, ''), 'pwsh.exe'))
+    .find((candidate) => fs.existsSync(candidate))
+    || path.join(process.env.SystemRoot || 'C:\\Windows',
+      'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
   let pid;
   let ready = false;
   try {
