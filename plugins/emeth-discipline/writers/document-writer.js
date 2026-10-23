@@ -16,7 +16,8 @@ const {
   parseSpecMetadata,
   parseDesignMetadata,
 } = require('../dashboard/records/record-parser.js');
-const { assertDesignWrite, readDevelopmentRecord, supersessionMap } = require('../dashboard/records/development-contracts.js');
+const { assertDesignWrite, readDevelopmentRecord, readDesigns, supersessionMap } = require('../dashboard/records/development-contracts.js');
+const { withFileLock } = require('../lib/file-lock.js');
 const { registerProject, rootKey } = require('../dashboard/registry.js');
 const { validateDocumentPaths, readDesignDocuments, assertDocumentSetAvailable, recoveryMessage } = require('../lib/design-documents.js');
 const { readMarkdownSection } = require('../lib/markdown-section.js');
@@ -24,7 +25,7 @@ const roots = require('../lib/document-roots.js');
 
 const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
 const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
-const DESIGN_PATH = /^\.emeth\/designs\/(DESIGN-\d{4,})-([^/\\]+)\/DESIGN\.md$/;
+const DESIGN_PATH = /^\.emeth\/designs\/(DESIGN-\d{4,})(?:-([^/\\]+))?\/DESIGN\.md$/;
 const CHANGE_KINDS = new Set(['major', 'operational']);
 
 class DocumentWriterError extends Error {
@@ -589,17 +590,8 @@ function withDocumentLock(options, operation) {
   if (storage.configured) roots.prepareRoot(root, storage.directory);
   ensureSafeDirectory(root, path.join(root, '.emeth'));
   const lock = path.join(root, '.emeth', '.design-write.lock');
-  assertSafeExistingPath(root, lock, 'file');
-  if (fs.existsSync(lock)) {
-    const owner = Number(fs.readFileSync(lock, 'utf8'));
-    if (!Number.isInteger(owner) || owner <= 0) throw writerError('document-locked', 'Invalid Design lock');
-    try { process.kill(owner, 0); throw writerError('document-locked', 'Another Design write is active'); }
-    catch (error) { if (error.code !== 'ESRCH') throw error; }
-    fs.unlinkSync(lock);
-  }
-  fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
-  try { return operation(); }
-  finally { fs.unlinkSync(lock); }
+  assertSafeExistingPath(root, lock);
+  return withFileLock(lock, operation, { code: 'document-locked', message: 'Another Design write is active or its lock needs inspection' });
 }
 
 function writeDocument(options, sourceBuffer) {
@@ -817,21 +809,13 @@ function listDesigns(options) {
   const root = canonicalProjectRoot(options.project_root);
   migrateProject(root);
   const storage = roots.designStorage(root);
-  const entries = fs.existsSync(storage.directory) ? fs.readdirSync(storage.directory, { withFileTypes: true }) : [];
-  const ids = [...new Set(entries
-    .filter(entry => entry.isDirectory() && fs.existsSync(path.join(storage.directory, entry.name, 'DESIGN.md')))
-    .map(entry => /^(DESIGN-\d{4,})(?:-|$)/.exec(entry.name)?.[1]).filter(Boolean))].sort();
   const records = [];
-  const designs = ids.map(id => {
-    try {
-      const record = readDevelopmentRecord(root, id);
-      records.push(record);
-      return { id, title: record.title, kind: record.metadata.kind, status: record.status, revision: record.revision,
-        path: record.relativePath, ...(storage.configured ? { absolute_path: record.source.filePath } : {}),
-        supersedes: record.metadata.supersedes, superseded_by: record.metadata.superseded_by };
-    } catch (error) {
-      return { id, error: { code: error.code || 'contract-unavailable', message: error.message } };
-    }
+  const designs = readDesigns(root, { includeErrors: true }).sort((left, right) => left.id.localeCompare(right.id, 'en')).map(record => {
+    if (record.error) return record;
+    records.push(record);
+    return { id: record.id, title: record.title, kind: record.metadata.kind, status: record.status, revision: record.revision,
+      path: record.relativePath, ...(storage.configured ? { absolute_path: record.source.filePath } : {}),
+      supersedes: record.metadata.supersedes, superseded_by: record.metadata.superseded_by };
   });
   // Replacement is declared by the successor; derive it for each replaced Design.
   let next = new Map();

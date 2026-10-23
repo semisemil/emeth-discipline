@@ -24,7 +24,7 @@
     documentId: null,
   };
   const indexGate = core.createLatestRequestGate();
-  const documentGate = core.createDocumentRequestGate();
+  const documentGate = core.createLatestRequestGate();
   const query = new URLSearchParams(globalThis.location.search);
   const elements = {
     project: document.getElementById('architecture-project'),
@@ -47,19 +47,6 @@
       return localStorage.getItem(STORAGE_PROJECT);
     } catch {
       return null;
-    }
-  }
-
-  function applySavedAppearance() {
-    try {
-      const theme = localStorage.getItem('emeth.dashboard.theme');
-      const accent = (localStorage.getItem('emeth.dashboard.accent') || '').replace(/^#3459e6$/i, '#c93686');
-      if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-      if (/^#[0-9a-fA-F]{6}$/.test(accent || '')) {
-        document.documentElement.style.setProperty('--accent', accent);
-      }
-    } catch {
-      // Appearance preferences are optional.
     }
   }
 
@@ -149,17 +136,18 @@
     for (const item of state.documents) {
       const row = make('li');
       const link = make('a', 'architecture-document-link');
-      const id = core.architectureDocumentId(item);
+      const id = item.id;
+      const label = DOCUMENT_KIND_LABELS[item.kind] || id;
       const params = new URLSearchParams({ project: state.projectId, document: id });
       link.href = `/architecture?${params}`;
       link.dataset.documentId = id;
       link.dataset.railLabel = String(list.children.length + 1).padStart(2, '0');
-      link.title = `${item.title || DOCUMENT_KIND_LABELS[item.kind] || id}\n${core.architectureDocumentPath(item)}`;
-      link.setAttribute('aria-label', item.title || DOCUMENT_KIND_LABELS[item.kind] || id);
+      link.title = `${label}\n${item.path}`;
+      link.setAttribute('aria-label', label);
       link.setAttribute('aria-current', id === state.documentId ? 'page' : 'false');
       link.append(
-        make('strong', '', item.title || DOCUMENT_KIND_LABELS[item.kind] || id),
-        make('span', '', [DOCUMENT_KIND_LABELS[item.kind] || core.architectureDocumentPath(item), core.STATUSES[item.status] || item.status].filter(Boolean).join(' · ')),
+        make('strong', '', label),
+        make('span', '', item.path),
       );
       row.append(link);
       list.append(row);
@@ -211,26 +199,23 @@
   }
 
   function renderDocument(detail) {
-    const item = state.documents.find(
-      (documentItem) => core.architectureDocumentId(documentItem) === state.documentId,
-    ) || {};
-    const relativePath = detail.relative_path || detail.path || core.architectureDocumentPath(item);
+    const relativePath = detail.path;
     const header = make('header', 'architecture-document-header');
     header.append(
-      make('p', 'document-kind', DOCUMENT_KIND_LABELS[item.kind] || '아키텍처'),
-      make('h2', '', detail.title || item.title || DOCUMENT_KIND_LABELS[item.kind] || state.documentId),
+      make('p', 'document-kind', DOCUMENT_KIND_LABELS[detail.kind] || '아키텍처'),
+      make('h2', '', DOCUMENT_KIND_LABELS[detail.kind] || detail.id),
       make('p', 'document-path', relativePath),
     );
-    const markdown = detail.body || detail.content || '';
+    const markdown = detail.body;
     const metadata = make('dl', 'architecture-metadata');
     const checkpoint = state.index?.git_checkpoint || {};
     const fields = [
-      ['ADR 상태', decisionStatus(item, markdown)],
+      ['ADR 상태', decisionStatus(detail, markdown)],
       ['Git 브랜치', checkpoint.branch_at_check],
       ['Git 커밋', checkpoint.revision],
       ['Git 동기화', checkpoint.checked_at],
-      ['문서 전체 검증', detail.verified_at || item.verified_at],
-      ['문서 검증 revision', detail.source_revision || item.source_revision],
+      ['문서 전체 검증', detail.verified_at],
+      ['문서 검증 revision', detail.source_revision],
     ].filter(([, value]) => value);
     for (const [label, value] of fields) {
       metadata.append(make('dt', '', label), make('dd', '', value));
@@ -256,16 +241,14 @@
     state.documentId = documentId;
     renderDocumentNavigation();
     updateLocation();
-    const request = documentGate.begin(state.projectId, documentId);
+    const request = documentGate.begin(documentId);
     try {
       const detail = await api(`/api/v1/projects/${encodeURIComponent(state.projectId)}/architecture/documents/${encodeURIComponent(documentId)}`);
-      const disposition = documentGate.disposition(request, state.projectId, state.documentId);
-      if (!disposition.render) return;
+      if (!documentGate.isCurrent(request, state.documentId)) return;
       setStatus('');
       renderDocument(detail);
     } catch (error) {
-      const disposition = documentGate.disposition(request, state.projectId, state.documentId);
-      if (!disposition.render) return;
+      if (!documentGate.isCurrent(request, state.documentId)) return;
       setStatus('');
       emptyDetail('문서를 읽을 수 없음', error.message);
     } finally {
@@ -377,7 +360,6 @@
     }
   });
 
-  applySavedAppearance();
   collapseNavigation(!globalThis.matchMedia('(max-width: 760px)').matches
     && document.documentElement.dataset.sidebar === 'collapsed', false);
   loadProjects();

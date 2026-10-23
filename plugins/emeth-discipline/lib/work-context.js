@@ -4,7 +4,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash, randomUUID } = require('node:crypto');
 
-const delegationContract = fs.readFileSync(path.join(__dirname, '../references/delegated-work.md'), 'utf8').replace(/\r\n/g, '\n');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 class WorkContext {
@@ -48,8 +47,10 @@ class WorkContext {
     const key = JSON.stringify([file, from, to]);
     const previous = this.state.reads[key];
     const metadata = { path: file, sha256: version, bytes: bytes.length, from, to: Math.min(to ?? all.length, all.length) };
-    this.state.reads[key] = { ...metadata, lines };
-    this.save();
+    if (previous?.sha256 !== version) {
+      this.state.reads[key] = { ...metadata, lines };
+      this.save();
+    }
     if (!refresh && previous && JSON.stringify(previous.lines) === JSON.stringify(lines)) return { ...metadata, status: 'unchanged' };
     if (!refresh && previous) {
       let prefix = 0, suffix = 0;
@@ -65,17 +66,6 @@ class WorkContext {
   summary() {
     return { progress: this.progress(), reads: Object.values(this.state.reads).map(({ lines, ...metadata }) => metadata) };
   }
-}
-
-function describeArtifacts(files) {
-  return files.map(file => {
-    try {
-      if(fs.lstatSync(file).isSymbolicLink())return{path:file,kind:'symlink',target:fs.readlinkSync(file)};
-      const real = fs.realpathSync(file), stat = fs.statSync(real);
-      if (stat.isDirectory()) return { path: real, kind: 'directory', files: describeArtifacts(fs.readdirSync(real).filter(n => !['.git', 'node_modules', '.venv'].includes(n)).map(n => path.join(real, n))) };
-      return { path: real, sha256: digest(fs.readFileSync(real)), bytes: stat.size };
-    } catch (error) { return { path: file, error: error.code ?? error.message }; }
-  });
 }
 
 if (require.main === module) {
@@ -101,4 +91,4 @@ if (require.main === module) {
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
 
-module.exports = { WorkContext, describeArtifacts, delegationContract };
+module.exports = { WorkContext };

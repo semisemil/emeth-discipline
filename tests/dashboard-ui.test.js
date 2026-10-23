@@ -247,8 +247,8 @@ test('index completion reloads the document selected during refresh after cleari
 });
 
 test('collapsed rail cues distinguish same-name projects before selection', () => {
-  assert.deepEqual(core.projectRailCue(projects[0], projects), { primary: '같1', secondary: '' });
-  assert.deepEqual(core.projectRailCue(projects[1], projects), { primary: '같2', secondary: '' });
+  assert.equal(core.projectRailCue(projects[0], projects), '같1');
+  assert.equal(core.projectRailCue(projects[1], projects), '같2');
 
   const posixCasePeers = [
     { name: 'same', root: '/Users/A/same', availability: 'available' },
@@ -256,20 +256,18 @@ test('collapsed rail cues distinguish same-name projects before selection', () =
   ];
   const upperCue = core.projectRailCue(posixCasePeers[0], posixCasePeers);
   const lowerCue = core.projectRailCue(posixCasePeers[1], posixCasePeers);
-  assert.match(upperCue.primary, /^s[12]$/);
-  assert.match(lowerCue.primary, /^s[12]$/);
-  assert.equal(upperCue.secondary, '');
-  assert.equal(lowerCue.secondary, '');
-  assert.notDeepEqual(upperCue, lowerCue);
+  assert.match(upperCue, /^s[12]$/);
+  assert.match(lowerCue, /^s[12]$/);
+  assert.notEqual(upperCue, lowerCue);
 
   const drivePeers = [
     { name: 'same', root: 'C:\\same', availability: 'available' },
     { name: 'same', root: 'D:\\same', availability: 'available' },
   ];
-  assert.deepEqual(core.projectRailCue(drivePeers[0], drivePeers), { primary: 's1', secondary: '' });
-  assert.deepEqual(core.projectRailCue(drivePeers[1], drivePeers), { primary: 's2', secondary: '' });
-  assert.deepEqual(core.projectRailCue(drivePeers[0], [...drivePeers].reverse()), { primary: 's1', secondary: '' });
-  assert.deepEqual(core.projectRailCue({ name: 'solo', availability: 'unavailable' }, []), { primary: 'so', secondary: '' });
+  assert.equal(core.projectRailCue(drivePeers[0], drivePeers), 's1');
+  assert.equal(core.projectRailCue(drivePeers[1], drivePeers), 's2');
+  assert.equal(core.projectRailCue(drivePeers[0], [...drivePeers].reverse()), 's1');
+  assert.equal(core.projectRailCue({ name: 'solo', availability: 'unavailable' }, []), 'so');
 });
 
 test('project selection restores desktop focus and returns mobile focus to the drawer opener', async t => {

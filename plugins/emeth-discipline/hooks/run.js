@@ -43,9 +43,9 @@ async function run(input) {
     process.stderr.write(`Architecture memory connection unavailable: ${error.code || error.message}\n`);
   }
   if (failure) {
-    if (!contexts.length && !response.systemMessage) throw failure;
+    if (!contexts.length) throw failure;
     const message = `Emeth Discipline prompt unavailable: ${failure.message}`;
-    response.systemMessage = [response.systemMessage, message].filter(Boolean).join('\n');
+    response.systemMessage = message;
     process.stderr.write(`${message}\n`);
   }
   if (contexts.length) {

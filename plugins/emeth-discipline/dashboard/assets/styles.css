@@ -140,7 +140,6 @@ h1, h2, h3, p { overflow-wrap: anywhere; }
 .project-active-count { min-width: 18px; color: var(--accent-ink); font-size: .75rem; font-variant-numeric: tabular-nums; text-align: right; }
 .project-rail-cue { position: relative; display: grid; place-items: center; flex: none; width: 30px; height: 30px; margin-top: 1px; border: 1px solid #c2d1ee15; border-radius: 8px; background: #ffffff08; color: #acb9ce; transition: background 180ms, color 180ms; }
 .rail-cue-primary { font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
-.rail-cue-secondary { display: none; }
 .project-latest, .project-root { overflow: hidden; color: var(--sidebar-muted); font-size: .75rem; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .project-blocked, .availability-unavailable { color: #e9bd74; font-size: .75rem; font-weight: 400; }
 .project-order-hint { margin-left: 5px; font-size: .625rem; font-weight: 400; color: #796573; }
@@ -447,7 +446,6 @@ th:not([aria-sort="none"]) .column-sort { color: var(--text); }
 .project-panel-collapsed .project-option { justify-content: center; align-items: center; width: 44px; min-height: 44px; margin: 2px auto; padding: 6px; border-radius: 11px; }
 .project-panel-collapsed .project-rail-cue { width: 30px; height: 30px; margin: 0; }
 .project-panel-collapsed .rail-cue-primary { font-size: .75rem; }
-.project-panel-collapsed .rail-cue-secondary { display: none; }
 .architecture-layout { transition: grid-template-columns 200ms ease; }
 .architecture-sidebar { display: flex; flex-direction: column; }
 .architecture-navigation { flex: 1; }

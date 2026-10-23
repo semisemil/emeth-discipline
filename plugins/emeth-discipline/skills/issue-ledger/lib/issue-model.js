@@ -26,7 +26,7 @@
     ['design', {
       label: 'Design',
       idPattern: /^DESIGN-\d{4,}$/,
-      locationPattern: /^\.emeth\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
+      locationPattern: /^\.emeth\/designs\/(DESIGN-\d{4,})(?:-[^/]+)?\/DESIGN\.md$/
     }],
     ['plan', {
       label: 'Plan',
@@ -659,7 +659,7 @@
     const identity = issue.identity;
     const state = issue.state;
     const usesClaims = identity.type === 'bug' || identity.type === 'research';
-    const invalidated = validation.indexes?.supersededEvidence || new Set();
+    const invalidated = validation.indexes.supersededEvidence;
     const evidence = issue.evidence.map((item) => ({
       id: item.id,
       kind: item.kind,
@@ -670,7 +670,7 @@
       supersedes: asArray(item.supersedes),
       invalidates: asArray(item.invalidates)
     }));
-    const supersededDecisions = validation.indexes?.supersededDecisions || new Set();
+    const supersededDecisions = validation.indexes.supersededDecisions;
     const events = issue.events.map((event) => ({
       id: event.id,
       kind: event.kind,
@@ -1022,6 +1022,7 @@
 
   return {
     activeStatuses,
+    linkedWorkKinds,
     terminalStatuses,
     issueStatuses,
     isIssueFileName,

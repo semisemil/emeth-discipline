@@ -144,12 +144,18 @@ test('link-work stores one canonical context link with its state transition', (t
   assert.deepEqual(linked.events.map(({ kind, from, to }) => ({ kind, from, to })), [
     { kind: 'transition', from: 'open', to: 'doing' }
   ]);
+  const before = fs.readFileSync(filePath, 'utf8');
+  const repeated = runLinkWork(root, { updatedAt: '2026-08-12T02:00:00.000Z' });
+  assert.equal(repeated.status, 0, repeated.stderr);
+  assert.match(repeated.stdout, /^no-op:/);
+  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
 test('Design work links round-trip through the issue ledger and dashboard with readiness signals', (t) => {
   const { root, projectRoot, filePath } = createFixture(t);
-  const overrides = { kind: 'design', workId: 'DESIGN-0001', workPath: '.emeth/designs/DESIGN-0001-example/DESIGN.md' };
-  assert.equal(runLinkWork(root, overrides).status, 0);
+  const overrides = { kind: 'design', workId: 'DESIGN-0001', workPath: '.emeth/designs/DESIGN-0001/DESIGN.md' };
+  const result = runLinkWork(root, overrides);
+  assert.equal(result.status, 0, result.stderr);
   const issue = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   assert.deepEqual(issue.context, [{ kind: 'Design', location: overrides.workPath }]);
   const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
@@ -210,6 +216,39 @@ test('link-work accepts an inline Plan related_issues array', (t) => {
   assert.equal(result.status, 0, result.stderr);
   const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   assert.equal(linked.context[0].location, '.emeth/plan/PLAN-0002-inline/PLAN.md');
+});
+
+test('link-work decodes quoted Plan IDs and backlinks before saving the issue', (t) => {
+  const { projectRoot, root, filePath } = createFixture(t);
+  const workPath = '.emeth/plan/PLAN-0001-quoted/PLAN.md';
+  const artifactPath = path.join(projectRoot, workPath);
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, '---\nid: "PLAN-\\u0030001"\ntitle: Example\nstatus: ready\nrelated_issues: ["PL-\\u0030001"]\n---\n');
+
+  const result = runLinkWork(root, {
+    kind: 'plan',
+    workId: 'PLAN-0001',
+    workPath,
+    status: null
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  assert.deepEqual(linked.context, [{ kind: 'Plan', location: workPath }]);
+});
+
+test('link-work rejects incomplete Spec metadata without changing the issue', (t) => {
+  const { projectRoot, root, filePath } = createFixture(t);
+  const before = fs.readFileSync(filePath, 'utf8');
+  const artifactPath = path.join(projectRoot, '.emeth/specs/SPEC-0001-example/SPEC.md');
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, '---\n{"id":"SPEC-0001","related_issues":["PL-0001"]}\n---\n');
+
+  const result = runLinkWork(root);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Spec metadata가 올바르지 않습니다/);
+  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
 test('link-work rejects a missing explicit issue before changing other issues', (t) => {

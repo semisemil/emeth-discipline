@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
+const { inside } = require('../lib/document-roots.js');
 
 const {
   ProjectApiError,
@@ -132,13 +133,6 @@ function sendError(request, response, status, code, message, extraHeaders = {}) 
   sendJson(request, response, status, { error: { code, message } }, extraHeaders);
 }
 
-function isContainedPath(rootPath, candidatePath) {
-  const relative = path.relative(rootPath, candidatePath);
-  return relative === '' || (!relative.startsWith(`..${path.sep}`)
-    && relative !== '..'
-    && !path.isAbsolute(relative));
-}
-
 function comparablePath(filePath) {
   const normalized = path.normalize(filePath);
   return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
@@ -173,11 +167,11 @@ function resolveStaticAsset(assetRoot, relativePath) {
     }
 
     const candidatePath = path.resolve(resolvedRoot, relativePath);
-    if (!isContainedPath(resolvedRoot, candidatePath)) {
+    if (!inside(resolvedRoot, candidatePath)) {
       return null;
     }
     const canonicalCandidate = fs.realpathSync.native(candidatePath);
-    if (!isContainedPath(canonicalRoot, canonicalCandidate)) {
+    if (!inside(canonicalRoot, canonicalCandidate)) {
       return null;
     }
     const candidateStatus = fs.statSync(canonicalCandidate, { bigint: true });
@@ -195,7 +189,7 @@ function resolveStaticAsset(assetRoot, relativePath) {
     }
 
     const currentCanonicalCandidate = fs.realpathSync.native(candidatePath);
-    if (!isContainedPath(canonicalRoot, currentCanonicalCandidate)) {
+    if (!inside(canonicalRoot, currentCanonicalCandidate)) {
       closeDescriptor(descriptor);
       descriptor = undefined;
       return null;

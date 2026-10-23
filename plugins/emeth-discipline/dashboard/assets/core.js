@@ -78,9 +78,9 @@
         || String(left.root).localeCompare(String(right.root), 'en', { sensitivity: 'variant' })
         || compareText(left.id, right.id));
     const initials = Array.from(String(project.name || '?')).slice(0, 2).join('');
-    if (peers.length < 2) return { primary: initials, secondary: '' };
+    if (peers.length < 2) return initials;
     const position = peers.findIndex((candidate) => project.id ? candidate.id === project.id : candidate.root === project.root);
-    return { primary: Array.from(initials)[0] + String(position + 1), secondary: '' };
+    return Array.from(initials)[0] + String(position + 1);
   }
 
   function projectSelectionFocusKey(projectId, viewportWidth) {
@@ -459,27 +459,18 @@
     return output.join('\n');
   }
 
-  function architectureDocumentId(document) {
-    return String(document?.id || document?.document_id || '').trim();
-  }
-
-  function architectureDocumentPath(document) {
-    return String(document?.relative_path || document?.path || '').replace(/\\/g, '/').replace(/^\.\//, '');
-  }
-
   function architectureDocuments(index) {
     const documents = Array.isArray(index?.documents) ? index.documents : [];
     return documents
-      .filter((document) => architectureDocumentId(document) && architectureDocumentPath(document))
+      .filter((document) => document?.id && document?.path)
       .sort((left, right) => (Number(left.order) || 0) - (Number(right.order) || 0)
-        || compareText(left.title, right.title)
-        || compareText(architectureDocumentId(left), architectureDocumentId(right)));
+        || compareText(left.id, right.id));
   }
 
   function initialArchitectureDocumentId(documents, requestedId) {
     const requested = String(requestedId || '');
-    if ((documents || []).some((document) => architectureDocumentId(document) === requested)) return requested;
-    return architectureDocumentId(documents?.[0]) || null;
+    if ((documents || []).some((document) => document.id === requested)) return requested;
+    return documents?.[0]?.id || null;
   }
 
   function normalizeArchitecturePath(value) {
@@ -507,9 +498,9 @@
     const directory = current.includes('/') ? current.slice(0, current.lastIndexOf('/') + 1) : '';
     const resolved = normalizeArchitecturePath(`${directory}${withoutSuffix}`);
     if (!resolved) return null;
-    return architectureDocumentId((documents || []).find(
-      (document) => normalizeArchitecturePath(architectureDocumentPath(document)) === resolved,
-    )) || null;
+    return (documents || []).find(
+      (document) => normalizeArchitecturePath(document.path) === resolved,
+    )?.id || null;
   }
 
   return Object.freeze({
@@ -520,8 +511,6 @@
     SIGNALS,
     STATUSES,
     compareText,
-    architectureDocumentId,
-    architectureDocumentPath,
     architectureDocuments,
     createDocumentRequestGate,
     createLatestRequestGate,

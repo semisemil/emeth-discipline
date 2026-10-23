@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
+const { inside: isInside } = require('../../lib/document-roots.js');
 
 const issueModel = require('../../skills/issue-ledger/lib/issue-model.js');
 const { rootKey } = require('../registry.js');
@@ -23,13 +24,6 @@ class RecordError extends Error {
     this.name = 'RecordError';
     this.code = code;
   }
-}
-
-function isInside(parent, candidate) {
-  const relative = path.relative(parent, candidate);
-  return relative === '' || (!path.isAbsolute(relative)
-    && relative !== '..'
-    && !relative.startsWith(`..${path.sep}`));
 }
 
 function realpath(filePath) {

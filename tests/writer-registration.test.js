@@ -222,6 +222,81 @@ test('a create lock left by an exited process does not block Issue creation', (t
   }
 });
 
+test('Design lock recovery preserves a live successor and the saved document', async (t) => {
+  const fixture = makeFixture(t);
+  const relativePath = '.emeth/designs/DESIGN-0001-free/DESIGN.md';
+  const file = path.join(fixture.projectRoot, relativePath);
+  const source = specContent().replace('SPEC-0001', 'DESIGN-0001');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, source);
+  const lock = path.join(fixture.projectRoot, '.emeth', '.design-write.lock');
+  fs.writeFileSync(lock, '2147483647');
+  const options = { project_root: fixture.projectRoot, kind: 'design', relative_path: relativePath, memory: 'off' };
+  // Two acquisition windows allow process coordination around the shared lock's five-second wait.
+  const timeout = 2 * 5000;
+  const waitFor = (...names) => {
+    const deadline = Date.now() + timeout;
+    while (!names.some(name => fs.existsSync(path.join(fixture.root, name)))) {
+      assert.ok(Date.now() < deadline, 'Design lock coordination timed out');
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+    }
+  };
+  const workerSource = `
+    const fs = require('node:fs'), path = require('node:path');
+    const [writer, root, lock, options, source, timeout] = process.argv.slice(1);
+    const write = fs.writeFileSync;
+    function waitFor(name) {
+      const deadline = Date.now() + Number(timeout);
+      while (!fs.existsSync(path.join(root, name))) {
+        if (Date.now() >= deadline) throw Error('Design worker coordination timed out');
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+      }
+    }
+    fs.writeFileSync = (file, ...args) => {
+      const result = write(file, ...args);
+      if (file === lock) { write(path.join(root, 'entered'), 'entered'); waitFor('release'); }
+      return result;
+    };
+    write(path.join(root, 'ready'), 'ready'); waitFor('start');
+    let result;
+    try { result = { status: require(writer).writeDocument(JSON.parse(options), Buffer.from(source)).write.status }; }
+    catch (error) { result = { error: error.code }; }
+    write(path.join(root, 'result.json'), JSON.stringify(result));
+  `;
+  const worker = spawn(process.execPath, ['-e', workerSource, documentCli, fixture.root, lock,
+    JSON.stringify(options), source, String(timeout)], { env: fixture.env, windowsHide: true, stdio: 'ignore' });
+  const completed = new Promise((resolve, reject) => { worker.once('exit', resolve); worker.once('error', reject); });
+  const read = fs.readFileSync;
+  let interleaved = false;
+  try {
+    waitFor('ready');
+    fs.readFileSync = (file, ...args) => {
+      const result = read(file, ...args);
+      if (!interleaved && file === lock) {
+        interleaved = true;
+        fs.writeFileSync(path.join(fixture.root, 'start'), 'start');
+        waitFor('entered', 'result.json');
+      }
+      return result;
+    };
+    const result = require(documentCli).writeDocument(options, Buffer.from(source));
+    fs.readFileSync = read;
+    const overlap = fs.existsSync(path.join(fixture.root, 'entered')) && !fs.existsSync(path.join(fixture.root, 'result.json'));
+    fs.writeFileSync(path.join(fixture.root, 'release'), 'release');
+    assert.equal(await completed, 0);
+    const successor = JSON.parse(fs.readFileSync(path.join(fixture.root, 'result.json'), 'utf8'));
+    assert.equal(interleaved, true);
+    assert.equal(overlap, false, 'A live successor still owns the Design lock');
+    assert.ok(successor.status === 'no-op' || successor.error === 'document-locked', JSON.stringify(successor));
+    assert.equal(result.write.status, 'no-op');
+    assert.equal(fs.readFileSync(file, 'utf8'), source);
+  } finally {
+    fs.readFileSync = read;
+    if (worker.exitCode === null) worker.kill();
+    await completed;
+  }
+});
+
 test('Issue write failure does not register the project', (t) => {
   const fixture = makeFixture(t);
   const input = path.join(fixture.root, 'issue.json');

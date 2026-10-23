@@ -3,6 +3,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { setTimeout: delay } = require('node:timers/promises');
 
 const sleepState = new Int32Array(new SharedArrayBuffer(4));
 const OWNER = 'owner.json';
@@ -19,10 +20,11 @@ function stat(file) {
   try { return fs.lstatSync(file, { bigint: true }); }
   catch (error) { if (error.code === 'ENOENT' || contended(error)) return null; throw error; }
 }
-// A lock is a directory holding its owner's PID; earlier versions used a file holding the same JSON.
+// A lock is a directory holding its owner's PID; earlier versions used a JSON file or a bare PID.
 function owner(file, status) {
   try {
-    const { pid } = JSON.parse(fs.readFileSync(status.isDirectory() ? path.join(file, OWNER) : file, 'utf8'));
+    const value = JSON.parse(fs.readFileSync(status.isDirectory() ? path.join(file, OWNER) : file, 'utf8'));
+    const pid = typeof value === 'number' ? value : value?.pid;
     return Number.isInteger(pid) && pid > 0 ? pid : null;
   } catch { return null; }
 }
@@ -71,20 +73,19 @@ function release(file) {
     }
   }
 }
-// Runs action while this process holds the lock. The lock appears under its name with the owner already recorded.
-function withFileLock(file, action, busy) {
-  const deadline = Date.now() + 5000;
+// The lock appears under its name with the owner already recorded.
+function acquire(file, busy, asynchronous = false) {
+  const deadline = Date.now() + (busy.timeoutMs ?? 5000);
   const unavailable = (message) => Object.assign(new Error(message), { code: busy.code });
   const staged = `${file}.${crypto.randomUUID()}.tmp`;
   fs.mkdirSync(staged);
-  try {
-    fs.writeFileSync(path.join(staged, OWNER), JSON.stringify({ pid: process.pid }));
-    let failure;
+  let failure;
+  function attempt() {
     while (true) {
       // Windows lets a directory rename replace a file, so the rename is tried only while the name is free.
       let current = stat(file);
       if (!current) {
-        try { fs.renameSync(staged, file); break; }
+        try { fs.renameSync(staged, file); return true; }
         catch (error) {
           if (!contended(error)) throw error;
           failure = error;
@@ -94,13 +95,30 @@ function withFileLock(file, action, busy) {
       if (current?.isSymbolicLink()) throw unavailable(`Lock file is a symbolic link: ${file}`);
       if (current && recover(file)) continue;
       if (Date.now() >= deadline) throw current || !failure ? unavailable(busy.message) : failure;
-      sleep(20);
+      return false;
     }
-  } finally {
-    fs.rmSync(staged, { recursive: true, force: true });
   }
+  const cleanup = () => fs.rmSync(staged, { recursive: true, force: true });
+  if (asynchronous) return (async () => {
+    try {
+      fs.writeFileSync(path.join(staged, OWNER), JSON.stringify({ pid: process.pid }));
+      while (!attempt()) await delay(20);
+    } finally { cleanup(); }
+  })();
+  try {
+    fs.writeFileSync(path.join(staged, OWNER), JSON.stringify({ pid: process.pid }));
+    while (!attempt()) sleep(20);
+  } finally { cleanup(); }
+}
+function withFileLock(file, action, busy) {
+  acquire(file, busy);
   try { return action(); }
   finally { release(file); }
 }
+async function withFileLockAsync(file, action, busy) {
+  await acquire(file, busy, true);
+  try { return await action(); }
+  finally { release(file); }
+}
 
-module.exports = { withFileLock };
+module.exports = { withFileLock, withFileLockAsync };

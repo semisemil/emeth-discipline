@@ -2,15 +2,19 @@
 
 'use strict';
 
-const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const { withFileLock } = require('../../../lib/file-lock');
 const { migrateProject, rewritePaths } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const model = require('../lib/issue-model.js');
-
-const registerProjectCli = path.resolve(__dirname, '../../../dashboard/register-project.js');
+const { registerProject } = require('../../../dashboard/registry.js');
+const {
+  parseFrontmatter,
+  parsePlanMetadata,
+  parseSpecMetadata,
+  parseDesignMetadata,
+} = require('../../../dashboard/records/record-parser.js');
 
 function fail(message, code = 1) {
   console.error(message);
@@ -131,70 +135,6 @@ function requireOption(options, key, label) {
   return value;
 }
 
-function frontMatter(content, label) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  if (!match) {
-    fail(`${label} front matter를 읽지 못했습니다.`);
-  }
-  return match[1];
-}
-
-function yamlScalar(value) {
-  const trimmed = String(value || '').trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"'))
-    || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
-function readPlanMetadata(content) {
-  const metadata = frontMatter(content, 'Plan');
-  const idMatch = metadata.match(/^id:[ \t]*(.*?)[ \t]*$/m);
-  const relatedMatch = metadata.match(/^related_issues:[ \t]*(.*?)[ \t]*$/m);
-  if (!idMatch) {
-    fail('Plan front matter에 id가 없습니다.');
-  }
-  if (!relatedMatch) {
-    return { id: yamlScalar(idMatch[1]), relatedIssues: [] };
-  }
-  if (relatedMatch[1]) {
-    const inline = relatedMatch[1];
-    if (!inline.startsWith('[') || !inline.endsWith(']')) {
-      fail('Plan related_issues는 배열이어야 합니다.');
-    }
-    return {
-      id: yamlScalar(idMatch[1]),
-      relatedIssues: inline.slice(1, -1).split(',').map(yamlScalar).filter(Boolean)
-    };
-  }
-  const after = metadata.slice(relatedMatch.index + relatedMatch[0].length);
-  const relatedIssues = [];
-  for (const line of after.split(/\r?\n/)) {
-    if (/^\s*$/.test(line)) {
-      continue;
-    }
-    const item = line.match(/^\s+-\s+(.+?)\s*$/);
-    if (!item) {
-      break;
-    }
-    relatedIssues.push(yamlScalar(item[1]));
-  }
-  return { id: yamlScalar(idMatch[1]), relatedIssues };
-}
-
-function readSpecMetadata(content) {
-  try {
-    const metadata = JSON.parse(frontMatter(content, 'Spec'));
-    return {
-      id: metadata.id,
-      relatedIssues: Array.isArray(metadata.related_issues) ? metadata.related_issues : []
-    };
-  } catch (error) {
-    fail(`Spec front matter JSON을 읽지 못했습니다: ${error.message}`);
-  }
-}
-
 function validateWorkBacklink(issueId, work, projectRoot) {
   const artifactPath = work.kind === 'design'
     ? require('../../../lib/document-roots.js').designTarget(projectRoot, work.location.replace(/\\/g, '/'))
@@ -204,11 +144,19 @@ function validateWorkBacklink(issueId, work, projectRoot) {
     fail(`연결할 ${label} 문서가 없습니다: ${artifactPath}`);
   }
   const content = fs.readFileSync(artifactPath, 'utf8');
-  const metadata = work.kind === 'plan' ? readPlanMetadata(content) : readSpecMetadata(content);
+  let metadata;
+  try {
+    const { metadataText } = parseFrontmatter(content);
+    metadata = work.kind === 'plan'
+      ? parsePlanMetadata(metadataText)
+      : work.kind === 'design' ? parseDesignMetadata(metadataText) : parseSpecMetadata(metadataText);
+  } catch (error) {
+    fail(error.message);
+  }
   if (metadata.id !== work.id) {
     fail(`${label} 문서 ID가 일치하지 않습니다: ${metadata.id || '(없음)'}`);
   }
-  if (!metadata.relatedIssues.includes(issueId)) {
+  if (!metadata.related_issues.includes(issueId)) {
     fail(`${work.id} related_issues에서 ${issueId}을 찾지 못했습니다.`);
   }
 }
@@ -234,29 +182,16 @@ function resolveProjectRoot(issuesRoot, explicitProjectRoot) {
 
 function registerWrittenProject(issuesRoot, explicitProjectRoot) {
   const projectRoot = resolveProjectRoot(issuesRoot, explicitProjectRoot);
-  const result = spawnSync(process.execPath, [
-    registerProjectCli,
-    'register',
-    '--project-root',
-    projectRoot
-  ], { encoding: 'utf8' });
-
-  if (result.error) {
+  try {
+    console.error(`registration: ${JSON.stringify(registerProject(projectRoot))}`);
+  } catch (error) {
     console.error(`registration-failed: ${JSON.stringify({
       error: {
-        code: 'registration-command-failed',
-        message: result.error.message
+        code: error.code || 'registration-failed',
+        message: error.message
       }
     })}`);
-    return;
   }
-  const output = (result.status === 0 ? result.stdout : result.stderr).trim();
-  console.error(`${result.status === 0 ? 'registration' : 'registration-failed'}: ${output || JSON.stringify({
-    error: {
-      code: 'registration-command-failed',
-      message: `등록 명령이 결과 없이 종료되었습니다: ${result.status}`
-    }
-  })}`);
 }
 
 function commandList(options) {
@@ -524,8 +459,7 @@ function commandLinkWork(options) {
     fail(error.message);
   }
   validateWorkBacklink(id, operation.work, path.resolve(options.project_root || process.cwd()));
-  const comparable = JSON.parse(JSON.stringify(result.issue));
-  comparable.updated_at = raw.updated_at;
+  const comparable = { ...result.issue, updated_at: raw.updated_at };
   if (model.serializeIssue(comparable) === model.serializeIssue(raw)) {
     console.log(`no-op: ${filePath}`);
     return;

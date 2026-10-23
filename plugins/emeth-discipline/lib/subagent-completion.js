@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { createHash, randomUUID } = require('node:crypto');
-const { setTimeout: delay } = require('node:timers/promises');
+const { withFileLockAsync } = require('./file-lock');
 
 class CompletionNotifications {
   constructor({ directory, request }) { this.directory = directory; this.request = request; }
@@ -17,16 +17,7 @@ class CompletionNotifications {
     const key = createHash('sha256').update(JSON.stringify([parent, task])).digest('hex');
     const file = path.join(this.directory, key + '.json'), lock = file + '.lock';
     fs.mkdirSync(this.directory, { recursive: true });
-    const deadline = Date.now() + 10000;
-    let handle;
-    while (!handle) {
-      try { handle = fs.openSync(lock, 'wx'); }
-      catch (error) {
-        if (error.code !== 'EEXIST' || Date.now() >= deadline) throw error;
-        await delay(20);
-      }
-    }
-    try {
+    return withFileLockAsync(lock, async () => {
       const state = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { parent, task, clientId: key, acknowledged: false };
       const save = () => {
         const staged = file + '.' + randomUUID() + '.tmp';
@@ -66,7 +57,7 @@ class CompletionNotifications {
         state.queuedId = item.id; save();
       }
       return { status: 'registered', task, queuedSubmissionId: state.queuedId };
-    } finally { fs.closeSync(handle); fs.unlinkSync(lock); }
+    }, { code: 'completion-locked', message: 'Completion is locked; inspect its owner before removing the lock.', timeoutMs: 10000 });
   }
 }
 

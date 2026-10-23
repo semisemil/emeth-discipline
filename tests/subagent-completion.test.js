@@ -5,8 +5,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const { execFileSync } = require('node:child_process');
 const { CompletionNotifications } = require('../plugins/emeth-discipline/lib/subagent-completion');
+const { connect } = require('../plugins/emeth-discipline/lib/codex-rpc');
 
 function fixture(t, parentThread = { canAcceptDirectInput: true }) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-completion-'));
@@ -77,6 +79,69 @@ test('an unacknowledged completion remains queued and retries do not duplicate i
   const results = await Promise.all([1, 2].map(() => f.create().perform('notify', { parent: 'parent', task: 'a', message: 'done' })));
   assert.equal(f.queue().length, 1);
   assert.equal(results[0].queuedSubmissionId, results[1].queuedSubmissionId);
+});
+
+test('completion retries recover the lock of an exited notifier and still support acknowledgement', async t => {
+  const f = fixture(t);
+  const source = `
+    const { CompletionNotifications } = require(process.argv[1]);
+    new CompletionNotifications({ directory: process.argv[2], request: async () => process.exit(0) })
+      .perform('notify', { parent: 'parent', task: 'interrupted', message: 'done' });
+  `;
+  execFileSync(process.execPath, ['-e', source,
+    require.resolve('../plugins/emeth-discipline/lib/subagent-completion'), f.create().directory], { windowsHide: true });
+  const result = await f.create().perform('notify', { parent: 'parent', task: 'interrupted', message: 'done' });
+  assert.equal(result.status, 'registered');
+  assert.equal(f.queue().length, 1);
+  assert.equal((await f.create().perform('ack', { parent: 'parent', task: 'interrupted' })).deleted, 1);
+  assert.deepEqual(f.queue(), []);
+});
+
+test('proxy launch failure preserves the original executable path and ENOENT', async t => {
+  const f = fixture(t);
+  const binary = path.join(f.create().directory, 'missing-codex.exe');
+  await assert.rejects(connect({ binary }), error => error.code === 'ENOENT' && error.path === binary);
+});
+
+test('proxy startup failure retains its stderr diagnostic', async t => {
+  const f = fixture(t);
+  const preload = path.join(f.create().directory, 'failed-proxy.cjs');
+  fs.writeFileSync(preload, "require('node:fs').writeSync(2, 'fixture proxy startup failure\\n'); process.exit(23);\n");
+  await assert.rejects(connect({ binary: process.execPath,
+    env: { ...process.env, NODE_OPTIONS: '--require ' + JSON.stringify(preload.split(path.sep).join('/')) },
+  }), /fixture proxy startup failure/);
+});
+
+test('RPC initialization and later requests complete through the proxy transport', async t => {
+  const f = fixture(t), directory = f.create().directory;
+  const preload = path.join(directory, 'proxy.mjs');
+  fs.writeFileSync(preload, `
+    import { createRequire } from 'node:module';
+    const require = createRequire(import.meta.url);
+    const http = require('node:http'), net = require('node:net');
+    const { WebSocketServer } = require(${JSON.stringify(require.resolve('ws'))});
+    const server = http.createServer();
+    const sockets = new WebSocketServer({ server });
+    sockets.on('connection', socket => {
+      let initialized = false;
+      socket.on('message', bytes => {
+        const message = JSON.parse(bytes);
+        if (message.method === 'initialized') { initialized = true; return; }
+        socket.send(JSON.stringify({ id: message.id, result: message.method === 'initialize' ? {} : { initialized, params: message.params } }));
+      });
+    });
+    server.listen(0, '127.0.0.1', () => {
+      const stream = net.connect(server.address().port, '127.0.0.1');
+      process.stdin.pipe(stream); stream.pipe(process.stdout);
+    });
+    await new Promise(() => {});
+  `);
+  const rpc = await connect({ binary: process.execPath,
+    env: { ...process.env, NODE_OPTIONS: '--import ' + JSON.stringify(pathToFileURL(preload).href) },
+  });
+  try {
+    assert.deepEqual(await rpc.request('fixture/echo', { text: 'kept' }), { initialized: true, params: { text: 'kept' } });
+  } finally { rpc.close(); }
 });
 
 test('reopening state preserves an early receipt and suppresses later registration', async t => {

@@ -270,7 +270,9 @@ function collectCandidates(projectState, diagnostics) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) {
         continue;
       }
-      const id = entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
+      const id = definition.directoryName === 'designs' && DESIGN_ID.test(entry.name)
+        ? entry.name
+        : entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
       if (!id || !definition.idPattern.test(id)) {
         continue;
       }
@@ -348,10 +350,7 @@ function canonicalDocumentPath(kind, location) {
   if (typeof location !== 'string' || location.includes('\\')) {
     return null;
   }
-  const pattern = kind === 'plan'
-    ? /^\.emeth\/plan\/(PLAN-\d{4,})-[^/]+\/PLAN\.md$/
-    : kind === 'design' ? /^\.emeth\/designs\/(DESIGN-\d{4,})-[^/]+\/DESIGN\.md$/
-      : /^\.emeth\/specs\/(SPEC-\d{4,})-[^/]+\/SPEC\.md$/;
+  const pattern = issueModel.linkedWorkKinds.get(kind).locationPattern;
   const match = location.match(pattern);
   return match ? { id: match[1], path: location } : null;
 }
@@ -560,7 +559,9 @@ function projectSourceSignature(project) {
       continue;
     }
     for (const entry of entries) {
-      const id = entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
+      const id = definition.directoryName === 'designs' && DESIGN_ID.test(entry.name)
+        ? entry.name
+        : entry.name.match(/^([A-Z]+-\d{4,})-[^/\\]+$/)?.[1];
       if (!id || !definition.idPattern.test(id)) {
         continue;
       }
@@ -789,13 +790,19 @@ function buildProjectIndex(project, options = {}) {
     revision: record.revision,
   })).sort((left, right) => left.id.localeCompare(right.id));
 
-  const designs = linkState.documents.filter(record => record.kind === 'design').map(record => ({
-    id: record.id, title: record.title, status: record.status, related_issues: record.relatedIssues,
-    linked_issue_ids: [...linkState.linkedIssues.get(`design:${record.id}`)].sort(),
-    relative_path: record.relativePath, updated_at: record.updatedAt, kind: record.specKind,
-    revision: record.revision, supersedes: record.metadata.supersedes,
+  const designs = linkState.documents.filter((record) => record.kind === 'design').map((record) => ({
+    id: record.id,
+    title: record.title,
+    status: record.status,
     superseded_by: record.supersededBy || record.metadata.superseded_by,
-  })).sort((a, b) => a.id.localeCompare(b.id));
+    related_issues: record.relatedIssues,
+    linked_issue_ids: [...linkState.linkedIssues.get(`design:${record.id}`)].sort(),
+    relative_path: record.relativePath,
+    updated_at: record.updatedAt,
+    kind: record.specKind,
+    revision: record.revision,
+    supersedes: record.metadata.supersedes,
+  })).sort((left, right) => left.id.localeCompare(right.id));
 
   diagnostics.sort((left, right) => left.relative_path.localeCompare(right.relative_path)
     || left.code.localeCompare(right.code));
@@ -927,9 +934,6 @@ class ProjectIndexService {
         this.closeProjectWatchers(projectId);
         this.invalidateProject(projectId);
       }
-    }
-    for (const project of projects) {
-      this.ensureProjectWatchers(project);
     }
   }
 

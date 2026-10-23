@@ -36,6 +36,14 @@ function tempDirectory(t) {
   return directory;
 }
 
+test('server status rejects missing Windows APPDATA before accessing a fallback directory', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-control-config-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  await assert.rejects(inspectServer({ platform: 'win32', env: {}, homeDir: root }), { code: 'config-unavailable' });
+  assert.deepEqual(fs.readdirSync(root), []);
+});
+
 test('open uses expected_version and preserves server and project state', async (t) => {
   const directory = tempDirectory(t);
   fs.mkdirSync(directory, { recursive: true });

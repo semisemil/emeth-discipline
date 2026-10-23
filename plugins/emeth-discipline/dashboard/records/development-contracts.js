@@ -31,14 +31,31 @@ function readDevelopmentRecord(root, id) {
     throw error;
   }
 }
-function readDesigns(root) {
+function readDesigns(root, { includeErrors = false } = {}) {
   migrateProject(root);
-  const directory = roots.designStorage(root).directory;
+  const storage = roots.designStorage(root);
+  const directory = storage.directory;
   if (!fs.existsSync(directory)) return [];
-  const ids = new Set(fs.readdirSync(directory, { withFileTypes: true })
-    .filter(entry => entry.isDirectory() && fs.existsSync(path.join(directory, entry.name, 'DESIGN.md')))
-    .map(entry => /^(DESIGN-\d{4,})-/.exec(entry.name)?.[1]).filter(Boolean));
-  return [...ids].map(id => readDevelopmentRecord(root, id));
+  const filesById = new Map();
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const id = /^(DESIGN-\d{4,})(?:-|$)/.exec(entry.name)?.[1];
+    const file = path.join(directory, entry.name, 'DESIGN.md');
+    if (!id || !fs.existsSync(file)) continue;
+    if (!filesById.has(id)) filesById.set(id, []);
+    filesById.get(id).push(file);
+  }
+  return [...filesById].map(([id, files]) => {
+    try {
+      if (files.length !== 1) fail('contract-unavailable', `Ambiguous document ID: ${id}`);
+      return parseCurrentRecord({ root: storage.root, directory, filePath: files[0], expectedId: id, kind: 'design',
+        relativePath: roots.designReference(root, files[0]) });
+    } catch (error) {
+      if (error.code === 'record-id-mismatch') error.message = 'Document ID does not match its directory';
+      if (!includeErrors) throw error;
+      return { id, error: { code: error.code || 'contract-unavailable', message: error.message } };
+    }
+  });
 }
 function supersessionMap(records) {
   const next = new Map();

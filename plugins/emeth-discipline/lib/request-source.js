@@ -35,7 +35,7 @@ function capture(directory, input) {
 function notice(input) {
   if (input.hook_event_name !== 'UserPromptSubmit' || host.name() !== 'codex' || typeof input.prompt !== 'string') return '';
   const skill = findDocumentSkill(input.prompt);
-  const isDesign = (skill?.documents || [skill]).some(candidate => candidate?.prefix === 'DESIGN');
+  const isDesign = skill?.prefix === 'DESIGN';
   const invocation = input.prompt.trimStart().split(/\s/, 1)[0];
   if (!isDesign && invocation !== '$emeth-discipline:start-implementation') return '';
   const data = host.dataDir();

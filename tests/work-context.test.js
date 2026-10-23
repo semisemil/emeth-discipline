@@ -5,17 +5,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const {spawnSync}=require('node:child_process');
-const {WorkContext,describeArtifacts}=require('../plugins/emeth-discipline/lib/work-context');
+const {WorkContext}=require('../plugins/emeth-discipline/lib/work-context');
 const helper=path.resolve(__dirname,'../plugins/emeth-discipline/lib/work-context.js');
-
-test('return contract loads its complete dedicated reference without the implementation skill',t=>{
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
- const lib=path.join(dir,'lib');fs.mkdirSync(lib);
- const copied=path.join(lib,'work-context.js');fs.copyFileSync(helper,copied);
- const reference=path.join(dir,'references/delegated-work.md');fs.mkdirSync(path.dirname(reference),{recursive:true});
- fs.writeFileSync(reference,'# Delegated work\r\n\r\nReturn the result.\r\n#### Evidence\r\nKeep exact paths.\r\n');
- assert.equal(require(copied).delegationContract,'# Delegated work\n\nReturn the result.\n#### Evidence\nKeep exact paths.\n');
-});
 
 test('versioned public reads preserve content, return changes and allow refresh after recovery',t=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-context-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
@@ -23,7 +14,13 @@ test('versioned public reads preserve content, return changes and allow refresh 
  fs.writeFileSync(file,'one\ntwo\nthree\n');
  const call=(...args)=>{const r=spawnSync(process.execPath,[helper,'read','--state',state,'--path',file,...args],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);};
  const first=call();assert.equal(first.status,'full');assert.equal(first.content,'one\ntwo\nthree\n');
+ fs.utimesSync(state,new Date('2000-01-01T00:00:00Z'),new Date('2000-01-01T00:00:00Z'));
+ const unchangedState=fs.readFileSync(state),unchangedTime=fs.statSync(state).mtimeMs;
  assert.equal(call().status,'unchanged');
+ assert.deepEqual(fs.readFileSync(state),unchangedState);
+ assert.equal(fs.statSync(state).mtimeMs,unchangedTime);
+ assert.equal(call('--refresh').content,first.content);
+ assert.equal(fs.statSync(state).mtimeMs,unchangedTime);
  fs.writeFileSync(file,'one\nupdated\nthree\n');
  const changed=call();assert.equal(changed.previous_sha256,first.sha256);assert.deepEqual(changed.changes,{start:2,removed:['two'],added:['updated']});
  assert.equal(call('--refresh').content,'one\nupdated\nthree\n');
@@ -36,8 +33,8 @@ test('workflow decisions and read ranges survive a new context instance',t=>{
  const context=new WorkContext(state);context.progress({stage:'review',decisions:['Keep the public API'],pending:['Independent review'],artifacts:[file]});
  assert.equal(context.read(file,{from:2,to:2}).content,'second');
  fs.writeFileSync(file,'changed\nsecond\nthird');
- const restored=new WorkContext(state);assert.equal(restored.progress().stage,'review');assert.equal(restored.read(file,{from:2,to:2}).status,'unchanged');
+ const restored=new WorkContext(state);assert.equal(restored.progress().stage,'review');
+ const unchangedRange=restored.read(file,{from:2,to:2});assert.equal(unchangedRange.status,'unchanged');
+ assert.equal(new WorkContext(state).summary().reads[0].sha256,unchangedRange.sha256);
  assert.equal(restored.read(file).status,'full');
- const artifact=describeArtifacts([file])[0];assert.equal(artifact.sha256,restored.read(file).sha256);
- assert.equal(describeArtifacts([path.join(dir,'absent')])[0].error,'ENOENT');
 });

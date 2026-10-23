@@ -51,24 +51,24 @@ function composeBaseline(pluginRoot, host) {
   }
   const hostRules = readFileWithRetry(hostPath).replace(/^\uFEFF/, '').trim();
   const baseline = resolveReferences(shared.replace(HOST_RULES, () => hostRules), skillPath);
-  return { baseline: baseline.replaceAll('{{plugin-root}}', pluginRoot), hostPath };
+  return baseline.replaceAll('{{plugin-root}}', pluginRoot);
 }
 
 function composeEmethPrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'codex').baseline.trimEnd();
+  return composeBaseline(pluginRoot, 'codex').trimEnd();
 }
 
 // The rules skill stays hidden in Claude Code; only this hook output delivers it there.
 function composeClaudePrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'claude').baseline.trimEnd();
+  return composeBaseline(pluginRoot, 'claude').trimEnd();
 }
 
 function composeMixdogPrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
   // The language, authority, and evidence rules are shared with Codex.
-  const { baseline } = composeBaseline(pluginRoot, 'codex');
+  const baseline = composeBaseline(pluginRoot, 'codex');
   const mixdog = readFileWithRetry(path.join(pluginRoot, 'skills', 'rules', 'mixdog.md'));
   return `${baseline.trimEnd()}\n\n${mixdog.trim()}`.replaceAll('{{plugin-root}}', pluginRoot);
 }

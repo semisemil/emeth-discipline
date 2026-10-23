@@ -115,11 +115,11 @@ test('a legacy document has one successor without becoming executable or rewriti
   assert.equal(resolveContract(f.project, 'DESIGN-0002').id, 'DESIGN-0002');
 });
 
-test('manual successor conflicts block both the dashboard detail and execution', t => {
+test('manual successor conflicts in ID-only directories block execution and refresh dashboard state', t => {
   const f = fixture(t);
   f.write('.emeth/specs/SPEC-0001-original/SPEC.md', document('SPEC-0001'));
-  save(f, document('DESIGN-0001', { supersedes: ['SPEC-0001'] }));
-  f.write('.emeth/designs/DESIGN-0002-manual/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
+  f.write('.emeth/designs/DESIGN-0001-notification/DESIGN.md', document('DESIGN-0001', { supersedes: ['SPEC-0001'] }));
+  f.write('.emeth/designs/DESIGN-0002/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-successor-conflict');
   const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
   const { registerProject } = require('../plugins/emeth-discipline/dashboard/registry.js');
@@ -132,6 +132,54 @@ test('manual successor conflicts block both the dashboard detail and execution',
   assert.equal(index.designs[0].status, 'blocked');
   assert.ok(index.diagnostics.some(item => item.code === 'contract-successor-conflict'));
   assert.equal(service.getDocument(project.id, 'design', 'DESIGN-0001').status, 'blocked');
+  f.write('.emeth/designs/DESIGN-0002/DESIGN.md', document('DESIGN-0002'));
+  assert.equal(service.getIndex(project.id).designs.find(record => record.id === 'DESIGN-0001').status, 'ready');
+});
+
+test('ID-only Design directories support reading, patching and status changes at the same path', t => {
+  const f = fixture(t);
+  const file = '.emeth/designs/DESIGN-0001/DESIGN.md';
+  f.write(file, document());
+  const run = (command, extra = [], input) => {
+    const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), command,
+      '--project-root', f.project, '--id', 'DESIGN-0001', ...extra], {
+      env: f.env, encoding: 'utf8', windowsHide: true, input,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  };
+  const read = run('read');
+  assert.equal(read.path, file);
+  assert.equal(read.text, f.read(file));
+  const patched = run('patch', ['--change-kind', 'major', '--memory', 'off'],
+    JSON.stringify({ edits: [{ old: '처리 ID', new: '접수 ID' }] }));
+  assert.equal(patched.write.path, file);
+  assert.equal(patched.write.revision, 2);
+  assert.match(f.read(file), /접수 ID/);
+  const updated = run('status', ['--status', 'completed', '--memory', 'off']);
+  assert.equal(updated.write.path, file);
+  assert.equal(updated.document_status, 'completed');
+  assert.equal(updated.write.revision, 2);
+  assert.equal(fs.existsSync(path.join(f.project, '.emeth/designs/DESIGN-0001-notification')), false);
+});
+
+test('Design listing preserves valid records and reports duplicate IDs and invalid metadata separately', t => {
+  const f = fixture(t);
+  f.write('.emeth/designs/DESIGN-0001/DESIGN.md', document());
+  f.write('.emeth/designs/DESIGN-0002-a/DESIGN.md', document('DESIGN-0002'));
+  f.write('.emeth/designs/DESIGN-0002-b/DESIGN.md', document('DESIGN-0002'));
+  f.write('.emeth/designs/DESIGN-0003/DESIGN.md', 'invalid metadata');
+  const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'list', '--project-root', f.project],
+    { env: f.env, encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 0, result.stderr);
+  const { designs } = JSON.parse(result.stdout);
+  assert.deepEqual(designs.map(record => record.id), ['DESIGN-0001', 'DESIGN-0002', 'DESIGN-0003']);
+  assert.equal(designs[0].status, 'ready');
+  assert.equal(designs[0].path, '.emeth/designs/DESIGN-0001/DESIGN.md');
+  assert.equal(designs[1].error.code, 'contract-unavailable');
+  assert.match(designs[1].error.message, /Ambiguous/);
+  assert.equal(designs[2].error.code, 'record-metadata-invalid');
+  assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-unavailable');
 });
 
 test('disabled or prohibited Memory is preserved, and recording failure is separate from a successful Design write', t => {

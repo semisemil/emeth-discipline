@@ -380,11 +380,9 @@
       const counts = project.availability === 'available'
         ? `활성 ${project.counts?.active ?? 0} · 보류 ${project.counts?.blocked ?? 0}`
         : '경로 확인 필요';
-      const cueValue = core.projectRailCue(project, state.projects);
       const cue = make('span', 'project-rail-cue');
       cue.setAttribute('aria-hidden', 'true');
-      cue.append(make('span', 'rail-cue-primary', cueValue.primary));
-      if (cueValue.secondary) cue.append(make('span', 'rail-cue-secondary', cueValue.secondary));
+      cue.append(make('span', 'rail-cue-primary', core.projectRailCue(project, state.projects)));
       const indicator = make('span', 'project-indicator');
       indicator.setAttribute('aria-hidden', 'true');
       if (project.availability !== 'available') indicator.textContent = '!';

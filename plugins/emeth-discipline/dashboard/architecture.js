@@ -33,13 +33,6 @@ function realpath(filePath) {
   return path.normalize(resolve(filePath));
 }
 
-function isInside(parent, candidate) {
-  const relative = path.relative(parent, candidate);
-  return relative === '' || (!path.isAbsolute(relative)
-    && relative !== '..'
-    && !relative.startsWith(`..${path.sep}`));
-}
-
 function sameIdentity(first, second) {
   return first.dev === second.dev && first.ino === second.ino;
 }
@@ -84,8 +77,8 @@ function readSecureFile(options) {
   try {
     const candidate = path.resolve(options.path);
     const storageRoot = options.storageRoot || options.projectRoot;
-    if (!isInside(storageRoot, candidate)
-        || !isInside(options.boundaryRoot, candidate)) {
+    if (!roots.inside(storageRoot, candidate)
+        || !roots.inside(options.boundaryRoot, candidate)) {
       throw architectureError(
         'architecture-path-outside-project',
         '아키텍처 문서 경로가 프로젝트 밖을 가리킵니다.',
@@ -93,8 +86,8 @@ function readSecureFile(options) {
     }
 
     const canonical = realpath(candidate);
-    if (!isInside(storageRoot, canonical)
-        || !isInside(options.boundaryRoot, canonical)) {
+    if (!roots.inside(storageRoot, canonical)
+        || !roots.inside(options.boundaryRoot, canonical)) {
       throw architectureError(
         'architecture-path-outside-project',
         '아키텍처 문서 경로가 프로젝트 밖을 가리킵니다.',
@@ -130,8 +123,8 @@ function readSecureFile(options) {
     const current = fs.statSync(currentCanonical, { bigint: true });
     const currentProjectRoot = realpath(options.projectRoot);
     if (rootKey(currentProjectRoot) !== rootKey(options.projectRoot)
-        || !isInside(storageRoot, currentCanonical)
-        || !isInside(options.boundaryRoot, currentCanonical)
+        || !roots.inside(storageRoot, currentCanonical)
+        || !roots.inside(options.boundaryRoot, currentCanonical)
         || !current.isFile()
         || !sameIdentity(opened, current)
         || current.size !== opened.size
@@ -173,7 +166,7 @@ function discoverManifest(projectRoot) {
   let docsRoot;
   try {
     docsRoot = realpath(docsPath);
-    if (!fs.statSync(docsRoot).isDirectory() || !isInside(projectRoot, docsRoot)) {
+    if (!fs.statSync(docsRoot).isDirectory() || !roots.inside(projectRoot, docsRoot)) {
       throw new Error('docs outside project');
     }
   } catch (error) {
@@ -225,7 +218,7 @@ function discoverManifest(projectRoot) {
       } catch {
         continue;
       }
-      if (isInside(docsRoot, childReal)) {
+      if (roots.inside(docsRoot, childReal)) {
         queue.push({ directory: childReal, depth: current.depth + 1 });
       }
     }
@@ -342,8 +335,8 @@ function loadArchitecture(project, options = {}) {
   try {
     architectureRoot = realpath(architectureRootPath);
     if (!fs.statSync(architectureRoot).isDirectory()
-        || (!configured && !isInside(projectRoot, architectureRoot))
-        || !isInside(docsRoot, architectureRoot)) {
+        || (!configured && !roots.inside(projectRoot, architectureRoot))
+        || !roots.inside(docsRoot, architectureRoot)) {
       throw new Error('architecture root outside docs');
     }
   } catch (error) {

@@ -17,9 +17,7 @@ const DESIGN_DOCUMENT = Object.freeze({ directory: ['.emeth', 'designs'], prefix
 const DOCUMENT_SKILLS = Object.freeze({
   '$emeth-discipline:issue-ledger': ISSUE_DOCUMENT,
   '$emeth-discipline:development-design': DESIGN_DOCUMENT,
-  '$emeth-discipline:figure-it-out': Object.freeze({
-    documents: Object.freeze([DESIGN_DOCUMENT]),
-  }),
+  '$emeth-discipline:figure-it-out': DESIGN_DOCUMENT,
 });
 
 function findDocumentSkill(prompt) {
@@ -76,13 +74,10 @@ function notice(input) {
     if (!documentSkill) {
       return '';
     }
-    const documentSkills = documentSkill.documents || [documentSkill];
     const projectRoot = typeof input.cwd === 'string' && input.cwd.length > 0
       ? path.resolve(input.cwd)
       : process.cwd();
-    return documentSkills.map((candidate) => (
-      `Next ${candidate.label} number: ${nextDocumentId(projectRoot, candidate)}`
-    )).join('\n');
+    return `Next ${documentSkill.label} number: ${nextDocumentId(projectRoot, documentSkill)}`;
   } catch (error) {
     logDiagnostic({
       hook: 'next-document-number',

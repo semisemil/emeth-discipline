@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { withFileLock } = require('../../../lib/file-lock');
 const { migrateProject } = require('../../../lib/storage-migration');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -66,15 +67,7 @@ function exclusive(root, action) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const ignored = safePath(root, `${WORK}/.gitignore`);
   if (!fs.existsSync(ignored)) fs.writeFileSync(ignored, '*\n');
-  if (fs.existsSync(file)) {
-    const lock = jsonFile(file, 1024);
-    if (!Number.isInteger(lock?.pid) || lock.pid <= 0) fail('memory-locked', 'Invalid work lock; inspect its owner before removing it.');
-    try { process.kill(lock.pid, 0); fail('memory-locked', 'Another memory operation is active.'); }
-    catch (error) { if (error.code !== 'ESRCH') throw error; }
-    fs.unlinkSync(file);
-  }
-  fs.writeFileSync(file, JSON.stringify({ pid: process.pid }), { flag: 'wx' });
-  try { return action(); } finally { fs.unlinkSync(file); }
+  return withFileLock(file, action, { code: 'memory-locked', message: 'Memory is locked; inspect its owner before removing it.' });
 }
 module.exports = { BINDING, WORK, fail, relative, safePath, textFile, jsonFile, atomicWrite, hash, saveJson, binding, exclusive,
   rootPath, prepareRoot: roots.prepareRoot, architectureSetting: roots.architectureSetting };

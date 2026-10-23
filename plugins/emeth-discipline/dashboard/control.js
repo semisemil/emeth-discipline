@@ -2,10 +2,10 @@
 
 const fs = require('node:fs');
 const http = require('node:http');
-const os = require('node:os');
 const path = require('node:path');
 const { execFile, spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
+const { getDashboardConfigDir } = require('./registry.js');
 
 const HOST = '127.0.0.1';
 const PORT = 43127;
@@ -15,14 +15,7 @@ const HEALTH_TIMEOUT_MS = 500;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function dashboardDirectory(options = {}) {
-  const env = options.env || process.env;
-  const platform = options.platform || process.platform;
-  const homeDir = options.homeDir || os.homedir();
-  const pathApi = platform === 'win32' ? path.win32 : path.posix;
-  const configRoot = platform === 'win32'
-    ? (env.APPDATA || pathApi.join(homeDir, 'AppData', 'Roaming'))
-    : (env.XDG_CONFIG_HOME || pathApi.join(homeDir, '.config'));
-  return pathApi.join(configRoot, 'emeth', 'dashboard');
+  return getDashboardConfigDir({ ...options, homedir: options.homeDir });
 }
 
 function dashboardPaths(options = {}) {

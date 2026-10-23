@@ -5,7 +5,7 @@ const { spawn } = require('node:child_process');
 
 async function connect({ binary = 'codex', env = process.env, timeoutMs = 10000 } = {}) {
   const pending = new Map();
-  let sequence = 0, socket, stream, closed = false, stderr = '';
+  let sequence = 0, socket, stream, closed = false, stderr = '', failure, rejectConnection;
   const proxy = process.platform === 'win32' && binary === 'codex'
     ? spawn(env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', 'codex app-server proxy'], { env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] })
     : spawn(binary, ['app-server', 'proxy'], { env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -17,7 +17,9 @@ async function connect({ binary = 'codex', env = process.env, timeoutMs = 10000 
     connection.on('error', fail);
   });
   function fail(error) {
-    for (const p of pending.values()) { clearTimeout(p.timer); p.reject(error); }
+    failure ||= error;
+    rejectConnection?.(failure);
+    for (const p of pending.values()) { clearTimeout(p.timer); p.reject(failure); }
     pending.clear();
   }
   function close() {
@@ -33,11 +35,13 @@ async function connect({ binary = 'codex', env = process.env, timeoutMs = 10000 
   proxy.stdin.on('error', fail);
   try {
     await new Promise((resolve, reject) => { bridge.once('error', reject); bridge.listen(0, '127.0.0.1', resolve); });
+    if (failure) throw failure;
     socket = new WebSocket(`ws://127.0.0.1:${bridge.address().port}/`);
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Codex connection timed out')), timeoutMs);
-      socket.addEventListener('open', () => { clearTimeout(timer); resolve(); }, { once: true });
-      socket.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Codex connection failed: ' + stderr)); }, { once: true });
+      rejectConnection = error => { clearTimeout(timer); reject(error); };
+      socket.addEventListener('open', () => { clearTimeout(timer); rejectConnection = null; resolve(); }, { once: true });
+      socket.addEventListener('error', () => fail(new Error('Codex connection failed: ' + stderr)), { once: true });
     });
     socket.addEventListener('message', event => {
       let message;
@@ -50,6 +54,7 @@ async function connect({ binary = 'codex', env = process.env, timeoutMs = 10000 
     });
     socket.addEventListener('close', () => fail(new Error('Codex connection ended')));
     const request = (method, params) => new Promise((resolve, reject) => {
+      if (failure) { reject(failure); return; }
       const id = ++sequence;
       const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Codex request timed out: ${method}`)); }, timeoutMs);
       pending.set(id, { resolve, reject, timer });
