@@ -9,7 +9,7 @@ const test = require('node:test');
 const host = require('../plugins/emeth-discipline/lib/host');
 
 const repoRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
-const hostRules = ['codex.md', 'mixdog.md'].map(file => fs.readFileSync(
+const hostRules = ['mixdog.md'].map(file => fs.readFileSync(
   path.join(repoRoot, 'skills/rules', file), 'utf8',
 ).trim().replaceAll('{{plugin-root}}', repoRoot));
 
@@ -64,6 +64,7 @@ test('Mixdog sessions apply host rules and restore them on user submissions', t 
 test('Mixdog document requests keep the numbering notice alongside the baseline', t => {
   for (const [prompt, id] of [
     ['/development-design write a design', 'DESIGN-0001'],
+    ['/emeth-discipline:development-design write a design', 'DESIGN-0001'],
     ['$emeth-discipline:development-design write a design', 'DESIGN-0001'],
     ['figure-it-out implement the change', 'DESIGN-0001'],
     ['/issue-ledger register this bug', 'PL-0001'],

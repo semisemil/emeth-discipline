@@ -16,9 +16,9 @@ const ISSUE_DOCUMENT = Object.freeze({
 const DESIGN_DOCUMENT = Object.freeze({ directory: ['.emeth', 'designs'], prefix: 'DESIGN', label: 'design' });
 
 const DOCUMENT_SKILLS = Object.freeze({
-  '$emeth-discipline:issue-ledger': ISSUE_DOCUMENT,
-  '$emeth-discipline:development-design': DESIGN_DOCUMENT,
-  '$emeth-discipline:figure-it-out': DESIGN_DOCUMENT,
+  '/emeth-discipline:issue-ledger': ISSUE_DOCUMENT,
+  '/emeth-discipline:development-design': DESIGN_DOCUMENT,
+  '/emeth-discipline:figure-it-out': DESIGN_DOCUMENT,
 });
 
 function findDocumentSkill(prompt) {
@@ -32,11 +32,11 @@ function findDocumentSkill(prompt) {
   let invocation = firstLine.trim().split(/[ \t]+/, 1)[0];
   if (host.name() === 'mixdog') {
     const name = invocation.replace(/^[$/]/, '').replace(/^emeth-discipline:/, '');
-    invocation = `$emeth-discipline:${name}`;
+    invocation = `/emeth-discipline:${name}`;
   }
-  if (host.name() === 'claude') {
-    if (!invocation.startsWith('/')) return null;
-    invocation = `$${invocation.slice(1)}`;
+  // Codex keeps its native `$` skill mention as an alias of the slash form.
+  if (host.name() === 'codex' && invocation.startsWith('$')) {
+    invocation = `/${invocation.slice(1)}`;
   }
   return DOCUMENT_SKILLS[invocation] || null;
 }

@@ -57,7 +57,7 @@ test('Codex skill metadata keeps invocation policies and the figure-it-out entry
   const manifest = JSON.parse(fs.readFileSync(path.join(packageRoot, '.codex-plugin/plugin.json'), 'utf8'));
   assert.ok(manifest.interface.defaultPrompt.length <= 3);
   assert.ok(manifest.interface.defaultPrompt.every(prompt => prompt.length <= 128));
-  assert.ok(manifest.interface.defaultPrompt.some(prompt => prompt.startsWith('$emeth-discipline:figure-it-out')));
+  assert.ok(manifest.interface.defaultPrompt.some(prompt => prompt.startsWith('/emeth-discipline:figure-it-out')));
 });
 
 test('isolated package delivers host rules and numbering through its hook CLI', t => {
@@ -81,11 +81,11 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/ui-design.md')));
     assert.doesNotMatch(context, /skill-prompt-authoring-principles/);
     for (const [source, marker] of Object.entries(markers)) {
-      assert.equal(context.includes(marker), source === host || host === 'mixdog' && source === 'codex', `${host}: ${source}`);
+      assert.equal(context.includes(marker), source === host, `${host}: ${source}`);
     }
   }
   const number = f.run('hooks/run.js', [], JSON.stringify({
-    hook_event_name: 'UserPromptSubmit', prompt: '$emeth-discipline:development-design',
+    hook_event_name: 'UserPromptSubmit', prompt: '/emeth-discipline:development-design',
     cwd: f.project, session_id: 'number',
   }));
   assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);

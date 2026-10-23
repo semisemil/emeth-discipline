@@ -27,6 +27,8 @@ function runHook(root, prompt) {
       ...process.env,
       HOME: root,
       USERPROFILE: root,
+      // Pin Codex so the Codex log location holds wherever the suite runs.
+      PLUGIN_ROOT: pluginRoot,
     },
     input: JSON.stringify({
       hook_event_name: 'UserPromptSubmit',
@@ -48,8 +50,8 @@ test('unrelated prompts and non-invocation mentions emit zero stdout bytes', (t)
   const root = fixture(t);
   for (const prompt of [
     'Register an issue.',
-    'Please use $emeth-discipline:issue-ledger for this.',
-    'Compare $emeth-discipline:development-plan and another skill.',
+    'Please use /emeth-discipline:issue-ledger for this.',
+    'Compare /emeth-discipline:development-plan and another skill.',
   ]) {
     const result = runHook(root, prompt);
     assert.equal(result.status, 0, result.stderr);
@@ -63,13 +65,13 @@ test('issue-ledger reserves filenames and stored IDs when announcing the next nu
   touch(root, '.emeth/issues/PL-0012-old.md');
   touch(root, '.emeth/issues/not-an-issue.json');
 
-  assert.deepEqual(context(runHook(root, '$emeth-discipline:issue-ledger\nRegister this work.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0013']);
+  assert.deepEqual(context(runHook(root, '/emeth-discipline:issue-ledger\nRegister this work.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0013']);
   const template = fs.readFileSync(path.join(pluginRoot, 'skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8');
   const issue = JSON.parse(template.replace(/REPLACE: [^"]*/g, 'Fixture value'));
   issue.identity.id = 'PL-0020';
   issue.created_at = issue.updated_at = '2026-08-12T00:00:00.000Z';
   fs.writeFileSync(path.join(root, '.emeth', 'issues', 'renamed-task.json'), JSON.stringify(issue));
-  assert.deepEqual(context(runHook(root, '$emeth-discipline:issue-ledger')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0021']);
+  assert.deepEqual(context(runHook(root, '/emeth-discipline:issue-ledger')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['PL-0021']);
 });
 
 test('development-design receives the next number from Design directories', (t) => {
@@ -77,16 +79,16 @@ test('development-design receives the next number from Design directories', (t) 
   fs.mkdirSync(path.join(root, '.emeth/designs/DESIGN-0004-response-modes'), { recursive: true });
   fs.mkdirSync(path.join(root, '.emeth/designs/DESIGN-0020-another'), { recursive: true });
 
-  assert.deepEqual(context(runHook(root, '  $emeth-discipline:development-design   \nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0021']);
+  assert.deepEqual(context(runHook(root, '  /emeth-discipline:development-design   \nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0021']);
 });
 
 test('Design numbering grows beyond four digits and starts at one for a new project', (t) => {
   const populated = fixture(t);
   fs.mkdirSync(path.join(populated, '.emeth/designs/DESIGN-9999-roadmap'), { recursive: true });
-  assert.deepEqual(context(runHook(populated, '$emeth-discipline:development-design\nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-10000']);
+  assert.deepEqual(context(runHook(populated, '/emeth-discipline:development-design\nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-10000']);
 
   const empty = fixture(t);
-  assert.deepEqual(context(runHook(empty, '$emeth-discipline:development-design')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
+  assert.deepEqual(context(runHook(empty, '/emeth-discipline:development-design')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
 
 test('figure-it-out receives only a Design number independent of legacy document numbering', (t) => {
@@ -94,13 +96,13 @@ test('figure-it-out receives only a Design number independent of legacy document
   fs.mkdirSync(path.join(root, '.emeth/plan/PLAN-0003-roadmap'), { recursive: true });
   fs.mkdirSync(path.join(root, '.emeth/specs/SPEC-0011-settings'), { recursive: true });
 
-  assert.deepEqual(context(runHook(root, '$emeth-discipline:figure-it-out\nTake this change through implementation.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
+  assert.deepEqual(context(runHook(root, '/emeth-discipline:figure-it-out\nTake this change through implementation.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
 
 test('a numbering read failure is logged and leaves the skill able to fall back', (t) => {
   const root = fixture(t);
   touch(root, '.emeth/issues');
-  const result = runHook(root, '$emeth-discipline:issue-ledger');
+  const result = runHook(root, '/emeth-discipline:issue-ledger');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(Buffer.byteLength(result.stdout), 0);
 

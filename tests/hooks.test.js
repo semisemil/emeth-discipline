@@ -50,18 +50,25 @@ function output(result) {
 
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
   const f = fixture(t); f.memory();
-  const response = output(f.run({ prompt: '$emeth-discipline:development-design' }));
+  const response = output(f.run({ prompt: '/emeth-discipline:development-design' }));
   assert.match(response.hookSpecificOutput.additionalContext, /\bDESIGN-0001\b/);
   assert.ok(response.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   f.write('.emeth/issues', 'This is not a directory.');
-  const fallback = output(f.run({ session_id: 'session-b', prompt: '$emeth-discipline:issue-ledger' }));
+  const fallback = output(f.run({ session_id: 'session-b', prompt: '/emeth-discipline:issue-ledger' }));
   assert.ok(fallback.hookSpecificOutput.additionalContext.includes('.emeth/architecture.json'));
   assert.doesNotMatch(fallback.hookSpecificOutput.additionalContext, /\bPL-\d{4,}\b/);
 });
 
+test('Codex accepts its native $ skill mention as the slash invocation', (t) => {
+  const f = fixture(t);
+  for (const prompt of ['/emeth-discipline:development-design', '$emeth-discipline:development-design']) {
+    assert.equal(output(f.run({ prompt })).hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
+  }
+});
+
 test('Codex design entry preserves the exact request as a reusable source', (t) => {
   const f = fixture(t);
-  const prompt = '$emeth-discipline:figure-it-out\r\n상태는 `new`, `done`, `failed`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal을 유지하세요.\n';
+  const prompt = '/emeth-discipline:figure-it-out\r\n상태는 `new`, `done`, `failed`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal을 유지하세요.\n';
   const input = { turn_id: 'turn-a', prompt };
   const response = output(f.run(input));
   const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
@@ -78,11 +85,11 @@ test('Codex design entry preserves the exact request as a reusable source', (t) 
 
 test('request preservation cannot replace a prior source or suppress other notices', (t) => {
   const f = fixture(t);
-  const input = { turn_id: 'turn-a', prompt: '$emeth-discipline:start-implementation DESIGN-0001\nKeep all three states.' };
+  const input = { turn_id: 'turn-a', prompt: '/emeth-discipline:start-implementation DESIGN-0001\nKeep all three states.' };
   const response = output(f.run(input));
   const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
   assert.ok(source);
-  const changed = output(f.run({ ...input, prompt: '$emeth-discipline:development-design\nDifferent request.' }));
+  const changed = output(f.run({ ...input, prompt: '/emeth-discipline:development-design\nDifferent request.' }));
   assert.deepEqual(changed.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
   assert.doesNotMatch(changed.hookSpecificOutput.additionalContext, /Current request source/);
   assert.equal(fs.readFileSync(source, 'utf8'), input.prompt);
@@ -90,7 +97,7 @@ test('request preservation cannot replace a prior source or suppress other notic
 
 test('request sources are limited to named Codex design and implementation entry points', (t) => {
   const f = fixture(t);
-  for (const prompt of ['Ordinary conversation.', '$emeth-discipline:issue-ledger\nRecord this issue.']) {
+  for (const prompt of ['Ordinary conversation.', '/emeth-discipline:issue-ledger\nRecord this issue.']) {
     output(f.run({ turn_id: 'turn-a', prompt }));
   }
   output(f.run({ turn_id: 'turn-a', prompt: '/emeth-discipline:figure-it-out\nA Claude request.' }, { env: claudeEnvironment(f) }));
@@ -117,7 +124,7 @@ test('a corrupt memory binding does not suppress the fixed prompt or document nu
   const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' });
   assert.equal(output(result).hookSpecificOutput.additionalContext, codexRules);
   assert.notEqual(result.stderr.trim(), '');
-  const number = output(f.run({ prompt: '$emeth-discipline:development-design' }));
+  const number = output(f.run({ prompt: '/emeth-discipline:development-design' }));
   assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
 

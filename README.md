@@ -20,7 +20,7 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 - **None**: 플러그인 미사용
 - **Core**: 플러그인 활성화
-- **Workflow**: [`$emeth-discipline:figure-it-out`](plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
+- **Workflow**: [`/emeth-discipline:figure-it-out`](plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -98,7 +98,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 기존 프로젝트의 배경을 정리하고 싶을 때 호출하세요.
 
 ```text
-$emeth-discipline:architecture-memory-init
+/emeth-discipline:architecture-memory-init
 ```
 
 생성한 문서는 이후 설계와 구현에서 참고합니다.
@@ -111,13 +111,13 @@ $emeth-discipline:architecture-memory-init
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:rules` | 대화와 결과물 전반 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
-| `$emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
-| `$emeth-discipline:slop-check` | 기존 코드에 맞춰 작성하거나 불필요한 코드를 찾을 때 | 불필요한 처리, 중복 구현과 관례 이탈을 근거로 판정하고 정리 방향 제시 |
-| `$emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
-| `$emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
-| `$emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
-| `$emeth-discipline:dashboard-server` | 통합 대시보드를 이용할 때 | 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
+| `/emeth-discipline:rules` | 대화와 결과물 전반 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
+| `/emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
+| `/emeth-discipline:slop-check` | 기존 코드에 맞춰 작성하거나 불필요한 코드를 찾을 때 | 불필요한 처리, 중복 구현과 관례 이탈을 근거로 판정하고 정리 방향 제시 |
+| `/emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
+| `/emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
+| `/emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
+| `/emeth-discipline:dashboard-server` | 통합 대시보드를 이용할 때 | 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
 
 ### Architecture
 
@@ -125,10 +125,10 @@ $emeth-discipline:architecture-memory-init
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
-| `$emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
-| `$emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
-| `$emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
+| `/emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
+| `/emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
+| `/emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
+| `/emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
 
 ### Workflow
 
@@ -136,17 +136,17 @@ $emeth-discipline:architecture-memory-init
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:development-design` | 개발설계문서를 작성하거나 수정할 때 | 작업에 맞는 문서 형식으로 개요와 상세 설계를 여러 파일에 연결해 작성 |
-| `$emeth-discipline:tenet-me` | 설계나 구현이 요구 결과를 보장하는지 검토할 때 | 결과에서 필요한 조건과 근거를 역추적하고, 발견한 빈틈을 정방향 사례로 확인 |
-| `$emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현과 검증까지 진행 |
-| `$emeth-discipline:start-implementation` | 준비된 설계를 구현할 때 | 기능 개발, 버그 수정, 리팩터링에 맞는 절차로 구현 조율과 검증 |
+| `/emeth-discipline:development-design` | 개발설계문서를 작성하거나 수정할 때 | 작업에 맞는 문서 형식으로 개요와 상세 설계를 여러 파일에 연결해 작성 |
+| `/emeth-discipline:tenet-me` | 설계나 구현이 요구 결과를 보장하는지 검토할 때 | 결과에서 필요한 조건과 근거를 역추적하고, 발견한 빈틈을 정방향 사례로 확인 |
+| `/emeth-discipline:figure-it-out` | 필요한 설계부터 구현까지 맡길 때 | Design 준비와 검토 후 구현과 검증까지 진행 |
+| `/emeth-discipline:start-implementation` | 준비된 설계를 구현할 때 | 기능 개발, 버그 수정, 리팩터링에 맞는 절차로 구현 조율과 검증 |
 
 ### 코드 이해와 후보 비교
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `$emeth-discipline:code-exploration` | 코드의 동작과 설계 이유를 이해하거나 배우고 싶을 때 | 질문에 맞춰 how, why, teach 모드로 코드와 변경 이력을 조사하고 설명 |
-| `$emeth-discipline:ensemble` | 설계나 구현에 여러 후보를 비교하고 싶을 때 | 독립 후보 생성, 교차 평가, 좋은 부분의 합성, 결과 검증 |
+| `/emeth-discipline:code-exploration` | 코드의 동작과 설계 이유를 이해하거나 배우고 싶을 때 | 질문에 맞춰 how, why, teach 모드로 코드와 변경 이력을 조사하고 설명 |
+| `/emeth-discipline:ensemble` | 설계나 구현에 여러 후보를 비교하고 싶을 때 | 독립 후보 생성, 교차 평가, 좋은 부분의 합성, 결과 검증 |
 
 ## 🔁 기획부터 구현까지
 
@@ -168,12 +168,12 @@ flowchart LR
 `issue-ledger`는 버그, 일반 작업, 기능, 조사, 문서화, 유지보수 항목을 프로젝트에 저장합니다.
 
 ```text
-$emeth-discipline:issue-ledger
+/emeth-discipline:issue-ledger
 설정 파일 호환성 문제를 이슈로 등록해줘.
 ```
 
 ```text
-$emeth-discipline:issue-ledger
+/emeth-discipline:issue-ledger
 PL-0012의 진행 상황과 확인 근거를 갱신해줘.
 ```
 
@@ -243,10 +243,10 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 
 | 명령 | 동작 |
 | --- | --- |
-| `$emeth-discipline:dashboard-server add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
-| `$emeth-discipline:dashboard-server open` | 필요하면 서버를 시작하고 대시보드 열기 |
-| `$emeth-discipline:dashboard-server status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
-| `$emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
+| `/emeth-discipline:dashboard-server add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
+| `/emeth-discipline:dashboard-server open` | 필요하면 서버를 시작하고 대시보드 열기 |
+| `/emeth-discipline:dashboard-server status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
+| `/emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
 
 프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `add`를 호출하세요.
 이 명령은 프로젝트 파일을 새로 만들거나 다른 폴더를 검색하지 않습니다.

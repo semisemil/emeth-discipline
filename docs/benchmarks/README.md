@@ -4,7 +4,7 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 - **None**: 플러그인 미사용
 - **Core**: 플러그인 활성화
-- **Workflow**: [`$emeth-discipline:figure-it-out`](../../plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
+- **Workflow**: [`/emeth-discipline:figure-it-out`](../../plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |

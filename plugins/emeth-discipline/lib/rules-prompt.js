@@ -40,7 +40,7 @@ function invalidPrompt(message, code, filePath) {
 
 // Direct readers follow this line's links; the hook inlines the running host's rules in its place.
 const HOST_RULES = /^Apply the rules for the host running this conversation: [^\r\n]*/m;
-const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md' });
+const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', mixdog: 'mixdog.md' });
 
 function composeBaseline(pluginRoot, host) {
   const skillPath = path.join(pluginRoot, 'skills', 'rules', 'SKILL.md');
@@ -67,10 +67,7 @@ function composeClaudePrompt(options = {}) {
 
 function composeMixdogPrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  // The language, authority, and evidence rules are shared with Codex.
-  const baseline = composeBaseline(pluginRoot, 'codex');
-  const mixdog = readFileWithRetry(path.join(pluginRoot, 'skills', 'rules', 'mixdog.md'));
-  return `${baseline.trimEnd()}\n\n${mixdog.trim()}`.replaceAll('{{plugin-root}}', pluginRoot);
+  return composeBaseline(pluginRoot, 'mixdog').trimEnd();
 }
 
 module.exports = {
