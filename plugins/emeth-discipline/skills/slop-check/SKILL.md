@@ -44,7 +44,8 @@ Before you add a guard, field, conversion, wrapper, or branch, name its producer
 | Not a finding | A role or a counterexample is established. | Omit, unless the user named it or a likely misreading needs correction. |
 
 State each claim at the strength of its evidence: a static structural finding is not a runtime failure, and a count of operations is not a measured gain. Drop a hypothesis that observation refutes.
-A recorded decision can satisfy a keep condition. Judge its reason and the current implementation together.
+Judge existing code and prior additions by their current contracts and roles, including code labeled as needed for safety.
+A recorded decision can satisfy a keep condition when its reason applies to the current implementation; presence or a prior label alone cannot.
 An answer that chooses a new policy is a new requirement, not evidence that existing code was wrong.
 
 ## Re-check
@@ -55,6 +56,7 @@ Apply the same criteria as the first pass, and change a result only for new evid
 
 Reuse the existing path and remove steps without a role. Add an abstraction only when no existing one fits.
 Include every path that shares the fixed contract in the change and its verification.
+When replacing a path, verify that affected callers use the intended path and remove the replaced path unless a keep condition applies.
 Align convention drift only on reported or touched lines.
 
 ## Reporting
