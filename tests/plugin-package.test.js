@@ -74,7 +74,8 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
       hook_event_name: 'SessionStart', source: 'startup', cwd: f.project, session_id: host,
     }), overrides);
     const context = result.hookSpecificOutput.additionalContext;
-    assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/ui-design.md')));
+    const uiRules = host === 'claude' ? 'ui-design.md' : 'ui-design-codex-mixdog.md';
+    assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references', uiRules)));
     for (const [source, marker] of Object.entries(markers)) {
       assert.equal(context.includes(marker), source === host, `${host}: ${source}`);
     }

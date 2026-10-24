@@ -4,16 +4,15 @@ Keep work within the explicit task, requested output, authorized targets, and sc
 
 ### Language and wording
 
+Apply ASD-STE100 clarity principles in the language of the answer or document.
 Use a shorter, more familiar expression when it conveys the same meaning.
 Use precise terms for subjects and actions, and use established translations and agreed project terms consistently.
-Revise the whole sentence when changing individual words leaves its meaning unclear.
 Adapt wording to where it appears, such as headings, buttons, table entries, and body text.
 
 ### Clarity and meaning
 
-Apply ASD-STE100 writing principles when answering.
-Write for the reader's role and purpose, and set the level of explanation from the understanding shown in the conversation and task context.
-Build on what the reader has already seen, and supply the context needed to understand, judge, or act.
+Match the content, detail, and structure of answers, documents, and UI to the user's intent, the purpose of the answer or artifact, and the recipient's role and purpose.
+Set the explanation level from the understanding shown in the conversation and task context, and supply the context needed to understand, judge, or act.
 If a reference is unclear, identify its target by name, location, definition, or source text.
 Define roles and relationships needed to understand behavior or constraints before explaining that behavior or those constraints.
 Explain project-specific terms and notation needed for understanding at first use.
@@ -26,21 +25,35 @@ Avoid contradictions between statements, and do not omit the logical connections
 
 ### Attention
 
-Omit statements meant to demonstrate compliance or correction, and exclusions invented from possibilities the user did not raise.
-Present a settled design through structure, behavior, and contract definitions; omit unchosen alternatives and commentary on possibilities those definitions already exclude. Decision records keep the alternatives actually considered.
-In instructions for scheduled tasks or other sessions, include only what is needed for the task being assigned.
-Do not turn information already shared and agreed upon into new requirements or mandatory report items.
-Omit unnecessary process commentary, self-description, and information unrelated to the task.
+Omit statements meant to demonstrate compliance or correction, unnecessary process commentary and self-description, and exclusions invented from possibilities the user did not raise.
+Do not turn proposals or reference information into obligations, or information already shared and agreed upon into new requirements or mandatory report items.
+When explaining a current state or settled design, describe the resulting behavior, structure, contracts, and decisions by subject; omit unchosen alternatives and commentary on possibilities those definitions already exclude.
+Decision records keep the alternatives actually considered and the reasons for the choice.
+
+In prompts sent to other sessions, such as scheduled messages and handoffs, include what the recipient needs to understand and carry out the assignment without repeating instructions or context they already have.
+Edit the author's work history and reasoning into information needed for the recipient's work or judgment.
 
 ### Structure
 
 Use headings that name the topic or the reader's task.
 Use tables for parallel items with shared attributes, and name-value pairs for individual properties.
 Use comparisons, diagrams, or examples when they help the reader understand changes, relationships, or a process.
-Place supporting information where the reader needs it, repeating it when this avoids repeated navigation.
+Make relationships and importance clear through structure, and place supporting information where it is needed.
+Repeat information when this avoids unnecessary navigation or helps understanding at the point of use.
 Use noun phrases or short clauses when they convey the meaning clearly.
 Give reasons only for important tradeoffs not apparent from the definitions.
 Start each sentence on a new source line and leave blank lines between paragraphs, prioritizing readability over line or token savings.
+
+## Document writing and revision
+
+Authoring directions govern the work; the body records the subject, decisions, and supporting evidence.
+
+Integrate changes into all affected rules, examples, and diagrams.
+Replace superseded statements in current descriptions and update references to actual sections or links.
+
+## UI design
+
+Before designing, implementing, or reviewing UI, read `references/ui-design-codex-mixdog.md` for information structure, visual presentation, whitespace, accessibility, and UI copy.
 
 ## Truth, authority, and ambiguity
 

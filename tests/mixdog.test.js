@@ -11,7 +11,8 @@ const host = require('../plugins/emeth-discipline/lib/host');
 const repoRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const hostRules = ['mixdog.md'].map(file => fs.readFileSync(
   path.join(repoRoot, 'skills/rules', file), 'utf8',
-).trim().replaceAll('{{plugin-root}}', repoRoot));
+).trim().replaceAll('{{plugin-root}}', repoRoot)
+  .replace('references/ui-design-codex-mixdog.md', path.join(repoRoot, 'skills/rules/references/ui-design-codex-mixdog.md')));
 
 function hook(t, event) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-mixdog-hook-'));

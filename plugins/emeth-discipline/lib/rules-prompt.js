@@ -45,7 +45,10 @@ const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', 
 function composeBaseline(pluginRoot, host) {
   const skillPath = path.join(pluginRoot, 'skills', 'rules', 'SKILL.md');
   const hostPath = path.join(pluginRoot, 'skills', 'rules', HOST_FILES[host]);
-  const shared = removeFrontmatter(readFileWithRetry(skillPath));
+  const shared = removeFrontmatter(readFileWithRetry(skillPath)).replace(
+    /<!-- claude-only -->\r?\n([\s\S]*?)<!-- \/claude-only -->\r?\n?/g,
+    (_match, content) => host === 'claude' ? content : '',
+  ).replace(/<!-- direct-readers -->\r?\n[\s\S]*?<!-- \/direct-readers -->\r?\n?/g, '');
   if (shared.split(new RegExp(HOST_RULES.source, 'gm')).length !== 2) {
     throw invalidPrompt('Emeth Discipline host-rules line must appear exactly once.', 'INVALID_HOST_SLOT', skillPath);
   }
