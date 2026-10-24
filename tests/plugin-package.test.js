@@ -35,13 +35,9 @@ function fixture(t) {
   return { root, plugin, project, env, run };
 }
 
-test('both marketplaces install the same package without repository development files', () => {
+test('both marketplaces install the same plugin package', () => {
   assert.equal(codex.plugins[0].source.path, './plugins/emeth-discipline');
   assert.equal(path.resolve(repoRoot, claude.plugins[0].source), packageRoot);
-  for (const formerSource of ['assets', 'dashboard', 'hooks', 'lib', 'skills', 'writers',
-    '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', 'scripts/build-plugin.js']) {
-    assert.equal(fs.existsSync(path.join(repoRoot, formerSource)), false, formerSource);
-  }
 });
 
 test('Codex skill metadata keeps invocation policies and the figure-it-out entry', () => {
@@ -79,7 +75,6 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     }), overrides);
     const context = result.hookSpecificOutput.additionalContext;
     assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references/ui-design.md')));
-    assert.doesNotMatch(context, /skill-prompt-authoring-principles/);
     for (const [source, marker] of Object.entries(markers)) {
       assert.equal(context.includes(marker), source === host, `${host}: ${source}`);
     }

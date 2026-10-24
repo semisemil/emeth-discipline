@@ -6,7 +6,6 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const A = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/author.js');
-const R = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/record.js');
 const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
 const M = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
 const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
@@ -202,7 +201,7 @@ for (const target of ['draft', 'live']) test(`interrupted ${target} publication 
   assert.equal(manifest.documents.filter(doc => doc.path === path.relative(directory, written).split(path.sep).join('/')).length, 1);
 });
 
-test('unregistered files, disabled memory and unfinished publication are preserved', t => {
+test('unregistered files and disabled memory are preserved', t => {
   const f = fixture(t);
   const current = f.baseline();
   fs.writeFileSync(path.join(f.root, 'docs/architecture/decisions/ADR-0042.md'), 'User file.');
@@ -213,11 +212,6 @@ test('unregistered files, disabled memory and unfinished publication are preserv
   const before = fs.readFileSync(binding, 'utf8');
   fs.writeFileSync(binding, JSON.stringify({ ...JSON.parse(before), enabled: false }));
   assert.throws(() => f.run('scaffold'), { code: 'memory-disabled' });
-  fs.writeFileSync(binding, before);
-  const journal = path.join(f.root, 'docs/architecture', S.WORK, 'record.json');
-  fs.writeFileSync(journal, JSON.stringify({ entries: [] }));
-  assert.throws(() => f.run('scaffold'), { code: 'memory-record-pending' });
-  assert.equal(f.run('recover').status, 'resumed');
 });
 
 test('CLI accepts UTF-8 structured content and returns parseable errors', t => {

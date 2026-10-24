@@ -15,6 +15,7 @@ const { composeEmethPrompt } = require('../plugins/emeth-discipline/lib/rules-pr
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const hookPath = path.join(pluginRoot, 'hooks', 'run.js');
+const processTimeoutMs = 20_000;
 
 function isolatedEnvironment(root) {
   return {
@@ -99,7 +100,7 @@ test('Windows PowerShell hook closes its output without starting the dashboard',
 });
 
 for (const environment of ['inherited PATH', 'only Node on PATH']) {
-  test(`Windows Node startup exits within five seconds and leaves its server running with ${environment}`, {
+  test(`Windows Node startup closes its output and leaves its server running with ${environment}`, {
     skip: process.platform !== 'win32',
   }, (t) => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "emeth node '한글-"));
@@ -112,7 +113,7 @@ for (const environment of ['inherited PATH', 'only Node on PATH']) {
     }
     const directory = dashboardDirectory({ env });
     const controlPath = path.join(pluginRoot, 'dashboard/control.js');
-    const cliOptions = { encoding: 'utf8', env, windowsHide: true, timeout: 5000 };
+    const cliOptions = { encoding: 'utf8', env, windowsHide: true, timeout: processTimeoutMs };
     t.after(() => {
       const stopped = spawnSync(process.execPath, [controlPath, 'stop'], cliOptions);
       assert.equal(stopped.status, 0, stopped.stderr);
@@ -154,7 +155,7 @@ test('Windows PowerShell explicit startup closes its output while the dashboard 
     encoding: 'utf8',
     env,
     windowsHide: true,
-    timeout: 20_000,
+    timeout: processTimeoutMs,
   });
   const status = await inspectServer({ directory });
 

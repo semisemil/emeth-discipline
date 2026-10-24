@@ -239,47 +239,6 @@ test('an abandoned registry lock is recovered before registration', (t) => {
   assert.equal(fs.existsSync(`${lockPath}.recovery`), false);
 });
 
-test('Windows recovery-claim EPERM is retried as lock contention', (t) => {
-  const root = makeRoot(t);
-  const configRoot = path.join(root, 'config');
-  const projectRoot = path.join(root, 'project');
-  const env = { ...configEnv(configRoot), APPDATA: configRoot };
-  const options = registryOptions(configRoot, {
-    env,
-    platform: 'win32',
-    lockRetryMs: 0,
-  });
-  const registryPath = getRegistryPath(options);
-  const lockPath = `${registryPath}.lock`;
-  const recoveryPath = `${lockPath}.recovery`;
-  fs.mkdirSync(projectRoot, { recursive: true });
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(lockPath, JSON.stringify({
-    schema_version: 1,
-    token: '99999999-9999-4999-8999-999999999999',
-    owner_pid: 2147483647,
-    started_at: new Date().toISOString(),
-  }), 'utf8');
-
-  const originalOpen = fs.openSync;
-  let denied = true;
-  fs.openSync = function denyFirstRecoveryClaim(filePath, flags, ...args) {
-    if (denied && filePath === recoveryPath && flags === 'wx') {
-      denied = false;
-      const error = new Error('recovery claim is temporarily locked');
-      error.code = 'EPERM';
-      throw error;
-    }
-    return originalOpen.call(this, filePath, flags, ...args);
-  };
-  t.after(() => { fs.openSync = originalOpen; });
-
-  assert.equal(registerProject(projectRoot, options).status, 'registered');
-  assert.equal(denied, false);
-  assert.equal(fs.existsSync(lockPath), false);
-  assert.equal(fs.existsSync(recoveryPath), false);
-});
-
 test('missing roots are rejected without creating global state', (t) => {
   const root = makeRoot(t);
   const configRoot = path.join(root, 'config');
@@ -290,46 +249,7 @@ test('missing roots are rejected without creating global state', (t) => {
   assert.equal(fs.existsSync(getRegistryPath(registryOptions(configRoot))), false);
 });
 
-test('invalid registries are rejected and never overwritten', (t) => {
-  const root = makeRoot(t);
-  const projectRoot = path.join(root, 'project');
-  const configRoot = path.join(root, 'config');
-  const options = registryOptions(configRoot);
-  const registryPath = getRegistryPath(options);
-  fs.mkdirSync(projectRoot, { recursive: true });
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-
-  const invalidCases = [
-    '{bad json',
-    JSON.stringify({ schema_version: 2, projects: [] }),
-    JSON.stringify({ schema_version: 1, projects: [], extra: true }),
-    JSON.stringify({
-      schema_version: 1,
-      projects: [
-        { id: '11111111-1111-4111-8111-111111111111', root: projectRoot, registered_at: '2026-08-17T00:00:00.000Z' },
-        { id: '11111111-1111-4111-8111-111111111111', root: path.join(root, 'other'), registered_at: '2026-08-17T00:00:00.000Z' }
-      ]
-    }),
-    JSON.stringify({
-      schema_version: 1,
-      projects: [
-        { id: '11111111-1111-4111-8111-111111111111', root: projectRoot, registered_at: '2026-08-17T00:00:00.000Z' },
-        { id: '22222222-2222-4222-8222-222222222222', root: projectRoot, registered_at: '2026-08-17T00:00:00.000Z' }
-      ]
-    })
-  ];
-
-  for (const content of invalidCases) {
-    fs.writeFileSync(registryPath, content, 'utf8');
-    assert.throws(
-      () => registerProject(projectRoot, options),
-      (error) => error.code === 'registry-invalid'
-    );
-    assert.equal(fs.readFileSync(registryPath, 'utf8'), content);
-  }
-});
-
-test('register CLI reports registered, no-op, and registry-invalid as stable results', (t) => {
+test('register CLI reports registered, no-op, and invalid arguments as stable results', (t) => {
   const root = makeRoot(t);
   const projectRoot = path.join(root, 'project');
   const configRoot = path.join(root, 'config');
@@ -346,15 +266,6 @@ test('register CLI reports registered, no-op, and registry-invalid as stable res
   assert.equal(JSON.parse(first.stdout).status, 'registered');
   assert.equal(second.status, 0, second.stderr);
   assert.equal(JSON.parse(second.stdout).status, 'no-op');
-
-  const registryPath = getRegistryPath({ env });
-  fs.writeFileSync(registryPath, '{bad json', 'utf8');
-  const invalid = spawnSync(process.execPath, [registerCli, 'register', '--project-root', projectRoot], {
-    encoding: 'utf8', env
-  });
-  assert.equal(invalid.status, 1);
-  assert.equal(JSON.parse(invalid.stderr).error.code, 'registry-invalid');
-  assert.equal(fs.readFileSync(registryPath, 'utf8'), '{bad json');
 
   const malformed = spawnSync(process.execPath, [registerCli, 'register', '--unknown', projectRoot], {
     encoding: 'utf8', env

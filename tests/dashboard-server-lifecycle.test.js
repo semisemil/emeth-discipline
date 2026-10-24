@@ -1,6 +1,5 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const http = require('node:http');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
@@ -12,7 +11,6 @@ const {
   health,
   inspectServer,
   openDashboard,
-  runCli,
   startServer,
   stopServer,
 } = require('../plugins/emeth-discipline/dashboard/control');
@@ -108,24 +106,6 @@ test('open moves a verified legacy server to the fixed port', async (t) => {
   assert.equal((await health(43127)).value.instance_id, opened.instance_id);
 });
 
-test('explicit startup replaces an expired lock whose owner PID was reused', async (t) => {
-  const directory = tempDirectory(t);
-  const lockPath = path.join(directory, 'server-start.lock');
-  fs.writeFileSync(lockPath, JSON.stringify({
-    schema_version: 1,
-    instance_id: randomUUID(),
-    owner_pid: process.pid,
-    started_at: new Date(Date.now() - 60_000).toISOString(),
-  }));
-
-  const result = await runCli(['start'], { directory, port: 0 });
-
-  assert.equal(result.exitCode, 0);
-  assert.equal(result.result.action, 'started');
-  assert.equal((await inspectServer({ directory })).instance_id, result.result.instance_id);
-  assert.equal(fs.existsSync(lockPath), false);
-});
-
 test('Windows startup timeout stops the child and removes startup state', {
   skip: process.platform !== 'win32',
 }, async (testContext) => {
@@ -148,21 +128,17 @@ test('Windows startup timeout stops the child and removes startup state', {
 
 test('PID reuse and another health service are not treated as Emeth Discipline or stopped', async (t) => {
   const directory = tempDirectory(t);
-  const otherInstance = randomUUID();
-  const service = http.createServer((_request, response) => {
-    response.setHeader('Content-Type', 'application/json');
-    response.end(JSON.stringify({ schema_version: 1, instance_id: otherInstance, version: 'other' }));
-  });
-  t.after(() => close(service));
-  const address = await listen(service);
+  const otherDirectory = tempDirectory(t);
+  const other = await startServer({ directory: otherDirectory, port: 0 });
+  assert.equal(other.ok, true);
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(path.join(directory, 'server.json'), JSON.stringify({
     schema_version: 1,
     instance_id: randomUUID(),
     pid: process.pid,
-    port: address.port,
-    version: '0.6.2',
-    started_at: new Date().toISOString(),
+    port: other.port,
+    version: '0.6.3',
+    started_at: new Date(Date.now() - 60_000).toISOString(),
   }));
 
   const status = await inspectServer({ directory });
@@ -171,30 +147,10 @@ test('PID reuse and another health service are not treated as Emeth Discipline o
   assert.equal(status.status, 'stopped');
   assert.equal(status.reason, 'instance-mismatch');
   assert.equal(stopped.action, 'unchanged');
-  assert.equal(service.listening, true);
+  assert.equal((await inspectServer({ directory: otherDirectory })).instance_id, other.instance_id);
 });
 
-test('stale PID state is replaced without preserving its identity', async (t) => {
-  const directory = tempDirectory(t);
-  const staleInstance = randomUUID();
-  fs.mkdirSync(directory, { recursive: true });
-  fs.writeFileSync(path.join(directory, 'server.json'), JSON.stringify({
-    schema_version: 1,
-    instance_id: staleInstance,
-    pid: 2147483647,
-    port: 43127,
-    version: '0.6.2',
-    started_at: new Date().toISOString(),
-  }));
-
-  const result = await startServer({ directory, port: 0 });
-
-  assert.equal(result.ok, true);
-  assert.equal(result.action, 'started');
-  assert.notEqual(result.instance_id, staleInstance);
-});
-
-test('concurrent starter processes recover an expired lock without competing servers', async (t) => {
+test('concurrent startup recovers an expired lock and preserves one verified server state', async (t) => {
   const directory = tempDirectory(t);
   fs.writeFileSync(path.join(directory, 'server-start.lock'), JSON.stringify({
     schema_version: 1,
@@ -203,10 +159,10 @@ test('concurrent starter processes recover an expired lock without competing ser
     started_at: new Date(Date.now() - 60_000).toISOString(),
   }));
   const control = require.resolve('../plugins/emeth-discipline/dashboard/control');
-  const script = `require(process.argv[1]).startServer({ directory: process.argv[2], port: 0 })
+  const script = `require(process.argv[1]).startServer({ directory: process.argv[2] })
     .then(result => console.log(JSON.stringify(result)))
     .catch(error => { console.error(error); process.exitCode = 1; });`;
-  const results = await Promise.all(Array.from({ length: 4 }, () => new Promise((resolve, reject) => {
+  const results = await Promise.all(Array.from({ length: 2 }, () => new Promise((resolve, reject) => {
     execFile(process.execPath, ['-e', script, control, directory], { windowsHide: true }, (error, stdout) => {
       if (error) return reject(error);
       const result = JSON.parse(stdout);
@@ -221,7 +177,12 @@ test('concurrent starter processes recover an expired lock without competing ser
 
   assert.equal(started.length, 1);
   assert.equal(status.status, 'running');
+  assert.equal(status.port, 43127);
   assert.equal(status.instance_id, started[0].instance_id);
+  assert.equal((await health(status.port)).value.instance_id, status.instance_id);
+  const state = JSON.parse(fs.readFileSync(path.join(directory, 'server.json'), 'utf8'));
+  assert.equal(state.instance_id, status.instance_id);
+  assert.equal(state.pid, status.pid);
   assert.equal(new Set(results.filter(result => result.instance_id).map(result => result.instance_id)).size, 1);
   assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
 });

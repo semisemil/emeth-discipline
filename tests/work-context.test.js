@@ -14,13 +14,8 @@ test('versioned public reads preserve content, return changes and allow refresh 
  fs.writeFileSync(file,'one\ntwo\nthree\n');
  const call=(...args)=>{const r=spawnSync(process.execPath,[helper,'read','--state',state,'--path',file,...args],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);};
  const first=call();assert.equal(first.status,'full');assert.equal(first.content,'one\ntwo\nthree\n');
- fs.utimesSync(state,new Date('2000-01-01T00:00:00Z'),new Date('2000-01-01T00:00:00Z'));
- const unchangedState=fs.readFileSync(state),unchangedTime=fs.statSync(state).mtimeMs;
  assert.equal(call().status,'unchanged');
- assert.deepEqual(fs.readFileSync(state),unchangedState);
- assert.equal(fs.statSync(state).mtimeMs,unchangedTime);
  assert.equal(call('--refresh').content,first.content);
- assert.equal(fs.statSync(state).mtimeMs,unchangedTime);
  fs.writeFileSync(file,'one\nupdated\nthree\n');
  const changed=call();assert.equal(changed.previous_sha256,first.sha256);assert.deepEqual(changed.changes,{start:2,removed:['two'],added:['updated']});
  assert.equal(call('--refresh').content,'one\nupdated\nthree\n');

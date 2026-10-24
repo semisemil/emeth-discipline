@@ -7,7 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { JSDOM } = require('jsdom');
 
-const { dashboard, project, index } = require('./helpers/dashboard-page');
+const { dashboard, project, index, deferred } = require('./helpers/dashboard-page');
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
 const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 
@@ -83,16 +83,6 @@ const indexFixture = {
   diagnostics: [{ code: 'record-invalid', message: '기록을 읽지 못했습니다.', relative_path: '.emeth/issues/bad.json' }],
   read_at: '2026-08-19T06:00:00.000Z',
 };
-
-function deferred() {
-  let resolve;
-  let reject;
-  const promise = new Promise((resolveValue, rejectValue) => {
-    resolve = resolveValue;
-    reject = rejectValue;
-  });
-  return { promise, reject, resolve };
-}
 
 const planKey = '[data-focus-key="documents:item:plan:PLAN-0002"]';
 const specKey = '[data-focus-key="documents:item:spec:SPEC-0005"]';
@@ -202,27 +192,20 @@ test('late document response is cached for its own key without replacing selecte
   assert.equal(page.calls.filter(call => call.url === documentRoute('plan', 'PLAN-0002')).length, 1);
 });
 
-test('newest same-document success wins over an older late success', async t => {
-  const older = deferred(), newest = deferred(); let attempts = 0;
-  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
-  page.click(planKey); page.click(planKey);
-  newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
-  older.resolve(detail('plan', 'PLAN-0002', 'STALE')); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /NEWEST/);
-  assert.doesNotMatch(page.get('.document-detail').textContent, /STALE/);
-  page.click(planKey); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /NEWEST/);
-  assert.equal(attempts, 2);
-});
-
-test('newest same-document success is not replaced by an older late error', async t => {
-  const older = deferred(), newest = deferred(); let attempts = 0;
-  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
-  page.click(planKey); page.click(planKey);
-  newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
-  older.resolve({ error: { message: 'STALE-ERROR' } }); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /NEWEST/);
-  assert.doesNotMatch(page.get('.document-detail').textContent + page.get('#status-stack').textContent, /STALE-ERROR/);
+test('newest same-document success survives older successes and errors', async t => {
+  for (const outcome of ['success', 'error']) {
+    const older = deferred(), newest = deferred(); let attempts = 0;
+    const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
+    page.click(planKey); page.click(planKey);
+    newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
+    older.resolve(outcome === 'success' ? detail('plan', 'PLAN-0002', 'STALE') : { error: { message: 'STALE-ERROR' } });
+    await page.settle();
+    assert.match(page.get('.document-detail').textContent, /NEWEST/);
+    assert.doesNotMatch(page.get('.document-detail').textContent + page.get('#status-stack').textContent, /STALE/);
+    page.click(planKey); await page.settle();
+    assert.match(page.get('.document-detail').textContent, /NEWEST/);
+    assert.equal(attempts, 2);
+  }
 });
 
 test('index completion reloads the document selected during refresh after clearing its early detail', async t => {
@@ -271,7 +254,10 @@ test('project selection restores desktop focus and returns mobile focus to the d
   assert.equal(page.document.activeElement, menu);
   assert.equal(page.get('.workspace').inert, false);
   assert.equal(page.get('#project-panel').inert, true);
-  const requested = await dashboard(t, { query: '?project=beta&expected_version=older' });
+  const requested = await dashboard(t, {
+    projects: [project(AVAILABLE_ID, 'alpha'), project(UNAVAILABLE_ID, 'beta')],
+    query: `?project=${UNAVAILABLE_ID}&expected_version=older`,
+  });
   assert.equal(requested.get('#current-project').textContent, 'beta');
   assert.ok(requested.get('#status-stack [role="alert"]').textContent.includes('older'));
 });

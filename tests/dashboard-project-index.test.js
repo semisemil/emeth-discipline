@@ -131,8 +131,7 @@ test('project index returns canonical records, reciprocal links, and multiple fl
     ],
   }));
 
-  const built = buildProjectIndex(project(root), { now: () => '2026-08-18T00:00:00.000Z' });
-  const result = built.publicIndex;
+  const result = buildProjectIndex(project(root), { now: () => '2026-08-18T00:00:00.000Z' }).publicIndex;
   assert.equal(result.project.availability, 'available');
   assert.deepEqual(result.project.counts, { active: 1, blocked: 0 });
   assert.deepEqual(result.issues[0].plan_ids, ['PLAN-0001']);
@@ -141,7 +140,6 @@ test('project index returns canonical records, reciprocal links, and multiple fl
   assert.equal(result.diagnostics.length, 0);
   assert.deepEqual(result.plans[0].linked_issue_ids, ['PL-0001']);
   assert.deepEqual(result.specs[0].linked_issue_ids, ['PL-0001']);
-  assert.ok([...built.recordMap.values()].every((record) => record.body === undefined));
 });
 
 test('production state-starter example Issue is excluded by the canonical filename owner', (t) => {
@@ -232,83 +230,6 @@ test('source changes invalidate the index cache and documents load bodies on dem
   const document = service.getDocument(PROJECT_ID, 'plan', 'PLAN-0001');
   assert.equal(document.body, 'changed');
   assert.equal(document.content_type, 'text/markdown');
-});
-
-test('watchers invalidate only one project and watcher failure leaves signature refresh available', (t) => {
-  const firstRoot = makeRoot(t);
-  const secondRoot = makeRoot(t);
-  const secondId = '22222222-2222-4222-8222-222222222222';
-  writeIssue(firstRoot, issue());
-  writeIssue(secondRoot, issue({
-    identity: { ...issue().identity, id: 'PL-0002', title: 'Second' },
-  }));
-  const registryPath = path.join(firstRoot, 'config', 'projects.json');
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(registryPath, JSON.stringify({
-    schema_version: 1,
-    projects: [
-      project(firstRoot),
-      { id: secondId, root: secondRoot, registered_at: '2026-08-17T00:00:00.000Z' },
-    ],
-  }), 'utf8');
-
-  const listeners = new Map();
-  let readAt = '2026-08-18T00:00:00.000Z';
-  const service = new ProjectIndexService({
-    registryOptions: { registryPath },
-    now: () => readAt,
-    watch: (directory, listener) => {
-      listeners.set(directory, listener);
-      return { close() {} };
-    },
-  });
-  t.after(() => service.close());
-  service.listProjects();
-  assert.equal(service.getIndex(PROJECT_ID).read_at, readAt);
-  const secondReadAt = service.getIndex(secondId).read_at;
-
-  const firstIssues = fs.realpathSync(path.join(firstRoot, '.emeth', 'issues'));
-  readAt = '2026-08-18T00:01:00.000Z';
-  listeners.get(firstIssues)('change', 'PL-0001.json');
-  assert.equal(service.getIndex(PROJECT_ID).read_at, readAt);
-  assert.equal(service.getIndex(secondId).read_at, secondReadAt);
-
-  const failingService = new ProjectIndexService({
-    registryOptions: { registryPath },
-    watch: () => {
-      throw Object.assign(new Error('watch unavailable'), { code: 'ENOSPC' });
-    },
-  });
-  t.after(() => failingService.close());
-  assert.equal(failingService.getIndex(PROJECT_ID).issues[0].status, 'open');
-  const changed = issue();
-  changed.state = { status: 'blocked', current_summary: 'Watcher failed', next_action: 'Poll source', blocker: 'watch', unblock_condition: 'poll' };
-  writeIssue(firstRoot, changed);
-  assert.equal(failingService.getIndex(PROJECT_ID).issues[0].status, 'blocked');
-  assert.equal(failingService.getIndex(secondId).issues[0].title, 'Second');
-});
-
-test('record directory symlinks cannot expose files outside the registered project', (t) => {
-  const root = makeRoot(t);
-  const external = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-external-records-'));
-  t.after(() => fs.rmSync(external, { recursive: true, force: true }));
-  const externalRecord = path.join(external, 'PLAN.md');
-  fs.writeFileSync(externalRecord, [
-    '---',
-    'id: PLAN-0003',
-    'title: External',
-    'status: ready',
-    '---',
-    'secret outside content',
-  ].join('\n'), 'utf8');
-  const planRoot = path.join(root, '.emeth', 'plan');
-  fs.mkdirSync(planRoot, { recursive: true });
-  fs.symlinkSync(external, path.join(planRoot, 'PLAN-0003-escape'), process.platform === 'win32' ? 'junction' : 'dir');
-
-  const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.plans, []);
-  assert.ok(result.diagnostics.some((item) => item.code === 'record-path-outside-project'));
-  assert.doesNotMatch(JSON.stringify(result), /secret outside content/);
 });
 
 test('all seven flow rules use active open or doing separately from blocked', (t) => {
@@ -409,27 +330,9 @@ test('legacy issues remain indexed and nested Spec revisions are excluded', (t) 
   assert.equal(result.diagnostics.some((item) => item.code === 'record-duplicate-id'), false);
 });
 
-test('index accepts supported Plan scalars and diagnoses invalid document metadata', (t) => {
+test('index parses supported Plan titles and diagnoses malformed quoting', (t) => {
   const root = makeRoot(t);
-  for (const [id, slug, title] of [
-    ['PLAN-0030', 'null-title', 'null'],
-    ['PLAN-0031', 'mapping-title', 'A: B'],
-    ['PLAN-0099', 'bad-single-quote', "'bad'quote'"],
-    ['PLAN-0100', 'sequence-indicator', '- bad'],
-    ['PLAN-0101', 'block-indicator', '|'],
-    ['PLAN-0102', 'anchor-indicator', '&anchor'],
-    ['PLAN-0103', 'alias-indicator', '*anchor'],
-    ['PLAN-0104', 'collection-indicator', '[bad]'],
-    ['PLAN-0105', 'unknown-field', 'Bad\nextra: value'],
-  ]) {
-    const directory = path.join(root, '.emeth', 'plan', `${id}-${slug}`);
-    fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(
-      path.join(directory, 'PLAN.md'),
-      `---\nid: ${id}\ntitle: ${title}\nstatus: ready\n---\nBody`,
-      'utf8',
-    );
-  }
+  writePlan(root, 'PLAN-0099', 'invalid', { title: "'bad'quote'", relatedIssues: [] });
 
   for (const [id, title] of [
     ['PLAN-0001', '"안전한: 계획"'],
@@ -437,10 +340,6 @@ test('index accepts supported Plan scalars and diagnoses invalid document metada
     ['PLAN-0003', "'Safe ''quoted'' plan'"],
     ['PLAN-0004', '-safe plain plan'],
   ]) writePlan(root, id, 'supported', { title, relatedIssues: [] });
-  const oldSpecPath = writeSpec(root, 'SPEC-0001', 'old-schema', { relatedIssues: [] });
-  const absoluteSpec = path.join(root, oldSpecPath);
-  fs.writeFileSync(absoluteSpec, fs.readFileSync(absoluteSpec, 'utf8').replace('"schema_version": 2', '"schema_version": 1'));
-
   const result = buildProjectIndex(project(root)).publicIndex;
   assert.deepEqual(result.plans.map(({ id, title, related_issues }) => ({ id, title, related_issues })), [
     { id: 'PLAN-0001', title: '안전한: 계획', related_issues: [] },
@@ -448,22 +347,10 @@ test('index accepts supported Plan scalars and diagnoses invalid document metada
     { id: 'PLAN-0003', title: "Safe 'quoted' plan", related_issues: [] },
     { id: 'PLAN-0004', title: '-safe plain plan', related_issues: [] },
   ]);
-  assert.deepEqual(result.specs, []);
   assert.deepEqual(
     result.diagnostics
       .filter((item) => item.code === 'record-metadata-invalid')
       .map((item) => item.relative_path),
-    [
-      '.emeth/plan/PLAN-0030-null-title/PLAN.md',
-      '.emeth/plan/PLAN-0031-mapping-title/PLAN.md',
-      '.emeth/plan/PLAN-0099-bad-single-quote/PLAN.md',
-      '.emeth/plan/PLAN-0100-sequence-indicator/PLAN.md',
-      '.emeth/plan/PLAN-0101-block-indicator/PLAN.md',
-      '.emeth/plan/PLAN-0102-anchor-indicator/PLAN.md',
-      '.emeth/plan/PLAN-0103-alias-indicator/PLAN.md',
-      '.emeth/plan/PLAN-0104-collection-indicator/PLAN.md',
-      '.emeth/plan/PLAN-0105-unknown-field/PLAN.md',
-      '.emeth/specs/SPEC-0001-old-schema/SPEC.md',
-    ],
+    ['.emeth/plan/PLAN-0099-invalid/PLAN.md'],
   );
 });

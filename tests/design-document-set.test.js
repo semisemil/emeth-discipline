@@ -26,7 +26,7 @@ function fixture(t) {
   const create = input => run('create', input, ['--title', '알림 개발 설계', '--slug', 'notification', '--status', 'ready', '--input-format', 'documents']);
   const directory = path.join(project, '.emeth/designs/DESIGN-0001-notification');
   const read = name => fs.readFileSync(path.join(directory, name), 'utf8');
-  const execute = (extra = []) => {
+  const execute = (extra = ['--format', 'paths']) => {
     const result = spawnSync(process.execPath, [contracts, '--project-root', project, '--id', 'DESIGN-0001', ...extra], { env, encoding: 'utf8', windowsHide: true });
     return { ...result, value: JSON.parse(result.status === 0 ? result.stdout : result.stderr) };
   };
@@ -38,7 +38,7 @@ const request = '# 접수 계약\n\n접수 성공 시 요청 ID를 반환한다.
 const delivery = '# 전달 설계\n\n저장 완료 후 알림을 전송한다.\n';
 const input = { body: overview, documents: [{ path: 'contracts/request.md', body: request }, { path: 'delivery.md', body: delivery }] };
 
-test('the contract path view locates every complete artifact without echoing its body', t => {
+test('contract handoff locates every complete artifact without echoing its body', t => {
   const f = fixture(t);
   assert.equal(f.create(input).status, 0);
   const handoff = f.execute(['--format', 'paths']);
@@ -52,10 +52,6 @@ test('the contract path view locates every complete artifact without echoing its
     [path.join(f.directory, 'delivery.md'), delivery],
   ]);
   for (const body of [overview, request, delivery]) assert.equal(handoff.stdout.includes(JSON.stringify(body).slice(1, -1)), false);
-  fs.writeFileSync(path.join(f.directory, '.design-set-pending.json'), '{}');
-  const interrupted = f.execute(['--format', 'paths']);
-  assert.equal(interrupted.status, 1);
-  assert.equal(interrupted.value.error.code, 'design-document-set-pending');
 });
 
 test('existing design artifacts are saved byte-for-byte and reach the implementation reader', t => {
@@ -71,7 +67,7 @@ test('existing design artifacts are saved byte-for-byte and reach the implementa
   assert.deepEqual(fs.readFileSync(source), bytes);
   const handoff = f.execute();
   assert.equal(handoff.status, 0, handoff.stderr);
-  assert.equal(handoff.value.documents.find(d => d.path.endsWith('/sketch.md')).body, bytes.toString('utf8').replace(/^\ufeff/, ''));
+  assert.deepEqual(fs.readFileSync(handoff.value.documents.find(d => d.path.endsWith('/sketch.md')).absolute_path), bytes);
 });
 
 test('a Design revision can adopt an existing artifact without rewriting it or its prior contract', t => {
@@ -89,10 +85,10 @@ test('a Design revision can adopt an existing artifact without rewriting it or i
   assert.equal(f.read('verification.md'), text);
   assert.equal(f.read('revisions/REV-1/DESIGN.md'), oldOverview);
   assert.equal(f.read('contracts/request.md'), request);
-  assert.equal(f.execute().value.documents.find(d => d.path.endsWith('/verification.md')).body, text);
+  assert.equal(fs.readFileSync(f.execute().value.documents.find(d => d.path.endsWith('/verification.md')).absolute_path, 'utf8'), text);
 });
 
-test('an unreadable or ambiguous source cannot partially publish a Design', t => {
+test('source failures leave no partial Design and allow retry while preserving independent notes', t => {
   const f = fixture(t);
   const missing = path.join(f.project, 'missing.md');
   const failed = f.create({ body: overview, documents: [{ path: 'delivery.md', body: delivery }, { path: 'contracts/request.md', source: missing }] });
@@ -107,35 +103,13 @@ test('an unreadable or ambiguous source cannot partially publish a Design', t =>
   const ambiguous = f.create({ body: overview, documents: [{ path: 'contracts/request.md', source, body: request }] });
   assert.equal(ambiguous.value.error.code, 'document-content-invalid');
   assert.equal(fs.existsSync(f.directory), false);
-});
-
-test('a saved overview and detailed designs reach both editing and implementation readers intact', t => {
-  const f = fixture(t);
-  const result = f.create(input);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.value.write.revision, 1);
-  assert.ok(f.read('DESIGN.md').endsWith(overview));
-  assert.equal(f.read('contracts/request.md'), request);
-  assert.equal(f.read('delivery.md'), delivery);
-  const editing = f.run('read');
-  assert.equal(editing.status, 0, editing.stderr);
-  const implementing = f.execute();
-  assert.equal(implementing.status, 0, implementing.stderr);
-  for (const result of [editing, implementing]) {
-    assert.deepEqual(result.value.documents.map(document => document.body), [request, delivery]);
-    assert.ok(result.value.documents[0].path.endsWith('/contracts/request.md'));
-  }
-});
-
-test('a failed first save can be retried with its ID while preserving other files in the directory', t => {
-  const f = fixture(t);
   fs.mkdirSync(f.directory, { recursive: true });
   fs.writeFileSync(path.join(f.directory, 'author-notes.txt'), '독립적인 기록');
   const result = f.run('create', input, ['--id', 'DESIGN-0001', '--title', '알림 개발 설계', '--slug', 'notification', '--status', 'ready', '--input-format', 'documents']);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.value.write.id, 'DESIGN-0001');
   assert.equal(f.read('author-notes.txt'), '독립적인 기록');
-  assert.deepEqual(f.execute().value.documents.map(document => document.body), [request, delivery]);
+  assert.deepEqual(f.execute().value.documents.map(document => fs.readFileSync(document.absolute_path, 'utf8')), [request, delivery]);
 });
 
 test('changing only a detailed contract revisions and snapshots the whole set, preserving independent text', t => {
@@ -158,7 +132,7 @@ test('changing only a detailed contract revisions and snapshots the whole set, p
   assert.equal(f.read('revisions/REV-1/delivery.md'), independent);
   assert.equal(f.read('delivery.md'), independent);
   assert.ok(f.read('DESIGN.md').endsWith(overview));
-  assert.equal(f.execute().value.documents[0].body, request.replace('요청 ID', '접수 ID'));
+  assert.equal(fs.readFileSync(f.execute().value.documents[0].absolute_path, 'utf8'), request.replace('요청 ID', '접수 ID'));
   const noOp = f.run('patch', { documents: [{ path: 'contracts/request.md', edits: [{ old: '접수 ID', new: '접수 ID' }] }] }, ['--change-kind', 'major']);
   assert.equal(noOp.value.write.status, 'no-op');
   assert.equal(noOp.value.write.revision, 2);
@@ -206,6 +180,9 @@ test('status changes preserve all detail bytes and missing details prevent ready
   assert.equal(f.run('status', undefined, ['--status', 'ready']).status, 0);
   fs.unlinkSync(path.join(f.directory, 'delivery.md'));
   assert.equal(f.execute().status, 1);
+  const partial = f.run('read', undefined, ['--document', 'contracts/request.md', '--section', '접수 계약']);
+  assert.equal(partial.status, 1);
+  assert.equal(partial.value.error.code, 'record-unavailable');
   assert.equal(f.run('status', undefined, ['--status', 'ready']).value.error.code, 'contract-unavailable');
 });
 
@@ -238,8 +215,9 @@ test('handoff rejects a document set changed during reading instead of mixing re
     fs.openSync = open;
     fs.readSync = read;
   }
-  assert.equal(f.execute().value.revision, 2);
-  assert.equal(f.execute().value.documents[1].body, delivery.replace('저장 완료 후', '영구 저장 완료 후'));
+  const handoff = f.execute();
+  assert.equal(handoff.value.revision, 2);
+  assert.equal(fs.readFileSync(handoff.value.documents[1].absolute_path, 'utf8'), delivery.replace('저장 완료 후', '영구 저장 완료 후'));
 });
 
 test('a replacement declared at creation is listed and blocks the replaced contract', t => {
@@ -273,6 +251,8 @@ test('an interrupted publication blocks handoff and recovery preserves external 
   const interrupted = spawnSync(process.execPath, ['-e', script], { env: f.env, encoding: 'utf8', windowsHide: true });
   assert.equal(JSON.parse(interrupted.stderr).error.code, 'design-document-set-pending');
   assert.equal(f.execute().value.error.code, 'design-document-set-pending');
+  const partial = f.run('read', undefined, ['--document', 'contracts/request.md']);
+  assert.equal(partial.value.error.code, 'design-document-set-pending');
   const blocked = f.run('read').value.error;
   assert.equal(blocked.code, 'design-document-set-pending');
   assert.match(blocked.message, /recover --project-root <project> --id DESIGN-0001/);

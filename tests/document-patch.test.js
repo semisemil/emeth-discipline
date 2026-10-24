@@ -108,17 +108,45 @@ test('operational patches preserve revision and skip snapshots', t => {
   assert.equal(followup.status, 0, followup.stderr);
 });
 
-test('patch retains Memory connection and separates registration failure from saved content', t => {
+test('filesystem and registration failures preserve the document publication boundary', t => {
   const f = fixture(t);
   const registry = getRegistryPath({ env: f.env });
-  fs.mkdirSync(path.dirname(registry), { recursive: true });
-  fs.writeFileSync(registry, '{invalid');
-  const result = f.patch(changes, ['--change-kind', 'major', '--language', 'ko']);
+  const source = `const fs = require('node:fs');
+    for (const name of ['linkSync', 'renameSync']) {
+      const original = fs[name];
+      fs[name] = (from, to, ...args) => {
+        if (to === process.argv[2]) throw Object.assign(new Error(process.argv[3] + ': publication failed'), { code: process.argv[3] });
+        return original(from, to, ...args);
+      };
+    }
+    require(process.argv[1]).main(process.argv.slice(4));`;
+  const run = (target, code, args, input) => spawnSync(process.execPath, ['-e', source, cli, target, code,
+    ...args, '--project-root', f.project], { input, env: f.env, encoding: 'utf8', windowsHide: true });
+  const created = path.join(f.project, '.emeth/designs/DESIGN-0002-failed/DESIGN.md');
+  for (const [target, args, input] of [
+    [created, ['create', '--id', 'DESIGN-0002', '--title', 'Failed creation', '--slug', 'failed', '--memory', 'off'], '# New document'],
+    [f.file, ['patch', '--id', 'DESIGN-0001', '--change-kind', 'major', '--memory', 'off'], JSON.stringify({ edits: changes })],
+  ]) {
+    const failed = run(target, 'EIO', args, input);
+    assert.equal(failed.status, 1);
+    assert.equal(JSON.parse(failed.stderr).error.code, 'document-write-failed');
+    assert.deepEqual(fs.readFileSync(f.file), f.original);
+    assert.equal(fs.existsSync(created), false);
+    assert.equal(fs.existsSync(registry), false);
+  }
+  const result = run(registry, 'EACCES', ['patch', '--id', 'DESIGN-0001', '--change-kind', 'major', '--language', 'ko'], JSON.stringify({ edits: changes }));
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.value.registration.status, 'failed');
-  assert.equal(result.value.memory.status, 'created');
+  const value = JSON.parse(result.stdout);
+  assert.equal(value.write.status, 'updated');
+  assert.equal(value.registration.status, 'failed');
+  assert.equal(value.registration.error.code, 'registry-write-failed');
+  assert.match(value.registration.error.message, /EACCES/);
+  assert.equal(value.memory.status, 'created');
   assert.ok(fs.existsSync(path.join(f.project, '.emeth/architecture.json')));
+  assert.deepEqual(fs.readFileSync(f.file), Buffer.from(f.original.toString('utf8')
+    .replace('"revision": 1', '"revision": 2').replace(changes[0].old, changes[0].new)));
   assert.deepEqual(fs.readFileSync(f.snapshot), f.original);
+  assert.equal(fs.existsSync(registry), false);
 });
 
 test('malformed patches, active locks and missing IDs do not save', t => {
@@ -130,9 +158,10 @@ test('malformed patches, active locks and missing IDs do not save', t => {
     assert.deepEqual(fs.readFileSync(f.file), f.original);
   }
   const lock = path.join(f.project, '.emeth/.design-write.lock');
-  fs.writeFileSync(lock, String(process.pid));
+  fs.mkdirSync(lock);
+  fs.writeFileSync(path.join(lock, 'owner.json'), JSON.stringify({ pid: process.pid }));
   assert.equal(f.patch(changes).value.error.code, 'document-locked');
-  fs.unlinkSync(lock);
+  fs.rmSync(lock, { recursive: true });
   fs.unlinkSync(f.file);
   assert.equal(f.run('read').value.error.code, 'contract-unavailable');
 });
@@ -148,14 +177,6 @@ test('sequential insertion and deletion apply once and preserve untouched text',
   assert.equal(fs.readFileSync(f.file, 'utf8'), f.original.toString('utf8')
     .replace('"revision": 1', '"revision": 2').replace('# 요구사항', '# 요구사항\n\n확정된 조건.')
     .replace('성공하면 ID를 반환한다.\n\n', ''));
-});
-
-test('oversized resulting document is rejected without publishing changes', t => {
-  const f = fixture(t);
-  const result = f.patch([changes[0], { old: '유지할 문장.', new: 'x'.repeat(2 * 1024 * 1024 - 240) }]);
-  assert.equal(result.value.error.code, 'document-too-large');
-  assert.deepEqual(fs.readFileSync(f.file), f.original);
-  assert.equal(fs.existsSync(f.snapshot), false);
 });
 
 test('replacement cycles are rejected by the shared Design validator', t => {

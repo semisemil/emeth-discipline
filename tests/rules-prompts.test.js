@@ -7,7 +7,7 @@ const test = require('node:test');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 
-test('hook registration keeps lifecycle boundaries and removes legacy owners', () => {
+test('Codex registers its lifecycle events and platform commands', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.codex-plugin/plugin.json'), 'utf8'));
   const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
   assert.deepEqual(new Set(Object.keys(hooks)), new Set(['SessionStart', 'SubagentStart', 'UserPromptSubmit']));
@@ -20,17 +20,11 @@ test('hook registration keeps lifecycle boundaries and removes legacy owners', (
     assert.ok(groups[0].hooks[0].command.includes('/hooks/run.js'), event);
     assert.ok(groups[0].hooks[0].commandWindows.includes('\\hooks\\run.js'), event);
   }
-  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'refresh-dashboard.js')), false);
-  assert.equal(hooks.PreToolUse, undefined);
-  assert.equal(hooks.SessionEnd, undefined);
-  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks', 'load-baseline.js')), false);
-  assert.equal(fs.existsSync(path.join(pluginRoot, 'skills', 'proofline-baseline-quality')), false);
 });
 
-test('Claude registers one exec-form hook per event without a shared default hook file', () => {
+test('Claude registers one exec-form hook per lifecycle event', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.claude-plugin/plugin.json'), 'utf8'));
   const hooks = JSON.parse(fs.readFileSync(path.join(pluginRoot, manifest.hooks), 'utf8')).hooks;
-  assert.equal(fs.existsSync(path.join(pluginRoot, 'hooks/hooks.json')), false);
   assert.deepEqual(new Set(Object.keys(hooks)), new Set(['SessionStart', 'SubagentStart', 'UserPromptSubmit']));
   const sessionMatcher = new RegExp(hooks.SessionStart[0].matcher);
   for (const source of ['startup', 'resume', 'clear', 'compact']) assert.ok(sessionMatcher.test(source), source);

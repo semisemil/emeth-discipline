@@ -6,6 +6,7 @@ const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const { parseDesignMetadata, parseFrontmatter } = require('../plugins/emeth-discipline/dashboard/records/record-parser.js');
+const { getRegistryPath } = require('../plugins/emeth-discipline/dashboard/registry.js');
 const root = path.resolve(__dirname, '../plugins/emeth-discipline');
 
 test('create generates valid metadata and allocates IDs from body-only input', t => {
@@ -14,13 +15,22 @@ test('create generates valid metadata and allocates IDs from body-only input', t
   const project = path.join(temporary, 'project');
   fs.mkdirSync(project);
   const body = '# 알림\n\n성공하면 ID를 반환한다.\n';
-  const create = (extra = []) => {
+  const env = { ...process.env, APPDATA: path.join(temporary, 'config'), XDG_CONFIG_HOME: path.join(temporary, 'config') };
+  const create = (extra = [], projectRoot = project) => {
     const result = spawnSync(process.execPath, [path.join(root, 'writers/document-writer.js'), 'create',
-      '--project-root', project, '--title', '알림 설계', '--slug', 'notification', '--memory', 'off', ...extra],
-    { input: body, encoding: 'utf8', windowsHide: true,
-      env: { ...process.env, APPDATA: path.join(temporary, 'config'), XDG_CONFIG_HOME: path.join(temporary, 'config') } });
+      '--project-root', projectRoot, '--title', '알림 설계', '--slug', 'notification', '--memory', 'off', ...extra],
+    { input: body, encoding: 'utf8', windowsHide: true, env });
     return { status: result.status, value: JSON.parse(result.status === 0 ? result.stdout : result.stderr) };
   };
+  const missing = path.join(temporary, 'missing');
+  for (const projectRoot of ['', missing]) {
+    const rejected = create([], projectRoot);
+    assert.equal(rejected.status, 1);
+    assert.equal(rejected.value.error.code, 'project-root-invalid');
+    assert.equal(fs.existsSync(getRegistryPath({ env })), false);
+  }
+  assert.equal(fs.existsSync(missing), false);
+  assert.equal(fs.existsSync(path.join(project, '.emeth')), false);
   const id = 'DESIGN-0001';
   const result = create();
   assert.equal(result.status, 0, JSON.stringify(result.value));

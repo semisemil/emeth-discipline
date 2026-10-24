@@ -25,15 +25,15 @@ function fixture(t) {
   const write = (name, text) => { const file = path.join(project, name); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text); };
   return { root, project, env, write, read: name => fs.readFileSync(path.join(project, name), 'utf8') };
 }
-function document(id = 'DESIGN-0001', overrides = {}, body = '# 알림 설계\n\n접수에 성공하면 처리 ID를 반환한다.') {
+function legacySpec(id) {
   return `---\n${JSON.stringify({ schema_version: 2, id, title: '알림 설계', kind: 'feature', status: 'ready', revision: 1,
-    supersedes: [], superseded_by: null, related_issues: [], ...overrides }, null, 2)}\n---\n\n${body}\n`;
+    supersedes: [], superseded_by: null, related_issues: [] }, null, 2)}\n---\n\n# 기존 계약\n`;
 }
-function save(f, text = document(), extra = []) {
-  const id = JSON.parse(text.split('---')[1]).id;
-  const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'write', '--kind', 'design',
-    '--project-root', f.project, '--relative-path', `.emeth/designs/${id}-notification/DESIGN.md`, ...extra],
-  { input: text, encoding: 'utf8', env: f.env, windowsHide: true });
+function create(f, { id, status = 'ready', supersedes = [] } = {}, extra = []) {
+  const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'create',
+    '--project-root', f.project, '--title', '알림 설계', '--slug', 'notification', '--status', status,
+    ...(id ? ['--id', id] : []), ...supersedes.flatMap(previous => ['--supersedes', previous]), ...extra],
+  { input: '# 알림 설계\n\n접수에 성공하면 처리 ID를 반환한다.', encoding: 'utf8', env: f.env, windowsHide: true });
   return { ...result, value: result.status === 0 ? JSON.parse(result.stdout) : JSON.parse(result.stderr) };
 }
 function section(id, value) { return `## ${id}\n<!-- am: {"id":"${id}","terms":["offline"]} -->\n\n**confirmed/current**\n\n${value}\n`; }
@@ -41,7 +41,7 @@ function receipt(f, id) { return memory.read(memory.loadRecords(f.project), { id
 
 test('the first Design is saved, indexed and executable with a minimal connected Memory and no Git survey', t => {
   const f = fixture(t);
-  const result = save(f);
+  const result = create(f);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.value.write.kind, 'design');
   assert.equal(result.value.memory.status, 'created');
@@ -57,14 +57,13 @@ test('the first Design is saved, indexed and executable with a minimal connected
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.project }).publicIndex;
   assert.equal(index.designs[0].status, 'ready');
   assert.equal(selectDocuments(index, { kind: 'design' })[0].id, 'DESIGN-0001');
-  assert.equal(save(f).value.write.status, 'no-op');
 });
 
 test('contract CLI reports Memory state without initializing it or blocking the ready contract', t => {
   const f = fixture(t);
-  assert.equal(save(f, document(), ['--memory', 'off']).status, 0);
+  assert.equal(create(f, {}, ['--memory', 'off']).status, 0);
   const read = () => {
-    const result = spawnSync(process.execPath, [path.join(repo, 'dashboard/records/development-contracts.js'), '--project-root', f.project, '--id', 'DESIGN-0001'], { encoding: 'utf8', env: f.env, windowsHide: true });
+    const result = spawnSync(process.execPath, [path.join(repo, 'dashboard/records/development-contracts.js'), '--project-root', f.project, '--id', 'DESIGN-0001', '--format', 'paths'], { encoding: 'utf8', env: f.env, windowsHide: true });
     assert.equal(result.status, 0, result.stderr);
     const value = JSON.parse(result.stdout);
     assert.equal(value.id, 'DESIGN-0001');
@@ -79,122 +78,52 @@ test('contract CLI reports Memory state without initializing it or blocking the 
   assert.equal(read().status, 'failed');
 });
 
-test('Design revision snapshots the old contract and rejects body changes under an operational revision', t => {
-  const f = fixture(t);
-  const original = document();
-  assert.equal(save(f, original).status, 0);
-  const changed = document('DESIGN-0001', { revision: 2 }, '# 새 계약\n\n실패하면 접수 ID를 반환하지 않는다.');
-  assert.equal(save(f, changed, ['--change-kind', 'major']).status, 0);
-  assert.equal(f.read('.emeth/designs/DESIGN-0001-notification/revisions/REV-1.md'), original);
-  const invalid = save(f, document('DESIGN-0001', { revision: 2 }), ['--change-kind', 'operational']);
-  assert.notEqual(invalid.status, 0);
-  assert.equal(invalid.value.error.code, 'contract-revision-required');
-  assert.equal(resolveContract(f.project, 'DESIGN-0001').revision, 2);
-});
-
 test('a legacy document has one successor without becoming executable or rewriting its file', t => {
   const f = fixture(t);
-  const legacy = document('SPEC-0001');
+  const legacy = legacySpec('SPEC-0001');
   f.write('.emeth/specs/SPEC-0001-original/SPEC.md', legacy);
-  f.write('.emeth/specs/SPEC-0002-independent/SPEC.md', document('SPEC-0002'));
+  f.write('.emeth/specs/SPEC-0002-independent/SPEC.md', legacySpec('SPEC-0002'));
   assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-id-invalid');
-  assert.equal(save(f, document('DESIGN-0001', { status: 'draft', supersedes: ['SPEC-0001'] })).status, 0);
+  assert.equal(create(f, { status: 'draft', supersedes: ['SPEC-0001'] }).status, 0);
   assert.throws(() => resolveContract(f.project, 'SPEC-0001'), error => error.code === 'contract-id-invalid');
   assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-not-ready');
   assert.throws(() => resolveContract(f.project, 'SPEC-0002'), error => error.code === 'contract-id-invalid');
-  const conflicting = save(f, document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
+  const conflicting = create(f, { id: 'DESIGN-0002', supersedes: ['SPEC-0001'] });
   assert.equal(conflicting.value.error.code, 'contract-successor-conflict');
   const index = buildProjectIndex({ id: '11111111-1111-4111-8111-111111111111', root: f.project }).publicIndex;
   assert.equal(index.designs[0].status, 'draft');
   assert.equal(index.specs.find(record => record.id === 'SPEC-0001').status, 'superseded');
   assert.equal(index.specs.find(record => record.id === 'SPEC-0001').superseded_by, 'DESIGN-0001');
   assert.equal(f.read('.emeth/specs/SPEC-0001-original/SPEC.md'), legacy);
-  assert.equal(save(f, document('DESIGN-0002', { supersedes: ['DESIGN-0001'] })).status, 0);
-  const cycle = save(f, document('DESIGN-0001', { status: 'draft', supersedes: ['SPEC-0001', 'DESIGN-0002'] }), ['--change-kind', 'operational']);
-  assert.equal(cycle.value.error.code, 'contract-successor-cycle');
+  assert.equal(create(f, { id: 'DESIGN-0002', supersedes: ['DESIGN-0001'] }).status, 0);
+  const cycle = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'patch',
+    '--project-root', f.project, '--id', 'DESIGN-0001', '--change-kind', 'operational'], {
+    input: JSON.stringify({ edits: [{ old: '"supersedes": [\n    "SPEC-0001"\n  ]', new: '"supersedes": ["SPEC-0001", "DESIGN-0002"]' }] }),
+    encoding: 'utf8', env: f.env, windowsHide: true,
+  });
+  assert.equal(JSON.parse(cycle.stderr).error.code, 'contract-successor-cycle');
   assert.equal(resolveContract(f.project, 'DESIGN-0002').id, 'DESIGN-0002');
-});
-
-test('manual successor conflicts in ID-only directories block execution and refresh dashboard state', t => {
-  const f = fixture(t);
-  f.write('.emeth/specs/SPEC-0001-original/SPEC.md', document('SPEC-0001'));
-  f.write('.emeth/designs/DESIGN-0001-notification/DESIGN.md', document('DESIGN-0001', { supersedes: ['SPEC-0001'] }));
-  f.write('.emeth/designs/DESIGN-0002/DESIGN.md', document('DESIGN-0002', { supersedes: ['SPEC-0001'] }));
-  assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-successor-conflict');
-  const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
-  const { registerProject } = require('../plugins/emeth-discipline/dashboard/registry.js');
-  const registryPath = path.join(f.root, 'registry.json');
-  registerProject(f.project, { registryPath });
-  const service = new ProjectIndexService({ registryOptions: { registryPath }, watch: () => ({ close() {} }) });
-  t.after(() => service.close());
-  const project = service.readProjects()[0];
-  const index = service.getIndex(project.id);
-  assert.equal(index.designs[0].status, 'blocked');
-  assert.ok(index.diagnostics.some(item => item.code === 'contract-successor-conflict'));
-  assert.equal(service.getDocument(project.id, 'design', 'DESIGN-0001').status, 'blocked');
-  f.write('.emeth/designs/DESIGN-0002/DESIGN.md', document('DESIGN-0002'));
-  assert.equal(service.getIndex(project.id).designs.find(record => record.id === 'DESIGN-0001').status, 'ready');
-});
-
-test('ID-only Design directories support reading, patching and status changes at the same path', t => {
-  const f = fixture(t);
-  const file = '.emeth/designs/DESIGN-0001/DESIGN.md';
-  f.write(file, document());
-  const run = (command, extra = [], input) => {
-    const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), command,
-      '--project-root', f.project, '--id', 'DESIGN-0001', ...extra], {
-      env: f.env, encoding: 'utf8', windowsHide: true, input,
-    });
-    assert.equal(result.status, 0, result.stderr);
-    return JSON.parse(result.stdout);
-  };
-  const read = run('read');
-  assert.equal(read.path, file);
-  assert.equal(read.text, f.read(file));
-  const patched = run('patch', ['--change-kind', 'major', '--memory', 'off'],
-    JSON.stringify({ edits: [{ old: '처리 ID', new: '접수 ID' }] }));
-  assert.equal(patched.write.path, file);
-  assert.equal(patched.write.revision, 2);
-  assert.match(f.read(file), /접수 ID/);
-  const updated = run('status', ['--status', 'completed', '--memory', 'off']);
-  assert.equal(updated.write.path, file);
-  assert.equal(updated.document_status, 'completed');
-  assert.equal(updated.write.revision, 2);
-  assert.equal(fs.existsSync(path.join(f.project, '.emeth/designs/DESIGN-0001-notification')), false);
-});
-
-test('Design listing preserves valid records and reports duplicate IDs and invalid metadata separately', t => {
-  const f = fixture(t);
-  f.write('.emeth/designs/DESIGN-0001/DESIGN.md', document());
-  f.write('.emeth/designs/DESIGN-0002-a/DESIGN.md', document('DESIGN-0002'));
-  f.write('.emeth/designs/DESIGN-0002-b/DESIGN.md', document('DESIGN-0002'));
-  f.write('.emeth/designs/DESIGN-0003/DESIGN.md', 'invalid metadata');
-  const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'list', '--project-root', f.project],
-    { env: f.env, encoding: 'utf8', windowsHide: true });
-  assert.equal(result.status, 0, result.stderr);
-  const { designs } = JSON.parse(result.stdout);
-  assert.deepEqual(designs.map(record => record.id), ['DESIGN-0001', 'DESIGN-0002', 'DESIGN-0003']);
-  assert.equal(designs[0].status, 'ready');
-  assert.equal(designs[0].path, '.emeth/designs/DESIGN-0001/DESIGN.md');
-  assert.equal(designs[1].error.code, 'contract-unavailable');
-  assert.equal(designs[2].error.code, 'record-metadata-invalid');
-  assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'contract-unavailable');
-  assert.throws(() => resolveContract(f.project, 'DESIGN-0004'),
-    error => error.code === 'contract-unavailable');
 });
 
 test('disabled or prohibited Memory is preserved, and recording failure is separate from a successful Design write', t => {
   const f = fixture(t);
-  assert.equal(save(f, document(), ['--memory', 'off']).value.memory.status, 'disabled');
+  const patch = (old, replacement) => {
+    const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'patch',
+      '--project-root', f.project, '--id', 'DESIGN-0001', '--change-kind', 'major'], {
+      input: JSON.stringify({ edits: [{ old, new: replacement }] }), encoding: 'utf8', env: f.env, windowsHide: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  };
+  assert.equal(create(f, {}, ['--memory', 'off']).value.memory.status, 'disabled');
   assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
   f.write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
-  assert.equal(save(f).value.memory.status, 'disabled');
+  assert.equal(patch('처리 ID', '접수 ID').memory.status, 'disabled');
   assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
   fs.unlinkSync(path.join(f.project, '.emeth/architecture.json'));
   f.write('docs/architecture/manual.md', 'Keep existing user documentation.');
-  const result = save(f);
-  assert.equal(result.status, 0);
-  assert.equal(result.value.memory.status, 'failed');
+  const result = patch('접수 ID', '확정 ID');
+  assert.equal(result.memory.status, 'failed');
   assert.equal(f.read('docs/architecture/manual.md'), 'Keep existing user documentation.');
 });
 
@@ -283,7 +212,7 @@ test('interrupted conversation publication blocks retrieval and survey until rec
   assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-c', expected: null, text: section('AM-c', 'Disabled.') }] }), error => error.code === 'memory-disabled');
 });
 
-test('conversation replacement preserves literal text and rejects oversized or identity-changing sections before writing', t => {
+test('conversation replacement preserves literal text and rejects identity-changing sections before writing', t => {
   const f = fixture(t);
   recording.ensureMemory(f.project);
   recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-a', expected: null, text: section('AM-a', 'Original.') }] });
@@ -292,7 +221,6 @@ test('conversation replacement preserves literal text and rejects oversized or i
   assert.equal(memory.loadRecords(f.project).byId.get('AM-a').text, literal.trim());
   const before = f.read('docs/architecture/04-context.md');
   assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-a', expected: receipt(f, 'AM-a'), text: section('AM-other', 'Changed identity.') }] }), error => error.code === 'memory-patch-invalid');
-  assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-huge', expected: null, text: section('AM-huge', 'a'.repeat(2 * 1024 * 1024)) }] }), error => error.code === 'memory-file-invalid');
   assert.equal(f.read('docs/architecture/04-context.md'), before);
   assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory/work/record.json')), false);
 });

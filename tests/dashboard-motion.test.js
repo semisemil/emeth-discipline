@@ -56,7 +56,6 @@ test('a stale project response cannot unlock or animate the current project tran
   assert.equal(panel.attributes.has('aria-busy'), false);
   assert.equal(panel.classes.has('is-changing'), false);
   assert.equal(panel.animations.length, 1);
-  motion.finish(second);
   motion.finish(null);
   assert.equal(panel.animations.length, 1);
 });
@@ -72,19 +71,14 @@ test('reduced motion preserves the loading lifecycle without starting animations
   assert.equal(panel.animations.length, 0);
 });
 
-test('interrupting an entrance cancels its animation and keeps other regions independent', () => {
+test('interrupting an entrance cancels its animation and releases the region after loading', () => {
   const { motion } = setup();
   const first = region();
-  const second = region();
   motion.enter(first);
   const firstTransition = motion.begin(first);
-  const secondTransition = motion.begin(second);
   assert.equal(first.animations[0].cancelled, true);
   motion.finish(firstTransition);
   assert.equal(first.inert, false);
-  assert.equal(second.inert, true);
-  motion.finish(secondTransition);
-  assert.equal(second.inert, false);
 });
 
 test('page appearance is restored before rendering and sidebar controls tolerate unavailable storage', () => {

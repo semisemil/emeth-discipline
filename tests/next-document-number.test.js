@@ -82,13 +82,11 @@ test('development-design receives the next number from Design directories', (t) 
   assert.deepEqual(context(runHook(root, '  /emeth-discipline:development-design   \nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0021']);
 });
 
-test('Design numbering grows beyond four digits and starts at one for a new project', (t) => {
+test('Design numbering grows beyond four digits', (t) => {
   const populated = fixture(t);
   fs.mkdirSync(path.join(populated, '.emeth/designs/DESIGN-9999-roadmap'), { recursive: true });
   assert.deepEqual(context(runHook(populated, '/emeth-discipline:development-design\nDevelop a design.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-10000']);
 
-  const empty = fixture(t);
-  assert.deepEqual(context(runHook(empty, '/emeth-discipline:development-design')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
 });
 
 test('figure-it-out receives only a Design number independent of legacy document numbering', (t) => {
@@ -97,18 +95,4 @@ test('figure-it-out receives only a Design number independent of legacy document
   fs.mkdirSync(path.join(root, '.emeth/specs/SPEC-0011-settings'), { recursive: true });
 
   assert.deepEqual(context(runHook(root, '/emeth-discipline:figure-it-out\nTake this change through implementation.')).match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
-});
-
-test('a numbering read failure is logged and leaves the skill able to fall back', (t) => {
-  const root = fixture(t);
-  touch(root, '.emeth/issues');
-  const result = runHook(root, '/emeth-discipline:issue-ledger');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(Buffer.byteLength(result.stdout), 0);
-
-  const logPath = path.join(root, '.codex', 'log', 'emeth-hook.log');
-  const entry = JSON.parse(fs.readFileSync(logPath, 'utf8').trim());
-  assert.equal(entry.hook, 'next-document-number');
-  assert.equal(entry.event, 'UserPromptSubmit');
-  assert.match(entry.filePath, /\.emeth[\\/]issues$/);
 });

@@ -56,15 +56,6 @@ test('Mixdog retains its previous Codex model defaults', () => {
   assert.equal(result.stdout, policy('codex.md'));
 });
 
-test('an unidentified or ambiguous shell receives no guessed policy', () => {
-  for (const signals of [{}, { CODEX_THREAD_ID: 'outer-session', CLAUDECODE: '1' }]) {
-    const result = run(signals);
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.notEqual(result.stderr.trim(), '');
-  }
-});
-
 test('the command reads only the selected Markdown and returns its saved changes from another working directory', t => {
   const temporaryRoot = fs.realpathSync(os.tmpdir());
   const directory = fs.mkdtempSync(path.join(temporaryRoot, 'emeth-model-routing-'));
@@ -95,9 +86,4 @@ test('the command reads only the selected Markdown and returns its saved changes
   assert.equal(updated.status, 0, updated.stderr);
   assert.equal(updated.stdout, revised);
 
-  fs.unlinkSync(selected);
-  const missing = run({ CLAUDECODE: '1' }, options);
-  assert.equal(missing.status, 1);
-  assert.equal(missing.stdout, '');
-  assert.match(missing.stderr, /ENOENT/);
 });

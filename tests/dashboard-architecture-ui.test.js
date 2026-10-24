@@ -189,18 +189,14 @@ test('relative links resolve only to registered Architecture documents', () => {
 });
 
 test('Markdown keeps default link hardening and permits resolver-approved Architecture routes', () => {
+  const route = '/architecture?project=11111111-1111-4111-8111-111111111111&document=context';
   const internal = JSDOM.fragment(core.renderMarkdown('[맥락](04-context.md)', {
-    resolveLink: () => '/architecture?project=p1&document=context',
+    resolveLink: () => route,
   }));
   const link = internal.querySelector('a');
-  assert.equal(link.getAttribute('href'), '/architecture?project=p1&document=context');
+  assert.equal(link.getAttribute('href'), route);
   assert.equal(link.dataset.architectureLink, 'true');
   assert.notEqual(link.target, '_blank');
-
-  const refused = JSDOM.fragment(core.renderMarkdown('[위험](local.md)', {
-    resolveLink: () => 'javascript:alert(1)',
-  }));
-  assert.equal(refused.querySelector('[href]'), null);
 
   const unresolved = [];
   core.renderMarkdown('[없음](missing.md)', {

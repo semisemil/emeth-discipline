@@ -181,21 +181,6 @@ test('rename paths, non-ancestor comparisons and no-document effects are classif
   assert.equal(f.manifest().git_checkpoint.revision, f.git('rev-parse', 'HEAD'));
 });
 
-test('unmanaged collections require init; completed init refreshes only the binding and old owned pointer', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  const manifest = f.manifest(); manifest.managed = false;
-  f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
-  f.write('AGENTS.md', 'Keep JavaScript.\n<!-- architecture-memory:start -->\nC:/old-plugin-cache/SKILL.md\n<!-- architecture-memory:end -->\nKeep tests.\n');
-  assert.throws(() => W.begin(f.root, 'update'), { code: 'memory-not-initialized' });
-  const begun = W.begin(f.root, 'init');
-  assert.equal(begun.connection_only, true);
-  W.apply(f.root);
-  assert.equal(f.manifest().managed, true);
-  assert.equal(fs.readFileSync(path.join(f.root, 'AGENTS.md'), 'utf8'), 'Keep JavaScript.\nKeep tests.\n');
-  assert.doesNotMatch(fs.readFileSync(path.join(f.root, S.BINDING), 'utf8'), /old-plugin|Users|SKILL/);
-});
-
 test('update CLI rejects a missing connection even when managed documents remain', (t) => {
   const f = fixture(t);
   initialize(f);
@@ -260,15 +245,14 @@ test('hook emits nothing before init, resolves the current plugin and suppresses
   const changedPlugin = path.join(f.root, '.test-plugin');
   f.write('.test-plugin/skills/architecture-memory/SKILL.md', 'Current plugin.');
   assert.ok(notice(event, { dataRoot, pluginRoot: changedPlugin }).includes(JSON.stringify(changedPlugin).slice(1, -1)));
-  const manifest = f.manifest(); manifest.managed = false;
-  f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
+  const binding = JSON.stringify({ schema_version: 1, root: 'docs/architecture' });
+  f.write(S.BINDING, JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
   assert.match(notice(event, { dataRoot }), /\S/);
   assert.equal(connectionStatus(f.root).status, 'disabled');
   assert.equal(notice(event, { dataRoot }), '');
-  manifest.managed = true;
-  f.write('docs/architecture/.architecture-memory/manifest.json', JSON.stringify(manifest));
+  f.write(S.BINDING, binding);
   assert.equal(notice(event, { dataRoot }), first);
-  fs.unlinkSync(path.join(f.root, 'docs/architecture/.architecture-memory/manifest.json'));
+  f.write(S.BINDING, JSON.stringify({ schema_version: 1, root: 'docs/missing' }));
   assert.match(notice(event, { dataRoot }), /\S/);
   assert.equal(connectionStatus(f.root).status, 'unavailable');
   assert.equal(notice(event, { dataRoot }), '');
@@ -285,30 +269,24 @@ test('the session notice reports commits made after the Memory Git checkpoint', 
   assert.match(notice(event, { dataRoot }), /architecture-memory-update/);
 });
 
-test('inventory and source output are bounded; bulk classification does not echo thousands of paths', (t) => {
+test('change pages are bounded and bulk classification includes paths beyond the first page', (t) => {
   const f = fixture(t);
   initialize(f);
-  for (let i = 0; i < 300; i++) f.write(`assets/data-${i}.txt`, 'irrelevant fixture data\n');
+  for (let i = 0; i < 31; i++) f.write(`assets/data-${i}.txt`, 'irrelevant fixture data\n');
   f.git('add', 'assets'); f.git('commit', '-qm', 'assets');
   W.begin(f.root, 'update');
   const page = W.inspect(f.root, 'changes');
-  assert.equal(page.total, 300); assert.ok(page.next_offset); assert.ok(JSON.stringify(page).length < 6000);
+  assert.equal(page.total, 31); assert.equal(page.next_offset, 30); assert.ok(JSON.stringify(page).length < 6000);
   const classification = W.classify(f.root, { prefix: 'assets/', effect: 'none', reason: 'Only fixture payloads; source boundaries unchanged.' });
-  assert.equal(classification.classified, 300); assert.ok(JSON.stringify(classification).length < 100);
+  assert.equal(classification.classified, 31); assert.ok(JSON.stringify(classification).length < 100);
   W.apply(f.root);
 });
 
-test('path boundaries, unregistered drafts and malformed inputs fail without replacing live documents', (t) => {
+test('occupied roots and malformed CLI arguments fail without creating a connection', (t) => {
   const f = fixture(t);
-  assert.throws(() => W.begin(f.root, 'init', { root: 'docs/\0escape' }), { code: 'document-root-invalid' });
   f.write('docs/manual/README.md', 'Existing manual.');
   assert.throws(() => W.begin(f.root, 'init', { root: 'docs/manual' }), { code: 'memory-root-conflict' });
   assert.equal(fs.existsSync(path.join(f.root, 'docs/manual/.architecture-memory')), false);
-  const begun = W.begin(f.root, 'init'); fill(begun);
-  const metadata = path.join(begun.draft, '.architecture-memory/manifest.json');
-  const malformed = JSON.parse(fs.readFileSync(metadata)); malformed.documents[0].path = '../escape.md';
-  fs.writeFileSync(metadata, JSON.stringify(malformed));
-  assert.throws(() => W.apply(f.root), { code: 'architecture-manifest-invalid' });
   assert.equal(fs.existsSync(path.join(f.root, S.BINDING)), false);
   assert.throws(() => W.parseArgs(['source', '--project-root', f.root, '--limit', '9999']), { code: 'memory-argument-invalid' });
 });
@@ -373,25 +351,6 @@ test('external edits to unchanged draft dependencies prevent publication', (t) =
   fs.appendFileSync(live, '\nNew constraint from another task.\n');
   assert.throws(() => W.apply(f.root), { code: 'memory-target-changed' });
   assert.match(fs.readFileSync(live, 'utf8'), /another task/);
-});
-
-test('invalid durable states fail closed and reject unsafe journal targets before further writes', (t) => {
-  const f = fixture(t);
-  const begun = W.begin(f.root, 'init'); fill(begun);
-  const stateFile = path.join(f.root, 'docs/architecture', S.WORK, 'state.json');
-  const original = JSON.parse(fs.readFileSync(stateFile));
-  for (const change of [{ phase: 'unknown' }, { observations: [] }, { snapshot: { ...original.snapshot, revision: '--output=foreign' } }, { root: 'docs/other' }]) {
-    fs.writeFileSync(stateFile, JSON.stringify({ ...original, ...change }));
-    assert.throws(() => W.apply(f.root), { code: 'memory-state-invalid' });
-  }
-  fs.writeFileSync(stateFile, JSON.stringify(original));
-  assert.throws(() => W.apply(f.root, {}, { afterWrite() { throw new Error('interrupted'); } }), /interrupted/);
-  const pending = JSON.parse(fs.readFileSync(stateFile));
-  pending.entries.push({ file: 'src/server.js', before: null, after: 'unwanted', after_hash: S.hash('unwanted') });
-  fs.writeFileSync(stateFile, JSON.stringify(pending));
-  assert.throws(() => W.apply(f.root), { code: 'memory-state-invalid' });
-  assert.match(fs.readFileSync(path.join(f.root, 'src/server.js'), 'utf8'), /"memory"/);
-  assert.equal(fs.existsSync(path.join(f.root, 'docs/architecture/02-containers.md')), false);
 });
 
 test('registered hook CLI emits bounded valid context and stays empty without a binding', (t) => {

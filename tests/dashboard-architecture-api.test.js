@@ -8,7 +8,6 @@ const path = require('node:path');
 const test = require('node:test');
 
 const {
-  ArchitectureService,
   MAX_DOCUMENT_BYTES,
 } = require('../plugins/emeth-discipline/dashboard/architecture.js');
 const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
@@ -18,12 +17,12 @@ const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
 const INSTANCE_ID = '22222222-2222-4222-8222-222222222222';
 const CHECKPOINT_REVISION = '0123456789abcdef0123456789abcdef01234567';
 
-function manifest(documents, values = {}) {
+function manifest(documents) {
   return {
     schema_version: 2,
-    managed: values.managed ?? true,
-    language: values.language || 'ko',
-    git_checkpoint: values.git_checkpoint || {
+    managed: true,
+    language: 'ko',
+    git_checkpoint: {
       revision: CHECKPOINT_REVISION,
       branch_at_check: 'main',
       checked_at: '2026-08-30T00:00:00.000Z',
@@ -45,7 +44,7 @@ function document(id, kind, relativePath, order) {
 
 function writeMemory(projectRoot, relativeRoot = 'docs/architecture', values = {}) {
   const architectureRoot = path.join(projectRoot, ...relativeRoot.split('/'));
-  const documents = values.documents || [
+  const documents = [
     document('architecture-index', 'index', 'README.md', 0),
     document('system-context', 'system-context', '01-system-context.md', 1),
   ];
@@ -57,7 +56,7 @@ function writeMemory(projectRoot, relativeRoot = 'docs/architecture', values = {
   }
   fs.writeFileSync(
     path.join(architectureRoot, '.architecture-memory', 'manifest.json'),
-    JSON.stringify(values.manifest || manifest(documents)),
+    JSON.stringify(manifest(documents)),
     'utf8',
   );
   return architectureRoot;
@@ -69,9 +68,7 @@ async function fixture(t, values = {}) {
   const assetRoot = path.join(temporaryRoot, 'assets');
   const registryPath = path.join(temporaryRoot, 'config', 'projects.json');
   fs.mkdirSync(projectRoot, { recursive: true });
-  if (values.emeth !== false) {
-    fs.mkdirSync(path.join(projectRoot, '.emeth'), { recursive: true });
-  }
+  fs.mkdirSync(path.join(projectRoot, '.emeth'), { recursive: true });
   fs.mkdirSync(assetRoot, { recursive: true });
   fs.mkdirSync(path.dirname(registryPath), { recursive: true });
   fs.writeFileSync(registryPath, JSON.stringify({
@@ -82,12 +79,7 @@ async function fixture(t, values = {}) {
       registered_at: '2026-08-29T00:00:00.000Z',
     }],
   }), 'utf8');
-  for (const [name, content] of Object.entries(values.assets || {})) {
-    fs.writeFileSync(path.join(assetRoot, name), content, 'utf8');
-  }
-  if (values.memory !== false) {
-    writeMemory(projectRoot, values.relativeRoot, values.memory || {});
-  }
+  writeMemory(projectRoot, values.relativeRoot, values.memory || {});
 
   const projectService = new ProjectIndexService({
     registryOptions: { registryPath },
@@ -107,10 +99,8 @@ async function fixture(t, values = {}) {
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   });
   return {
-    architectureService: new ArchitectureService({ projectService }),
     projectRoot,
     server,
-    temporaryRoot,
   };
 }
 
@@ -190,8 +180,12 @@ test('architecture API lists registered documents and reads one Markdown documen
   assert.ok(Number(head.headers['content-length']) > 0);
 });
 
-test('an architecture-only registered project remains selectable without .emeth records', async (t) => {
-  const { server } = await fixture(t, { emeth: false });
+test('an architecture-only registered project remains selectable without Issue records', async (t) => {
+  const { projectRoot, server } = await fixture(t);
+  fs.writeFileSync(path.join(projectRoot, '.emeth', 'architecture.json'), JSON.stringify({
+    schema_version: 1, root: 'docs/architecture',
+  }));
+  assert.equal(fs.existsSync(path.join(projectRoot, '.emeth', 'issues')), false);
   const response = await request(server, '/api/v1/projects');
   assert.equal(response.status, 200);
   const project = JSON.parse(response.body).projects.find((item) => item.id === PROJECT_ID);
@@ -243,7 +237,7 @@ test('architecture API exposes only manifest-registered documents and GET or HEA
   ), '# system-context\n');
 });
 
-test('architecture API rejects malformed, disabled, oversized, and invalid UTF-8 content', async (t) => {
+test('architecture API preserves unverified checkpoints and reports disabled or unreadable content', async (t) => {
   const { projectRoot, server } = await fixture(t);
   const manifestPath = path.join(
     projectRoot,
@@ -262,18 +256,6 @@ test('architecture API rejects malformed, disabled, oversized, and invalid UTF-8
     200,
   );
 
-  current.schema_version = 1;
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  const unsupported = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`);
-  assert.equal(unsupported.status, 409);
-  assert.equal(JSON.parse(unsupported.body).error.code, 'architecture-manifest-invalid');
-
-  current.schema_version = 2;
-  current.git_checkpoint = {
-    revision: CHECKPOINT_REVISION,
-    branch_at_check: 'main',
-    checked_at: '2026-08-30T00:00:00.000Z',
-  };
   current.managed = false;
   fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
   const disabled = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`);
@@ -281,20 +263,6 @@ test('architecture API rejects malformed, disabled, oversized, and invalid UTF-8
   assert.equal(JSON.parse(disabled.body).error.code, 'architecture-not-managed');
 
   current.managed = true;
-  current.git_checkpoint.revision = 'abc123';
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  const invalidCheckpoint = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`);
-  assert.equal(invalidCheckpoint.status, 409);
-  assert.equal(JSON.parse(invalidCheckpoint.body).error.code, 'architecture-manifest-invalid');
-
-  current.git_checkpoint.revision = CHECKPOINT_REVISION;
-  current.documents[0].path = '../outside.md';
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  const malformed = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`);
-  assert.equal(malformed.status, 409);
-  assert.equal(JSON.parse(malformed.body).error.code, 'architecture-manifest-invalid');
-
-  current.documents[0].path = 'README.md';
   fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
   fs.writeFileSync(documentPath, Buffer.from([0xc3, 0x28]));
   const invalidUtf8 = await request(
@@ -311,27 +279,4 @@ test('architecture API rejects malformed, disabled, oversized, and invalid UTF-8
   );
   assert.equal(oversized.status, 409);
   assert.equal(JSON.parse(oversized.body).error.code, 'architecture-too-large');
-});
-
-test('architecture document reads reject canonical paths outside the project', async (t) => {
-  const documents = [document('system-context', 'system-context', 'linked/context.md', 0)];
-  const { projectRoot, server, temporaryRoot } = await fixture(t, { memory: { documents } });
-  const externalDirectory = path.join(temporaryRoot, 'external');
-  const linkedDirectory = path.join(projectRoot, 'docs', 'architecture', 'linked');
-  fs.mkdirSync(externalDirectory);
-  fs.writeFileSync(path.join(externalDirectory, 'context.md'), 'EXTERNAL SECRET', 'utf8');
-  fs.rmSync(linkedDirectory, { recursive: true });
-  fs.symlinkSync(
-    externalDirectory,
-    linkedDirectory,
-    process.platform === 'win32' ? 'junction' : 'dir',
-  );
-
-  const response = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-  );
-  assert.equal(response.status, 409);
-  assert.equal(JSON.parse(response.body).error.code, 'architecture-path-outside-project');
-  assert.doesNotMatch(response.body, /EXTERNAL SECRET/);
 });

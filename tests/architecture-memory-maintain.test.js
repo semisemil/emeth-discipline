@@ -38,23 +38,13 @@ function fixture(t) {
   function query(question) {
     const found = cli('memory.js', 'search', undefined, ['--query', question, '--limit', '1']);
     assert.equal(found.matches.length, 1, question);
-    const documents = new Map();
-    let cursor;
-    do {
-      const flags = ['--id', found.matches[0].id, '--revision', found.revision, '--max-chars', '6000'];
-      if (cursor) flags.push('--cursor', cursor);
-      const page = cli('memory.js', 'read', undefined, flags);
-      for (const doc of page.documents) {
-        if (!documents.has(doc.path)) documents.set(doc.path, { intro: doc.intro, sections: [] });
-        documents.get(doc.path).sections.push(...doc.sections);
-      }
-      if (!page.complete) assert.ok(page.documents.some(doc => doc.sections.length), 'A read page must make progress.');
-      cursor = page.next_cursor;
-    } while (cursor);
-    const texts = [...documents.values()].flatMap(doc => [doc.intro, ...doc.sections.map(section => section.text)]);
+    const page = cli('memory.js', 'read', undefined,
+      ['--id', found.matches[0].id, '--revision', found.revision, '--max-chars', '6000']);
+    assert.equal(page.complete, true);
+    const texts = page.documents.flatMap(doc => [doc.intro, ...doc.sections.map(section => section.text)]);
     return { id: found.matches[0].id, text: texts.join('\n'), chars: texts.reduce((size, text) => size + text.length, 0) };
   }
-  return { root, directory, run, cli, load, read, add, snapshot, query };
+  return { directory, run, cli, load, read, add, snapshot, query };
 }
 
 test('real CLI searches and partial reads preserve offline and synchronization answers after a cross-document split', t => {
@@ -210,12 +200,15 @@ test('stale revisions, stale receipts and missing links reject an entire batch b
   f.add('추가 조건', '접수의 출처를 보존한다.');
   const saved = f.snapshot();
   assert.throws(() => f.run('reorganize', { revision: stale, sections: [] }), { code: 'memory-changed' });
+  assert.deepEqual(f.snapshot(), saved);
   const valid = { document: 'context', id, expected: f.read(id).receipt, body: '접수 원본을 보존한다.' };
   assert.throws(() => f.run('reorganize', { revision: f.load().revision, sections: [
     { document: 'context', ref: 'new', title: '새 절', body: '새 조건.', confidence: 'confirmed', lifecycle: 'current' },
     { ...valid, expected: 'stale' },
   ] }), { code: 'memory-record-changed' });
+  assert.deepEqual(f.snapshot(), saved);
   assert.throws(() => f.run('reorganize', { revision: f.load().revision, sections: [{ ...valid, links: ['AM-absent'] }] }), { code: 'memory-link-missing' });
+  assert.deepEqual(f.snapshot(), saved);
   assert.equal(f.cli('author.js', 'reorganize', { revision: f.load().revision }).status, 'no-op');
   assert.deepEqual(f.snapshot(), saved);
 });
@@ -259,7 +252,7 @@ test('reorganization in an initialization draft becomes searchable only after it
   assert.match(JSON.stringify(M.read(M.loadRecords(root), { ids: [found.matches[0].id], revision: found.revision })), /망 점검 중에도/);
 });
 
-test('interrupted reorganization recovers the same allocated sections through the existing journal', t => {
+test('interrupted reorganization recovers the edited body and new prerequisite without duplicating sections', t => {
   const f = fixture(t);
   const old = f.add('보관', '접수 기록을 보관한다.');
   const manifest = f.snapshot()[0];
@@ -276,11 +269,13 @@ test('interrupted reorganization recovers the same allocated sections through th
     ] }), /Interrupted reorganization/);
   } finally { S.atomicWrite = atomicWrite; }
   assert.throws(f.load, { code: 'memory-record-pending' });
-  const journal = JSON.parse(fs.readFileSync(path.join(f.directory, '.architecture-memory/work/record.json'), 'utf8'));
   assert.equal(f.run('recover').status, 'resumed');
-  for (const entry of journal.entries) assert.equal(fs.readFileSync(path.join(f.directory, entry.path), 'utf8'), entry.after);
   assert.equal(f.run('recover').status, 'no-op');
   assert.equal(f.snapshot()[0], manifest);
-  assert.equal(f.load().records.filter(item => item.title === '저장 조건').length, 1);
-  assert.match(f.query('보관').text, /정전 후에도 보관/);
+  const records = f.load();
+  const storage = records.records.filter(item => item.title === '저장 조건');
+  assert.equal(storage.length, 1);
+  assert.deepEqual(records.byId.get(old).links, [storage[0].id]);
+  assert.match(f.read(old).text, /접수 기록은 저장 조건을 따른다/);
+  assert.match(f.read(storage[0].id).text, /정전 후에도 보관/);
 });

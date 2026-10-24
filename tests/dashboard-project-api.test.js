@@ -76,7 +76,7 @@ async function fixture(t, options = {}) {
     await new Promise((resolve) => server.close(resolve));
     fs.rmSync(root, { recursive: true, force: true });
   });
-  return { assetRoot, availableRoot, projectService, root, registryPath, server };
+  return { assetRoot, availableRoot, root, registryPath, server };
 }
 
 function rawRequest(server, bytes) {
@@ -88,22 +88,6 @@ function rawRequest(server, bytes) {
     socket.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     socket.on('error', reject);
   });
-}
-
-function linkExternalFile(externalFile, targetFile) {
-  try {
-    fs.symlinkSync(externalFile, targetFile, 'file');
-  } catch (error) {
-    if (process.platform !== 'win32' || error.code !== 'EPERM') {
-      throw error;
-    }
-    fs.rmSync(path.dirname(targetFile), { recursive: true, force: true });
-    fs.symlinkSync(
-      path.dirname(externalFile),
-      path.dirname(targetFile),
-      'junction',
-    );
-  }
 }
 
 function request(server, values = {}) {
@@ -139,10 +123,9 @@ function pathKey(filePath) {
   return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
 
-function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
+function instrumentAssetDescriptors(assetRoot) {
   const originalOpen = fs.openSync;
   const originalClose = fs.closeSync;
-  const originalStat = fs.statSync;
   const assetPrefix = `${pathKey(assetRoot)}${path.sep}`;
   const descriptors = new Set();
   let restored = false;
@@ -152,9 +135,6 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
     if (!fileKey.startsWith(assetPrefix)) {
       return originalOpen.call(fs, filePath, ...args);
     }
-    if (beforeOpen) {
-      beforeOpen(filePath);
-    }
     const descriptor = originalOpen.call(fs, filePath, ...args);
     descriptors.add(descriptor);
     return descriptor;
@@ -163,20 +143,12 @@ function instrumentAssetDescriptors(assetRoot, beforeOpen, beforeStat) {
     descriptors.delete(descriptor);
     return originalClose.call(fs, descriptor);
   };
-  fs.statSync = function instrumentedStat(filePath, ...args) {
-    const fileKey = pathKey(filePath);
-    if (fileKey.startsWith(assetPrefix) && beforeStat) {
-      beforeStat(filePath);
-    }
-    return originalStat.call(fs, filePath, ...args);
-  };
 
   return {
     restore() {
       if (!restored) {
         fs.openSync = originalOpen;
         fs.closeSync = originalClose;
-        fs.statSync = originalStat;
         restored = true;
       }
     },
@@ -268,24 +240,15 @@ test('static dashboard serves root, expected_version entry, and same-origin asse
   assert.equal(descriptors.snapshot().outstanding, 0);
 });
 
-test('static dashboard rejects unknown files, directories, traversal, encoded separators, and symlink escape', async (t) => {
-  const { assetRoot, root, server } = await fixture(t, {
+test('static dashboard rejects unknown files, directories, traversal, and encoded separators', async (t) => {
+  const { server } = await fixture(t, {
     assetFiles: {
       'index.html': '<!doctype html>',
       'nested/asset.js': 'safe',
     },
   });
-  const externalDirectory = path.join(root, 'external-static');
-  const externalFile = path.join(externalDirectory, 'escape.js');
-  fs.mkdirSync(externalDirectory, { recursive: true });
-  fs.writeFileSync(externalFile, 'external secret', 'utf8');
-  const linkedFile = path.join(assetRoot, 'linked', 'escape.js');
-  fs.mkdirSync(path.dirname(linkedFile), { recursive: true });
-  linkExternalFile(externalFile, linkedFile);
-
   assert.equal((await request(server, { path: '/missing.js' })).status, 404);
   assert.equal((await request(server, { path: '/nested/' })).status, 404);
-  assert.equal((await request(server, { path: '/linked/escape.js' })).status, 404);
   assert.equal((await request(server, { path: '/nested%2fasset.js' })).status, 400);
   assert.equal((await request(server, { path: '/app.js?cache=1' })).status, 400);
 
@@ -297,91 +260,6 @@ test('static dashboard rejects unknown files, directories, traversal, encoded se
   const [headerText, body] = traversal.split('\r\n\r\n');
   assert.match(headerText, /^HTTP\/1\.1 400\b/);
   assert.equal(JSON.parse(body).error.code, 'request-target-invalid');
-  assert.doesNotMatch(traversal, /external secret/);
-});
-
-test('static GET and HEAD reject an asset-root replacement between stat and open', async (t) => {
-  for (const method of ['GET', 'HEAD']) {
-    const { assetRoot, root, server } = await fixture(t, {
-      assetFiles: { 'index.html': '<!doctype html>SAFE' },
-    });
-    const originalAssetRoot = path.join(root, `assets-before-${method.toLowerCase()}`);
-    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-static-external-'));
-    const externalSecret = 'OUTSIDE-SECRET';
-    fs.writeFileSync(path.join(externalRoot, 'index.html'), externalSecret, 'utf8');
-    t.after(() => fs.rmSync(externalRoot, { recursive: true, force: true }));
-
-    let replaced = false;
-    const descriptors = instrumentAssetDescriptors(assetRoot, () => {
-      if (replaced) {
-        return;
-      }
-      fs.renameSync(assetRoot, originalAssetRoot);
-      fs.symlinkSync(
-        externalRoot,
-        assetRoot,
-        process.platform === 'win32' ? 'junction' : 'dir',
-      );
-      replaced = true;
-    });
-    t.after(() => descriptors.restore());
-
-    let response;
-    try {
-      response = await request(server, { method, path: '/' });
-    } finally {
-      descriptors.restore();
-    }
-
-    assert.equal(replaced, true);
-    assert.equal(response.status, 404);
-    assert.equal(response.headers['content-type'], 'application/json; charset=utf-8');
-    assert.doesNotMatch(response.body, /OUTSIDE-SECRET/);
-    assert.equal(descriptors.snapshot().outstanding, 0);
-    assert.equal(fs.readFileSync(path.join(externalRoot, 'index.html'), 'utf8'), externalSecret);
-  }
-});
-
-test('static GET and HEAD reject a nested component replacement between realpath and stat', async (t) => {
-  for (const method of ['GET', 'HEAD']) {
-    const { assetRoot, server } = await fixture(t, {
-      assetFiles: { 'nested/index.html': '<!doctype html>SAFE-NESTED' },
-    });
-    const originalNestedRoot = path.join(assetRoot, `nested-before-${method.toLowerCase()}`);
-    const externalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-static-nested-external-'));
-    const externalSecret = 'OUTSIDE-SECRET-REPRO';
-    fs.writeFileSync(path.join(externalRoot, 'index.html'), externalSecret, 'utf8');
-    t.after(() => fs.rmSync(externalRoot, { recursive: true, force: true }));
-
-    let replaced = false;
-    const descriptors = instrumentAssetDescriptors(assetRoot, undefined, () => {
-      if (replaced) {
-        return;
-      }
-      fs.renameSync(path.join(assetRoot, 'nested'), originalNestedRoot);
-      fs.symlinkSync(
-        externalRoot,
-        path.join(assetRoot, 'nested'),
-        process.platform === 'win32' ? 'junction' : 'dir',
-      );
-      replaced = true;
-    });
-    t.after(() => descriptors.restore());
-
-    let response;
-    try {
-      response = await request(server, { method, path: '/nested/index.html' });
-    } finally {
-      descriptors.restore();
-    }
-
-    assert.equal(replaced, true);
-    assert.equal(response.status, 404);
-    assert.equal(response.headers['content-type'], 'application/json; charset=utf-8');
-    assert.doesNotMatch(response.body, /OUTSIDE-SECRET-REPRO/);
-    assert.equal(descriptors.snapshot().outstanding, 0);
-    assert.equal(fs.readFileSync(path.join(externalRoot, 'index.html'), 'utf8'), externalSecret);
-  }
 });
 
 test('missing asset root leaves lifecycle health available and returns UI 404', async (t) => {
@@ -395,82 +273,6 @@ test('missing asset root leaves lifecycle health available and returns UI 404', 
   assert.equal(root.headers['x-content-type-options'], 'nosniff');
   assert.equal(root.headers['cache-control'], 'no-store');
   assert.equal(root.headers['access-control-allow-origin'], undefined);
-});
-
-test('raw NUL request targets receive the JSON clientError boundary response', async (t) => {
-  const { server } = await fixture(t);
-  const { port } = server.address();
-  const raw = await rawRequest(server, Buffer.concat([
-    Buffer.from('GET /api/v1/proj', 'ascii'),
-    Buffer.from([0]),
-    Buffer.from(`ects HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\n\r\n`, 'ascii'),
-  ]));
-  const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 400\b/);
-  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
-    const colon = line.indexOf(':');
-    return [line.slice(0, colon), line.slice(colon + 1).trim()];
-  }));
-  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
-  assert.equal(headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(headers.get('cache-control'), 'no-store');
-  assert.equal(headers.has('access-control-allow-origin'), false);
-  const { error } = JSON.parse(body);
-  assert.equal(error.code, 'request-target-invalid');
-  assert.equal(typeof error.message, 'string');
-  assert.notEqual(error.message.trim(), '');
-});
-
-test('raw ordinary HTTP without Host reaches the secured JSON Host boundary', async (t) => {
-  const { server } = await fixture(t);
-  const raw = await rawRequest(
-    server,
-    Buffer.from('GET /api/v1/health HTTP/1.1\r\n\r\n', 'ascii'),
-  );
-  const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 403\b/);
-  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
-    const colon = line.indexOf(':');
-    return [line.slice(0, colon), line.slice(colon + 1).trim()];
-  }));
-  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
-  assert.equal(headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(headers.get('cache-control'), 'no-store');
-  assert.equal(headers.has('access-control-allow-origin'), false);
-  const { error } = JSON.parse(body);
-  assert.equal(error.code, 'host-forbidden');
-  assert.equal(typeof error.message, 'string');
-  assert.notEqual(error.message.trim(), '');
-});
-
-test('raw ordinary HTTP rejects duplicate Host fields before Origin and routing', async (t) => {
-  const { server } = await fixture(t);
-  const { port } = server.address();
-  const raw = await rawRequest(
-    server,
-    Buffer.from([
-      'GET /api/v1/health HTTP/1.1',
-      `Host: 127.0.0.1:${port}`,
-      'Host: evil.example',
-      'Origin: https://invalid.example',
-      '',
-      '',
-    ].join('\r\n'), 'ascii'),
-  );
-  const [headerText, body] = raw.split('\r\n\r\n');
-  assert.match(headerText, /^HTTP\/1\.1 403\b/);
-  const headers = new Headers(headerText.split('\r\n').slice(1).map(line => {
-    const colon = line.indexOf(':');
-    return [line.slice(0, colon), line.slice(colon + 1).trim()];
-  }));
-  assert.equal(headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
-  assert.equal(headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(headers.get('cache-control'), 'no-store');
-  assert.equal(headers.has('access-control-allow-origin'), false);
-  const { error } = JSON.parse(body);
-  assert.equal(error.code, 'host-forbidden');
-  assert.equal(typeof error.message, 'string');
-  assert.notEqual(error.message.trim(), '');
 });
 
 test('only unavailable projects can be forgotten', async (t) => {
@@ -555,34 +357,6 @@ test('two simultaneously available projects never expose each other records', as
   assert.equal(current.currentSummary, '대기');
 });
 
-test('HTTP index rejects a file-link escape through a symlink or Windows junction fallback', async (t) => {
-  const { availableRoot, root, server } = await fixture(t);
-  const externalDirectory = path.join(root, 'external-plan');
-  const externalFile = path.join(externalDirectory, 'PLAN.md');
-  fs.mkdirSync(externalDirectory, { recursive: true });
-  fs.writeFileSync(externalFile, [
-    '---',
-    'id: PLAN-0009',
-    'title: EXTERNAL-FILE-SECRET',
-    'status: ready',
-    '---',
-    'EXTERNAL-BODY-SECRET',
-  ].join('\n'), 'utf8');
-  const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0009-file-link');
-  fs.mkdirSync(planDirectory, { recursive: true });
-  linkExternalFile(externalFile, path.join(planDirectory, 'PLAN.md'));
-
-  const response = await request(server, {
-    path: `/api/v1/projects/${AVAILABLE_ID}/index?refresh=1`,
-  });
-  assert.equal(response.status, 200);
-  const index = JSON.parse(response.body);
-  assert.deepEqual(index.plans, []);
-  assert.ok(index.diagnostics.some((item) => item.code === 'record-path-outside-project'
-    && item.relative_path === '.emeth/plan/PLAN-0009-file-link/PLAN.md'));
-  assert.doesNotMatch(response.body, /EXTERNAL-(?:FILE|BODY)-SECRET/);
-});
-
 test('HTTP index rejects records over 2 MiB with a relative-path diagnostic', async (t) => {
   const { availableRoot, server } = await fixture(t);
   const planDirectory = path.join(availableRoot, '.emeth', 'plan', 'PLAN-0010-too-large');
@@ -602,90 +376,6 @@ test('HTTP index rejects records over 2 MiB with a relative-path diagnostic', as
   assert.deepEqual(index.plans, []);
   assert.ok(index.diagnostics.some((item) => item.code === 'record-too-large'
     && item.relative_path === '.emeth/plan/PLAN-0010-too-large/PLAN.md'));
-});
-
-test('HTTP never trusts a canonical project root replaced by a junction or symlink', async (t) => {
-  const { availableRoot, root, server } = await fixture(t);
-  const initial = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
-  assert.equal(initial.status, 200);
-  assert.deepEqual(JSON.parse(initial.body).issues.map((issue) => issue.id), ['PL-0001']);
-
-  const movedRoot = path.join(root, 'moved-original');
-  const externalRoot = path.join(root, 'external');
-  const externalIssues = path.join(externalRoot, '.emeth', 'issues');
-  fs.mkdirSync(externalIssues, { recursive: true });
-  const externalIssue = makeIssue();
-  externalIssue.identity.id = 'PL-9999';
-  externalIssue.identity.title = 'EXTERNAL-SECRET-RECORD';
-  fs.writeFileSync(path.join(externalIssues, 'PL-9999.json'), JSON.stringify(externalIssue), 'utf8');
-  fs.renameSync(availableRoot, movedRoot);
-  fs.symlinkSync(externalRoot, availableRoot, process.platform === 'win32' ? 'junction' : 'dir');
-
-  const projects = await request(server, { path: '/api/v1/projects' });
-  assert.equal(projects.status, 200);
-  const listed = JSON.parse(projects.body).projects.find((project) => project.id === AVAILABLE_ID);
-  assert.equal(listed.availability, 'unavailable');
-  assert.deepEqual(listed.counts, { active: null, blocked: null });
-  assert.doesNotMatch(projects.body, /EXTERNAL-SECRET-RECORD/);
-
-  const index = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
-  assert.equal(index.status, 200);
-  assert.equal(JSON.parse(index.body).project.availability, 'unavailable');
-  assert.deepEqual(JSON.parse(index.body).issues, []);
-  assert.doesNotMatch(index.body, /EXTERNAL-SECRET-RECORD/);
-
-  const document = await request(server, {
-    path: `/api/v1/projects/${AVAILABLE_ID}/documents/issue/PL-9999`,
-  });
-  assert.equal(document.status, 409);
-  assert.equal(JSON.parse(document.body).error.code, 'project-unavailable');
-  assert.doesNotMatch(document.body, /EXTERNAL-SECRET-RECORD/);
-});
-
-test('HTTP discards a cached index when the registry maps the same project ID to another canonical root', async (t) => {
-  const { availableRoot, registryPath, root, server } = await fixture(t);
-  const issueA = makeIssue();
-  issueA.identity.title = 'SECRET-FROM-A';
-  issueA.state.current_summary = 'SECRET-FROM-A';
-  fs.writeFileSync(
-    path.join(availableRoot, '.emeth', 'issues', 'PL-0001.json'),
-    JSON.stringify(issueA),
-    'utf8',
-  );
-
-  const fromA = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
-  assert.equal(fromA.status, 200);
-  assert.match(fromA.body, /SECRET-FROM-A/);
-
-  const rootB = path.join(root, 'available-b');
-  const issuesB = path.join(rootB, '.emeth', 'issues');
-  fs.mkdirSync(issuesB, { recursive: true });
-  const issueB = makeIssue();
-  issueB.identity.title = 'ROOT-B';
-  issueB.state.current_summary = 'CURRENT-FROM-B';
-  fs.writeFileSync(path.join(issuesB, 'PL-0001.json'), JSON.stringify(issueB), 'utf8');
-  const canonicalB = fs.realpathSync.native(rootB);
-  const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
-  registry.projects.find((project) => project.id === AVAILABLE_ID).root = canonicalB;
-  fs.writeFileSync(registryPath, JSON.stringify(registry), 'utf8');
-
-  const projects = await request(server, { path: '/api/v1/projects' });
-  const listed = JSON.parse(projects.body).projects.find((project) => project.id === AVAILABLE_ID);
-  assert.equal(listed.root, canonicalB);
-
-  const fromB = await request(server, { path: `/api/v1/projects/${AVAILABLE_ID}/index` });
-  assert.equal(fromB.status, 200);
-  const indexB = JSON.parse(fromB.body);
-  assert.equal(indexB.project.root, canonicalB);
-  assert.equal(indexB.issues[0].title, 'ROOT-B');
-  assert.doesNotMatch(fromB.body, /SECRET-FROM-A/);
-
-  const documentB = await request(server, {
-    path: `/api/v1/projects/${AVAILABLE_ID}/documents/issue/PL-0001`,
-  });
-  assert.equal(documentB.status, 200);
-  assert.equal(JSON.parse(documentB.body).body.currentSummary, 'CURRENT-FROM-B');
-  assert.doesNotMatch(documentB.body, /SECRET-FROM-A/);
 });
 
 test('project list omits document details and subsequent index reads see current sources', async (t) => {

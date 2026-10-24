@@ -30,7 +30,7 @@ function hook(t, event) {
 
 test('Mixdog compatibility variables use Mixdog identity and state without changing other hosts', () => {
   const env = { MIXDOG_PLUGIN_ROOT: '/mixdog/plugin', MIXDOG_PLUGIN_DATA: '/mixdog/state',
-    PLUGIN_ROOT: '/codex/plugin', CLAUDE_PLUGIN_ROOT: '/compat/plugin', CLAUDE_PLUGIN_DATA: '/compat/state' };
+    CLAUDE_PLUGIN_ROOT: '/compat/plugin', CLAUDE_PLUGIN_DATA: '/compat/state' };
   assert.equal(host.name(env), 'mixdog');
   assert.equal(host.dataDir({ env }), '/mixdog/state');
   assert.equal(host.logDir({ env }), path.join('/mixdog/state', 'log'));
@@ -38,11 +38,7 @@ test('Mixdog compatibility variables use Mixdog identity and state without chang
   assert.equal(host.dataDir({ env: { MIXDOG_PLUGIN_ROOT: '/plugin' }, temporaryFallback: true }),
     path.join(os.tmpdir(), 'emeth-mixdog-plugin-state'));
   assert.equal(host.logDir({ env: { MIXDOG_PLUGIN_ROOT: '/plugin', MIXDOG_DATA_DIR: '/state' } }), path.join('/state', 'log'));
-  assert.equal(host.name({ PLUGIN_ROOT: '/codex', CLAUDE_PLUGIN_ROOT: '/compat' }), 'codex');
-  assert.equal(host.name({ CLAUDE_PLUGIN_ROOT: '/claude' }), 'claude');
   assert.equal(host.name({ MIXDOG_DATA_DIR: '/mixdog/data' }), 'mixdog');
-  assert.equal(host.name({ PLUGIN_ROOT: '/codex', MIXDOG_DATA_DIR: '/mixdog/data' }), 'codex');
-  assert.equal(host.name({}), 'codex');
 });
 
 test('Mixdog sessions apply host rules and restore them on user submissions', t => {
@@ -87,8 +83,4 @@ test('Mixdog agent spawns receive rules without losing task, route, file, or use
   for (const rules of hostRules) assert.ok(updated.context.includes(rules));
   assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'agent', tool_input: updated }), {},
     'repeat execution does not duplicate rules');
-  for (const type of ['send', 'close', 'cancel', 'read', 'status', 'list', 'cleanup']) {
-    assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'agent', tool_input: { ...args, type } }), {});
-  }
-  assert.deepEqual(hook(t, { hook_event_name: 'PreToolUse', tool_name: 'shell', tool_input: args }), {});
 });

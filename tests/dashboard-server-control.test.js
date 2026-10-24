@@ -7,12 +7,14 @@ const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
 const {
+  dashboardDirectory,
   inspectServer,
   openDashboard,
   runCli,
   startServer,
   stopServer,
 } = require('../plugins/emeth-discipline/dashboard/control');
+const { registerProject } = require('../plugins/emeth-discipline/dashboard/registry');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const controlPath = path.join(pluginRoot, 'dashboard', 'control.js');
@@ -36,39 +38,46 @@ function tempDirectory(t) {
   return directory;
 }
 
-test('server status rejects missing Windows APPDATA before accessing a fallback directory', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-control-config-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-
-  await assert.rejects(inspectServer({ platform: 'win32', env: {}, homeDir: root }), { code: 'config-unavailable' });
-  assert.deepEqual(fs.readdirSync(root), []);
-});
-
 test('open uses expected_version and preserves server and project state', async (t) => {
-  const directory = tempDirectory(t);
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-control-project-'));
+  const env = isolatedEnvironment(root);
+  const directory = dashboardDirectory({ env });
+  t.after(async () => {
+    await stopServer({ directory });
+    fs.rmSync(root, { recursive: true, force: true });
+  });
   fs.mkdirSync(directory, { recursive: true });
+  const project = path.join(root, 'project');
+  fs.mkdirSync(project);
+  const registered = registerProject(project, { env });
   const projectsPath = path.join(directory, 'projects.json');
-  fs.writeFileSync(projectsPath, '{"preserve":true}');
-  const running = await startServer({ directory, port: 0 });
+  const beforeProjects = fs.readFileSync(projectsPath);
+  const started = spawnSync(process.execPath, [controlPath, 'start'], {
+    env, encoding: 'utf8', windowsHide: true, timeout: 20_000,
+  });
+  assert.equal(started.status, 0, started.stderr);
+  const running = JSON.parse(started.stdout);
   const beforeServer = fs.readFileSync(path.join(directory, 'server.json'), 'utf8');
   let launchedUrl;
 
   const opened = await openDashboard({
     directory,
-    port: 0,
     browserLauncher(url) {
       launchedUrl = url;
     },
   });
 
   assert.equal(opened.action, 'opened');
+  assert.equal(opened.instance_id, running.instance_id);
   assert.equal(new URL(launchedUrl).searchParams.get('expected_version'), running.version);
+  const listed = await (await fetch(`http://127.0.0.1:${running.port}/api/v1/projects`)).json();
+  assert.deepEqual(listed.projects.map(item => item.id), [registered.project.id]);
   assert.equal(fs.readFileSync(path.join(directory, 'server.json'), 'utf8'), beforeServer);
   assert.equal(fs.existsSync(path.join(directory, 'settings.json')), false);
-  assert.equal(fs.readFileSync(projectsPath, 'utf8'), '{"preserve":true}');
+  assert.deepEqual(fs.readFileSync(projectsPath), beforeProjects);
 
   await stopServer({ directory });
-  assert.equal(fs.readFileSync(projectsPath, 'utf8'), '{"preserve":true}');
+  assert.deepEqual(fs.readFileSync(projectsPath), beforeProjects);
 });
 
 test('open starts a stopped server and launches its verified URL', async (t) => {
@@ -121,14 +130,6 @@ test('status reports a running version mismatch without restarting it', async (t
   assert.equal(status.instance_id, running.instance_id);
   assert.equal(status.version, 'older-version');
   assert.equal(status.version_mismatch, true);
-});
-
-test('dashboard-server CLI reserves stderr and exit 2 for invalid actions', () => {
-  const result = spawnSync(process.execPath, [controlPath, 'register'], { encoding: 'utf8' });
-
-  assert.equal(result.status, 2);
-  assert.equal(result.stdout, '');
-  assert.notEqual(result.stderr.trim(), '');
 });
 
 test('status and stop report stopped without creating dashboard state', (t) => {

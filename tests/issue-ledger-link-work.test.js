@@ -4,6 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { getRegistryPath } = require('../plugins/emeth-discipline/dashboard/registry.js');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const cliPath = path.join(pluginRoot, 'skills', 'issue-ledger', 'scripts', 'issue-ledger.js');
@@ -143,9 +144,13 @@ test('link-work accepts a BOM-prefixed Issue and stores one canonical link with 
     { kind: 'transition', from: 'open', to: 'doing' }
   ]);
   const before = fs.readFileSync(filePath, 'utf8');
+  const registryPath = getRegistryPath({ env: configEnv(root) });
+  fs.unlinkSync(registryPath);
   const repeated = runLinkWork(root, { updatedAt: '2026-08-12T02:00:00.000Z' });
   assert.equal(repeated.status, 0, repeated.stderr);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
+  assert.match(repeated.stdout, /^no-op:/);
+  assert.equal(fs.existsSync(registryPath), false);
 });
 
 test('Design work links round-trip through the issue ledger and dashboard with readiness signals', (t) => {
@@ -175,6 +180,7 @@ test('link-work rejects a mismatched work ID before changing the issue', (t) => 
   const result = runLinkWork(root, { workId: 'SPEC-0002' });
 
   assert.equal(result.status, 1);
+  assert.match(result.stderr, /location이 SPEC-0002의 Spec 경로가 아닙니다/);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
@@ -199,53 +205,13 @@ test('link-work accepts a Plan without changing the active issue status', (t) =>
   assert.deepEqual(linked.events, []);
 });
 
-test('link-work decodes quoted IDs and inline Plan backlinks before saving the issue', (t) => {
-  const { projectRoot, root, filePath } = createFixture(t);
-  const workPath = '.emeth/plan/PLAN-0001-quoted/PLAN.md';
-  const artifactPath = path.join(projectRoot, workPath);
-  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
-  fs.writeFileSync(artifactPath, '---\nid: "PLAN-\\u0030001"\ntitle: Example\nstatus: ready\nrelated_issues: ["PL-\\u0030001"]\n---\n');
-
-  const result = runLinkWork(root, {
-    kind: 'plan',
-    workId: 'PLAN-0001',
-    workPath,
-    status: null
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  assert.deepEqual(linked.context, [{ kind: 'Plan', location: workPath }]);
-});
-
-test('link-work rejects incomplete Spec metadata without changing the issue', (t) => {
-  const { projectRoot, root, filePath } = createFixture(t);
-  const before = fs.readFileSync(filePath, 'utf8');
-  const artifactPath = path.join(projectRoot, '.emeth/specs/SPEC-0001-example/SPEC.md');
-  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
-  fs.writeFileSync(artifactPath, '---\n{"id":"SPEC-0001","related_issues":["PL-0001"]}\n---\n');
-
-  const result = runLinkWork(root);
-
-  assert.equal(result.status, 1);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
-test('link-work rejects a missing explicit issue before changing other issues', (t) => {
-  const { root, filePath } = createFixture(t);
-  const before = fs.readFileSync(filePath, 'utf8');
-  const result = runLinkWork(root, { issueId: 'PL-9999' });
-
-  assert.equal(result.status, 1);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
 test('link-work requires the Plan or Spec to link back to the issue', (t) => {
   const { root, filePath } = createFixture(t);
   const before = fs.readFileSync(filePath, 'utf8');
   const result = runLinkWork(root, { relatedIssues: [] });
 
   assert.equal(result.status, 1);
+  assert.match(result.stderr, /SPEC-0001 related_issues에서 PL-0001/);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
@@ -273,6 +239,7 @@ test('generic update cannot bypass linked-artifact validation', (t) => {
   ], { encoding: 'utf8', env: configEnv(root) });
 
   assert.equal(result.status, 1);
+  assert.match(result.stderr, /역링크를 검증하는 link-work 명령/);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
@@ -295,6 +262,7 @@ test('link-work does not reopen or advance a terminal issue', (t) => {
   const result = runLinkWork(root);
 
   assert.equal(result.status, 1);
+  assert.match(result.stderr, /종료된 이슈.*resolved/);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 

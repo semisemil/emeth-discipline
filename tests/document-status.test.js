@@ -6,11 +6,11 @@ const path = require('node:path');
 const {spawnSync} = require('node:child_process');
 const test = require('node:test');
 const cli = path.resolve(__dirname, '../plugins/emeth-discipline/writers/document-writer.js');
-function fixture(t, kind='design', pretty=false, newline='\n') {
+function fixture(t, { pretty=false, newline='\n' }={}) {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'emeth-status-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  const project=path.join(root,'project'), id=kind==='design'?'DESIGN-0001':'SPEC-0001';
-  const file=path.join(project,'.emeth',kind==='design'?'designs':'specs',id+'-test',kind==='design'?'DESIGN.md':'SPEC.md');
+  const project=path.join(root,'project'), id='DESIGN-0001';
+  const file=path.join(project,'.emeth','designs',id+'-test','DESIGN.md');
   fs.mkdirSync(path.dirname(file),{recursive:true});
   const metadata={schema_version:2,id,title:'상태 변경',kind:'feature',status:'ready',revision:3,supersedes:[],superseded_by:null,related_issues:[]};
   const body='\r\n# Body 한글\n\n"status": "ready" must remain.\r\nTrailing spaces  \n';
@@ -20,8 +20,8 @@ function fixture(t, kind='design', pretty=false, newline='\n') {
   const run=(extra=[],memory='off')=>spawnSync(process.execPath,[cli,'status','--project-root',project,'--id',id,'--status','completed',...(memory ? ['--memory',memory] : []),...extra],{env,encoding:'utf8',input:'Not document stdin',timeout:10000,windowsHide:true});
   return {root,project,id,file,metadata,body,text,run};
 }
-for(const [kind,pretty] of [['design',false],['spec',true]]) test(`${kind} status handles ${pretty?'pretty CRLF':'compact LF'} JSON without document input`,t=>{
-  const f=fixture(t,kind,pretty,pretty?'\r\n':'\n');
+test('Design status preserves pretty CRLF metadata and body bytes without document input',t=>{
+  const f=fixture(t,{pretty:true,newline:'\r\n'});
   const r=f.run();assert.equal(r.status,0,r.stderr);
   const output=JSON.parse(r.stdout);assert.equal(output.document_status,'completed');assert.equal(output.write.status,'updated');assert.equal(output.write.revision,3);assert.equal(output.write.snapshot,null);assert.notEqual(output.registration.status,'failed');
   const text=fs.readFileSync(f.file,'utf8'), match=text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)([\s\S]*)$/);
@@ -37,15 +37,14 @@ test('invalid status and duplicate options leave the document unchanged',t=>{
  const r=spawnSync(process.execPath,[cli,'status','--project-root',f.project,'--id',f.id,'--status','bogus','--memory','off'],{encoding:'utf8'});
  assert.notEqual(r.status,0);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);
 });
-test('missing and ambiguous IDs fail without changing a document',t=>{
- const f=fixture(t);const other=path.join(path.dirname(path.dirname(f.file)),f.id+'-duplicate',path.basename(f.file));
- fs.mkdirSync(path.dirname(other));fs.writeFileSync(other,f.text);
- assert.notEqual(f.run().status,0);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);
- fs.unlinkSync(other);fs.unlinkSync(f.file);assert.notEqual(f.run().status,0);assert.equal(fs.existsSync(f.file),false);
+test('a missing ID fails without recreating its document',t=>{
+ const f=fixture(t);fs.unlinkSync(f.file);
+ assert.notEqual(f.run().status,0);assert.equal(fs.existsSync(f.file),false);
 });
 test('status respects an active Design lock',t=>{
- const f=fixture(t),lock=path.join(f.project,'.emeth','.design-write.lock');fs.writeFileSync(lock,String(process.pid));
- const r=f.run();assert.notEqual(r.status,0);assert.match(r.stderr,/document-locked/);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);assert.equal(fs.readFileSync(lock,'utf8'),String(process.pid));
+ const f=fixture(t),lock=path.join(f.project,'.emeth','.design-write.lock');fs.mkdirSync(lock);
+ const owner=path.join(lock,'owner.json'),ownerText=JSON.stringify({pid:process.pid});fs.writeFileSync(owner,ownerText);
+ const r=f.run();assert.notEqual(r.status,0);assert.match(r.stderr,/document-locked/);assert.equal(fs.readFileSync(f.file,'utf8'),f.text);assert.equal(fs.readFileSync(owner,'utf8'),ownerText);
 });
 
 test('status does not initialize an absent Memory', t => {

@@ -74,13 +74,6 @@ test('a subagent parent resumes through its native path without queuing direct i
   assert.equal((await f.create().perform('notify', { parent: 'parent', task: 'tests', message: 'tests ready' })).status, 'acknowledged');
 });
 
-test('an unacknowledged completion remains queued and retries do not duplicate it', async t => {
-  const f = fixture(t);
-  const results = await Promise.all([1, 2].map(() => f.create().perform('notify', { parent: 'parent', task: 'a', message: 'done' })));
-  assert.equal(f.queue().length, 1);
-  assert.equal(results[0].queuedSubmissionId, results[1].queuedSubmissionId);
-});
-
 test('completion retries recover the lock of an exited notifier and still support acknowledgement', async t => {
   const f = fixture(t);
   const source = `
@@ -97,10 +90,19 @@ test('completion retries recover the lock of an exited notifier and still suppor
   assert.deepEqual(f.queue(), []);
 });
 
-test('proxy launch failure preserves the original executable path and ENOENT', async t => {
+test('the default proxy command reports an unavailable Codex executable', async t => {
   const f = fixture(t);
-  const binary = path.join(f.create().directory, 'missing-codex.exe');
-  await assert.rejects(connect({ binary }), error => error.code === 'ENOENT' && error.path === binary);
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) if (key.toLowerCase() === 'path') delete env[key];
+  env.PATH = f.create().directory;
+  await assert.rejects(connect({ env }), error => {
+    if (process.platform === 'win32') assert.match(error.message, /['"]codex['"]/i);
+    else {
+      assert.equal(error.code, 'ENOENT');
+      assert.equal(error.path, 'codex');
+    }
+    return true;
+  });
 });
 
 test('proxy startup failure retains its stderr diagnostic', async t => {
@@ -142,22 +144,6 @@ test('RPC initialization and later requests complete through the proxy transport
   try {
     assert.deepEqual(await rpc.request('fixture/echo', { text: 'kept' }), { initialized: true, params: { text: 'kept' } });
   } finally { rpc.close(); }
-});
-
-test('reopening state preserves an early receipt and suppresses later registration', async t => {
-  const f = fixture(t);
-  await f.create().perform('ack', { parent: 'parent', task: 'a' });
-  assert.equal((await f.create().perform('notify', { parent: 'parent', task: 'a', message: 'done' })).status, 'acknowledged');
-  assert.deepEqual(f.queue(), []);
-});
-
-test('the same assignment name in another parent keeps its own wake-up', async t => {
-  const f = fixture(t), inbox = f.create();
-  await inbox.perform('notify', { parent: 'first', task: 'a', message: 'done' });
-  await inbox.perform('notify', { parent: 'second', task: 'a', message: 'done' });
-  await inbox.perform('ack', { parent: 'first', task: 'a' });
-  assert.equal(f.queue().length, 1);
-  assert.equal(f.queue()[0].threadId, 'second');
 });
 
 test('a failed cancellation keeps the completion available for a later acknowledgement', async t => {

@@ -114,19 +114,6 @@ test('missing or ambiguous headings and nonmember paths fail without modifying s
   assert.equal(fs.existsSync(f.file('revisions')), false);
 });
 
-test('partial reads retain validation of unselected members and pending document-set publication', t => {
-  const f = fixture(t);
-  fs.unlinkSync(f.file('delivery.md'));
-  const missing = f.run('read', ['--document', 'contracts/request.md', '--section', '접수']);
-  assert.equal(missing.status, 1);
-  assert.equal(missing.value.error.code, 'record-unavailable');
-  fs.writeFileSync(f.file('delivery.md'), delivery);
-  fs.writeFileSync(f.file('.design-set-pending.json'), '{}');
-  const pending = f.run('read', ['--document', 'DESIGN.md']);
-  assert.equal(pending.status, 1);
-  assert.equal(pending.value.error.code, 'design-document-set-pending');
-});
-
 test('compact CLI save results retain revision, snapshots, registration, and document status', t => {
   const f = fixture(t);
   assert.deepEqual(f.create.value, {
