@@ -17,12 +17,25 @@ node <plugin-root>/dashboard/records/development-contracts.js --project-root <pr
 ## Implementation workflow
 
 The calling conversation owns design selection, coupled code, integration and final verification.
-Choose the workflow from the required behavior before design exploration.
+After grounding the affected paths, select verification ownership from the behavioral change before design exploration.
+Use Continuous owner when the change introduces or changes any of these:
+
+- The interaction between processing stages or policies, including their input dependencies, applicability or required ordering.
+- Allowed state transitions, required execution ordering, or effects carried across calls or actors through shared state.
+- Compatibility rules across representations or integration boundaries, where new and existing behavior must coexist.
+
+Otherwise, use Integrated owner when requirements and baseline behavior establish the required result and the behavior to preserve.
+Fill material evidence gaps before selecting.
+Assess the changed relationships and contracts; an existing pipeline or stateful component alone does not select Continuous owner.
+Detailed requirements and specified interfaces do not remove these verification conditions.
+Keep the selection for the same work contract; reconsider it when new behavioral evidence or accepted requirements change that classification.
+Select design candidates separately through [blueprint](references/blueprint.md#phase-b-sketch).
+Candidate use leaves the selected workflow's review and test roles in place.
 
 | Workflow | Selection | Independent work |
 | --- | --- | --- |
-| Integrated owner | A bounded change whose outcomes and surrounding contracts are straightforward to verify | Two design candidates; the calling conversation selects the design, implements and verifies it, then one ensemble judge reviews the completed result |
-| Continuous owner | Other work, including interacting requirements, state transitions or integrations that need independent test derivation | Two design candidates and one ensemble judge settle the design before implementation; a fresh test author works alongside the calling conversation's implementation |
+| Integrated owner | The change does not meet a Continuous owner condition, and its required and preserved behavior are grounded | The calling conversation selects the design, implements and verifies it; one independent judge reviews the completed result |
+| Continuous owner | The change meets any Continuous owner condition above | One independent judge reviews the selected design before implementation; a fresh test author works alongside the calling conversation's implementation |
 
 Use the selected workflow throughout the task's playbook, retaining its reproduction, behavior-preservation and delivery checks.
 Reuse a reviewed Design, candidate artifacts and verification while their contracts and source evidence remain valid.
@@ -31,7 +44,8 @@ For Continuous owner, assign independent public-contract tests through the [impl
 Supply requirement and baseline source paths, test conventions and distinct owned test paths under that role's input contract.
 Implement in parallel, then integrate the tests and resolve failures against their contract basis.
 
-For Integrated owner, give ensemble's single judge the completed implementation, candidate artifacts and verification evidence.
+Use the [independent review contract](../ensemble/SKILL.md#independent-review) at the selected workflow's review boundary, including when no design candidates were used.
+For Integrated owner, supply the completed implementation, original requirements, source baseline, any candidate artifacts and verification evidence.
 Resolve material findings and obtain that judge's review of the affected corrections before delivery.
 Both workflows finish with verification of the complete public result on the real artifact.
 

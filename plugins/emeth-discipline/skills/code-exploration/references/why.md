@@ -1,6 +1,6 @@
 ---
 name: why
-description: "Use for 'why does X work this way', 'why we picked Y', design rationale, regressions, postmortems, or data-backed thresholds. Discovers available MCPs and queries each evidence category (source control, issue tracker, long-form docs, real-time chat, infrastructure observability, error tracking, product analytics warehouse) in parallel, then returns a cited read on decisions and tradeoffs. Use how for runtime behavior."
+description: "Use for 'why does X work this way', 'why we picked Y', design rationale, regressions, postmortems, or data-backed thresholds. Selects historical sources needed to answer the question and returns cited decisions and tradeoffs. Use how for runtime behavior."
 disable-model-invocation: true
 ---
 
@@ -14,7 +14,7 @@ Every spawn is `generalPurpose` with `readonly: false` (agent mode). **Do not us
 
 ## Operating Posture
 
-Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring. Read `<plugin-root>/skills/code-exploration/references/why/epistemics.md` for the full confidence framework and phrasing guide. The synthesizer must follow it.
+Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring. Read `<plugin-root>/skills/code-exploration/references/why/epistemics.md` for the full confidence framework and phrasing guide. The calling conversation applies it to the final synthesis.
 
 ## Step 1. Understand the Target and the Question
 
@@ -28,7 +28,9 @@ Before spawning investigators, build the seed context inline: file paths and lin
 
 ## Step 3. Spawn Parallel Investigators
 
-**Default to the full parallel investigation.** The goal is a complete coverage map, not a minimal one. Document the null, don't skip the search.
+Select sources from the question, known evidence and unresolved gaps.
+Investigate directly in the calling conversation when the scope is bounded.
+Delegate self-contained research when parallel work or a separate context window helps.
 
 ### Discovery
 
@@ -46,7 +48,8 @@ Map each available MCP to one evidence category:
 
 Source control is always available through git and `gh`. For the other six, classify using the MCP name, server instructions, tool names, and resource descriptors. If an MCP could fit more than one category, choose the one matching its primary evidence. Record ambiguous cases in the coverage map.
 
-Spawn one investigator per category that has a matching MCP, all in a single message so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs.
+For delegated research, assign independent evidence questions and the tools needed to answer them.
+Run independent investigations concurrently.
 
 Each investigator's prompt is `<plugin-root>/skills/code-exploration/references/why/investigator-prompt.md` filled in, plus:
 - the category playbook `references/sources/<source>.md` for the selected MCP, adapted from the examples in `<plugin-root>/skills/code-exploration/references/why/source-playbook.md`
@@ -55,9 +58,9 @@ Each investigator's prompt is `<plugin-root>/skills/code-exploration/references/
 
 ### Investigator roster, one per available evidence category
 
-Each category below is uniquely positioned to surface one shape of "why", shown after "Best at". Use it to know what to expect back, to name a gap when a category returns empty, and, only in the rare provably-irrelevant case, to justify a skip.
+Each category below is uniquely positioned to surface one shape of "why", shown after "Best at". Use it to know what to expect back, to name a gap when a category returns empty, and to choose sources that can resolve the current evidence gaps.
 
-1. **Source control** (git history, `gh` for PRs, code comments, tests). Always spawn, the only guaranteed source. Best at *implementation-time rationale captured during review*.
+1. **Source control** (git history, `gh` for PRs, code comments, tests). Available locally without a connected service. Best at *implementation-time rationale captured during review*.
 2. **Issue / ticket tracker** (e.g. Linear, Jira, GitHub Issues, Plane, Shortcut MCP). Best at *the product or business forcing function*. Strongest when the why is external to engineering.
 3. **Long-form documents** (e.g. Notion, Confluence, Google Docs, Coda MCP). Best at *long-form design rationale*, written out before it becomes code.
 4. **Real-time team chat** (e.g. Slack, Discord, Microsoft Teams, Mattermost MCP). Best at *real-time deliberation that never reached a doc*. Especially important when the source control, ticket, and doc paper trail is thin.
@@ -67,16 +70,12 @@ Each category below is uniquely positioned to surface one shape of "why", shown 
 
 ### When to skip an investigator
 
-Only with an **explicit, written justification** that goes in the final Sources Consulted. Two valid reasons:
-
-- **No MCP is available for that category** in this environment. Flag it as a gap, not a choice: "Real-time team chat skipped. No matching MCP available, so the conversational record was not searchable."
-- **The source is provably irrelevant**, not just "probably irrelevant." A high bar: "Error / exception tracking skipped. Target is a build-time script with no runtime code path."
-
-If your scope assessment suggests a single-commit trivial target where the PR description already contains the complete answer, you may answer inline **only after** confirming all seven available category searches would be redundant. Say so explicitly. This should be rare.
+Stop expanding the search when the evidence answers the question at the stated confidence.
+Report searched sources and material coverage limits, including unavailable sources that could change the conclusion.
 
 ## Step 4. Synthesize
 
-Spawn one synthesizer. It gets:
+The calling conversation synthesizes:
 1. The investigator findings, including any null results and any categories skipped with justification
 2. The code anchor
 3. The user's original question
@@ -85,11 +84,11 @@ Spawn one synthesizer. It gets:
 
 ## Step 5. Present
 
-Present the synthesizer's output to the user. You may lightly edit for clarity or add context from the conversation, but **do not rewrite the confidence language**.
+Present the synthesis with its evidence tiers and uncertainty intact.
 
 ## Output Format
 
-The structure is the one in `<plugin-root>/skills/code-exploration/references/why/synthesizer-prompt.md`: The Question, The Code in Question, What We Found, What We Can Reasonably Infer, Competing Hypotheses, What We Don't Know, Sources Consulted, Confidence Summary. Adapt as needed, but keep the confidence separation intact, and keep Sources Consulted as one line per investigator, including the ones that returned nothing or were skipped, with the reason.
+The structure is the one in `<plugin-root>/skills/code-exploration/references/why/synthesizer-prompt.md`: The Question, The Code in Question, What We Found, What We Can Reasonably Infer, Competing Hypotheses, What We Don't Know, Sources Consulted, Confidence Summary. Adapt as needed, but keep the confidence separation intact, and keep Sources Consulted as one line per investigator, including empty searches and material source gaps.
 
 After Sources Consulted, if the user's [why](why.md) question is a precursor to changing this code, convert the lineage findings into a Preserve / Change / Avoid / Risk constraint set for planning the change.
 

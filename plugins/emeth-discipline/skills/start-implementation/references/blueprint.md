@@ -15,9 +15,12 @@ Use [how](../../code-exploration/references/how.md) when understanding the exist
 
 ## Phase B: Sketch
 
-Run [ensemble](../../ensemble/SKILL.md) with the common task, relevant evidence and [candidate prompt](blueprint/runner-prompt.md).
-Apply [design exploration](../../../references/design-exploration.md) to its candidate assignments and synthesis.
-For implementation, use the selected [implementation workflow](../SKILL.md#implementation-workflow) to assign the independent review's timing and target.
+Use two independent candidates when materially different solutions remain open and comparison can change an important boundary, interface, state ownership, algorithm or tradeoff.
+For that case, run [ensemble](../../ensemble/SKILL.md) with the common task, relevant evidence and [candidate prompt](blueprint/runner-prompt.md), applying [design exploration](../../../references/design-exploration.md).
+Otherwise, the calling conversation derives the design contract from requirements and existing evidence.
+Reuse an accepted design while its contract and evidence remain valid.
+Candidate selection does not change the [verification ownership](../SKILL.md#implementation-workflow) or its independent roles.
+Apply [independent review](../../ensemble/SKILL.md#independent-review) at its owning boundary whether or not candidates were used, including for a design-only request or requested design checkpoint.
 Select the design before dependent implementation.
 The selected artifact records the boundaries, decisions and verification criteria.
 Supplied types, APIs and examples remain authoritative at their source; add a sketch only for a decision they leave open.

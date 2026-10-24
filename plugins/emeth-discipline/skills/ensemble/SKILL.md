@@ -27,19 +27,23 @@ Once both candidates are complete, select a base and incorporate useful differen
 For an already supplied interface, synthesize its remaining implementation decisions; established behavior stays at its source.
 Record the selected base, accepted differences, material rejected proposals and unresolved limits once, alongside the artifact.
 
-The calling [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) assigns the independent review's timing and target.
-For a design-only request or requested design checkpoint, review the synthesized design before handing it back or implementing it.
-A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
+Apply the [independent review](#independent-review) at its owning boundary.
 
 ## Independent review
 
+For implementation, the calling [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) assigns the review's timing and target.
+For a design-only request or requested design checkpoint, review the selected design before handing it back or implementing it, including when candidates were not used.
+A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
+
 Use one independent judge with the settings in [Subagents](../start-implementation/SKILL.md#subagents).
-Give it the original requirements, source baseline, completed candidates, comparison criteria and review target by path.
+Give it the original requirements, source baseline, review target and verification evidence by path.
+Include candidate artifacts and comparison criteria when candidates were used.
 Use a fresh context without the owner's preference or prior analysis.
 Give the reviewer [tenet-me](../tenet-me/SKILL.md) as its review procedure.
-It compares the alternatives and traces the target against required outcomes and affected existing public behavior, independently of candidate reasoning and test expectations.
+It traces the target against required outcomes and affected existing public behavior, independently of implementation reasoning and test expectations.
+When alternatives are supplied, it also compares them.
 The target is readonly; the reviewer may write its own report artifact.
-Its return contract is the recommended base, decisive differences, material counterexamples and unresolved evidence limits.
+Its return contract is the review recommendation, material counterexamples and unresolved evidence limits, with a recommended base and decisive differences when alternatives are supplied.
 
 Resolve material findings through the artifact owner and retain the judge for review of affected corrections.
 The calling workflow owns integration, verification and delivery.

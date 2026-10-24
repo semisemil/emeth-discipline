@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to explain how it works or return findings for design.
 For user-facing explanations, build a working mental model for a senior engineer onboarding onto a subsystem.
-Tell the explainer whether the requested output is an explanation or design evidence.
+The calling conversation owns the explanation or design evidence and checks the decisive source locations.
 
 Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
 
@@ -16,22 +16,25 @@ Every spawn is a general subagent with read-only access. Select the explorer and
 
 If the scope is ambiguous, state your interpretation and explore. The user can redirect.
 
-- **Simple** (a single module, a small utility, a narrow question such as "how does function X work"): no explorers. Spawn one explainer that explores and produces the requested output in one pass, built from `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md` without the explorer-findings section. Go to step 4.
+- **Simple** (a single module, a small utility, a narrow question such as "how does function X work"): explore and answer in the calling conversation. Go to step 4.
 - **Complex** (a subsystem spanning multiple files or services, a cross-cutting feature, a full architectural overview): go to step 2.
 
 When in doubt, take the simple path.
 
 ## 2. Explore (complex only)
 
-Decompose the question into 2 to 4 angles, each a distinct slice of the subsystem. Spawn all explorers in a single message, each with `<plugin-root>/skills/code-exploration/references/how/explorer-prompt.md` and its angle filled in.
+Keep tightly coupled questions in the calling conversation.
+Delegate independent investigation slices when parallel research or a separate context window helps.
+Give each explorer `<plugin-root>/skills/code-exploration/references/how/explorer-prompt.md` and its question.
 
 ## 3. Synthesize (complex only)
 
-Once all explorers have returned, spawn one explainer with `<plugin-root>/skills/code-exploration/references/how/explainer-prompt.md`, every explorer's findings and the requested output purpose.
+Synthesize the available findings in the calling conversation.
+Resolve material conflicts against the code and carry the decisive source locations into the result.
 
 ## 4. Deliver
 
-For a user-facing explanation, present the explainer's output with light edits for clarity or conversation context.
+For a user-facing explanation, answer from the checked findings and the user's conversation context.
 For design work, return the synthesized findings, evidence locations and unresolved limits to the calling workflow.
 
 ## Output format
