@@ -1,7 +1,7 @@
 ---
 name: development-design
-when_to_use: "Write or revise a development Design, detailed documents, or Design status."
-description: Design a specific change to implement with the user, and write or revise its connected Design documents for implementation and review. Also use for Design status changes.
+when_to_use: "An explicit user request for design work or a workflow call to this skill."
+description: "Use only when the user explicitly requests design work or a workflow calls this skill. Create or revise development Designs, supporting documents, or Design status."
 ---
 
 # Development Design
