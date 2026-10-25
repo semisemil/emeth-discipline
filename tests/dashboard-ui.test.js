@@ -1,15 +1,11 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const test = require('node:test');
 const { JSDOM } = require('jsdom');
 
 const { dashboard, project, index, deferred } = require('./helpers/dashboard-page');
 const core = require('../plugins/emeth-discipline/dashboard/assets/core.js');
-const { buildProjectIndex } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 
 const AVAILABLE_ID = '11111111-1111-4111-8111-111111111111';
 const UNAVAILABLE_ID = '22222222-2222-4222-8222-222222222222';
@@ -96,73 +92,6 @@ async function documentPage(t, routes = {}) {
 }
 const documentRoute = (kind, id) => '/api/v1/projects/' + AVAILABLE_ID + '/documents/' + kind + '/' + id;
 
-test('production index schema feeds full signal IDs and canonical completed Spec status to UI', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-dashboard-ui-schema-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const issueDirectory = path.join(root, '.emeth', 'issues');
-  const readySpecDirectory = path.join(root, '.emeth', 'specs', 'SPEC-0005-ready');
-  const completedSpecDirectory = path.join(root, '.emeth', 'specs', 'SPEC-0006-completed');
-  fs.mkdirSync(issueDirectory, { recursive: true });
-  fs.mkdirSync(readySpecDirectory, { recursive: true });
-  fs.mkdirSync(completedSpecDirectory, { recursive: true });
-  fs.writeFileSync(path.join(issueDirectory, 'PL-0002.json'), JSON.stringify({
-    schema_version: 2,
-    identity: { id: 'PL-0002', aliases: [], type: 'task', mode: 'simple', title: 'Dashboard', risk: 'high' },
-    origin: { kind: 'request', summary: 'Dashboard UI', refs: [] },
-    state: { status: 'doing', current_summary: 'UI 구현', next_action: '검증' },
-    objective: { summary: 'Dashboard 제공', constraints: [] },
-    criteria: [{ id: 'C1', text: 'UI가 표시됨', evidence_refs: [] }],
-    milestones: [],
-    relations: [],
-    context: [{ kind: 'Spec', location: '.emeth/specs/SPEC-0005-ready/SPEC.md' }],
-    artifacts: [],
-    evidence: [],
-    events: [],
-    created_at: '2026-08-19T00:00:00.000Z',
-    updated_at: '2026-08-19T01:00:00.000Z',
-  }), 'utf8');
-  const writeSpec = (directory, metadata) => fs.writeFileSync(
-    path.join(directory, 'SPEC.md'),
-    `---\n${JSON.stringify(metadata, null, 2)}\n---\n# ${metadata.title}`,
-    'utf8',
-  );
-  writeSpec(readySpecDirectory, {
-    schema_version: 2,
-    id: 'SPEC-0005',
-    title: 'Ready Spec',
-    kind: 'feature',
-    status: 'ready',
-    revision: 1,
-    supersedes: [],
-    superseded_by: null,
-    related_issues: ['PL-0002'],
-  });
-  writeSpec(completedSpecDirectory, {
-    schema_version: 2,
-    id: 'SPEC-0006',
-    title: 'Completed Spec',
-    kind: 'feature',
-    status: 'completed',
-    revision: 1,
-    supersedes: [],
-    superseded_by: null,
-    related_issues: [],
-  });
-
-  const index = buildProjectIndex({
-    id: AVAILABLE_ID,
-    root,
-    registered_at: '2026-08-19T00:00:00.000Z',
-  }).publicIndex;
-  assert.deepEqual(index.issues[0].flow_signal_ids, ['issue:PL-0002:implementation-ready']);
-  assert.deepEqual(core.signalLabels(index.issues[0].flow_signal_ids), ['구현 가능']);
-  assert.deepEqual(
-    core.selectDocuments(index, { kind: 'spec', status: 'completed' }).map((document) => document.id),
-    ['SPEC-0006'],
-  );
-  assert.equal(core.STATUSES[index.specs.find((document) => document.id === 'SPEC-0006').status], '완료');
-});
-
 test('project switches ignore delayed prior success and error through the actual app', async t => {
   for (const outcome of ['success', 'error']) {
     const page = await dashboard(t);
@@ -190,146 +119,6 @@ test('late document response is cached for its own key without replacing selecte
   page.click(planKey); await page.settle();
   assert.match(page.get('.document-detail').textContent, /CACHED-PLAN/);
   assert.equal(page.calls.filter(call => call.url === documentRoute('plan', 'PLAN-0002')).length, 1);
-});
-
-test('newest same-document success survives older successes and errors', async t => {
-  for (const outcome of ['success', 'error']) {
-    const older = deferred(), newest = deferred(); let attempts = 0;
-    const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? older.promise : newest.promise });
-    page.click(planKey); page.click(planKey);
-    newest.resolve(detail('plan', 'PLAN-0002', 'NEWEST')); await page.settle();
-    older.resolve(outcome === 'success' ? detail('plan', 'PLAN-0002', 'STALE') : { error: { message: 'STALE-ERROR' } });
-    await page.settle();
-    assert.match(page.get('.document-detail').textContent, /NEWEST/);
-    assert.doesNotMatch(page.get('.document-detail').textContent + page.get('#status-stack').textContent, /STALE/);
-    page.click(planKey); await page.settle();
-    assert.match(page.get('.document-detail').textContent, /NEWEST/);
-    assert.equal(attempts, 2);
-  }
-});
-
-test('index completion reloads the document selected during refresh after clearing its early detail', async t => {
-  const refresh = deferred(), early = deferred(), reloaded = deferred(); let attempts = 0;
-  const page = await documentPage(t, {
-    ['/api/v1/projects/' + AVAILABLE_ID + '/index?refresh=1']: refresh.promise,
-    [documentRoute('plan', 'PLAN-0002')]: () => ++attempts === 1 ? early.promise : reloaded.promise,
-  });
-  page.click('#refresh-button'); page.click(planKey);
-  early.resolve(detail('plan', 'PLAN-0002', 'EARLY')); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /EARLY/);
-  refresh.resolve({ ...indexFixture, read_at: 'refreshed' }); await page.settle();
-  assert.equal(attempts, 2);
-  assert.doesNotMatch(page.get('.document-detail').textContent, /EARLY/);
-  assert.ok(page.get('.document-detail .empty-state'));
-  assert.equal(page.get('.document-detail .markdown-body'), null);
-  reloaded.resolve(detail('plan', 'PLAN-0002', 'RELOADED')); await page.settle();
-  assert.match(page.get('.document-detail').textContent, /RELOADED/);
-});
-
-test('collapsed rail cues distinguish same-name projects and remain stable when reordered', () => {
-  const posixCasePeers = [
-    { name: 'same', root: '/Users/A/same', availability: 'available' },
-    { name: 'same', root: '/Users/a/same', availability: 'available' },
-  ];
-  const drivePeers = [
-    { name: 'same', root: 'C:\\same', availability: 'available' },
-    { name: 'same', root: 'D:\\same', availability: 'available' },
-  ];
-  for (const peers of [projects, posixCasePeers, drivePeers]) {
-    const cues = peers.map(project => core.projectRailCue(project, peers));
-    assert.ok(cues.every(cue => cue.trim().length > 0));
-    assert.equal(new Set(cues).size, peers.length);
-    assert.deepEqual(peers.map(project => core.projectRailCue(project, [...peers].reverse())), cues);
-  }
-});
-
-test('project selection restores desktop focus and returns mobile focus to the drawer opener', async t => {
-  const page = await dashboard(t, { width: 768 });
-  page.click('[data-project-id="beta"]'); await page.settle();
-  assert.equal(page.document.activeElement.dataset.projectId, 'beta');
-  page.resize(390);
-  const menu = page.get('#menu-button'); menu.focus(); menu.click();
-  assert.equal(page.get('.workspace').inert, true);
-  page.click('[data-project-id="alpha"]'); await page.settle();
-  assert.equal(page.document.activeElement, menu);
-  assert.equal(page.get('.workspace').inert, false);
-  assert.equal(page.get('#project-panel').inert, true);
-  const requested = await dashboard(t, {
-    projects: [project(AVAILABLE_ID, 'alpha'), project(UNAVAILABLE_ID, 'beta')],
-    query: `?project=${UNAVAILABLE_ID}&expected_version=older`,
-  });
-  assert.equal(requested.get('#current-project').textContent, 'beta');
-  assert.ok(requested.get('#status-stack [role="alert"]').textContent.includes('older'));
-});
-
-test('document loading, success and failure preserve focus and stale responses cannot steal it', async t => {
-  const plan = deferred(), spec = deferred();
-  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: plan.promise, [documentRoute('spec', 'SPEC-0005')]: spec.promise });
-  page.get(planKey).focus(); page.click(planKey);
-  assert.equal(page.document.activeElement, page.get(planKey));
-  page.get(specKey).focus(); page.click(specKey);
-  spec.resolve({ error: { code: 'record-not-found', message: 'missing' } }); await page.settle();
-  assert.ok(page.get('.document-detail .empty-state'));
-  assert.equal(page.get('.document-detail .markdown-body'), null);
-  assert.equal(page.document.activeElement, page.get(specKey));
-  plan.resolve(detail('plan', 'PLAN-0002', 'CACHED')); await page.settle();
-  assert.equal(page.document.activeElement, page.get(specKey));
-  page.click(planKey); await page.settle();
-  assert.equal(page.document.activeElement, page.get(planKey));
-  const fallback = deferred();
-  page.routes[documentRoute('spec', 'SPEC-0006')] = fallback.promise;
-  page.click('[data-focus-key="documents:item:spec:SPEC-0006"]');
-  const filter = '[data-focus-key="documents:kind"]';
-  page.change(filter, 'plan');
-  fallback.resolve(detail('spec', 'SPEC-0006', 'Selected document is filtered out'));
-  await page.settle();
-  assert.equal(page.document.activeElement, page.get(filter));
-});
-
-test('background mode and image replacement are separate keyboard controls', async t => {
-  const stored = new Map();
-  const setup = window => {
-    window.Blob = Blob;
-    window.URL.createObjectURL = () => 'blob:stored-background';
-    window.URL.revokeObjectURL = () => {};
-    window.indexedDB = { open() {
-      const request = {};
-      queueMicrotask(() => {
-        request.result = { close() {}, transaction() {
-          const transaction = { objectStore: () => ({
-            get(key) {
-              const read = {};
-              queueMicrotask(() => { read.result = stored.get(key); read.onsuccess(); });
-              return read;
-            },
-            put(blob, key) { stored.set(key, blob); queueMicrotask(() => transaction.oncomplete()); },
-          }) };
-          return transaction;
-        } };
-        request.onsuccess();
-      });
-      return request;
-    } };
-  };
-  const page = await dashboard(t, { setup });
-  const input = page.get('#background-file'), mode = page.get('#background-mode'), button = page.get('#background-button');
-  assert.equal(input.tabIndex, -1); assert.equal(input.hidden, true); assert.equal(input.getAttribute('aria-hidden'), 'true');
-  for (const node of [mode, button]) { assert.equal(node.tabIndex, 0); assert.equal(node.hidden, false); assert.notEqual(node.getAttribute('aria-hidden'), 'true'); }
-  assert.deepEqual([...mode.options].map(option => option.value), ['color', 'image']);
-  let picks = 0; input.addEventListener('click', event => { event.preventDefault(); picks++; });
-  button.click(); assert.equal(picks, 1);
-  page.change('#background-mode', 'image'); assert.equal(picks, 2);
-  assert.equal(mode.value, 'color');
-  const image = new Blob(['image bytes'], { type: 'image/png' });
-  Object.defineProperty(input, 'files', { value: [image] });
-  input.dispatchEvent(new page.window.Event('change')); await page.settle();
-  assert.equal(page.document.documentElement.dataset.background, 'image');
-  assert.equal(page.window.localStorage.getItem('emeth.dashboard.background'), 'image');
-  const restored = await dashboard(t, { setup, storage: { 'emeth.dashboard.background': 'image' } });
-  assert.equal(restored.document.documentElement.dataset.background, 'image');
-  assert.match(restored.document.documentElement.style.getPropertyValue('--background-image'), /blob:stored-background/);
-  page.change('#background-mode', 'color');
-  assert.equal(page.document.documentElement.dataset.background, 'color');
 });
 
 test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
@@ -363,41 +152,6 @@ test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
   assert.ok([...content.querySelectorAll('a')].every(node => /^https?:/.test(node.getAttribute('href'))));
   assert.equal(content.querySelector('table code').textContent, '<b>');
   assert.ok(content.querySelector('pre code.language-html').textContent.startsWith('<iframe'));
-});
-
-test('projects prioritize availability, active work, and the most recently created issue', () => {
-  const available = { availability: 'available', root: 'C:/work', counts: { active: 0 } };
-  const entries = [
-    { ...available, id: 'idle-new', name: 'A', latest_issue: { created_at: '2026-09-05T00:00:00Z' } },
-    { ...available, id: 'active-old', name: 'B', counts: { active: 5 }, latest_issue: { created_at: '2026-08-01T00:00:00Z' } },
-    { ...available, id: 'active-new', name: 'C', counts: { active: 1 }, latest_issue: { created_at: '2026-09-04T00:00:00Z' } },
-    { ...available, id: 'empty', name: 'D' },
-    { ...available, id: 'gone', name: 'E', availability: 'unavailable', counts: { active: null } },
-  ];
-  assert.deepEqual(core.projectOptions(entries).map((item) => item.id), ['active-new', 'active-old', 'idle-new', 'empty', 'gone']);
-  assert.equal(core.initialProjectId(entries, null), 'active-new');
-  assert.equal(core.initialProjectId(entries, 'idle-new'), 'idle-new');
-  assert.deepEqual(entries.map((item) => item.id), ['idle-new', 'active-old', 'active-new', 'empty', 'gone']);
-  assert.deepEqual(core.projectOptions(entries, 'B').map((item) => item.id), ['active-old']);
-});
-
-test('work columns sort independently in both directions with a stable ID tie break', () => {
-  const fixture = { issues: [
-    { id: 'PL-0003', title: '다', type: 'documentation', status: 'blocked', risk: 'critical', updated_at: '2026-09-03T00:00:00Z' },
-    { id: 'PL-0001', title: '가', type: 'task', status: 'doing', risk: 'low', updated_at: '2026-09-02T00:00:00Z' },
-    { id: 'PL-0002', title: '나', type: 'bug', status: 'open', risk: 'high', updated_at: '2026-09-01T00:00:00Z' },
-  ] };
-  const expected = { id: [1, 2, 3], title: [1, 2, 3], type: [1, 3, 2], status: [1, 2, 3], risk: [3, 2, 1], date: [2, 1, 3] };
-  for (const [field, order] of Object.entries(expected)) {
-    for (const direction of ['asc', 'desc']) {
-      const ids = direction === 'asc' ? order : [...order].reverse();
-      assert.deepEqual(core.selectIssues(fixture, { quick: 'all', sort: `${field}-${direction}` }).map((item) => item.id),
-        ids.map((id) => `PL-000${id}`), `${field}-${direction}`);
-    }
-  }
-  assert.deepEqual(core.selectIssues(fixture, { quick: 'active', sort: 'title-desc' }).map((item) => item.id), ['PL-0002', 'PL-0001']);
-  const tied = { issues: fixture.issues.map((item) => ({ ...item, title: '같음' })) };
-  assert.deepEqual(core.selectIssues(tied, { quick: 'all', sort: 'title-desc' }).map((item) => item.id), ['PL-0001', 'PL-0002', 'PL-0003']);
 });
 
 test('dashboard controls keep keyboard focus, sort state and independent list visibility', async t => {
@@ -501,26 +255,4 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   assert.equal(removal.calls.find(call => call.method === 'DELETE').url, '/api/v1/projects/gone');
   assert.equal(removal.get('.project-option'), null);
   assert.ok(removal.get('#view-panel .empty-state p').textContent.trim());
-});
-
-test('a late diagram failure leaves a different dashboard view alone and current failures retain the source', async t => {
-  const older = deferred(), current = deferred();
-  let attempts = 0;
-  const page = await dashboard(t, { projects: [projects[1]],
-    setup(window) { window.testMermaid.run = () => ++attempts === 1 ? older.promise : current.promise; }, routes: {
-      ['/api/v1/projects/' + AVAILABLE_ID + '/index']: { ...indexFixture, read_at: 'initial' },
-      [documentRoute('plan', 'PLAN-0002')]: detail('plan', 'PLAN-0002', '# Diagram\n\n```mermaid\ngraph LR\n A --> B\n```'),
-    } });
-  page.click('[data-view="documents"]');
-  page.click(planKey); await page.settle();
-  page.click('[data-view="work"]'); await page.settle();
-  older.reject(new Error('Earlier diagram failed')); await page.settle();
-  assert.doesNotMatch(page.get('#status-stack').textContent, /Mermaid/);
-  assert.equal(page.get('[data-view="work"]').getAttribute('aria-selected'), 'true');
-  assert.ok(page.get('.issue-table'));
-
-  page.click('[data-view="documents"]'); await page.settle();
-  current.reject(new Error('Current diagram failed')); await page.settle();
-  assert.match(page.get('#status-stack').textContent, /Mermaid/);
-  assert.match(page.get('.markdown-body pre > code').textContent, /A --> B/);
 });

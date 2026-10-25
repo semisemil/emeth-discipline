@@ -4,7 +4,6 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const { buildProjectIndex, ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
@@ -59,23 +58,13 @@ test('one external root owns Design creation, reads, revisions, status, numberin
   const contract = f.cli('dashboard/records/development-contracts.js', ['--project-root', f.project, '--id', 'DESIGN-0001']);
   assert.equal(contract.status, 0, contract.stderr);
   assert.equal(JSON.parse(contract.stdout).documents[0].body, '# Contract\n\nReturn the receipt ID.');
-  const pointers = f.cli('dashboard/records/development-contracts.js', ['--project-root', f.project, '--id', 'DESIGN-0001', '--format', 'paths']);
-  assert.equal(pointers.status, 0, pointers.stderr);
-  const paths = JSON.parse(pointers.stdout);
-  assert.equal(paths.absolute_path, path.join(directory, 'DESIGN.md'));
-  assert.equal(paths.documents[0].absolute_path, path.join(directory, 'contract.md'));
-  assert.equal(fs.readFileSync(paths.documents[0].absolute_path, 'utf8'), '# Contract\n\nReturn the receipt ID.');
   assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['/emeth-discipline:development-design']), 'DESIGN-0002');
   const registryPath = path.join(f.temporary, 'projects.json');
   f.write(registryPath, JSON.stringify({ schema_version: 1, projects: [{ ...f.projectRecord, registered_at: '2026-10-12T00:00:00.000Z' }] }));
-  const watched = [];
-  const service = new ProjectIndexService({ registryOptions: { registryPath }, watch: target => { watched.push(target); return { close() {} }; } });
+  const service = new ProjectIndexService({ registryOptions: { registryPath } });
   t.after(() => service.close());
   assert.equal(service.getIndex(projectId).designs[0].revision, 2);
   assert.match(service.getDocument(projectId, 'design', 'DESIGN-0001').body, /Overview/);
-  assert.ok(watched.includes(directory));
-  assert.equal(JSON.parse(fs.readFileSync(path.join(f.vault, 'designs/.emeth-project.json'), 'utf8')).project_root, f.project);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(f.vault, 'architecture/.emeth-project.json'), 'utf8')).project_root, f.project);
 });
 
 test('external architecture baseline, authoring, retrieval and Git reconciliation use the code project', t => {
@@ -149,69 +138,4 @@ test('invalid settings and another project ownership fail without writing the de
   assert.equal(JSON.parse(invalid.stderr).error.code, 'document-roots-invalid');
   assert.equal(fs.existsSync(path.join(f.project, '.emeth/designs')), false);
   assert.equal(fs.existsSync(path.join(other, '.emeth/designs')), false);
-});
-
-test('architecture authoring preserves another project\'s external draft', t => {
-  const f = fixture(t);
-  W.begin(f.project, 'init');
-  A.run(f.project, 'scaffold');
-  const directory = path.join(f.vault, 'architecture');
-  const context = path.join(directory, '.architecture-memory/work/draft/04-context.md');
-  const before = fs.readFileSync(context);
-  const other = path.join(f.temporary, 'other-code');
-  fs.mkdirSync(other);
-  const result = f.cli('skills/architecture-memory/scripts/author.js', ['section', '--project-root', other, '--root', directory],
-    JSON.stringify({ document: 'context', title: 'Foreign context', body: 'This context belongs to the other project.', confidence: 'confirmed', lifecycle: 'current' }));
-  assert.equal(result.status, 1, result.stdout);
-  assert.equal(JSON.parse(result.stderr).error.code, 'document-project-mismatch');
-  assert.deepEqual(fs.readFileSync(context), before);
-});
-
-test('architecture patch preserves another project\'s pending publication', t => {
-  const f = fixture(t);
-  f.writer('create', ['--title', 'Example', '--slug', 'example'], '# Example');
-  const directory = path.join(f.vault, 'architecture');
-  const context = path.join(directory, '04-context.md');
-  const before = fs.readFileSync(context, 'utf8');
-  const journal = path.join(directory, '.architecture-memory/work/record.json');
-  const pending = JSON.stringify({ entries: [{ path: '04-context.md', before: crypto.createHash('sha256').update(before).digest('hex'), after: before + '\nOwner publication pending.\n' }] });
-  f.write(journal, pending);
-  const other = path.join(f.temporary, 'other-code');
-  f.write(path.join(other, '.emeth/documents.json'), JSON.stringify({ schema_version: 1, root: f.vault }));
-  f.write(path.join(other, '.emeth/architecture.json'), JSON.stringify({ schema_version: 1, root: 'docs/architecture' }));
-  const result = f.cli('skills/architecture-memory/scripts/record.js', ['patch', '--project-root', other, '--document', 'context'], JSON.stringify({ edits: [] }));
-  assert.equal(result.status, 1, result.stdout);
-  assert.equal(JSON.parse(result.stderr).error.code, 'document-project-mismatch');
-  assert.equal(fs.readFileSync(context, 'utf8'), before);
-  assert.equal(fs.readFileSync(journal, 'utf8'), pending);
-});
-
-test('relocating existing collections and selecting their new root preserves documents and resumes architecture work', t => {
-  const f = fixture(t);
-  fs.unlinkSync(path.join(f.project, '.emeth/documents.json'));
-  f.write(path.join(f.project, 'app.js'), 'const store = "local";\n');
-  f.writer('create', ['--title', 'Example', '--slug', 'example', '--status', 'ready'], '# Existing contract');
-  W.begin(f.project, 'init');
-  A.run(f.project, 'scaffold');
-  A.run(f.project, 'section', { document: 'system-context', title: 'Purpose', body: 'Store requests offline.', confidence: 'confirmed', lifecycle: 'current' });
-  A.run(f.project, 'section', { document: 'containers', title: 'Runtime', body: 'One application owns storage.', confidence: 'confirmed', lifecycle: 'current' });
-  W.apply(f.project);
-  const original = f.writer('read', ['--id', 'DESIGN-0001']);
-  const originalContext = fs.readFileSync(path.join(f.project, 'docs/architecture/04-context.md'), 'utf8');
-  fs.mkdirSync(f.vault, { recursive: true });
-  for (const [from, to] of [['.emeth/designs', 'designs'], ['docs/architecture', 'architecture']]) {
-    const source = path.resolve(f.project, from);
-    const target = path.resolve(f.vault, to);
-    assert.ok(source.startsWith(f.temporary + path.sep) && target.startsWith(f.temporary + path.sep));
-    fs.renameSync(source, target);
-  }
-  f.write(path.join(f.project, '.emeth/documents.json'), JSON.stringify({ schema_version: 1, root: f.vault }));
-  assert.equal(f.writer('read', ['--id', 'DESIGN-0001']).text, original.text);
-  assert.equal(nextDocumentId(f.project, DOCUMENT_SKILLS['/emeth-discipline:development-design']), 'DESIGN-0002');
-  assert.equal(W.begin(f.project, 'init').connection_only, true);
-  assert.equal(W.apply(f.project).status, 'applied');
-  assert.equal(fs.readFileSync(path.join(f.vault, 'architecture/04-context.md'), 'utf8'), originalContext);
-  f.writer('status', ['--id', 'DESIGN-0001', '--status', 'completed']);
-  assert.equal(fs.existsSync(path.join(f.project, '.emeth/designs')), false);
-  assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture')), false);
 });

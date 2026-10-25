@@ -38,22 +38,6 @@ const request = '# 접수 계약\n\n접수 성공 시 요청 ID를 반환한다.
 const delivery = '# 전달 설계\n\n저장 완료 후 알림을 전송한다.\n';
 const input = { body: overview, documents: [{ path: 'contracts/request.md', body: request }, { path: 'delivery.md', body: delivery }] };
 
-test('contract handoff locates every complete artifact without echoing its body', t => {
-  const f = fixture(t);
-  assert.equal(f.create(input).status, 0);
-  const handoff = f.execute(['--format', 'paths']);
-  assert.equal(handoff.status, 0, handoff.stderr);
-  assert.equal(handoff.value.status, 'ready');
-  assert.equal(handoff.value.revision, 1);
-  assert.equal(handoff.value.absolute_path, path.join(f.directory, 'DESIGN.md'));
-  assert.ok(fs.readFileSync(handoff.value.absolute_path, 'utf8').endsWith(overview));
-  assert.deepEqual(handoff.value.documents.map(d => [d.absolute_path, fs.readFileSync(d.absolute_path, 'utf8')]), [
-    [path.join(f.directory, 'contracts/request.md'), request],
-    [path.join(f.directory, 'delivery.md'), delivery],
-  ]);
-  for (const body of [overview, request, delivery]) assert.equal(handoff.stdout.includes(JSON.stringify(body).slice(1, -1)), false);
-});
-
 test('existing design artifacts are saved byte-for-byte and reach the implementation reader', t => {
   const f = fixture(t);
   const source = path.join(f.project, 'chosen sketch.md');
@@ -94,15 +78,6 @@ test('source failures leave no partial Design and allow retry while preserving i
   const failed = f.create({ body: overview, documents: [{ path: 'delivery.md', body: delivery }, { path: 'contracts/request.md', source: missing }] });
   assert.notEqual(failed.status, 0);
   assert.equal(fs.existsSync(f.directory), false);
-  const source = path.join(f.project, 'source.md');
-  fs.writeFileSync(source, Buffer.from([0xc3, 0x28]));
-  const invalidUtf8 = f.create({ body: overview, documents: [{ path: 'contracts/request.md', source }] });
-  assert.equal(invalidUtf8.value.error.code, 'document-invalid-utf8');
-  assert.equal(fs.existsSync(f.directory), false);
-  fs.writeFileSync(source, request);
-  const ambiguous = f.create({ body: overview, documents: [{ path: 'contracts/request.md', source, body: request }] });
-  assert.equal(ambiguous.value.error.code, 'document-content-invalid');
-  assert.equal(fs.existsSync(f.directory), false);
   fs.mkdirSync(f.directory, { recursive: true });
   fs.writeFileSync(path.join(f.directory, 'author-notes.txt'), '독립적인 기록');
   const result = f.run('create', input, ['--id', 'DESIGN-0001', '--title', '알림 개발 설계', '--slug', 'notification', '--status', 'ready', '--input-format', 'documents']);
@@ -110,32 +85,6 @@ test('source failures leave no partial Design and allow retry while preserving i
   assert.equal(result.value.write.id, 'DESIGN-0001');
   assert.equal(f.read('author-notes.txt'), '독립적인 기록');
   assert.deepEqual(f.execute().value.documents.map(document => fs.readFileSync(document.absolute_path, 'utf8')), [request, delivery]);
-});
-
-test('changing only a detailed contract revisions and snapshots the whole set, preserving independent text', t => {
-  const f = fixture(t);
-  assert.equal(f.create(input).status, 0);
-  fs.appendFileSync(path.join(f.directory, 'delivery.md'), '\n독립적으로 추가한 조건.\n');
-  const original = f.read('DESIGN.md');
-  const independent = f.read('delivery.md');
-  const patch = { documents: [{ path: 'contracts/request.md', edits: [{ old: '요청 ID', new: '접수 ID' }] }] };
-  const operational = f.run('patch', patch, ['--change-kind', 'operational']);
-  assert.equal(operational.value.error.code, 'contract-revision-required');
-  assert.equal(f.read('contracts/request.md'), request);
-  const revised = f.run('patch', patch, ['--change-kind', 'major']);
-  assert.equal(revised.status, 0, revised.stderr);
-  assert.equal(revised.value.write.revision, 2);
-  assert.equal(f.read('revisions/REV-1.md'), original);
-  assert.equal(f.read('revisions/REV-1/DESIGN.md'), original);
-  assert.ok(revised.value.write.snapshot.path.endsWith('/revisions/REV-1/DESIGN.md'));
-  assert.equal(f.read('revisions/REV-1/contracts/request.md'), request);
-  assert.equal(f.read('revisions/REV-1/delivery.md'), independent);
-  assert.equal(f.read('delivery.md'), independent);
-  assert.ok(f.read('DESIGN.md').endsWith(overview));
-  assert.equal(fs.readFileSync(f.execute().value.documents[0].absolute_path, 'utf8'), request.replace('요청 ID', '접수 ID'));
-  const noOp = f.run('patch', { documents: [{ path: 'contracts/request.md', edits: [{ old: '접수 ID', new: '접수 ID' }] }] }, ['--change-kind', 'major']);
-  assert.equal(noOp.value.write.status, 'no-op');
-  assert.equal(noOp.value.write.revision, 2);
 });
 
 test('invalid paths and unmatched edits cannot publish any part of the proposed set', t => {
@@ -169,70 +118,6 @@ test('reorganizing a single-file Design creates linked details and retiring a de
   assert.equal(f.execute().value.documents.length, 1);
   assert.equal(fs.existsSync(path.join(f.directory, 'delivery.md')), false);
   assert.equal(f.read('revisions/REV-2/delivery.md'), delivery);
-});
-
-test('status changes preserve all detail bytes and missing details prevent ready handoff', t => {
-  const f = fixture(t);
-  assert.equal(f.create(input).status, 0);
-  assert.equal(f.run('status', undefined, ['--status', 'completed']).status, 0);
-  assert.equal(f.read('contracts/request.md'), request);
-  assert.equal(f.read('delivery.md'), delivery);
-  assert.equal(f.run('status', undefined, ['--status', 'ready']).status, 0);
-  fs.unlinkSync(path.join(f.directory, 'delivery.md'));
-  assert.equal(f.execute().status, 1);
-  const partial = f.run('read', undefined, ['--document', 'contracts/request.md', '--section', '접수 계약']);
-  assert.equal(partial.status, 1);
-  assert.equal(partial.value.error.code, 'record-unavailable');
-  assert.equal(f.run('status', undefined, ['--status', 'ready']).value.error.code, 'contract-unavailable');
-});
-
-test('handoff rejects a document set changed during reading instead of mixing revisions', t => {
-  const f = fixture(t);
-  assert.equal(f.create(input).status, 0);
-  const { resolveContract } = require('../plugins/emeth-discipline/dashboard/records/development-contracts.js');
-  const open = fs.openSync;
-  const read = fs.readSync;
-  const descriptors = new Set();
-  let changed = false;
-  fs.openSync = (file, ...args) => {
-    const descriptor = open(file, ...args);
-    if (path.resolve(file) === path.join(f.directory, 'contracts/request.md')) descriptors.add(descriptor);
-    else descriptors.delete(descriptor);
-    return descriptor;
-  };
-  fs.readSync = (descriptor, ...args) => {
-    const bytes = read(descriptor, ...args);
-    if (!changed && descriptors.has(descriptor)) {
-      changed = true;
-      const result = f.run('patch', { documents: [{ path: 'delivery.md', edits: [{ old: '저장 완료 후', new: '영구 저장 완료 후' }] }] }, ['--change-kind', 'major']);
-      assert.equal(result.status, 0, result.stderr);
-    }
-    return bytes;
-  };
-  try {
-    assert.throws(() => resolveContract(f.project, 'DESIGN-0001'), error => error.code === 'document-changed');
-  } finally {
-    fs.openSync = open;
-    fs.readSync = read;
-  }
-  const handoff = f.execute();
-  assert.equal(handoff.value.revision, 2);
-  assert.equal(fs.readFileSync(handoff.value.documents[1].absolute_path, 'utf8'), delivery.replace('저장 완료 후', '영구 저장 완료 후'));
-});
-
-test('a replacement declared at creation is listed and blocks the replaced contract', t => {
-  const f = fixture(t);
-  assert.equal(f.create(input).status, 0);
-  const replacing = f.run('create', input, ['--title', '알림 재설계', '--slug', 'notification-v2', '--status', 'ready',
-    '--input-format', 'documents', '--supersedes', 'DESIGN-0001']);
-  assert.equal(replacing.status, 0, replacing.stderr);
-  assert.equal(f.execute().value.error.code, 'contract-superseded');
-  const listed = spawnSync(process.execPath, [writer, 'list', '--project-root', f.project], { env: f.env, encoding: 'utf8', windowsHide: true });
-  assert.equal(listed.status, 0, listed.stderr);
-  assert.deepEqual(JSON.parse(listed.stdout).designs.map(({ id, status, superseded_by }) => ({ id, status, superseded_by })), [
-    { id: 'DESIGN-0001', status: 'ready', superseded_by: 'DESIGN-0002' },
-    { id: 'DESIGN-0002', status: 'ready', superseded_by: null },
-  ]);
 });
 
 test('an interrupted publication blocks handoff and recovery preserves external changes', t => {

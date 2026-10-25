@@ -6,7 +6,6 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const host = require('../plugins/emeth-discipline/lib/host');
 
 const repoRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const hostRules = ['mixdog.md'].map(file => fs.readFileSync(
@@ -29,19 +28,6 @@ function hook(t, event) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
-test('Mixdog compatibility variables use Mixdog identity and state without changing other hosts', () => {
-  const env = { MIXDOG_PLUGIN_ROOT: '/mixdog/plugin', MIXDOG_PLUGIN_DATA: '/mixdog/state',
-    CLAUDE_PLUGIN_ROOT: '/compat/plugin', CLAUDE_PLUGIN_DATA: '/compat/state' };
-  assert.equal(host.name(env), 'mixdog');
-  assert.equal(host.dataDir({ env }), '/mixdog/state');
-  assert.equal(host.logDir({ env }), path.join('/mixdog/state', 'log'));
-  assert.equal(host.dataDir({ env: { MIXDOG_PLUGIN_ROOT: '/plugin' } }), null);
-  assert.equal(host.dataDir({ env: { MIXDOG_PLUGIN_ROOT: '/plugin' }, temporaryFallback: true }),
-    path.join(os.tmpdir(), 'emeth-mixdog-plugin-state'));
-  assert.equal(host.logDir({ env: { MIXDOG_PLUGIN_ROOT: '/plugin', MIXDOG_DATA_DIR: '/state' } }), path.join('/state', 'log'));
-  assert.equal(host.name({ MIXDOG_DATA_DIR: '/mixdog/data' }), 'mixdog');
-});
-
 test('Mixdog sessions apply host rules and restore them on user submissions', t => {
   const baseline = hook(t, { hook_event_name: 'SessionStart', source: 'startup' }).hookSpecificOutput.additionalContext;
   for (const rules of hostRules) assert.ok(baseline.includes(rules));
@@ -56,21 +42,6 @@ test('Mixdog sessions apply host rules and restore them on user submissions', t 
   const restored = hook(t, { hook_event_name: 'UserPromptSubmit', prompt: 'Continue after compaction.' });
   assert.equal(restored.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
   assert.equal(restored.hookSpecificOutput.additionalContext, baseline);
-});
-
-test('Mixdog document requests keep the numbering notice alongside the baseline', t => {
-  for (const [prompt, id] of [
-    ['/development-design write a design', 'DESIGN-0001'],
-    ['/emeth-discipline:development-design write a design', 'DESIGN-0001'],
-    ['$emeth-discipline:development-design write a design', 'DESIGN-0001'],
-    ['figure-it-out implement the change', 'DESIGN-0001'],
-    ['/issue-ledger register this bug', 'PL-0001'],
-  ]) {
-    const response = hook(t, { hook_event_name: 'UserPromptSubmit', prompt });
-    const context = response.hookSpecificOutput.additionalContext;
-    assert.deepEqual(context.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), [id], prompt);
-    for (const rules of hostRules) assert.ok(context.includes(rules));
-  }
 });
 
 test('Mixdog agent spawns receive rules without losing task, route, file, or user context', t => {

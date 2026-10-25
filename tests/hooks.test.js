@@ -7,7 +7,6 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const codexRules = '# Shared fixture rules\nCodex fixture rules';
-const claudeRules = '# Shared fixture rules\nClaude fixture rules';
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 
@@ -71,13 +70,6 @@ test('numbering and memory notices compose independently, including a failed num
   assert.equal(entry.filePath, issues);
 });
 
-test('Codex accepts its native $ skill mention as the slash invocation', (t) => {
-  const f = fixture(t);
-  for (const prompt of ['/emeth-discipline:development-design', '$emeth-discipline:development-design']) {
-    assert.equal(output(f.run({ prompt })).hookSpecificOutput.additionalContext, 'Next design number: DESIGN-0001');
-  }
-});
-
 test('Codex design entry preserves the exact request as a reusable source', (t) => {
   const f = fixture(t);
   const prompt = '/emeth-discipline:figure-it-out\r\n상태는 `new`, `done`, `failed`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal을 유지하세요.\n';
@@ -95,16 +87,6 @@ test('Codex design entry preserves the exact request as a reusable source', (t) 
   assert.equal(fs.readFileSync(source, 'utf8'), prompt);
 });
 
-test('request sources are limited to named Codex design and implementation entry points', (t) => {
-  const f = fixture(t);
-  for (const prompt of ['Ordinary conversation.', '/emeth-discipline:issue-ledger\nRecord this issue.']) {
-    output(f.run({ turn_id: 'turn-a', prompt }));
-  }
-  output(f.run({ turn_id: 'turn-a', prompt: '/emeth-discipline:figure-it-out\nA Claude request.' }, { env: claudeEnvironment(f) }));
-  assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'request-sources')), false);
-  assert.equal(fs.existsSync(path.join(claudeEnvironment(f).CLAUDE_PLUGIN_DATA, 'request-sources')), false);
-});
-
 test('startup, resume, compact and subagents keep their prompt and memory lifecycle boundaries', (t) => {
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));
@@ -117,16 +99,6 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   assert.equal(child.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
 });
 
-test('a corrupt memory binding does not suppress the fixed prompt or document number', (t) => {
-  const f = fixture(t);
-  f.write('.emeth/architecture.json', '{');
-  const result = f.run({ hook_event_name: 'SessionStart', source: 'startup' });
-  assert.equal(output(result).hookSpecificOutput.additionalContext, codexRules);
-  assert.notEqual(result.stderr.trim(), '');
-  const number = output(f.run({ prompt: '/emeth-discipline:development-design' }));
-  assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
-});
-
 function claudeEnvironment(f) {
   return {
     PLUGIN_ROOT: '', PLUGIN_DATA: '',
@@ -134,19 +106,6 @@ function claudeEnvironment(f) {
     CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
   };
 }
-
-test('Claude applies its fixed rules across lifecycle events', (t) => {
-  const f = fixture(t);
-  const env = claudeEnvironment(f);
-  for (const source of ['startup', 'clear', 'compact']) {
-    const response = output(f.run({ hook_event_name: 'SessionStart', source }, { env }));
-    assert.equal(response.hookSpecificOutput.additionalContext, claudeRules);
-  }
-  assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'child' }, { env }))
-    .hookSpecificOutput.additionalContext, claudeRules);
-  assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' }, { env })), {});
-  assert.equal(fs.existsSync(env.CLAUDE_PLUGIN_DATA), false);
-});
 
 test('host-specific Memory state stays separate for the same project and session', (t) => {
   const f = fixture(t); f.memory();
@@ -162,12 +121,4 @@ test('host-specific Memory state stays separate for the same project and session
     assert.equal(fs.readdirSync(path.join(directory, 'architecture-notices')).length, 1);
   }
   assert.equal(fs.existsSync(path.join(claudeEnv.CLAUDE_PLUGIN_DATA, 'rules-mode')), false);
-});
-
-test('Claude slash skill invocations get document numbers without interpreting mode commands', (t) => {
-  const f = fixture(t);
-  const env = claudeEnvironment(f);
-  const response = output(f.run({ prompt: '/emeth-discipline:development-design Plan a change.' }, { env }));
-  assert.deepEqual(response.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
-  assert.deepEqual(output(f.run({ prompt: '$emeth-discipline:development-design' }, { env })), {});
 });

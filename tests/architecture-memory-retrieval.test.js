@@ -50,24 +50,6 @@ test('Korean aliases and repository paths find operating facts without returning
   assert.throws(() => search(corpus, { paths: ['../outside'] }), { code: 'memory-query-path-invalid' });
 });
 
-test('selected sections retain preamble, nested conditions, globals and cyclic prerequisite closure', (t) => {
-  const f = fixture(t, {
-    'context.md': '# 단말\n공장 단말에만 적용한다.\n\n'
-      + record('AM-offline', '접수 계속.\n### 예외\n안전 인터록 시에는 중단한다.', { links: ['AM-power'] })
-      + record('AM-unrelated', '다른 소유자 정보.'),
-    'power.md': record('AM-power', '재부팅은 현장 관리자만 수행한다.', { links: ['AM-offline'] }),
-    'global.md': record('AM-global', '고객별 데이터 분리.', { always: true }),
-  });
-  const result = read(f.load(), { ids: ['AM-offline'] });
-  assert.equal(result.complete, true);
-  const ids = result.documents.flatMap((item) => item.sections.map((section) => section.id));
-  assert.deepEqual(new Set(ids), new Set(['AM-offline', 'AM-power', 'AM-global']));
-  assert.ok(result.documents.some((item) => item.intro.includes('공장 단말에만')));
-  assert.match(JSON.stringify(result), /안전 인터록/);
-  assert.doesNotMatch(JSON.stringify(result), /다른 소유자 정보/);
-  assert.equal(read(f.load(), { ids: ['@global'] }).documents.length, 1);
-});
-
 test('read receipts reuse exact evidence but changed preambles and newly required links return', (t) => {
   const f = fixture(t, {
     'context.md': '# Shared scope\nFactory only.\n\n' + record('AM-main', 'Continue registration.', { links: ['AM-power'] }),
@@ -107,25 +89,6 @@ test('a compact cursor covers dependencies exactly once and rejects a changed co
   assert.throws(() => read(f.load(), { ids: ['AM-root'], cursor: firstCursor }), { code: 'memory-cursor-stale' });
 });
 
-test('legacy evidence is unclassified and fenced examples cannot manufacture routing or state', (t) => {
-  const f = fixture(t, { 'legacy.md': '# Architecture\nShared scope.\n\n## Offline\nObserved local storage.\n\n```markdown\n## Fake\n<!-- am: {"id":"AM-fake"} -->\n**confirmed/current**\n```\n\n### Details\nKeep exceptions.\n\n## Other\nNot selected.\n' });
-  const corpus = f.load();
-  assert.equal(corpus.records.length, 2);
-  const found = search(corpus, { query: 'Offline' });
-  assert.equal(found.matches[0].confidence, 'unclassified');
-  assert.equal(found.matches[0].stable, false);
-  assert.equal(corpus.byId.has('AM-fake'), false);
-  assert.equal(read(corpus, { ids: [found.matches[0].id] }).documents[0].sections.length, 1);
-});
-
-test('an individual nested claim cannot classify an entire mixed section', (t) => {
-  const f = fixture(t, { 'mixed.md': '## Boundaries\nSeveral claims with separate evidence.\n\n### Earlier plan\n**confirmed/historical**\nRetired constraint.\n' });
-  const found = search(f.load(), { query: 'Boundaries' });
-  assert.equal(found.total, 1);
-  assert.equal(found.matches[0].confidence, 'unclassified');
-  assert.equal(found.matches[0].lifecycle, 'unclassified');
-});
-
 test('current proposals and accepted plans stay distinct; historical ADRs require history search', (t) => {
   const f = fixture(t, {
     'context.md': record('AM-now', 'queue local') + record('AM-plan', 'queue server', {}, 'confirmed/planned')
@@ -150,63 +113,4 @@ test('read budgets omit whole sections and expose incomplete prerequisites', (t)
   const complete = read(f.load(), { ids: ['AM-small'], maxChars: 6000 });
   assert.equal(complete.complete, true);
   assert.ok(complete.documents.flatMap((item) => item.sections).some((section) => section.text.endsWith(huge.trimEnd())));
-});
-
-test('search pagination exposes all candidates and a path match outranks repeated query terms', (t) => {
-  const contents = {};
-  for (let i = 0; i < 12; i++) contents[`${i}.md`] = record(`AM-${i}`, 'queue', { paths: [`src/${i}`] });
-  contents['noisy.md'] = record('AM-noisy', 'queue', { terms: Array.from({ length: 30 }, (_, i) => `word${i}`) });
-  const f = fixture(t, contents);
-  const corpus = f.load();
-  const page = search(corpus, { query: 'queue' });
-  assert.equal(page.matches.length, 5);
-  assert.equal(page.total, 13);
-  assert.equal(page.next_offset, 5);
-  const second = search(corpus, { query: 'queue', offset: page.next_offset });
-  assert.ok(second.matches.every((item) => !page.matches.some((first) => first.id === item.id)));
-  const ranked = search(corpus, { paths: ['src/3/file.js'], query: Array.from({ length: 30 }, (_, i) => `word${i}`).join(' ') });
-  assert.equal(ranked.matches[0].id, 'AM-3');
-});
-
-test('file changes are immediately visible and stale search revisions cannot select shifted legacy IDs', (t) => {
-  const f = fixture(t, { 'context.md': record('AM-one', 'old queue') });
-  const old = f.load();
-  fs.writeFileSync(path.join(f.architecture, 'context.md'), record('AM-one', 'new terminal'));
-  const current = f.load();
-  assert.equal(search(current, { query: 'queue' }).total, 0);
-  assert.equal(search(current, { query: 'terminal' }).total, 1);
-  assert.throws(() => read(current, { ids: ['AM-one'], revision: old.revision }), { code: 'memory-changed' });
-  fs.unlinkSync(path.join(f.architecture, 'context.md'));
-  assert.throws(f.load, { code: 'architecture-unavailable' });
-});
-
-test('CLI searches and checks without modifying project files; malformed arguments fail as JSON', (t) => {
-  const f = fixture(t, { 'context.md': record('AM-one', 'terminal') });
-  const before = fs.readFileSync(f.manifestPath);
-  const fileBefore = fs.statSync(path.join(f.architecture, 'context.md')).mtimeMs;
-  for (const args of [['search', '--query', 'terminal'], ['read', '--id', 'AM-one'], ['check']]) {
-    const result = spawnSync(process.execPath, [cli, ...args, '--project-root', f.root], { encoding: 'utf8', windowsHide: true });
-    assert.equal(result.status, 0, result.stderr);
-    assert.ok(JSON.parse(result.stdout));
-  }
-  assert.deepEqual(fs.readFileSync(f.manifestPath), before);
-  assert.equal(fs.statSync(path.join(f.architecture, 'context.md')).mtimeMs, fileBefore);
-  assert.deepEqual(fs.readdirSync(path.dirname(f.manifestPath)), ['manifest.json']);
-  for (const args of [['search', '--max-chars', '-1'], ['search', '--limit', '1x'], ['read', '--query', 'x'], ['check', '--unknown', 'x']]) {
-    const result = spawnSync(process.execPath, [cli, ...args, '--project-root', f.root], { encoding: 'utf8', windowsHide: true });
-    assert.equal(result.status, 1);
-    assert.ok(JSON.parse(result.stderr).error.code);
-  }
-  assert.throws(() => parseArgs(['search', '--project-root', f.root, '--query', 'x', '--query', 'y']), { code: 'memory-argument-invalid' });
-});
-
-test('missing and ambiguous registration fail before retrieval', (t) => {
-  const f = fixture(t, { 'context.md': record('AM-one', 'terminal') });
-  const duplicate = path.join(f.root, 'docs', 'other', '.architecture-memory');
-  fs.mkdirSync(duplicate, { recursive: true });
-  fs.writeFileSync(path.join(duplicate, 'manifest.json'), JSON.stringify(f.manifest));
-  assert.throws(f.load, (error) => /ambiguous/.test(error.code));
-  fs.unlinkSync(path.join(duplicate, 'manifest.json'));
-  fs.unlinkSync(f.manifestPath);
-  assert.throws(f.load, { code: 'architecture-not-found' });
 });

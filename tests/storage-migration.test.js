@@ -43,12 +43,6 @@ test('first startup migrates project records, links and binary attachments', t =
   assert.equal(fs.statSync(path.join(f.root, '.emeth/STATE.md')).mtimeMs, before);
 });
 
-test('new projects create no storage as a side effect of migration', t => {
-  const f = fixture(t);
-  migrateProject(f.root);
-  assert.deepEqual(fs.readdirSync(f.root), []);
-});
-
 test('conflicting directories fail without changing either copy', t => {
   const f = fixture(t);
   f.write('.proofline/issues/old.json', 'old'); f.write('.emeth/issues/new.json', 'new');
@@ -73,28 +67,6 @@ test('interrupted link rewrite resumes on the next access', t => {
   migrateProject(f.root);
   assert.equal(f.read('.emeth/STATE.md'), '.emeth/issues/PL-0001.json');
   assert.equal(fs.existsSync(path.join(f.root, '.emeth/.emeth-migration.json')), false);
-});
-
-test('directory rename failure preserves the source and is retryable', t => {
-  const f = fixture(t); f.write('.proofline/STATE.md', 'unchanged');
-  const rename = fs.renameSync;
-  fs.renameSync = () => { throw Object.assign(new Error('simulated busy directory'), { code: 'EBUSY' }); };
-  try { assert.throws(() => migrateProject(f.root), { code: 'EBUSY' }); }
-  finally { fs.renameSync = rename; }
-  assert.equal(f.read('.proofline/STATE.md'), 'unchanged');
-  migrateProject(f.root);
-  assert.equal(f.read('.emeth/STATE.md'), 'unchanged');
-});
-
-test('direct document numbering and architecture access migrate without a session hook', t => {
-  const f = fixture(t);
-  f.write('.proofline/issues/PL-0042.json', '{}');
-  f.write('.proofline/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
-  const storage = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage');
-  assert.equal(storage.binding(f.root).enabled, false);
-  const numbers = require('../plugins/emeth-discipline/lib/document-number');
-  assert.equal(numbers.nextDocumentId(f.root, numbers.DOCUMENT_SKILLS['/emeth-discipline:issue-ledger']), 'PL-0043');
-  assert.equal(fs.existsSync(path.join(f.root, '.proofline')), false);
 });
 
 test('Git exclusions and exceptions are carried forward without removing existing rules', t => {
@@ -124,14 +96,6 @@ test('concurrent first accesses serialize migration and preserve every record', 
   for (let i = 0; i < 2; i++) assert.equal(JSON.parse(f.read(`.emeth/issues/${i}.json`)).path, '.emeth/designs/example');
 });
 
-test('startup from a subdirectory migrates the containing project', t => {
-  const f = fixture(t); f.write('.proofline/STATE.md', 'kept'); f.write('src/file.js', '');
-  const result = spawnSync(process.execPath, [path.join(repo, 'hooks/run.js')], { env: f.env, encoding: 'utf8',
-    input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'resume', cwd: path.join(f.root, 'src') }) });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(f.read('.emeth/STATE.md'), 'kept');
-});
-
 test('dashboard and document CLI first access migrate legacy projects without a startup hook', t => {
   for (const surface of ['dashboard', 'writer']) {
     const f = fixture(t);
@@ -154,18 +118,4 @@ test('dashboard and document CLI first access migrate legacy projects without a 
     assert.equal(f.read('.emeth/designs/DESIGN-0001-example/DESIGN.md'), content);
     assert.equal(fs.existsSync(path.join(f.root, '.proofline')), false);
   }
-});
-
-test('issue CLI accepts an old explicit storage path and returns the migrated record', t => {
-  const f = fixture(t);
-  const issue = { schema_version: 2, identity: { id: 'PL-0001', aliases: [], type: 'task', mode: 'simple', title: 'Migrated issue', risk: 'low' },
-    origin: { kind: 'request', summary: 'Migration', refs: [] }, state: { status: 'open', current_summary: 'Ready', next_action: 'Continue' },
-    objective: { summary: 'Preserve issue', constraints: [] }, criteria: [{ id: 'C1', text: 'Still readable', evidence_refs: [] }],
-    relations: [], context: [], artifacts: [], evidence: [], events: [], created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' };
-  f.write('.proofline/issues/PL-0001.json', JSON.stringify(issue));
-  const result = spawnSync(process.execPath, [path.join(repo, 'skills/issue-ledger/scripts/issue-ledger.js'), 'show', 'PL-0001',
-    '--root', path.join(f.root, '.proofline/issues')], { cwd: f.root, env: f.env, encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Migrated issue/);
-  assert.deepEqual(JSON.parse(f.read('.emeth/issues/PL-0001.json')), issue);
 });

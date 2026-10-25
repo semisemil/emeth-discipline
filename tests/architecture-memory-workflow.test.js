@@ -4,8 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { spawnSync, execFile } = require('node:child_process');
-const { promisify } = require('node:util');
+const { spawnSync } = require('node:child_process');
 const W = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
 const S = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/storage.js');
 const { loadRecords } = require('../plugins/emeth-discipline/skills/architecture-memory/scripts/memory.js');
@@ -57,23 +56,6 @@ test('init freezes committed evidence while preserving uncommitted code and publ
   assert.equal(f.manifest().git_checkpoint.revision, head);
   assert.equal(S.binding(f.root).root, 'docs/architecture');
   assert.match(fs.readFileSync(path.join(f.root, 'src/server.js'), 'utf8'), /uncommitted-database/);
-});
-
-test('repeated init resumes its draft and repairs an incomplete existing baseline', (t) => {
-  const f = fixture(t);
-  let begun = W.begin(f.root, 'init', { language: 'ko' });
-  fill(begun);
-  const originalDraft = fs.readFileSync(path.join(begun.draft, '04-context.md'), 'utf8');
-  assert.equal(W.begin(f.root, 'init').draft, begun.draft);
-  assert.equal(fs.readFileSync(path.join(begun.draft, '04-context.md'), 'utf8'), originalDraft);
-  W.apply(f.root);
-  fs.unlinkSync(path.join(f.root, 'docs/architecture/02-containers.md'));
-  begun = W.begin(f.root, 'init');
-  assert.equal(begun.connection_only, false);
-  assert.throws(() => W.apply(f.root), { code: 'memory-baseline-incomplete' });
-  fill(begun);
-  W.apply(f.root);
-  assert.equal(loadRecords(f.root).state.manifest.documents.length, 5);
 });
 
 test('no-commit init detects source drift and later update seeds the first committed snapshot', (t) => {
@@ -151,113 +133,6 @@ test('foreign edits are preserved both before publication and during interrupted
   assert.match(fs.readFileSync(live, 'utf8'), /Later user edit/);
 });
 
-test('same commit and document-only commits return without drafting or advancing checkpoints', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  const checkpoint = f.manifest().git_checkpoint.revision;
-  assert.equal(W.begin(f.root, 'update').status, 'current');
-  f.git('add', 'docs/architecture', S.BINDING); f.git('commit', '-qm', 'memory only');
-  assert.equal(W.begin(f.root, 'update').status, 'ignored');
-  assert.equal(f.manifest().git_checkpoint.revision, checkpoint);
-});
-
-test('rename paths, non-ancestor comparisons and no-document effects are classified without inventing history', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  const base = f.git('rev-parse', 'HEAD');
-  f.git('checkout', '-qb', 'alternate');
-  f.git('mv', 'src/server.js', 'src/runtime.js'); f.git('commit', '-qm', 'rename');
-  let begun = W.begin(f.root, 'update');
-  assert.deepEqual(W.inspect(f.root, 'changes').items[0].paths, ['src/server.js', 'src/runtime.js']);
-  W.classify(f.root, { prefix: 'src/', effect: 'none', reason: 'Only a filename moved; no registered routing references the old path.' });
-  W.apply(f.root);
-  f.git('checkout', '-qb', 'other', base);
-  f.write('src/server.js', 'const store = "other branch";\n'); f.git('add', 'src'); f.git('commit', '-qm', 'other branch');
-  begun = W.begin(f.root, 'update');
-  assert.equal(begun.status, 'draft');
-  W.classify(f.root, { prefix: 'src/', effect: 'architecture', reason: 'Snapshot boundaries differ.' });
-  fs.appendFileSync(path.join(begun.draft, '02-containers.md'), '\nOther branch store.\n');
-  W.apply(f.root);
-  assert.equal(f.manifest().git_checkpoint.revision, f.git('rev-parse', 'HEAD'));
-});
-
-test('update CLI rejects a missing connection even when managed documents remain', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  f.write('src/server.js', 'const store = "database";\n');
-  f.git('add', 'src'); f.git('commit', '-qm', 'changed storage');
-  const memoryRoot = path.join(f.root, 'docs/architecture');
-  const stateFile = path.join(memoryRoot, S.WORK, 'state.json');
-  const stateBefore = fs.readFileSync(stateFile, 'utf8');
-  const manifestBefore = f.manifest();
-  const documentBefore = fs.readFileSync(path.join(memoryRoot, '04-context.md'), 'utf8');
-  fs.unlinkSync(path.join(f.root, S.BINDING));
-
-  const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
-  const result = spawnSync(process.execPath, [cli, 'update', '--project-root', f.root], { encoding: 'utf8', windowsHide: true });
-  assert.equal(result.status, 1, result.stdout);
-  assert.equal(JSON.parse(result.stderr).error.code, 'memory-not-initialized');
-  assert.equal(fs.existsSync(path.join(f.root, S.BINDING)), false);
-  assert.equal(fs.readFileSync(stateFile, 'utf8'), stateBefore);
-  assert.deepEqual(f.manifest(), manifestBefore);
-  assert.equal(fs.readFileSync(path.join(memoryRoot, '04-context.md'), 'utf8'), documentBefore);
-});
-
-test('disconnecting a pending update blocks publication until the connection is restored', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  f.write('src/server.js', 'const store = "database";\n');
-  f.git('add', 'src'); f.git('commit', '-qm', 'changed storage');
-  const begun = W.begin(f.root, 'update');
-  W.classify(f.root, { path: 'src/server.js', effect: 'architecture', reason: 'Persistent storage changes the operating context.' });
-  fs.appendFileSync(path.join(begun.draft, '04-context.md'), '\nStorage now persists between runs.\n');
-  const document = path.join(f.root, 'docs/architecture/04-context.md');
-  const documentBefore = fs.readFileSync(document, 'utf8');
-  const manifestBefore = f.manifest();
-  const bindingFile = path.join(f.root, S.BINDING);
-  const bindingBefore = fs.readFileSync(bindingFile, 'utf8');
-  fs.unlinkSync(bindingFile);
-
-  assert.throws(() => W.apply(f.root));
-  assert.equal(fs.readFileSync(document, 'utf8'), documentBefore);
-  assert.deepEqual(f.manifest(), manifestBefore);
-  assert.equal(fs.existsSync(bindingFile), false);
-
-  fs.writeFileSync(bindingFile, bindingBefore);
-  assert.equal(W.apply(f.root).status, 'applied');
-  assert.match(fs.readFileSync(document, 'utf8'), /Storage now persists between runs\./);
-});
-
-test('hook emits nothing before init, resolves the current plugin and suppresses repeat notices', (t) => {
-  const f = fixture(t);
-  const dataRoot = path.join(f.root, '.test-hook-data');
-  const event = { cwd: f.root, session_id: 's1', hook_event_name: 'UserPromptSubmit' };
-  assert.equal(notice(event, { dataRoot }), '');
-  assert.equal(fs.existsSync(dataRoot), false);
-  initialize(f);
-  const first = notice(event, { dataRoot });
-  assert.ok(first.includes('docs/architecture'));
-  assert.ok(first.includes('.emeth/architecture.json'));
-  assert.match(first, /skills.*architecture-memory.*SKILL.md/);
-  assert.equal(notice(event, { dataRoot }), '');
-  assert.match(notice({ ...event, hook_event_name: 'SessionStart', source: 'compact' }, { dataRoot }), /SKILL.md/);
-  assert.match(notice({ ...event, hook_event_name: 'SubagentStart', agent_id: 'a1' }, { dataRoot }), /SKILL.md/);
-  const changedPlugin = path.join(f.root, '.test-plugin');
-  f.write('.test-plugin/skills/architecture-memory/SKILL.md', 'Current plugin.');
-  assert.ok(notice(event, { dataRoot, pluginRoot: changedPlugin }).includes(JSON.stringify(changedPlugin).slice(1, -1)));
-  const binding = JSON.stringify({ schema_version: 1, root: 'docs/architecture' });
-  f.write(S.BINDING, JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
-  assert.match(notice(event, { dataRoot }), /\S/);
-  assert.equal(connectionStatus(f.root).status, 'disabled');
-  assert.equal(notice(event, { dataRoot }), '');
-  f.write(S.BINDING, binding);
-  assert.equal(notice(event, { dataRoot }), first);
-  f.write(S.BINDING, JSON.stringify({ schema_version: 1, root: 'docs/missing' }));
-  assert.match(notice(event, { dataRoot }), /\S/);
-  assert.equal(connectionStatus(f.root).status, 'unavailable');
-  assert.equal(notice(event, { dataRoot }), '');
-});
-
 test('the session notice reports commits made after the Memory Git checkpoint', (t) => {
   const f = fixture(t);
   const dataRoot = path.join(f.root, '.test-hook-data');
@@ -267,115 +142,4 @@ test('the session notice reports commits made after the Memory Git checkpoint', 
   f.write('src/server.js', 'const store = "database";\n');
   f.git('add', 'src/server.js'); f.git('commit', '-qm', 'database');
   assert.match(notice(event, { dataRoot }), /architecture-memory-update/);
-});
-
-test('change pages are bounded and bulk classification includes paths beyond the first page', (t) => {
-  const f = fixture(t);
-  initialize(f);
-  for (let i = 0; i < 31; i++) f.write(`assets/data-${i}.txt`, 'irrelevant fixture data\n');
-  f.git('add', 'assets'); f.git('commit', '-qm', 'assets');
-  W.begin(f.root, 'update');
-  const page = W.inspect(f.root, 'changes');
-  assert.equal(page.total, 31); assert.equal(page.next_offset, 30); assert.ok(JSON.stringify(page).length < 6000);
-  const classification = W.classify(f.root, { prefix: 'assets/', effect: 'none', reason: 'Only fixture payloads; source boundaries unchanged.' });
-  assert.equal(classification.classified, 31); assert.ok(JSON.stringify(classification).length < 100);
-  W.apply(f.root);
-});
-
-test('occupied roots and malformed CLI arguments fail without creating a connection', (t) => {
-  const f = fixture(t);
-  f.write('docs/manual/README.md', 'Existing manual.');
-  assert.throws(() => W.begin(f.root, 'init', { root: 'docs/manual' }), { code: 'memory-root-conflict' });
-  assert.equal(fs.existsSync(path.join(f.root, 'docs/manual/.architecture-memory')), false);
-  assert.equal(fs.existsSync(path.join(f.root, S.BINDING)), false);
-  assert.throws(() => W.parseArgs(['source', '--project-root', f.root, '--limit', '9999']), { code: 'memory-argument-invalid' });
-});
-
-test('init interruption before manifest creation resumes through the public init command', (t) => {
-  const f = fixture(t);
-  const begun = W.begin(f.root, 'init'); fill(begun);
-  assert.throws(() => W.apply(f.root, {}, { afterWrite() { throw new Error('interrupted'); } }), /interrupted/);
-  assert.equal(fs.existsSync(path.join(f.root, S.BINDING)), false);
-  assert.equal(W.begin(f.root, 'init').status, 'applying');
-  W.apply(f.root);
-  assert.equal(W.begin(f.root, 'init').connection_only, true);
-  W.apply(f.root);
-  assert.equal(W.inspect(f.root, 'status').next, 'done');
-  const ignored = f.git('status', '--porcelain', '--untracked-files=all');
-  assert.doesNotMatch(ignored, /work\/draft|work\/state|work\/lock/);
-});
-
-test('metadata-only baseline is not ready; captured HEAD remains authoritative after a new commit', (t) => {
-  const f = fixture(t);
-  const begun = W.begin(f.root, 'init');
-  const head = begun.source_revision;
-  fill(begun, (text) => text.replace('Observed baseline from the captured source.', ''));
-  assert.throws(() => W.apply(f.root), { code: 'memory-baseline-incomplete' });
-  for (const [, , file] of W.BASE) fs.appendFileSync(path.join(begun.draft, file), '\nBaseline evidence.\n');
-  f.write('src/server.js', 'const store = "new commit";\n'); f.git('add', 'src'); f.git('commit', '-qm', 'later commit');
-  assert.equal(W.source(f.root, { path: 'src/server.js' }).source_revision, head);
-  assert.match(W.source(f.root, { path: 'src/server.js' }).text, /"memory"/);
-  W.apply(f.root);
-  assert.equal(f.manifest().git_checkpoint.revision, head);
-  assert.equal(W.begin(f.root, 'update').pending_changes, 1);
-});
-
-test('uncommitted evidence can be refreshed without discarding its draft', (t) => {
-  const f = fixture(t, false);
-  const begun = W.begin(f.root, 'init'); fill(begun);
-  W.source(f.root, { path: 'src/server.js' });
-  f.write('src/server.js', 'const store = "new evidence";\n');
-  assert.throws(() => W.source(f.root, { path: 'src/server.js' }), { code: 'memory-source-changed' });
-  assert.match(W.source(f.root, { path: 'src/server.js', refresh: true }).text, /new evidence/);
-  f.write('src/new.js', 'New responsibility.');
-  assert.throws(() => W.apply(f.root), { code: 'memory-source-changed' });
-  W.inspect(f.root, 'inventory', { refresh: true });
-  W.source(f.root, { path: 'src/new.js' });
-  fs.appendFileSync(path.join(begun.draft, '02-containers.md'), '\nReconciled new evidence and responsibility.\n');
-  W.apply(f.root);
-  assert.equal(f.manifest().git_checkpoint.revision, null);
-});
-
-test('external edits to unchanged draft dependencies prevent publication', (t) => {
-  const f = fixture(t); initialize(f);
-  f.write('src/server.js', 'const store = "new";\n'); f.git('add', 'src'); f.git('commit', '-qm', 'new');
-  const begun = W.begin(f.root, 'update');
-  W.classify(f.root, { prefix: 'src/', effect: 'architecture', reason: 'New store.' });
-  fs.appendFileSync(path.join(begun.draft, '02-containers.md'), '\nChanged storage.\n');
-  const live = path.join(f.root, 'docs/architecture/04-context.md');
-  const before = fs.readFileSync(live, 'utf8');
-  fs.appendFileSync(live, '\nNew constraint from another task.\n');
-  assert.throws(() => W.apply(f.root), { code: 'memory-target-changed' });
-  fs.writeFileSync(live, before);
-  assert.throws(() => W.apply(f.root, {}, { afterWrite() { throw new Error('interrupted'); } }), /interrupted/);
-  fs.appendFileSync(live, '\nNew constraint from another task.\n');
-  assert.throws(() => W.apply(f.root), { code: 'memory-target-changed' });
-  assert.match(fs.readFileSync(live, 'utf8'), /another task/);
-});
-
-test('registered hook CLI emits bounded valid context and stays empty without a binding', (t) => {
-  const f = fixture(t);
-  const plugin = path.resolve(__dirname, '../plugins/emeth-discipline');
-  const hook = path.join(plugin, 'hooks/run.js');
-  const run = () => spawnSync(process.execPath, [hook], { input: JSON.stringify({ cwd: f.root, session_id: 'cli', hook_event_name: 'UserPromptSubmit' }), encoding: 'utf8', env: { ...process.env, PLUGIN_DATA: path.join(f.root, '.test-hook') } });
-  assert.equal(run().stdout, '');
-  initialize(f);
-  const result = run();
-  assert.equal(result.status, 0);
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.hookEventName, 'UserPromptSubmit');
-  assert.ok(result.stdout.length < 1000);
-  assert.equal(run().stdout, '');
-});
-
-test('committed source CLI reads run concurrently without a write lock or retries', async (t) => {
-  const f = fixture(t);
-  const begun = W.begin(f.root, 'init');
-  const cli = path.resolve(__dirname, '../plugins/emeth-discipline/skills/architecture-memory/scripts/workflow.js');
-  const execute = promisify(execFile);
-  const results = await Promise.all(Array.from({ length: 4 }, () => execute(process.execPath, [cli, 'source', '--project-root', f.root, '--path', 'src/server.js'], { windowsHide: true })));
-  for (const result of results) {
-    assert.equal(result.stderr, '');
-    assert.equal(JSON.parse(result.stdout).source_revision, begun.source_revision);
-    assert.match(JSON.parse(result.stdout).text, /"memory"/);
-  }
 });

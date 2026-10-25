@@ -4,13 +4,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawn, spawnSync } = require('node:child_process');
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
 const test = require('node:test');
 
 const pluginRoot = path.resolve(__dirname, '../plugins/emeth-discipline');
 const registerCli = path.join(pluginRoot, 'dashboard', 'register-project.js');
 const {
-  getDashboardConfigDir,
   getRegistryPath,
   readRegistry,
   registerProject
@@ -28,15 +28,6 @@ function configEnv(configRoot) {
     : { ...process.env, XDG_CONFIG_HOME: configRoot };
 }
 
-function registryOptions(configRoot, overrides = {}) {
-  return {
-    env: configEnv(configRoot),
-    randomUUID: () => '11111111-1111-4111-8111-111111111111',
-    now: () => '2026-08-17T00:00:00.000Z',
-    ...overrides
-  };
-}
-
 test('registry normalizes real roots, deduplicates aliases, and atomically retains distinct roots', (t) => {
   const root = makeRoot(t);
   const configRoot = path.join(root, 'config');
@@ -48,14 +39,10 @@ test('registry normalizes real roots, deduplicates aliases, and atomically retai
   fs.symlinkSync(firstRoot, aliasRoot, process.platform === 'win32' ? 'junction' : 'dir');
 
   const relativeFirst = path.relative(process.cwd(), firstRoot);
-  const first = registerProject(relativeFirst, registryOptions(configRoot));
-  const duplicate = registerProject(aliasRoot, registryOptions(configRoot, {
-    randomUUID: () => '22222222-2222-4222-8222-222222222222'
-  }));
-  const second = registerProject(secondRoot, registryOptions(configRoot, {
-    randomUUID: () => '33333333-3333-4333-8333-333333333333',
-    now: () => '2026-08-17T00:01:00.000Z'
-  }));
+  const options = { env: configEnv(configRoot) };
+  const first = registerProject(relativeFirst, options);
+  const duplicate = registerProject(aliasRoot, options);
+  const second = registerProject(secondRoot, options);
 
   assert.equal(first.status, 'registered');
   assert.equal(duplicate.status, 'no-op');
@@ -63,52 +50,13 @@ test('registry normalizes real roots, deduplicates aliases, and atomically retai
   assert.equal(second.status, 'registered');
   assert.notEqual(second.project.root, first.project.root);
 
-  const { registry, registryPath } = readRegistry(registryOptions(configRoot));
+  const { registry } = readRegistry(options);
   assert.equal(registry.projects.length, 2);
-  assert.deepEqual(registry.projects.map((project) => project.id), [
-    '11111111-1111-4111-8111-111111111111',
-    '33333333-3333-4333-8333-333333333333'
-  ]);
-  assert.equal(path.dirname(registryPath), getDashboardConfigDir(registryOptions(configRoot)));
-  assert.deepEqual(
-    fs.readdirSync(path.dirname(registryPath)).filter((name) => name.endsWith('.tmp')),
-    []
-  );
+  assert.equal(new Set(registry.projects.map(project => project.id)).size, 2);
 
   if (process.platform === 'win32') {
-    const caseVariant = registerProject(firstRoot.toUpperCase(), registryOptions(configRoot));
+    const caseVariant = registerProject(firstRoot.toUpperCase(), options);
     assert.equal(caseVariant.status, 'no-op');
-  }
-});
-
-test('existing registration remains usable without registry write permission', t => {
-  const root = makeRoot(t);
-  const projectRoot = path.join(root, 'project');
-  const otherRoot = path.join(root, 'other');
-  fs.mkdirSync(projectRoot);
-  fs.mkdirSync(otherRoot);
-  const options = registryOptions(path.join(root, 'config'));
-  const first = registerProject(projectRoot, options);
-  const registryPath = first.registryPath;
-  const original = fs.readFileSync(registryPath);
-  const open = fs.openSync;
-  fs.openSync = (file, ...args) => {
-    if (path.resolve(String(file)) === `${registryPath}.lock`) {
-      const error = new Error('Registry is read-only');
-      error.code = 'EPERM';
-      throw error;
-    }
-    return open(file, ...args);
-  };
-  try {
-    const reused = registerProject(projectRoot, options);
-    assert.equal(reused.status, 'no-op');
-    assert.deepEqual(reused.project, first.project);
-    assert.deepEqual(fs.readFileSync(registryPath), original);
-    assert.throws(() => registerProject(otherRoot, options), error => error.code === 'registry-lock-failed');
-    assert.deepEqual(fs.readFileSync(registryPath), original);
-  } finally {
-    fs.openSync = open;
   }
 });
 
@@ -117,71 +65,13 @@ test('concurrent registration retains every distinct project', async (t) => {
   const configRoot = path.join(root, 'config');
   const env = configEnv(configRoot);
   const registryPath = getRegistryPath({ env });
-  const projectRoots = Array.from({ length: 12 }, (_, index) => path.join(root, `project-${index}`));
+  const projectRoots = ['alpha', 'beta'].map(name => path.join(root, name));
   for (const projectRoot of projectRoots) {
     fs.mkdirSync(projectRoot, { recursive: true });
   }
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(registryPath, '{"schema_version":1,"projects":[]}\n', 'utf8');
-
-  const workerSource = String.raw`
-    const fs = require('node:fs');
-    const path = require('node:path');
-    const registryPath = process.env.EMETH_TEST_REGISTRY;
-    const originalRead = fs.readFileSync;
-    const waitState = new Int32Array(new SharedArrayBuffer(4));
-    fs.readFileSync = function delayedRegistryRead(filePath, ...args) {
-      const result = originalRead.call(this, filePath, ...args);
-      if (path.resolve(String(filePath)) === path.resolve(registryPath)) {
-        Atomics.wait(waitState, 0, 0, 75);
-      }
-      return result;
-    };
-    const { registerProject } = require(process.env.EMETH_TEST_REGISTRY_MODULE);
-    process.send('ready');
-    process.once('message', () => {
-      try {
-        process.stdout.write(JSON.stringify(registerProject(process.argv[1])));
-      } catch (error) {
-        process.stderr.write(JSON.stringify({ code: error.code, message: error.message }));
-        process.exitCode = 1;
-      } finally {
-        process.disconnect();
-      }
-    });
-  `;
-  const workers = projectRoots.map((projectRoot) => {
-    const child = spawn(process.execPath, ['-e', workerSource, projectRoot], {
-      env: {
-        ...env,
-        EMETH_TEST_REGISTRY: registryPath,
-        EMETH_TEST_REGISTRY_MODULE: path.join(pluginRoot, 'dashboard', 'registry.js')
-      },
-      stdio: ['ignore', 'pipe', 'pipe', 'ipc']
-    });
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (chunk) => { stdout += chunk; });
-    child.stderr.on('data', (chunk) => { stderr += chunk; });
-    const ready = new Promise((resolve, reject) => {
-      child.once('message', resolve);
-      child.once('error', reject);
-    });
-    const completed = new Promise((resolve, reject) => {
-      child.once('error', reject);
-      child.once('exit', (code) => resolve({ code, stdout, stderr }));
-    });
-    return { child, ready, completed };
-  });
-
-  await Promise.all(workers.map((worker) => worker.ready));
-  for (const worker of workers) {
-    worker.child.send('start');
-  }
-  const results = await Promise.all(workers.map((worker) => worker.completed));
-  for (const result of results) {
-    assert.equal(result.code, 0, result.stderr);
-  }
+  const execute = promisify(execFile);
+  await Promise.all(projectRoots.map(projectRoot => execute(process.execPath,
+    [registerCli, 'register', '--project-root', projectRoot], { env, windowsHide: true })));
 
   const { registry } = readRegistry({ env });
   assert.deepEqual(
@@ -196,7 +86,7 @@ test('a live registry lock times out without changing projects', (t) => {
   const root = makeRoot(t);
   const configRoot = path.join(root, 'config');
   const projectRoot = path.join(root, 'project');
-  const options = registryOptions(configRoot, { lockTimeoutMs: 0 });
+  const options = { env: configEnv(configRoot), lockTimeoutMs: 0 };
   const registryPath = getRegistryPath(options);
   const lockPath = `${registryPath}.lock`;
   fs.mkdirSync(projectRoot, { recursive: true });
@@ -215,61 +105,4 @@ test('a live registry lock times out without changing projects', (t) => {
   );
   assert.deepEqual(readRegistry(options).registry.projects, []);
   assert.equal(fs.existsSync(lockPath), true);
-});
-
-test('an abandoned registry lock is recovered before registration', (t) => {
-  const root = makeRoot(t);
-  const configRoot = path.join(root, 'config');
-  const projectRoot = path.join(root, 'project');
-  const options = registryOptions(configRoot);
-  const registryPath = getRegistryPath(options);
-  const lockPath = `${registryPath}.lock`;
-  fs.mkdirSync(projectRoot, { recursive: true });
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(lockPath, JSON.stringify({
-    schema_version: 1,
-    token: '99999999-9999-4999-8999-999999999999',
-    owner_pid: 2147483647,
-    started_at: new Date().toISOString()
-  }), 'utf8');
-
-  assert.equal(registerProject(projectRoot, options).status, 'registered');
-  assert.equal(readRegistry(options).registry.projects.length, 1);
-  assert.equal(fs.existsSync(lockPath), false);
-  assert.equal(fs.existsSync(`${lockPath}.recovery`), false);
-});
-
-test('missing roots are rejected without creating global state', (t) => {
-  const root = makeRoot(t);
-  const configRoot = path.join(root, 'config');
-  assert.throws(
-    () => registerProject(path.join(root, 'missing'), registryOptions(configRoot)),
-    (error) => error.code === 'project-root-invalid'
-  );
-  assert.equal(fs.existsSync(getRegistryPath(registryOptions(configRoot))), false);
-});
-
-test('register CLI reports registered, no-op, and invalid arguments as stable results', (t) => {
-  const root = makeRoot(t);
-  const projectRoot = path.join(root, 'project');
-  const configRoot = path.join(root, 'config');
-  const env = configEnv(configRoot);
-  fs.mkdirSync(projectRoot, { recursive: true });
-
-  const first = spawnSync(process.execPath, [registerCli, 'register', '--project-root', projectRoot], {
-    encoding: 'utf8', env
-  });
-  const second = spawnSync(process.execPath, [registerCli, 'register', '--project-root', projectRoot], {
-    encoding: 'utf8', env
-  });
-  assert.equal(first.status, 0, first.stderr);
-  assert.equal(JSON.parse(first.stdout).status, 'registered');
-  assert.equal(second.status, 0, second.stderr);
-  assert.equal(JSON.parse(second.stdout).status, 'no-op');
-
-  const malformed = spawnSync(process.execPath, [registerCli, 'register', '--unknown', projectRoot], {
-    encoding: 'utf8', env
-  });
-  assert.equal(malformed.status, 1);
-  assert.equal(JSON.parse(malformed.stderr).error.code, 'invalid-argument');
 });

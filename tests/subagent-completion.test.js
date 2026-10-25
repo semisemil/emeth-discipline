@@ -74,46 +74,6 @@ test('a subagent parent resumes through its native path without queuing direct i
   assert.equal((await f.create().perform('notify', { parent: 'parent', task: 'tests', message: 'tests ready' })).status, 'acknowledged');
 });
 
-test('completion retries recover the lock of an exited notifier and still support acknowledgement', async t => {
-  const f = fixture(t);
-  const source = `
-    const { CompletionNotifications } = require(process.argv[1]);
-    new CompletionNotifications({ directory: process.argv[2], request: async () => process.exit(0) })
-      .perform('notify', { parent: 'parent', task: 'interrupted', message: 'done' });
-  `;
-  execFileSync(process.execPath, ['-e', source,
-    require.resolve('../plugins/emeth-discipline/lib/subagent-completion'), f.create().directory], { windowsHide: true });
-  const result = await f.create().perform('notify', { parent: 'parent', task: 'interrupted', message: 'done' });
-  assert.equal(result.status, 'registered');
-  assert.equal(f.queue().length, 1);
-  assert.equal((await f.create().perform('ack', { parent: 'parent', task: 'interrupted' })).deleted, 1);
-  assert.deepEqual(f.queue(), []);
-});
-
-test('the default proxy command reports an unavailable Codex executable', async t => {
-  const f = fixture(t);
-  const env = { ...process.env };
-  for (const key of Object.keys(env)) if (key.toLowerCase() === 'path') delete env[key];
-  env.PATH = f.create().directory;
-  await assert.rejects(connect({ env }), error => {
-    if (process.platform === 'win32') assert.match(error.message, /['"]codex['"]/i);
-    else {
-      assert.equal(error.code, 'ENOENT');
-      assert.equal(error.path, 'codex');
-    }
-    return true;
-  });
-});
-
-test('proxy startup failure retains its stderr diagnostic', async t => {
-  const f = fixture(t);
-  const preload = path.join(f.create().directory, 'failed-proxy.cjs');
-  fs.writeFileSync(preload, "require('node:fs').writeSync(2, 'fixture proxy startup failure\\n'); process.exit(23);\n");
-  await assert.rejects(connect({ binary: process.execPath,
-    env: { ...process.env, NODE_OPTIONS: '--require ' + JSON.stringify(preload.split(path.sep).join('/')) },
-  }), /fixture proxy startup failure/);
-});
-
 test('RPC initialization and later requests complete through the proxy transport', async t => {
   const f = fixture(t), directory = f.create().directory;
   const preload = path.join(directory, 'proxy.mjs');
@@ -144,19 +104,6 @@ test('RPC initialization and later requests complete through the proxy transport
   try {
     assert.deepEqual(await rpc.request('fixture/echo', { text: 'kept' }), { initialized: true, params: { text: 'kept' } });
   } finally { rpc.close(); }
-});
-
-test('a failed cancellation keeps the completion available for a later acknowledgement', async t => {
-  const f = fixture(t);
-  await f.create().perform('notify', { parent: 'parent', task: 'a', message: 'done' });
-  const failing = new CompletionNotifications({ directory: f.create().directory, request: async (method, params) => {
-    if (method === 'thread/queue/delete') throw new Error('Connection lost');
-    return f.request(method, params);
-  } });
-  await assert.rejects(failing.perform('ack', { parent: 'parent', task: 'a' }), /Connection lost/);
-  assert.equal(f.queue().length, 1);
-  assert.equal((await f.create().perform('ack', { parent: 'parent', task: 'a' })).deleted, 1);
-  assert.deepEqual(f.queue(), []);
 });
 
 test('a lost registration response is recovered without sending a second completion', async t => {

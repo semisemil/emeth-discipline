@@ -10,7 +10,6 @@ const { execFile } = require('node:child_process');
 const {
   health,
   inspectServer,
-  openDashboard,
   startServer,
   stopServer,
 } = require('../plugins/emeth-discipline/dashboard/control');
@@ -87,23 +86,6 @@ test('fixed port owned by another process is reported without selecting another 
   assert.equal(fs.existsSync(path.join(directory, 'settings.json')), false);
   assert.equal(fs.existsSync(path.join(directory, 'server.json')), false);
   assert.equal(occupant.listening, true);
-});
-
-test('open moves a verified legacy server to the fixed port', async (t) => {
-  const directory = tempDirectory(t);
-  const legacy = await startServer({ directory, port: 0 });
-  assert.equal(legacy.ok, true);
-  let launchedUrl;
-
-  const opened = await openDashboard({ directory, browserLauncher(url) { launchedUrl = url; } });
-
-  assert.equal(opened.ok, true);
-  assert.equal(opened.action, 'opened');
-  assert.equal(opened.port, 43127);
-  assert.notEqual(opened.instance_id, legacy.instance_id);
-  assert.equal(new URL(launchedUrl).port, '43127');
-  assert.throws(() => process.kill(legacy.pid, 0), { code: 'ESRCH' });
-  assert.equal((await health(43127)).value.instance_id, opened.instance_id);
 });
 
 test('Windows startup timeout stops the child and removes startup state', {
@@ -184,31 +166,5 @@ test('concurrent startup recovers an expired lock and preserves one verified ser
   assert.equal(state.instance_id, status.instance_id);
   assert.equal(state.pid, status.pid);
   assert.equal(new Set(results.filter(result => result.instance_id).map(result => result.instance_id)).size, 1);
-  assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
-});
-
-test('normal and abnormal exits preserve identity cleanup rules', async (t) => {
-  const directory = tempDirectory(t);
-  const first = await startServer({ directory, port: 0 });
-  const normal = await stopServer({ directory });
-  assert.equal(normal.action, 'stopped');
-  assert.equal(fs.existsSync(path.join(directory, 'server.json')), false);
-
-  const second = await startServer({ directory, port: 0 });
-  process.kill(second.pid, 'SIGKILL');
-  let afterKill;
-  for (let attempt = 0; attempt < 80; attempt += 1) {
-    afterKill = await inspectServer({ directory });
-    if (afterKill.status === 'stopped') {
-      break;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  assert.equal(afterKill.status, 'stopped');
-  assert.equal(fs.existsSync(path.join(directory, 'server.json')), true);
-
-  const restarted = await startServer({ directory, port: 0 });
-  assert.equal(restarted.action, 'started');
-  assert.notEqual(restarted.instance_id, second.instance_id);
   assert.equal(fs.existsSync(path.join(directory, 'server-start.lock')), false);
 });

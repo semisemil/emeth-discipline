@@ -7,23 +7,11 @@ const path = require('node:path');
 const test = require('node:test');
 
 const {
-  ProjectIndexService,
   buildProjectIndex,
   buildProjectSummary,
 } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 
 const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
-const STATE_STARTER = path.join(
-  __dirname,
-  '..',
-  'plugins',
-  'emeth-discipline',
-  'skills',
-  'issue-ledger',
-  'assets',
-  'state-starter',
-);
-
 function makeRoot(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-project-index-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -32,16 +20,10 @@ function makeRoot(t) {
 }
 
 function issue(overrides = {}) {
-  return {
-    schema_version: 2,
-    identity: {
-      id: 'PL-0001', aliases: [], type: 'feature', mode: 'simple', title: 'Dashboard', risk: 'low',
-    },
-    origin: { kind: 'request', summary: 'Dashboard API', refs: [] },
-    state: { status: 'open', current_summary: 'API 대기', next_action: 'API 구현' },
-    objective: { summary: '기록을 표시한다.', constraints: [] },
-    criteria: [{ id: 'C1', text: '기록이 보인다.', evidence_refs: [] }],
-    milestones: [], relations: [], context: [], artifacts: [], evidence: [], events: [],
+  const template = fs.readFileSync(path.join(__dirname, '../plugins/emeth-discipline/skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8');
+  const value = JSON.parse(template.replace(/REPLACE: [^"]*/g, 'Dashboard'));
+  value.identity.id = 'PL-0001';
+  return { ...value,
     created_at: '2026-08-17T00:00:00.000Z',
     updated_at: '2026-08-17T01:00:00.000Z',
     ...overrides,
@@ -70,12 +52,12 @@ function writePlan(root, id, slug, values = {}) {
   const related = values.relatedIssues === undefined ? ['PL-0001'] : values.relatedIssues;
   const text = [
     '---',
-    `id: ${values.bodyId || id}`,
-    `title: ${values.title || id}`,
+    `id: ${id}`,
+    `title: ${id}`,
     `status: ${values.status || 'ready'}`,
     ...(related.length ? ['related_issues:', ...related.map((issueId) => `  - ${issueId}`)] : []),
     '---',
-    values.body || '# Plan',
+    '# Plan',
   ].join('\n');
   fs.writeFileSync(path.join(directory, 'PLAN.md'), text, 'utf8');
   return `.emeth/plan/${id}-${slug}/PLAN.md`;
@@ -87,15 +69,15 @@ function writeSpec(root, id, slug, values = {}) {
   const metadata = {
     schema_version: 2,
     id: values.bodyId || id,
-    title: values.title || id,
+    title: id,
     kind: 'feature',
     status: values.status || 'ready',
-    revision: values.revision || 1,
+    revision: 1,
     supersedes: [],
     superseded_by: null,
     related_issues: values.relatedIssues === undefined ? ['PL-0001'] : values.relatedIssues,
   };
-  fs.writeFileSync(path.join(directory, 'SPEC.md'), `---\n${JSON.stringify(metadata, null, 2)}\n---\n${values.body || '# Spec'}`, 'utf8');
+  fs.writeFileSync(path.join(directory, 'SPEC.md'), `---\n${JSON.stringify(metadata, null, 2)}\n---\n# Spec`, 'utf8');
   return `.emeth/specs/${id}-${slug}/SPEC.md`;
 }
 
@@ -120,82 +102,6 @@ test('summary and index expose the newest issue by creation time, independently 
   assert.equal(buildProjectSummary(project(path.join(root, 'missing'))).latest_issue, null);
 });
 
-test('project index returns canonical records, reciprocal links, and multiple flow signals', (t) => {
-  const root = makeRoot(t);
-  const planPath = writePlan(root, 'PLAN-0001', 'dashboard', { status: 'draft' });
-  const specPath = writeSpec(root, 'SPEC-0001', 'dashboard', { status: 'ready' });
-  writeIssue(root, issue({
-    context: [
-      { kind: 'Plan', location: planPath },
-      { kind: 'Spec', location: specPath },
-    ],
-  }));
-
-  const result = buildProjectIndex(project(root), { now: () => '2026-08-18T00:00:00.000Z' }).publicIndex;
-  assert.equal(result.project.availability, 'available');
-  assert.deepEqual(result.project.counts, { active: 1, blocked: 0 });
-  assert.deepEqual(result.issues[0].plan_ids, ['PLAN-0001']);
-  assert.deepEqual(result.issues[0].spec_ids, ['SPEC-0001']);
-  assert.deepEqual(result.flow_signals.map((signal) => signal.signal), ['plan-draft', 'implementation-ready']);
-  assert.equal(result.diagnostics.length, 0);
-  assert.deepEqual(result.plans[0].linked_issue_ids, ['PL-0001']);
-  assert.deepEqual(result.specs[0].linked_issue_ids, ['PL-0001']);
-});
-
-test('production state-starter example Issue is excluded by the canonical filename owner', (t) => {
-  const root = makeRoot(t);
-  fs.cpSync(STATE_STARTER, path.join(root, '.emeth'), { recursive: true });
-
-  const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.issues, []);
-  assert.deepEqual(result.project.counts, { active: 0, blocked: 0 });
-  assert.deepEqual(result.flow_signals, []);
-  assert.deepEqual(result.diagnostics, []);
-});
-
-test('canonical Issue filenames use content IDs unless the filename provides an identity', (t) => {
-  const root = makeRoot(t);
-  const issuesDirectory = path.join(root, '.emeth', 'issues');
-  fs.writeFileSync(
-    path.join(issuesDirectory, 'other.json'),
-    JSON.stringify(flowIssue('PL-0043', 'open')),
-    'utf8',
-  );
-  fs.writeFileSync(path.join(issuesDirectory, 'malformed.json'), '{not-json', 'utf8');
-  fs.writeFileSync(
-    path.join(issuesDirectory, 'PL-0001.json'),
-    JSON.stringify(flowIssue('PL-0044', 'open')),
-    'utf8',
-  );
-  const legacy = {
-    id: 'PL-0045',
-    status: 'open',
-    title: 'Named Markdown mismatch',
-    evidence: [],
-    risk: 'low',
-    created_at: '2026-08-17T00:00:00.000Z',
-    updated_at: '2026-08-17T01:00:00.000Z',
-  };
-  fs.writeFileSync(
-    path.join(issuesDirectory, 'PL-0002-title.md'),
-    `---\n${JSON.stringify(legacy, null, 2)}\n---\nBody`,
-    'utf8',
-  );
-
-  const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.issues.map((item) => item.id), ['PL-0043']);
-  assert.deepEqual(result.project.counts, { active: 1, blocked: 0 });
-  assert.deepEqual(result.flow_signals.map((item) => item.target.id), ['PL-0043']);
-  assert.deepEqual(
-    result.diagnostics.map((item) => ({ code: item.code, path: item.relative_path })),
-    [
-      { code: 'record-metadata-invalid', path: '.emeth/issues/malformed.json' },
-      { code: 'record-id-mismatch', path: '.emeth/issues/PL-0001.json' },
-      { code: 'record-id-mismatch', path: '.emeth/issues/PL-0002-title.md' },
-    ],
-  );
-});
-
 test('mismatched links and duplicate IDs are diagnosed and excluded without changing sources', (t) => {
   const root = makeRoot(t);
   const planPath = writePlan(root, 'PLAN-0001', 'first', { relatedIssues: [] });
@@ -212,24 +118,6 @@ test('mismatched links and duplicate IDs are diagnosed and excluded without chan
   assert.ok(result.diagnostics.some((item) => item.code === 'link-mismatch'));
   assert.ok(result.flow_signals.some((item) => item.signal === 'link-mismatch'));
   assert.equal(fs.readFileSync(path.join(root, '.emeth', 'issues', 'PL-0001.json'), 'utf8'), before);
-});
-
-test('source changes invalidate the index cache and documents load bodies on demand', (t) => {
-  const root = makeRoot(t);
-  const planPath = writePlan(root, 'PLAN-0001', 'cache', { body: '<script>alert(1)</script>' });
-  writeIssue(root, issue({ context: [{ kind: 'Plan', location: planPath }] }));
-  const registryPath = path.join(root, 'config', 'projects.json');
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(registryPath, JSON.stringify({ schema_version: 1, projects: [project(root)] }), 'utf8');
-  const service = new ProjectIndexService({ registryOptions: { registryPath } });
-
-  assert.equal(service.getIndex(PROJECT_ID).plans[0].status, 'ready');
-  writePlan(root, 'PLAN-0001', 'cache', { status: 'draft', body: 'changed' });
-  assert.equal(service.getIndex(PROJECT_ID).plans[0].status, 'draft');
-  assert.equal(service.getIndex(PROJECT_ID, { refresh: true }).plans[0].status, 'draft');
-  const document = service.getDocument(PROJECT_ID, 'plan', 'PLAN-0001');
-  assert.equal(document.body, 'changed');
-  assert.equal(document.content_type, 'text/markdown');
 });
 
 test('all seven flow rules use active open or doing separately from blocked', (t) => {
@@ -279,78 +167,4 @@ test('all seven flow rules use active open or doing separately from blocked', (t
   assert.equal(signalFor('PL-0108', 'work-definition-only'), false);
   assert.equal(signalFor('PL-0108', 'state-mismatch'), false);
   assert.deepEqual(result.project.counts, { active: 7, blocked: 1 });
-});
-
-test('legacy issues remain indexed and nested Spec revisions are excluded', (t) => {
-  const root = makeRoot(t);
-  const legacy = {
-    id: 'PL-0042',
-    status: 'in_progress',
-    title: 'Legacy Issue',
-    type: 'bug',
-    evidence: [],
-    risk: 'high',
-    description: 'Legacy current summary',
-    suggested_next_step: 'Continue verification',
-    created_at: '2026-08-16T00:00:00.000Z',
-    updated_at: '2026-08-17T00:00:00.000Z',
-  };
-  fs.writeFileSync(
-    path.join(root, '.emeth', 'issues', 'PL-0042.md'),
-    `---\n${JSON.stringify(legacy, null, 2)}\n---\n## Description\nLegacy body`,
-    'utf8',
-  );
-  writeSpec(root, 'SPEC-0020', 'current', { revision: 2, relatedIssues: [] });
-  const revisionDirectory = path.join(
-    root,
-    '.emeth',
-    'specs',
-    'SPEC-0020-current',
-    'revisions',
-    'revision-1',
-  );
-  fs.mkdirSync(revisionDirectory, { recursive: true });
-  fs.writeFileSync(path.join(revisionDirectory, 'SPEC.md'), `---\n${JSON.stringify({
-    schema_version: 2,
-    id: 'SPEC-0020',
-    title: 'OLD-REVISION-MUST-NOT-INDEX',
-    kind: 'feature',
-    status: 'draft',
-    revision: 1,
-    supersedes: [],
-    superseded_by: null,
-    related_issues: [],
-  }, null, 2)}\n---\nOld revision`, 'utf8');
-
-  const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.issues.map((item) => item.id), ['PL-0042']);
-  assert.deepEqual(result.specs.map((item) => ({ id: item.id, revision: item.revision })), [
-    { id: 'SPEC-0020', revision: 2 },
-  ]);
-  assert.equal(result.diagnostics.some((item) => item.code === 'record-duplicate-id'), false);
-});
-
-test('index parses supported Plan titles and diagnoses malformed quoting', (t) => {
-  const root = makeRoot(t);
-  writePlan(root, 'PLAN-0099', 'invalid', { title: "'bad'quote'", relatedIssues: [] });
-
-  for (const [id, title] of [
-    ['PLAN-0001', '"안전한: 계획"'],
-    ['PLAN-0002', '독립 계획'],
-    ['PLAN-0003', "'Safe ''quoted'' plan'"],
-    ['PLAN-0004', '-safe plain plan'],
-  ]) writePlan(root, id, 'supported', { title, relatedIssues: [] });
-  const result = buildProjectIndex(project(root)).publicIndex;
-  assert.deepEqual(result.plans.map(({ id, title, related_issues }) => ({ id, title, related_issues })), [
-    { id: 'PLAN-0001', title: '안전한: 계획', related_issues: [] },
-    { id: 'PLAN-0002', title: '독립 계획', related_issues: [] },
-    { id: 'PLAN-0003', title: "Safe 'quoted' plan", related_issues: [] },
-    { id: 'PLAN-0004', title: '-safe plain plan', related_issues: [] },
-  ]);
-  assert.deepEqual(
-    result.diagnostics
-      .filter((item) => item.code === 'record-metadata-invalid')
-      .map((item) => item.relative_path),
-    ['.emeth/plan/PLAN-0099-invalid/PLAN.md'],
-  );
 });

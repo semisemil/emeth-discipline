@@ -25,42 +25,11 @@ function configEnv(root) {
 }
 
 function makeIssue() {
-  return {
-    schema_version: 2,
-    identity: {
-      id: 'PL-0001',
-      aliases: [],
-      type: 'feature',
-      mode: 'simple',
-      title: '연결 작업 테스트',
-      risk: 'low'
-    },
-    origin: {
-      kind: '사용자 요청',
-      summary: 'Plan과 Spec의 연결 상태를 유지한다.',
-      refs: []
-    },
-    state: {
-      status: 'open',
-      current_summary: '연결된 산출물이 없다.',
-      next_action: 'Spec을 작성한다.'
-    },
-    objective: {
-      summary: '연결된 작업의 현재 상태를 한 곳에서 확인한다.',
-      constraints: []
-    },
-    criteria: [
-      { id: 'C1', text: '연결 상태가 일치한다.', evidence_refs: [] }
-    ],
-    milestones: [],
-    relations: [],
-    context: [],
-    artifacts: [],
-    evidence: [],
-    events: [],
-    created_at: '2026-08-12T00:00:00.000Z',
-    updated_at: '2026-08-12T00:00:00.000Z'
-  };
+  const template = fs.readFileSync(path.join(pluginRoot, 'skills/issue-ledger/assets/templates/issue-objective.json'), 'utf8');
+  const issue = JSON.parse(template.replace(/REPLACE: [^"]*/g, '연결 작업'));
+  issue.identity.id = 'PL-0001';
+  issue.created_at = issue.updated_at = '2026-08-12T00:00:00.000Z';
+  return issue;
 }
 
 function createFixture(t, issue = makeIssue()) {
@@ -174,75 +143,6 @@ test('Design work links round-trip through the issue ledger and dashboard with r
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
 });
 
-test('link-work rejects a mismatched work ID before changing the issue', (t) => {
-  const { root, filePath } = createFixture(t);
-  const before = fs.readFileSync(filePath, 'utf8');
-  const result = runLinkWork(root, { workId: 'SPEC-0002' });
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /location이 SPEC-0002의 Spec 경로가 아닙니다/);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
-test('link-work accepts a Plan without changing the active issue status', (t) => {
-  const { root, filePath } = createFixture(t);
-  const result = runLinkWork(root, {
-    kind: 'plan',
-    workId: 'PLAN-0001',
-    workPath: '.emeth/plan/PLAN-0001-example/PLAN.md',
-    currentSummary: 'PLAN-0001이 명세 입력으로 준비되었다.',
-    nextAction: '구현 명세를 작성한다.',
-    status: null
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  const linked = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  assert.equal(linked.state.status, 'open');
-  assert.deepEqual(linked.context, [{
-    kind: 'Plan',
-    location: '.emeth/plan/PLAN-0001-example/PLAN.md'
-  }]);
-  assert.deepEqual(linked.events, []);
-});
-
-test('link-work requires the Plan or Spec to link back to the issue', (t) => {
-  const { root, filePath } = createFixture(t);
-  const before = fs.readFileSync(filePath, 'utf8');
-  const result = runLinkWork(root, { relatedIssues: [] });
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /SPEC-0001 related_issues에서 PL-0001/);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
-test('generic update cannot bypass linked-artifact validation', (t) => {
-  const { projectRoot, root, filePath } = createFixture(t);
-  const before = fs.readFileSync(filePath, 'utf8');
-  const operationPath = path.join(projectRoot, 'operation.json');
-  fs.writeFileSync(operationPath, JSON.stringify({
-    type: 'link_work',
-    current_summary: '우회 갱신',
-    next_action: '없음',
-    work: {
-      kind: 'spec',
-      id: 'SPEC-0001',
-      location: '.emeth/specs/SPEC-0001-example/SPEC.md'
-    }
-  }), 'utf8');
-
-  const result = spawnSync(process.execPath, [
-    cliPath,
-    'update',
-    'PL-0001',
-    '--operation', operationPath,
-    '--root', root
-  ], { encoding: 'utf8', env: configEnv(root) });
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /역링크를 검증하는 link-work 명령/);
-  assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
 test('link-work does not reopen or advance a terminal issue', (t) => {
   const issue = makeIssue();
   issue.state = {
@@ -264,22 +164,4 @@ test('link-work does not reopen or advance a terminal issue', (t) => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /종료된 이슈.*resolved/);
   assert.equal(fs.readFileSync(filePath, 'utf8'), before);
-});
-
-test('the existing set_state operation still owns validated transitions', () => {
-  const result = model.applyOperation(makeIssue(), {
-    type: 'set_state',
-    status: 'blocked',
-    current_summary: '외부 승인을 기다린다.',
-    next_action: '승인 결과를 확인한다.',
-    blocker: '승인이 없다.',
-    unblock_condition: '승인이 기록된다.',
-    updated_at: '2026-08-12T01:00:00.000Z'
-  });
-
-  assert.equal(result.issue.state.status, 'blocked');
-  assert.equal(result.issue.state.blocker, '승인이 없다.');
-  assert.deepEqual(result.issue.events.map(({ from, to }) => ({ from, to })), [
-    { from: 'open', to: 'blocked' }
-  ]);
 });

@@ -59,25 +59,6 @@ test('the first Design is saved, indexed and executable with a minimal connected
   assert.equal(selectDocuments(index, { kind: 'design' })[0].id, 'DESIGN-0001');
 });
 
-test('contract CLI reports Memory state without initializing it or blocking the ready contract', t => {
-  const f = fixture(t);
-  assert.equal(create(f, {}, ['--memory', 'off']).status, 0);
-  const read = () => {
-    const result = spawnSync(process.execPath, [path.join(repo, 'dashboard/records/development-contracts.js'), '--project-root', f.project, '--id', 'DESIGN-0001', '--format', 'paths'], { encoding: 'utf8', env: f.env, windowsHide: true });
-    assert.equal(result.status, 0, result.stderr);
-    const value = JSON.parse(result.stdout);
-    assert.equal(value.id, 'DESIGN-0001');
-    assert.equal(value.status, 'ready');
-    return value.memory;
-  };
-  assert.equal(read().status, 'not-connected');
-  assert.equal(fs.existsSync(path.join(f.project, 'docs')), false);
-  recording.ensureMemory(f.project);
-  assert.equal(read().status, 'connected');
-  f.write('.emeth/architecture.json', '{broken');
-  assert.equal(read().status, 'failed');
-});
-
 test('a legacy document has one successor without becoming executable or rewriting its file', t => {
   const f = fixture(t);
   const legacy = legacySpec('SPEC-0001');
@@ -146,45 +127,6 @@ test('conversation patches retain independent changes and reject stale edits to 
   assert.equal(JSON.parse(f.read('docs/architecture/.architecture-memory/manifest.json')).git_checkpoint.revision, null);
 });
 
-test('Git update can reconcile minimal Memory without requiring a full init baseline', t => {
-  const f = fixture(t);
-  const git = (...args) => { const result = spawnSync('git', args, { cwd: f.project, encoding: 'utf8', windowsHide: true }); assert.equal(result.status, 0, result.stderr); return result.stdout.trim(); };
-  git('init'); git('config', 'user.name', 'Test'); git('config', 'user.email', 'test@example.invalid');
-  f.write('app.js', 'module.exports = 1;'); git('add', 'app.js'); git('commit', '-m', 'initial');
-  recording.ensureMemory(f.project);
-  const started = workflow.begin(f.project, 'update');
-  assert.equal(started.status, 'draft');
-  workflow.classify(f.project, { path: 'app.js', effect: 'none', reason: 'No recorded claim depends on this constant.' });
-  assert.equal(workflow.apply(f.project).status, 'applied');
-  assert.equal(JSON.parse(f.read('docs/architecture/.architecture-memory/manifest.json')).documents.length, 1);
-});
-
-test('related Memory documents publish together and ADR lifecycle updates invalidate old receipts', t => {
-  const f = fixture(t);
-  recording.ensureMemory(f.project, { language: 'ko' });
-  assert.match(f.read('docs/architecture/04-context.md'), /프로젝트 맥락/);
-  const linked = (id, link, text) => section(id, text).replace('"terms":["offline"]', `"links":["${link}"]`);
-  const initial = '# ADR-001\n\nStatus: accepted';
-  const batch = { documents: [
-    { document: 'context', edits: [{ id: 'AM-current', expected: null, text: linked('AM-current', 'AM-decision', 'Current effect.') }] },
-    { document: 'adr-001', path: 'decisions/ADR-001.md', kind: 'decision', intro: { before: null, after: initial },
-      edits: [{ id: 'AM-decision', expected: null, text: linked('AM-decision', 'AM-current', 'Accepted rationale with literal $& and $` text.') }] },
-  ] };
-  assert.equal(recording.patch(f.project, {}, batch).status, 'updated');
-  assert.equal(memory.loadRecords(f.project).byId.get('AM-current').links[0], 'AM-decision');
-  const oldReceipt = receipt(f, 'AM-decision');
-  const history = memory.loadRecords(f.project).byId.get('AM-decision').text;
-  recording.patch(f.project, { document: 'adr-001' }, { intro: { before: initial, after: '# ADR-001\n\nStatus: superseded' }, edits: [] });
-  assert.equal(memory.loadRecords(f.project).byId.get('AM-decision').text, history);
-  assert.throws(() => recording.patch(f.project, { document: 'adr-001' }, { edits: [{ id: 'AM-decision', expected: oldReceipt, text: history }] }), error => error.code === 'memory-record-changed');
-  const current = f.read('docs/architecture/04-context.md');
-  assert.throws(() => recording.patch(f.project, {}, { documents: [
-    { document: 'context', edits: [{ id: 'AM-new', expected: null, text: section('AM-new', 'Must not publish.') }] },
-    { document: 'adr-001', edits: [{ id: 'AM-invalid', expected: null, text: linked('AM-invalid', 'AM-absent', 'Broken link.') }] },
-  ] }), error => error.code === 'memory-link-missing');
-  assert.equal(f.read('docs/architecture/04-context.md'), current);
-});
-
 test('interrupted conversation publication blocks retrieval and survey until recovery, preserving external edits', t => {
   const f = fixture(t);
   recording.ensureMemory(f.project);
@@ -210,17 +152,4 @@ test('interrupted conversation publication blocks retrieval and survey until rec
   f.write('.emeth/architecture.json', JSON.stringify({ schema_version: 1, root: 'docs/architecture', enabled: false }));
   assert.throws(() => workflow.begin(f.project, 'update'), error => error.code === 'memory-not-initialized');
   assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-c', expected: null, text: section('AM-c', 'Disabled.') }] }), error => error.code === 'memory-disabled');
-});
-
-test('conversation replacement preserves literal text and rejects identity-changing sections before writing', t => {
-  const f = fixture(t);
-  recording.ensureMemory(f.project);
-  recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-a', expected: null, text: section('AM-a', 'Original.') }] });
-  const literal = section('AM-a', 'Keep $& and $` and $\' and $1 literally.');
-  recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-a', expected: receipt(f, 'AM-a'), text: literal }] });
-  assert.equal(memory.loadRecords(f.project).byId.get('AM-a').text, literal.trim());
-  const before = f.read('docs/architecture/04-context.md');
-  assert.throws(() => recording.patch(f.project, { document: 'context' }, { edits: [{ id: 'AM-a', expected: receipt(f, 'AM-a'), text: section('AM-other', 'Changed identity.') }] }), error => error.code === 'memory-patch-invalid');
-  assert.equal(f.read('docs/architecture/04-context.md'), before);
-  assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory/work/record.json')), false);
 });

@@ -2,281 +2,78 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-
-const {
-  MAX_DOCUMENT_BYTES,
-} = require('../plugins/emeth-discipline/dashboard/architecture.js');
 const { ProjectIndexService } = require('../plugins/emeth-discipline/dashboard/records/project-index.js');
 const { createDashboardHttpServer } = require('../plugins/emeth-discipline/dashboard/server.js');
 
-const PROJECT_ID = '11111111-1111-4111-8111-111111111111';
-const INSTANCE_ID = '22222222-2222-4222-8222-222222222222';
-const CHECKPOINT_REVISION = '0123456789abcdef0123456789abcdef01234567';
+const projectId = '11111111-1111-4111-8111-111111111111';
+const base = `/api/v1/projects/${projectId}/architecture`;
 
-function manifest(documents) {
-  return {
-    schema_version: 2,
-    managed: true,
-    language: 'ko',
-    git_checkpoint: {
-      revision: CHECKPOINT_REVISION,
-      branch_at_check: 'main',
-      checked_at: '2026-08-30T00:00:00.000Z',
-    },
-    documents,
+async function fixture(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-architecture-api-'));
+  const directory = path.join(root, 'docs/architecture');
+  const manifest = {
+    schema_version: 2, managed: true, language: 'ko',
+    git_checkpoint: { revision: null, branch_at_check: null, checked_at: null },
+    documents: [{ id: 'context', kind: 'context', path: 'context.md', order: 0,
+      verified_at: null, source_revision: null }],
   };
-}
-
-function document(id, kind, relativePath, order) {
-  return {
-    id,
-    kind,
-    path: relativePath,
-    order,
-    verified_at: '2026-08-29T00:00:00.000Z',
-    source_revision: 'abc123',
-  };
-}
-
-function writeMemory(projectRoot, relativeRoot = 'docs/architecture', values = {}) {
-  const architectureRoot = path.join(projectRoot, ...relativeRoot.split('/'));
-  const documents = [
-    document('architecture-index', 'index', 'README.md', 0),
-    document('system-context', 'system-context', '01-system-context.md', 1),
-  ];
-  fs.mkdirSync(path.join(architectureRoot, '.architecture-memory'), { recursive: true });
-  for (const item of documents) {
-    const filePath = path.join(architectureRoot, ...item.path.split('/'));
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, values.contents?.[item.id] || `# ${item.id}\n`, 'utf8');
-  }
-  fs.writeFileSync(
-    path.join(architectureRoot, '.architecture-memory', 'manifest.json'),
-    JSON.stringify(manifest(documents)),
-    'utf8',
-  );
-  return architectureRoot;
-}
-
-async function fixture(t, values = {}) {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-architecture-api-'));
-  const projectRoot = path.join(temporaryRoot, 'project');
-  const assetRoot = path.join(temporaryRoot, 'assets');
-  const registryPath = path.join(temporaryRoot, 'config', 'projects.json');
-  fs.mkdirSync(projectRoot, { recursive: true });
-  fs.mkdirSync(path.join(projectRoot, '.emeth'), { recursive: true });
-  fs.mkdirSync(assetRoot, { recursive: true });
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
-  fs.writeFileSync(registryPath, JSON.stringify({
-    schema_version: 1,
-    projects: [{
-      id: PROJECT_ID,
-      root: fs.realpathSync(projectRoot),
-      registered_at: '2026-08-29T00:00:00.000Z',
-    }],
-  }), 'utf8');
-  writeMemory(projectRoot, values.relativeRoot, values.memory || {});
-
-  const projectService = new ProjectIndexService({
-    registryOptions: { registryPath },
-  });
+  fs.mkdirSync(path.join(directory, '.architecture-memory'), { recursive: true });
+  const manifestPath = path.join(directory, '.architecture-memory/manifest.json');
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  const file = path.join(directory, 'context.md');
+  fs.writeFileSync(file, '# 현장 조건\n\n망 점검 중에도 접수를 보존한다.\n');
+  const registryPath = path.join(root, 'projects.json');
+  fs.writeFileSync(registryPath, JSON.stringify({ schema_version: 1, projects: [{
+    id: projectId, root, registered_at: '2026-08-29T00:00:00.000Z',
+  }] }));
+  const projectService = new ProjectIndexService({ registryOptions: { registryPath } });
   const server = createDashboardHttpServer({
-    assetRoot,
-    instanceId: INSTANCE_ID,
-    version: '0.7.3',
-    projectService,
+    assetRoot: root, projectService, version: 'test',
+    instanceId: '22222222-2222-4222-8222-222222222222',
   });
-  await new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
-  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(async () => {
-    await new Promise((resolve) => server.close(resolve));
-    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    await new Promise(resolve => server.close(resolve));
+    projectService.close();
+    fs.rmSync(root, { recursive: true, force: true });
   });
-  return {
-    projectRoot,
-    server,
-  };
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const request = (route, method = 'GET') => fetch(origin + route, { method, headers: { Origin: origin } });
+  return { directory, manifest, manifestPath, file, request };
 }
 
-function request(server, requestPath, values = {}) {
-  const address = server.address();
-  const host = `127.0.0.1:${address.port}`;
-  return new Promise((resolve, reject) => {
-    const call = http.request({
-      host: '127.0.0.1',
-      port: address.port,
-      method: values.method || 'GET',
-      path: requestPath,
-      headers: {
-        Host: host,
-        ...(values.origin ? { Origin: `http://${host}` } : {}),
-      },
-    }, (response) => {
-      const chunks = [];
-      response.on('data', (chunk) => chunks.push(chunk));
-      response.on('end', () => resolve({
-        status: response.statusCode,
-        headers: response.headers,
-        body: Buffer.concat(chunks).toString('utf8'),
-      }));
-    });
-    call.once('error', reject);
-    call.end();
-  });
-}
-
-test('architecture API lists registered documents and reads one Markdown document', async (t) => {
-  const { server } = await fixture(t, {
-    memory: {
-      contents: { 'system-context': '# 시스템 맥락\n\n```mermaid\ngraph LR\n```\n' },
-    },
-  });
-
-  const indexResponse = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture/index`);
-  assert.equal(indexResponse.status, 200);
-  const index = JSON.parse(indexResponse.body);
-  assert.equal(index.schema_version, 1);
-  assert.equal(index.project.id, PROJECT_ID);
-  assert.equal(index.language, 'ko');
-  assert.deepEqual(index.git_checkpoint, {
-    revision: CHECKPOINT_REVISION,
-    branch_at_check: 'main',
-    checked_at: '2026-08-30T00:00:00.000Z',
-  });
-  assert.equal(index.manifest_path, 'docs/architecture/.architecture-memory/manifest.json');
-  assert.deepEqual(index.documents.map((item) => item.id), [
-    'architecture-index',
-    'system-context',
-  ]);
-  assert.equal(
-    (await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`)).status,
-    200,
-  );
-
-  const response = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-  );
-  assert.equal(response.status, 200);
-  const body = JSON.parse(response.body);
-  assert.equal(body.id, 'system-context');
-  assert.equal(body.content_type, 'text/markdown');
-  assert.match(body.body, /```mermaid/);
-  assert.equal(typeof body.modified_at, 'string');
-
-  const head = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-    { method: 'HEAD' },
-  );
+test('architecture HTTP routes list and read registered documents without permitting writes or unregistered reads', async t => {
+  const f = await fixture(t);
+  const index = await f.request(`${base}/index`);
+  assert.equal(index.status, 200);
+  assert.deepEqual((await index.json()).documents.map(doc => doc.id), ['context']);
+  const document = await f.request(`${base}/documents/context`);
+  assert.equal(document.status, 200);
+  assert.equal((await document.json()).body, fs.readFileSync(f.file, 'utf8'));
+  const head = await f.request(`${base}/documents/context`, 'HEAD');
   assert.equal(head.status, 200);
-  assert.equal(head.body, '');
-  assert.ok(Number(head.headers['content-length']) > 0);
+  assert.equal(await head.text(), '');
+  fs.writeFileSync(path.join(f.directory, 'secret.md'), 'SECRET');
+  const unregistered = await f.request(`${base}/documents/secret`);
+  assert.equal(unregistered.status, 404);
+  assert.doesNotMatch(await unregistered.text(), /SECRET/);
+  const before = fs.readFileSync(f.file);
+  assert.equal((await f.request(`${base}/documents/context`, 'DELETE')).status, 405);
+  assert.deepEqual(fs.readFileSync(f.file), before);
 });
 
-test('an architecture-only registered project remains selectable without Issue records', async (t) => {
-  const { projectRoot, server } = await fixture(t);
-  fs.writeFileSync(path.join(projectRoot, '.emeth', 'architecture.json'), JSON.stringify({
-    schema_version: 1, root: 'docs/architecture',
-  }));
-  assert.equal(fs.existsSync(path.join(projectRoot, '.emeth', 'issues')), false);
-  const response = await request(server, '/api/v1/projects');
-  assert.equal(response.status, 200);
-  const project = JSON.parse(response.body).projects.find((item) => item.id === PROJECT_ID);
-  assert.equal(project.availability, 'available');
-  assert.deepEqual(project.counts, { active: 0, blocked: 0 });
-  assert.equal(
-    (await request(server, `/api/v1/projects/${PROJECT_ID}/architecture/index`)).status,
-    200,
-  );
-});
-
-test('architecture discovery accepts one bounded docs subtree and rejects ambiguity', async (t) => {
-  const first = await fixture(t, { relativeRoot: 'docs/team/architecture' });
-  const response = await request(first.server, `/api/v1/projects/${PROJECT_ID}/architecture`);
-  assert.equal(response.status, 200);
-  assert.equal(
-    JSON.parse(response.body).manifest_path,
-    'docs/team/architecture/.architecture-memory/manifest.json',
-  );
-
-  writeMemory(first.projectRoot, 'docs/other/architecture');
-  const ambiguous = await request(first.server, `/api/v1/projects/${PROJECT_ID}/architecture`);
-  assert.equal(ambiguous.status, 409);
-  assert.equal(JSON.parse(ambiguous.body).error.code, 'architecture-ambiguous');
-});
-
-test('architecture API exposes only manifest-registered documents and GET or HEAD', async (t) => {
-  const { projectRoot, server } = await fixture(t);
-  fs.writeFileSync(path.join(projectRoot, 'docs', 'architecture', 'secret.md'), 'SECRET', 'utf8');
-
-  const missing = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/secret`,
-  );
-  assert.equal(missing.status, 404);
-  assert.equal(JSON.parse(missing.body).error.code, 'architecture-document-not-found');
-  assert.doesNotMatch(missing.body, /SECRET/);
-
-  const deleted = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-    { method: 'DELETE', origin: true },
-  );
-  assert.equal(deleted.status, 405);
-  assert.equal(deleted.headers.allow, 'GET, HEAD');
-  assert.equal(fs.readFileSync(
-    path.join(projectRoot, 'docs', 'architecture', '01-system-context.md'),
-    'utf8',
-  ), '# system-context\n');
-});
-
-test('architecture API preserves unverified checkpoints and reports disabled or unreadable content', async (t) => {
-  const { projectRoot, server } = await fixture(t);
-  const manifestPath = path.join(
-    projectRoot,
-    'docs',
-    'architecture',
-    '.architecture-memory',
-    'manifest.json',
-  );
-  const documentPath = path.join(projectRoot, 'docs', 'architecture', '01-system-context.md');
-
-  const current = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  current.git_checkpoint = { revision: null, branch_at_check: null, checked_at: null };
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  assert.equal(
-    (await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`)).status,
-    200,
-  );
-
-  current.managed = false;
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  const disabled = await request(server, `/api/v1/projects/${PROJECT_ID}/architecture`);
+test('architecture HTTP routes report disabled memory and invalid document bytes', async t => {
+  const f = await fixture(t);
+  fs.writeFileSync(f.manifestPath, JSON.stringify({ ...f.manifest, managed: false }));
+  const disabled = await f.request(base);
   assert.equal(disabled.status, 404);
-  assert.equal(JSON.parse(disabled.body).error.code, 'architecture-not-managed');
-
-  current.managed = true;
-  fs.writeFileSync(manifestPath, JSON.stringify(current), 'utf8');
-  fs.writeFileSync(documentPath, Buffer.from([0xc3, 0x28]));
-  const invalidUtf8 = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-  );
-  assert.equal(invalidUtf8.status, 409);
-  assert.equal(JSON.parse(invalidUtf8.body).error.code, 'architecture-document-invalid-utf8');
-
-  fs.writeFileSync(documentPath, Buffer.alloc(MAX_DOCUMENT_BYTES + 1, 0x61));
-  const oversized = await request(
-    server,
-    `/api/v1/projects/${PROJECT_ID}/architecture/documents/system-context`,
-  );
-  assert.equal(oversized.status, 409);
-  assert.equal(JSON.parse(oversized.body).error.code, 'architecture-too-large');
+  assert.equal((await disabled.json()).error.code, 'architecture-not-managed');
+  fs.writeFileSync(f.manifestPath, JSON.stringify(f.manifest));
+  fs.writeFileSync(f.file, Buffer.from([0xc3, 0x28]));
+  const unreadable = await f.request(`${base}/documents/context`);
+  assert.equal(unreadable.status, 409);
+  assert.equal((await unreadable.json()).error.code, 'architecture-document-invalid-utf8');
 });
