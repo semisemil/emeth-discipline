@@ -20,13 +20,14 @@ For that case, run [ensemble](../../ensemble/SKILL.md) with the common task, rel
 Otherwise, the calling conversation derives the design contract from requirements and existing evidence.
 Reuse an accepted design while its contract and evidence remain valid.
 Candidate selection does not change the [verification ownership](../SKILL.md#implementation-workflow) or its independent roles.
+Synthesize the selected design in [design document form](../../development-design/references/document-form.md) before review.
 Apply [independent review](../../ensemble/SKILL.md#independent-review) at its owning boundary whether or not candidates were used, including for a design-only request or requested design checkpoint.
 Select the design before dependent implementation.
 The selected artifact records the boundaries, decisions and verification criteria.
 Supplied types, APIs and examples remain authoritative at their source; add a sketch only for a decision they leave open.
 Screen proposed boundaries against [design red flags](blueprint/design-red-flags.md) when they introduce new ownership or layering.
 For a requested full design rationale, use the [rationale template](blueprint/rationale-template.md).
-Reuse the synthesis as the Design contract.
+Reuse the resulting design as the Design contract.
 
 Proceed to implementation when the user's request or accepted follow-ups authorize it and the selected workflow's required design checks are complete.
 For a requested design checkpoint, present the selected design, its material effects and tradeoffs, and wait for explicit approval to implement.

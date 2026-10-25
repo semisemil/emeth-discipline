@@ -10,7 +10,7 @@ For status-only requests, use [status](references/document-status.md).
 
 Apply [design discussion](../rules/references/design-discussion.md) while developing a Design and [document form](references/document-form.md) when writing it.
 Develop the Design through [blueprint](../start-implementation/references/blueprint.md)'s Ground and Sketch phases.
-Its synthesized sketch and rationale form the Design's implementation contract.
+Its selected design forms the Design's implementation contract.
 Continue the named Design or one with the same goal; otherwise create one.
 Find existing Designs with `node <plugin-root>/writers/document-writer.js list --project-root <absolute-project-root>`.
 Use `DESIGN.md` for purpose, scope, and an overview of the change.

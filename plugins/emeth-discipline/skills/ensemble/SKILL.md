@@ -24,8 +24,9 @@ The candidates develop their solutions independently.
 
 After dispatch, derive concrete comparison criteria from the task, before reading the answers.
 Once both candidates are complete, select a base and incorporate useful differences into one coherent artifact.
+For design artifacts, reconstruct the selected architecture using [design document form](../development-design/references/document-form.md) before review.
 For an already supplied interface, synthesize its remaining implementation decisions; established behavior stays at its source.
-Record the selected base, accepted differences, material rejected proposals and unresolved limits once, alongside the artifact.
+Record the selected base, accepted differences, material rejected proposals and unresolved limits once in a supporting record alongside the artifact.
 
 Apply the [independent review](#independent-review) at its owning boundary.
 
@@ -33,6 +34,7 @@ Apply the [independent review](#independent-review) at its owning boundary.
 
 For implementation, the calling [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) assigns the review's timing and target.
 For a design-only request or requested design checkpoint, review the selected design before handing it back or implementing it, including when candidates were not used.
+For design artifacts, review the complete document's hierarchy, readability and consistency against its document form.
 A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
 
 Use one independent judge with the settings in [Subagents](../start-implementation/SKILL.md#subagents).
