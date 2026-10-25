@@ -37,7 +37,8 @@ Edit the author's work history and reasoning into information needed for the rec
 
 Use headings that name the topic or the reader's task.
 Use tables for parallel items with shared attributes, and name-value pairs for individual properties.
-Use comparisons, diagrams, or examples when they help the reader understand changes, relationships, or a process.
+Actively use visualization to make content easy to grasp.
+Choose its form and level of detail for what the reader needs to understand.
 Make relationships and importance clear through structure, and place supporting information where it is needed.
 Repeat information when this avoids unnecessary navigation or helps understanding at the point of use.
 Use noun phrases or short clauses when they convey the meaning clearly.

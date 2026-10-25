@@ -4,6 +4,7 @@
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const { spawnSync } = require('node:child_process');
 const { migrateProject, rewritePaths } = require('../lib/storage-migration');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
@@ -27,6 +28,7 @@ const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
 const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
 const DESIGN_PATH = /^\.emeth\/designs\/(DESIGN-\d{4,})(?:-([^/\\]+))?\/DESIGN\.md$/;
 const CHANGE_KINDS = new Set(['edit', 'major', 'operational']);
+const USAGE = 'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--supersedes ID]... [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read --project-root DIR --id DESIGN-ID [--document PATH] [--section TITLE]; patch|recover --project-root DIR --id DESIGN-ID; list --project-root DIR';
 
 class DocumentWriterError extends Error {
   constructor(code, message, cause) {
@@ -45,7 +47,7 @@ function parseArgs(argv) {
   if (!['create', 'write', 'status', 'read', 'patch', 'recover', 'list'].includes(command)) {
     throw writerError(
       'invalid-command',
-      'Usage: document-writer.js create --project-root DIR --title TITLE --slug SLUG [--supersedes ID]... [--input-format documents]; write --kind design|plan|spec --project-root DIR --relative-path PATH; status --project-root DIR --id DESIGN-ID|SPEC-ID --status STATE; read --project-root DIR --id DESIGN-ID [--document PATH] [--section TITLE]; patch|recover --project-root DIR --id DESIGN-ID; list --project-root DIR'
+      USAGE
     );
   }
 
@@ -284,7 +286,22 @@ function installFile(root, target, buffer, existing) {
   const temporary = writeTemporary(target, buffer);
   try {
     if (existing === null) {
-      fs.linkSync(temporary, target);
+      try {
+        fs.linkSync(temporary, target);
+      } catch (error) {
+        if (process.platform !== 'win32' || error.code !== 'EPERM') throw error;
+        // MXC can reject hardlinks. File.Move publishes without replacing an existing target.
+        const moved = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+          '$ErrorActionPreference="Stop"; [IO.File]::Move($env:EMETH_STAGED_FILE, $env:EMETH_TARGET_FILE)'], {
+          env: { ...process.env, EMETH_STAGED_FILE: temporary, EMETH_TARGET_FILE: target },
+          encoding: 'utf8', windowsHide: true,
+        });
+        if (moved.status !== 0) {
+          if (fs.existsSync(target)) throw Object.assign(new Error(`File already exists: ${target}`), { code: 'EEXIST' });
+          throw Object.assign(new Error(moved.stderr || moved.error?.message || error.message), { code: error.code });
+        }
+        return;
+      }
       fs.unlinkSync(temporary);
       return;
     }
@@ -769,8 +786,11 @@ function patchDocument(options, buffer) {
       const before = readExisting(record.source.root || root, target);
       let content = null;
       if (Object.hasOwn(document, 'body') || Object.hasOwn(document, 'source')) {
-        if (before || membership.includes(document.path)) throw writerError('document-exists', 'Use edits for an existing detailed document');
+        const adoptsInPlace = before && typeof document.source === 'string'
+          && rootKey(path.resolve(document.source)) === rootKey(target);
+        if (membership.includes(document.path) || before && !adoptsInPlace) throw writerError('document-exists', 'Use edits for a registered detailed document; register an existing unregistered artifact with source pointing to that file');
         content = documentContent(document);
+        if (before && !before.equals(content)) throw writerError('document-changed', `Detailed document changed: ${document.path}`);
         membership.push(document.path);
       } else {
         if (!before || !membership.includes(document.path)) throw writerError('contract-unavailable', `Detailed document not found: ${document.path}`);
@@ -883,8 +903,12 @@ function formatSuccess(result) {
 
 function main(argv = process.argv.slice(2), sourceBuffer) {
   if (argv.includes('--help') || argv.includes('-h')) {
-    process.stdout.write('Design write/patch options: --change-kind edit|major|operational (default: edit)\n'
-      + 'edit saves within the current revision; major starts a new revision and snapshots the previous one. Use major once per change to the agreed Design contract, then edit for subsequent saves.\n');
+    process.stdout.write(USAGE + '\n\nCreate options: --kind feature|bug|refactor|exact_port|maintenance --status draft|ready|blocked|completed|cancelled --language TAG --memory off\n'
+      + 'Create JSON: {"body":"overview","documents":[{"path":"detail.md","body":"text"}]}\n'
+      + 'Design write/patch options: --change-kind edit|major|operational (default: edit)\n'
+      + 'edit saves within the current revision; major starts a new revision and snapshots the previous one. Use major once per change to the agreed Design contract, then edit for subsequent saves.\n'
+      + 'Patch JSON: {"edits":[{"old":"exact text","new":"replacement"}],"documents":[{"path":"new.md","source":"absolute artifact path"}]}\n'
+      + 'Use edits for registered documents. An unregistered artifact already in the Design directory can be registered unchanged with source pointing to that file.\n');
     return;
   }
   try {

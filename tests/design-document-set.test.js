@@ -122,9 +122,12 @@ test('a Design revision can adopt an existing artifact without rewriting it or i
   const source = path.join(f.project, 'verification.md');
   const text = '# 검증 시나리오\r\n\r\n저장에 실패하면 알림을 보내지 않는다.\r\n';
   fs.writeFileSync(source, text);
+  const review = path.join(f.directory, 'review.md');
+  const reviewBytes = Buffer.from('\ufeff# 독립 검토\r\n\r\n검토자가 작성한 원문.\r\n');
+  fs.writeFileSync(review, reviewBytes);
   const oldOverview = f.read('DESIGN.md');
-  const result = f.run('patch', { edits: [{ old: overview, new: overview + '\n[검증](verification.md)\n' }], documents: [
-    { path: 'verification.md', source },
+  const result = f.run('patch', { edits: [{ old: overview, new: overview + '\n[검증](verification.md)과 [검토](review.md)\n' }], documents: [
+    { path: 'verification.md', source }, { path: 'review.md', source: review },
   ] }, ['--change-kind', 'major']);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.value.write.revision, 2);
@@ -132,6 +135,20 @@ test('a Design revision can adopt an existing artifact without rewriting it or i
   assert.equal(f.read('revisions/REV-1/DESIGN.md'), oldOverview);
   assert.equal(f.read('contracts/request.md'), request);
   assert.equal(fs.readFileSync(f.execute().value.documents.find(d => d.path.endsWith('/verification.md')).absolute_path, 'utf8'), text);
+  assert.deepEqual(fs.readFileSync(review), reviewBytes);
+  const registered = f.execute().value.documents.find(d => d.path.endsWith('/review.md'));
+  assert.deepEqual(fs.readFileSync(registered.absolute_path), reviewBytes);
+  const duplicate = f.run('patch', { documents: [{ path: 'review.md', body: '# Replacement' }] }, ['--change-kind', 'major']);
+  assert.equal(duplicate.value.error.code, 'document-exists');
+  assert.deepEqual(fs.readFileSync(review), reviewBytes);
+});
+
+test('CLI help describes document operations without requiring project arguments or stdin', () => {
+  const result = spawnSync(process.execPath, [writer, 'create', '--help'], { encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Create JSON:/);
+  assert.match(result.stdout, /Patch JSON:/);
+  assert.match(result.stdout, /registered unchanged/);
 });
 
 test('source failures leave no partial Design and allow retry while preserving independent notes', t => {
