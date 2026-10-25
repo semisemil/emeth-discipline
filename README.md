@@ -24,32 +24,26 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 6 Astra low | None | 196/196 | 3/14 | 4분 57초 | $0.973 |
-| 6 Astra low | Core | 196/196 | 5/14 | 4분 23초 | $0.929 |
-| 6 Astra low | Workflow | 196/196 | 9/14 | 12분 48초 | $6.164 |
-| 6.1 Sol medium | None | 196/196 | 6/14 | 5분 6초 | $0.269 |
-| 6.1 Sol medium | Core | 196/196 | 6/14 | 5분 34초 | $0.309 |
-| 6.1 Sol medium | Workflow | 196/196 | 9/14 | 9분 27초 | $1.131 |
+| 6 Astra low | None | 196/196 | 4.7/14 | 3분 36초 | $0.975 |
+| 6 Astra low | Core | 196/196 | 6.3/14 | 4분 37초 | $1.318 |
+| 6 Astra low | Workflow | 195.7/196 | 10.0/14 | 10분 27초 | $5.320 |
+| 6.1 Sol medium | None | 195.0/196 | 6.3/14 | 6분 21초 | $0.330 |
+| 6.1 Sol medium | Core | 195.7/196 | 6.7/14 | 7분 23초 | $0.345 |
+| 6.1 Sol medium | Workflow | 196/196 | 6.7/14 | 9분 27초 | $0.803 |
 
 
-[측정 조건과 회차별 결과](docs/benchmarks/README.md)
+[평가 항목과 회차별 결과](docs/benchmarks/README.md) / [원본 데이터](docs/benchmarks/superjson.json)
 
 ## 📦 설치
 
 ### Codex CLI에서 설치
-
-Codex CLI 0.163.0 이상을 사용합니다.
-`emeth-discipline` 마켓플레이스를 추가한 다음 Emeth 플러그인을 설치합니다.
-
 ```bash
 codex plugin marketplace add semisemil/emeth-discipline
 codex plugin add emeth-discipline@emeth-discipline
 ```
 
-부모 대화를 상속하는 하위 에이전트가 코드 조회 결과와 입력 캐시를 재사용할 수 있도록, 사용자 설정 파일 `~/.codex/config.toml`에 다음 설정을 추가합니다.
+사용자 설정 파일 `~/.codex/config.toml`에 다음 설정을 추가합니다.
 Windows의 기본 경로는 `%USERPROFILE%\.codex\config.toml`입니다.
-`CODEX_HOME`을 지정했다면 해당 폴더의 `config.toml`을 수정합니다.
-기존 섹션이 있으면 아래 항목을 해당 섹션에 합칩니다.
 
 ```toml
 [features]
@@ -59,9 +53,7 @@ incremental_tools = true
 enabled = true
 preserve_fork_prefix = true
 ```
-
 설정을 저장한 뒤 Codex를 시작합니다.
-
 ```bash
 codex
 ```
@@ -71,8 +63,6 @@ Codex가 열리면 다음 순서로 마무리합니다.
 1. `/hooks`를 엽니다.
 2. Emeth의 `SessionStart`, `SubagentStart`, `UserPromptSubmit` 훅을 확인하고 승인합니다.
 3. 새 작업을 시작합니다.
-
-훅 파일 경로가 바뀐 버전으로 업데이트한 경우에도 `/hooks`에서 현재 정의를 확인하고 승인합니다.
 
 대시보드 최초 등록에는 프로젝트 밖의 저장 폴더에 쓰기 권한이 필요합니다. [저장 위치와 권한 설정](#대시보드-저장-위치와-권한-설정)을 참고하세요.
 
@@ -88,12 +78,10 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 ## 🚀 빠르게 사용하기
 
 ### 기본 지침
-
 새 작업을 시작하면 기본 지침이 자동으로 적용됩니다.
 따로 스킬을 호출할 필요는 없습니다.
 
 ### 기존 프로젝트 파악하기
-
 `architecture-memory-init`은 기존 코드와 문서를 읽고 프로젝트 구조, 주요 결정과 운영 제약을 아키텍처 문서로 정리합니다.
 기존 프로젝트의 배경을 정리하고 싶을 때 호출하세요.
 
@@ -111,7 +99,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `/emeth-discipline:rules` | 대화와 결과물 전반 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
+| `/emeth-discipline:rules` | 기본 적용 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
 | `/emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
 | `/emeth-discipline:slop-check` | 기존 코드에 맞춰 작성하거나 불필요한 코드를 찾을 때 | 불필요한 처리, 중복 구현과 관례 이탈을 근거로 판정하고 정리 방향 제시 |
 | `/emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
@@ -240,7 +228,6 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 
 이슈, Design 또는 기존 문서를 저장하거나 아키텍처 메모리를 초기화하면 해당 프로젝트를 등록합니다.
 서버는 사용자가 대시보드를 열어 달라고 요청하거나 `open`을 호출할 때 시작합니다.
-별도 서버 패키지를 설치할 필요는 없습니다.
 
 | 명령 | 동작 |
 | --- | --- |
@@ -251,7 +238,6 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 
 프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `add`를 호출하세요.
 이 명령은 프로젝트 파일을 새로 만들거나 다른 폴더를 검색하지 않습니다.
-포트 `43127`을 다른 프로그램이 사용 중이면 시작 실패를 보고합니다.
 
 ### 대시보드 저장 위치와 권한 설정
 

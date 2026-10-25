@@ -1,0 +1,326 @@
+{
+  "task": "superjson-error-stack-serialization",
+  "measured_at": "2026-10-25",
+  "cost_kind": "api_equivalent_estimate_usd",
+  "aggregation": "Arithmetic mean of three selected runs per model and condition, including failed checks.",
+  "groups": [
+    {
+      "model": "gpt-6-astra",
+      "reasoning_effort": "low",
+      "condition": "None",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 4.666666666666667,
+        "elapsed_ms": 216428.66666666666,
+        "api_equivalent_usd": 0.9747960000000001
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 232211,
+          "api_equivalent_usd": 1.031022
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 206066,
+          "api_equivalent_usd": 0.963242
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 3,
+            "total": 14
+          },
+          "elapsed_ms": 211009,
+          "api_equivalent_usd": 0.930124
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "reasoning_effort": "low",
+      "condition": "Core",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 6.333333333333333,
+        "elapsed_ms": 276611.3333333333,
+        "api_equivalent_usd": 1.3180046666666667
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 327025,
+          "api_equivalent_usd": 1.524536
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 253176,
+          "api_equivalent_usd": 1.252436
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 249633,
+          "api_equivalent_usd": 1.177042
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "reasoning_effort": "low",
+      "condition": "Workflow",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 10,
+        "elapsed_ms": 627466.6666666666,
+        "api_equivalent_usd": 5.319544666666666
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 658728,
+          "api_equivalent_usd": 5.944688
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 632590,
+          "api_equivalent_usd": 4.881564
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 591082,
+          "api_equivalent_usd": 5.132382
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195,
+        "additional_passed": 6.333333333333333,
+        "elapsed_ms": 380645.6666666667,
+        "api_equivalent_usd": 0.3300121333333333
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 444724,
+          "api_equivalent_usd": 0.4163976
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 333528,
+          "api_equivalent_usd": 0.2602664
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 363685,
+          "api_equivalent_usd": 0.3133724
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 6.666666666666667,
+        "elapsed_ms": 442727,
+        "api_equivalent_usd": 0.3451768
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 360633,
+          "api_equivalent_usd": 0.3347608
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 430915,
+          "api_equivalent_usd": 0.332586
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 536633,
+          "api_equivalent_usd": 0.3681836
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 6.666666666666667,
+        "elapsed_ms": 566575,
+        "api_equivalent_usd": 0.8029128
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 598373,
+          "api_equivalent_usd": 0.8662424
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 740424,
+          "api_equivalent_usd": 0.9422948
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 360928,
+          "api_equivalent_usd": 0.6002012
+        }
+      ]
+    }
+  ]
+}
