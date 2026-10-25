@@ -37,6 +37,28 @@ const changes = [
   { old: '성공하면 ID를 반환한다.', new: '성공하면 접수 ID를 반환한다.' },
 ];
 
+test('Design write and patch support in-revision edits while operational saves preserve content', t => {
+  const f = fixture(t, { bom: true, newline: '\r\n' });
+  const revised = Buffer.from(f.original.toString('utf8').replace(changes[0].old, changes[0].new));
+  const write = spawnSync(process.execPath, [cli, 'write', '--kind', 'design', '--project-root', f.project,
+    '--relative-path', '.emeth/designs/DESIGN-0001-test/DESIGN.md', '--memory', 'off'],
+  { env: f.env, input: revised, encoding: 'utf8', windowsHide: true });
+  assert.equal(write.status, 0, write.stderr);
+  assert.equal(JSON.parse(write.stdout).write.revision, 1);
+  assert.equal(JSON.parse(write.stdout).write.snapshot, null);
+  assert.deepEqual(fs.readFileSync(f.file), revised);
+  const edit = [{ old: '유지할 문장.', new: '의미를 유지한 설명.' }];
+  const rejected = f.patch(edit, ['--change-kind', 'operational', '--memory', 'off']);
+  assert.equal(rejected.value.error.code, 'contract-revision-required');
+  assert.deepEqual(fs.readFileSync(f.file), revised);
+  const patched = f.patch(edit, ['--memory', 'off']);
+  assert.equal(patched.status, 0, patched.stderr);
+  assert.equal(patched.value.write.revision, 1);
+  assert.equal(patched.value.write.snapshot, null);
+  assert.deepEqual(fs.readFileSync(f.file), Buffer.from(revised.toString('utf8').replace(edit[0].old, edit[0].new)));
+  assert.equal(fs.existsSync(f.snapshot), false);
+});
+
 test('read and patch preserve BOM, CRLF and unrelated bytes', t => {
   const f = fixture(t, { bom: true, newline: '\r\n' });
   const read = f.read();

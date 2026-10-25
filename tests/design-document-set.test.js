@@ -38,6 +38,68 @@ const request = '# 접수 계약\n\n접수 성공 시 요청 ID를 반환한다.
 const delivery = '# 전달 설계\n\n저장 완료 후 알림을 전송한다.\n';
 const input = { body: overview, documents: [{ path: 'contracts/request.md', body: request }, { path: 'delivery.md', body: delivery }] };
 
+test('draft saves keep one revision while overview, details and membership evolve', t => {
+  const f = fixture(t);
+  const created = f.run('create', input, ['--title', '알림 개발 설계', '--slug', 'notification', '--input-format', 'documents']);
+  assert.equal(created.status, 0, created.stderr);
+  const first = f.run('patch', { edits: [{ old: overview, new: overview + '\n[검증](verification.md)\n' }], documents: [
+    { path: 'contracts/request.md', edits: [{ old: '요청 ID', new: '접수 ID' }] },
+    { path: 'verification.md', body: '# 검증\n\n접수 ID를 확인한다.\n' },
+  ] });
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.value.write.revision, 1);
+  assert.equal(first.value.write.snapshot, null);
+  const second = f.run('patch', { edits: [{ old: '[검증](verification.md)', new: '접수 ID로 검증한다.' }], documents: [
+    { path: 'verification.md', remove: true },
+    { path: 'delivery.md', edits: [{ old: '저장 완료 후', new: '영구 저장 완료 후' }] },
+  ] }, ['--change-kind', 'edit']);
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(second.value.write.revision, 1);
+  assert.equal(second.value.write.snapshot, null);
+  assert.equal(fs.existsSync(path.join(f.directory, 'revisions')), false);
+  assert.equal(fs.existsSync(path.join(f.directory, 'verification.md')), false);
+  assert.equal(f.read('contracts/request.md'), request.replace('요청 ID', '접수 ID'));
+  assert.equal(f.read('delivery.md'), delivery.replace('저장 완료 후', '영구 저장 완료 후'));
+  const ready = f.run('status', undefined, ['--status', 'ready']);
+  assert.equal(ready.status, 0, ready.stderr);
+  assert.equal(ready.value.write.revision, 1);
+  assert.equal(f.execute().value.revision, 1);
+});
+
+test('one contract change spans multiple saves and the next change snapshots its final set', t => {
+  const f = fixture(t);
+  assert.equal(f.create(input).status, 0);
+  const original = f.read('DESIGN.md');
+  const first = f.run('patch', { documents: [
+    { path: 'contracts/request.md', edits: [{ old: '요청 ID', new: '접수 ID' }] },
+  ] }, ['--change-kind', 'major']);
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.value.write.revision, 2);
+  const continued = f.run('patch', { edits: [{ old: overview, new: overview + '\n접수 ID는 알림 조회에 사용한다.\n' }], documents: [
+    { path: 'delivery.md', edits: [{ old: '알림을 전송한다.', new: '접수 ID를 담은 알림을 전송한다.' }] },
+  ] });
+  assert.equal(continued.status, 0, continued.stderr);
+  assert.equal(continued.value.write.revision, 2);
+  assert.equal(continued.value.write.snapshot, null);
+  assert.equal(f.execute().value.revision, 2);
+  assert.equal(f.read('revisions/REV-1/DESIGN.md'), original);
+  assert.equal(f.read('revisions/REV-1/contracts/request.md'), request);
+  assert.equal(f.read('revisions/REV-1/delivery.md'), delivery);
+  assert.equal(fs.existsSync(path.join(f.directory, 'revisions/REV-2')), false);
+  const finalOverview = f.read('DESIGN.md');
+  const finalRequest = f.read('contracts/request.md');
+  const finalDelivery = f.read('delivery.md');
+  const next = f.run('patch', { documents: [
+    { path: 'delivery.md', edits: [{ old: '저장 완료 후', new: '사용자가 확인한 후' }] },
+  ] }, ['--change-kind', 'major']);
+  assert.equal(next.status, 0, next.stderr);
+  assert.equal(next.value.write.revision, 3);
+  assert.equal(f.read('revisions/REV-2/DESIGN.md'), finalOverview);
+  assert.equal(f.read('revisions/REV-2/contracts/request.md'), finalRequest);
+  assert.equal(f.read('revisions/REV-2/delivery.md'), finalDelivery);
+  assert.equal(f.read('revisions/REV-1/DESIGN.md'), original);
+});
+
 test('existing design artifacts are saved byte-for-byte and reach the implementation reader', t => {
   const f = fixture(t);
   const source = path.join(f.project, 'chosen sketch.md');

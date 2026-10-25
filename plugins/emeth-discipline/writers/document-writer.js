@@ -26,7 +26,7 @@ const roots = require('../lib/document-roots.js');
 const PLAN_PATH = /^\.emeth\/plan\/(PLAN-\d{4,})-([^/\\]+)\/PLAN\.md$/;
 const SPEC_PATH = /^\.emeth\/specs\/(SPEC-\d{4,})-([^/\\]+)\/SPEC\.md$/;
 const DESIGN_PATH = /^\.emeth\/designs\/(DESIGN-\d{4,})(?:-([^/\\]+))?\/DESIGN\.md$/;
-const CHANGE_KINDS = new Set(['major', 'operational']);
+const CHANGE_KINDS = new Set(['edit', 'major', 'operational']);
 
 class DocumentWriterError extends Error {
   constructor(code, message, cause) {
@@ -112,8 +112,9 @@ function parseArgs(argv) {
   if (command === 'write' && (typeof options.relative_path !== 'string' || options.relative_path.length === 0)) {
     throw writerError('document-path-invalid', '--relative-path 값이 필요합니다.');
   }
-  if (options.change_kind !== undefined && !CHANGE_KINDS.has(options.change_kind)) {
-    throw writerError('change-kind-invalid', '--change-kind는 major 또는 operational이어야 합니다.');
+  if (options.change_kind !== undefined && (!CHANGE_KINDS.has(options.change_kind)
+      || options.change_kind === 'edit' && options.kind !== 'design')) {
+    throw writerError('change-kind-invalid', '--change-kind accepts major or operational; Design also accepts edit (default).');
   }
   if (options.section !== undefined && !options.section.trim()) {
     throw writerError('invalid-argument', '--section에는 절 제목이 필요합니다.');
@@ -319,7 +320,8 @@ function validateTransition(kind, existingMetadata, nextMetadata, changeKind) {
     }
     return;
   }
-  if (!CHANGE_KINDS.has(changeKind)) {
+  if (kind === 'design' && changeKind === undefined) changeKind = 'edit';
+  if (!CHANGE_KINDS.has(changeKind) || kind !== 'design' && changeKind === 'edit') {
     throw writerError('change-kind-required', 'Spec 변경에는 --change-kind major 또는 operational이 필요합니다.');
   }
   const expectedRevision = changeKind === 'major'
@@ -518,7 +520,7 @@ function writeDocumentUnlocked(options, sourceBuffer, expectedSource, documentCh
     const nextBody = parseFrontmatter(content).body;
     const membershipChanged = JSON.stringify(existingMetadata.documents || []) !== JSON.stringify(nextMetadata.documents || []);
     if (options.change_kind === 'operational' && (oldBody !== nextBody || membershipChanged || details.length)) {
-      throw writerError('contract-revision-required', 'Design body changes require a major revision');
+      throw writerError('contract-revision-required', 'Use edit for changes within the current Design revision, or major to start a new revision');
     }
   }
 
@@ -880,6 +882,11 @@ function formatSuccess(result) {
 }
 
 function main(argv = process.argv.slice(2), sourceBuffer) {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    process.stdout.write('Design write/patch options: --change-kind edit|major|operational (default: edit)\n'
+      + 'edit saves within the current revision; major starts a new revision and snapshots the previous one. Use major once per change to the agreed Design contract, then edit for subsequent saves.\n');
+    return;
+  }
   try {
     const options = parseArgs(argv);
     const result = options.command === 'create' ? createDocument(options, sourceBuffer === undefined ? fs.readFileSync(0) : sourceBuffer)
