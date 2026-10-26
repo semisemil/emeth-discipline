@@ -775,30 +775,13 @@
     return region;
   }
 
-  async function renderMermaid(root = elements.viewPanel) {
-    const mermaid = globalThis.mermaid;
-    const codeBlocks = [...root.querySelectorAll('pre > code.language-mermaid')];
-    if (codeBlocks.length === 0 || !mermaid) return;
+  async function renderDiagrams(root = elements.viewPanel) {
     const projectId = state.selectedProjectId;
     const view = state.view;
     const documentKey = state.selectedDocument;
-    const replacements = codeBlocks.map((code) => {
-      const original = code.parentElement;
-      const diagram = make('div', 'mermaid');
-      diagram.textContent = code.textContent;
-      original.replaceWith(diagram);
-      return { diagram, original };
-    });
-    try {
-      mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
-      await mermaid.run({ nodes: replacements.map(({ diagram }) => diagram) });
-    } catch {
-      let restored = false;
-      for (const { diagram, original } of replacements) {
-        if (diagram.isConnected) { diagram.replaceWith(original); restored = true; }
-      }
-      if (!restored || projectId !== state.selectedProjectId || view !== state.view || documentKey !== state.selectedDocument) return;
-      state.notice = '일부 Mermaid 다이어그램을 코드로 표시합니다.';
+    const failed = await globalThis.EmethDashboardDiagrams.render(root);
+    if (failed && projectId === state.selectedProjectId && view === state.view && documentKey === state.selectedDocument) {
+      state.notice = '일부 다이어그램을 코드로 표시합니다.';
       renderStatus();
     }
   }
@@ -912,7 +895,7 @@
     const table = elements.viewPanel.querySelector('.issue-table-wrap');
     if (table) table.scrollLeft = state.workScrollLeft;
     core.restoreFocusByKey(elements.viewPanel, focusKey, fallbackFocusKey);
-    renderMermaid();
+    renderDiagrams();
   }
 
   function renderView(

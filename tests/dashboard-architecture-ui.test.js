@@ -28,7 +28,7 @@ test('intro links carry the saved project and requested version without starting
   assert.equal(page.get('script[src="/app.js"]'), null);
 });
 
-test('Architecture viewer reads the selected document, renders metadata and local Mermaid without writes', async t => {
+test('Architecture viewer reads the selected document, renders metadata and local Pele diagrams without writes', async t => {
   const id = '11111111-1111-4111-8111-111111111111';
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-architecture-ui-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -69,9 +69,8 @@ test('Architecture viewer reads the selected document, renders metadata and loca
     assert.equal(term.nextElementSibling.textContent, value);
   }
   assert.equal(page.get('.document-path').textContent, 'decisions/ADR-001.md');
-  assert.match(page.diagrams[0], /A --> B/);
-  assert.equal(page.mermaidOptions[0].securityLevel, 'strict');
-  assert.equal(page.get('script[src="/vendor/mermaid.min.js"]') !== null, true);
+  assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="A"]'));
+  assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="B"]'));
   assert.ok(page.calls.every(call => call.method === 'GET'));
   assert.equal(page.window.localStorage.getItem('emeth.dashboard.project'), id);
   assert.equal(new URL(page.get('#dashboard-link').href).search, `?project=${id}`);

@@ -239,8 +239,8 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: detail('plan', 'PLAN-0002', '<img src=x onerror=alert(1)>\n\n```mermaid\ngraph LR\n A --> B\n```') });
   page.click(planKey); await page.settle();
   assert.equal(page.get('.markdown-body img'), null);
-  assert.match(page.diagrams[0], /A --> B/);
-  assert.equal(page.mermaidOptions[0].securityLevel, 'strict');
+  assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="A"]'));
+  assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="B"]'));
   const before = page.calls.length;
   assert.equal(page.intervals[0].delay, 30000);
   page.intervals[0].callback(); await page.settle();
@@ -255,4 +255,24 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   assert.equal(removal.calls.find(call => call.method === 'DELETE').url, '/api/v1/projects/gone');
   assert.equal(removal.get('.project-option'), null);
   assert.ok(removal.get('#view-panel .empty-state p').textContent.trim());
+});
+
+test('Pele renders Korean sequence messages and styled subgraphs while retaining only invalid diagrams as source', async t => {
+  const invalid = 'flowchart LR\n A[';
+  const page = await documentPage(t, { [documentRoute('plan', 'PLAN-0002')]: detail('plan', 'PLAN-0002', [
+    '```mermaid', 'flowchart LR', ' subgraph System[시스템]', ' A[저장] --> B[조회]', ' end',
+    ' style A fill:#123456', '```',
+    '```mermaid', invalid, '```',
+    '```mermaid', 'sequenceDiagram', ' actor U as 작업자', ' participant A as 기존 불량 옵션 화면',
+    ' U->>A: AOR 체크 편집 후 기존 설정 저장', ' A->>A: CurrentConfigInfo.DefectTypes에 보관', '```',
+  ].join('\n')) });
+  page.click(planKey); await page.settle();
+  assert.equal(page.document.querySelectorAll('.diagram svg.pele').length, 2);
+  assert.ok(page.get('.pele-flowchart .pele-cluster'));
+  assert.equal(page.get('.pele-flowchart .pele-node[data-id="A"] rect').style.fill, '#123456');
+  assert.equal(page.document.querySelectorAll('.pele-sequence .pele-message').length, 2);
+  assert.match(page.get('.pele-sequence').textContent, /AOR 체크 편집 후 기존 설정 저장/);
+  assert.match(page.get('.pele-sequence').textContent, /CurrentConfigInfo.DefectTypes에 보관/);
+  assert.equal(page.get('pre > code.language-mermaid').textContent.trim(), invalid);
+  assert.match(page.get('#status-stack').textContent, /일부 다이어그램을 코드로 표시합니다/);
 });

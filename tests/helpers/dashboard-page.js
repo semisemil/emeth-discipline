@@ -15,13 +15,10 @@ function deferred() {
 }
 
 async function openPage(t, { page = 'dashboard', query = '', routes = {}, storage = {}, width = 1024, setup } = {}) {
-  const calls = [], errors = [], intervals = [], diagrams = [], mermaidOptions = [];
+  const calls = [], errors = [], intervals = [];
   class Assets extends ResourceLoader {
     fetch(url) {
       const name = new URL(url).pathname.slice(1);
-      if (name === 'vendor/mermaid.min.js') {
-        return Promise.resolve(Buffer.from('globalThis.mermaid = globalThis.testMermaid;'));
-      }
       return Promise.resolve(fs.readFileSync(path.join(assets, name)));
     }
   }
@@ -38,10 +35,9 @@ async function openPage(t, { page = 'dashboard', query = '', routes = {}, storag
       window.requestAnimationFrame = callback => { callback(); return 0; };
       // jsdom does not lay out elements. This supplies visibility at the browser boundary for focus trapping.
       window.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [{}]; };
-      window.testMermaid = {
-        initialize(options) { mermaidOptions.push(options); },
-        async run({ nodes }) { diagrams.push(...nodes.map(node => node.textContent)); },
-      };
+      // Font loading and canvas measurement are browser boundaries absent in jsdom.
+      window.document.fonts = { ready: Promise.resolve(), load: async () => [] };
+      window.HTMLCanvasElement.prototype.getContext = () => null;
       window.fetch = async (url, options = {}) => {
         calls.push({ url, method: options.method || 'GET' });
         const route = routes[url];
@@ -59,7 +55,7 @@ async function openPage(t, { page = 'dashboard', query = '', routes = {}, storag
   const { window } = dom;
   const document = window.document;
   const result = {
-    window, document, calls, routes, intervals, diagrams, mermaidOptions,
+    window, document, calls, routes, intervals,
     get: selector => document.querySelector(selector),
     click(selector) { const node = document.querySelector(selector); assert.ok(node, selector); node.click(); },
     change(selector, value, type = 'change') {

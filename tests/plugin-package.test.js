@@ -122,7 +122,7 @@ test('isolated package starts its dashboard and serves packaged assets', async t
       assert.equal(page.status, 200, route);
       assert.equal(await page.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', file), 'utf8'));
     }
-    for (const asset of ['core.js', 'motion.js', 'app.js', 'intro.js', 'architecture.js', 'styles.css', 'vendor/mermaid.min.js']) {
+    for (const asset of ['core.js', 'motion.js', 'app.js', 'intro.js', 'architecture.js', 'diagrams.js', 'styles.css', 'vendor/pele.global.js']) {
       const response = await fetch(`${origin}/${asset}`);
       assert.equal(response.status, 200, asset);
       assert.equal(await response.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', asset), 'utf8'));

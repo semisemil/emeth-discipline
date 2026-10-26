@@ -341,22 +341,20 @@ th:not([aria-sort="none"]) .column-sort { color: var(--text); }
 .markdown-body pre { overflow: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; background: var(--surface-detail); line-height: 1.65; }
 .markdown-body pre code { padding: 0; background: transparent; overflow-wrap: normal; }
 .markdown-body blockquote { border-left: 3px solid var(--border); margin: 20px 0; padding: 2px 20px; color: var(--muted); }
-.markdown-body .mermaid { overflow: auto; margin: 24px 0; border: 1px solid var(--line); border-radius: 6px; padding: 20px; background: #fff; color: #20242e; text-align: center; }
-.markdown-body .mermaid svg { max-width: 100%; height: auto; }
-/* SVG style elements are blocked by the local server's style-src policy. */
-.mermaid svg { font-family: inherit; font-size: 14px; }
-.mermaid .node rect, .mermaid .node circle, .mermaid .node ellipse,
-.mermaid .node polygon, .mermaid .node path { fill: #f0f3fc; stroke: #8c9ab5; stroke-width: 1.2px; }
-.mermaid .cluster rect { fill: #f8f9fc; stroke: #cfd6e3; }
-.mermaid .flowchart-link, .mermaid .edgePath .path { fill: none; stroke: #76839a; stroke-width: 1.5px; }
-.mermaid .arrowMarkerPath, .mermaid .arrowheadPath { fill: #76839a; stroke: #76839a; }
-.mermaid .edge-pattern-dashed { stroke-dasharray: 3; }
-.mermaid .edge-pattern-dotted { stroke-dasharray: 2; }
-.mermaid .edge-thickness-thick { stroke-width: 3px; }
-.mermaid .nodeLabel, .mermaid .edgeLabel, .mermaid .cluster-label,
-.mermaid text { color: #20242e; fill: #20242e; font-family: inherit; }
-.mermaid .nodeLabel p, .mermaid .edgeLabel p { margin: 0; }
-.mermaid .edgeLabel, .mermaid .labelBkg { background: #fff; fill: #fff; }
+.markdown-body .diagram {
+  --pele-bg: var(--surface);
+  --pele-fg: var(--text);
+  --pele-muted: var(--muted);
+  --pele-line: var(--secondary);
+  --pele-surface: var(--surface-strong);
+  --pele-surface-alt: var(--surface-detail);
+  --pele-border: var(--muted);
+  --pele-accent: var(--accent);
+  --pele-font-mono: var(--mono);
+  overflow: auto; margin: 24px 0; border: 1px solid var(--line); border-radius: 6px;
+  padding: 20px; background: var(--surface); font-size: 16px; line-height: normal;
+}
+.markdown-body .diagram svg { display: block; max-width: none; height: auto; margin: 0 auto; }
 .markdown-table-wrap { max-width: 100%; overflow: auto; margin: 20px 0; border: 1px solid var(--line); border-radius: 6px; }
 .markdown-body table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .markdown-body th, .markdown-body td { border-bottom: 1px solid var(--line); padding: 10px 14px; text-align: left; }
@@ -432,7 +430,6 @@ th:not([aria-sort="none"]) .column-sort { color: var(--text); }
 .architecture-metadata { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 24px; margin: 24px 0 36px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-detail); font-size: .8125rem; }
 .architecture-metadata dt { color: var(--muted); }
 .architecture-metadata dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
-.architecture-markdown .mermaid { background: #fff; }
 .sidebar-toggle { flex: none; justify-content: start; gap: 12px; min-height: 42px; margin: 0 0 12px; padding: 8px 10px; border: 0; background: transparent; color: var(--sidebar-muted); font-size: .8125rem; font-weight: 400; white-space: nowrap; }
 .sidebar-toggle:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
 .project-panel-collapsed .project-panel { padding: 0 10px; }
