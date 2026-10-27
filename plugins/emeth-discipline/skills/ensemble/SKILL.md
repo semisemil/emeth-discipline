@@ -34,7 +34,7 @@ Apply the [independent review](#independent-review) at its owning boundary.
 
 For implementation, the calling [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) assigns the review's timing and target.
 For a design-only request or requested design checkpoint, review the selected design before handing it back or implementing it, including when candidates were not used.
-For design artifacts, review the complete document's hierarchy, readability and consistency against its document form.
+For design artifacts, apply [document form](../development-design/references/document-form.md) to review content selection, hierarchy, readability and consistency across the complete document set.
 A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
 
 Use one independent judge with the settings in [Subagents](../start-implementation/SKILL.md#subagents).

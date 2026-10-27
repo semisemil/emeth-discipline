@@ -14,7 +14,7 @@ Its selected design forms the Design's implementation contract.
 Continue the named Design or one with the same goal; otherwise create one.
 Find existing Designs with `node <plugin-root>/writers/document-writer.js list --project-root <absolute-project-root>`.
 Use `DESIGN.md` for purpose, scope, and an overview of the change.
-Move a subject into a detailed Markdown document in the same directory when it would crowd the overview, and link it from `DESIGN.md`.
+Move a necessary subject into a detailed Markdown document in the same directory when it would make the overview harder to understand or use, and link it from `DESIGN.md`.
 Deliver the complete document set with valid links.
 Keep [readiness](references/document-status.md) in metadata only.
 Save through [creation](references/document-operations.md) or [revision](references/document-editing.md).
