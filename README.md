@@ -122,6 +122,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
 | `/emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
 | `/emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
+| `/emeth-discipline:architecture-map` | 아키텍처 문서로 시스템 전체 구조를 보고 싶을 때 | 시스템 경계, 주요 구성 요소와 관계를 그래프로 표시 |
 | `/emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
 | `/emeth-discipline:architecture-memory-maintain` | 문서에 여러 주제나 중복이 쌓여 필요한 내용을 찾기 어려울 때 | 의미와 근거를 보존하며 내용을 분리하거나 통합하고, 실제 검색과 부분 조회로 확인 |
 
@@ -141,7 +142,13 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
 | `/emeth-discipline:code-exploration` | 코드의 동작과 설계 이유를 이해하거나 배우고 싶을 때 | 질문에 맞춰 how, why, teach 모드로 코드와 변경 이력을 조사하고 설명 |
+| `/emeth-discipline:work-trace` | 작업의 탐색 과정과 결론의 근거를 보고 싶을 때 | 요청한 작업에서 의미 있는 변화가 있을 때 답변 직전에 탐색 그래프 갱신 |
 | `/emeth-discipline:ensemble` | 설계나 구현에 여러 후보를 비교하고 싶을 때 | 독립 후보 생성, 교차 평가, 좋은 부분의 합성, 결과 검증 |
+
+`architecture-map`과 `work-trace`는 Graph Viewer가 연결되어 있으면 그래프 탭에 표시합니다.
+연결되어 있지 않으면 답변에 Mermaid 흐름도를 표시합니다.
+`work-trace`는 표시를 요청한 작업에 적용되며, 새 근거, 주요 작업이나 분기, 검증 결과 또는 결론이 그래프의 의미를 바꿀 때 갱신합니다.
+실시간 갱신을 요청한 경우에도 같은 기준을 적용합니다.
 
 ## 🔁 기획부터 구현까지
 

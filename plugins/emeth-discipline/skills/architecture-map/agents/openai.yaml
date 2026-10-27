@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Architecture Map"
+  short_description: "Show the whole system from architecture memory"
+  default_prompt: "Use $architecture-map to show the overall structure recorded in this project's Architecture Memory."
+
+policy:
+  allow_implicit_invocation: true

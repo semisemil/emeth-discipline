@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Work Trace"
+  short_description: "Show exploration, verification and conclusions"
+  default_prompt: "Use $work-trace to graph this task's observed exploration and verification, updating it before a final response only when the trace changes meaningfully."
+
+policy:
+  allow_implicit_invocation: true
