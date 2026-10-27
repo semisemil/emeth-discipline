@@ -46,11 +46,16 @@ test('Codex skill metadata keeps invocation policies and the figure-it-out entry
     ['architecture-memory-init', false], ['architecture-memory', true],
     ['architecture-memory-update', true], ['architecture-memory-maintain', true], ['figure-it-out', false],
     ['architecture-map', true], ['work-trace', true],
+    ['adaptive-reasoning', false],
   ]) {
     const metadata = parse(fs.readFileSync(path.join(packageRoot, 'skills', name, 'agents/openai.yaml'), 'utf8'));
     assert.equal(metadata.policy.allow_implicit_invocation, implicit, name);
     assert.ok(metadata.interface.default_prompt.includes('$' + name), name);
   }
+  const adaptive = fs.readFileSync(path.join(packageRoot, 'skills/adaptive-reasoning/SKILL.md'), 'utf8');
+  const frontmatter = parse(adaptive.split('---')[1]);
+  assert.equal(frontmatter['disable-model-invocation'], true);
+  assert.equal(frontmatter['user-invocable'], false);
   const manifest = JSON.parse(fs.readFileSync(path.join(packageRoot, '.codex-plugin/plugin.json'), 'utf8'));
   assert.ok(manifest.interface.defaultPrompt.length <= 3);
   assert.ok(manifest.interface.defaultPrompt.every(prompt => prompt.length <= 128));

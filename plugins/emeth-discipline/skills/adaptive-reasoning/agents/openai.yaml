@@ -1,0 +1,6 @@
+interface:
+  display_name: "Emeth: Adaptive Reasoning"
+  short_description: "Adjust reasoning effort to fit the current work"
+  default_prompt: "Use $adaptive-reasoning to adjust reasoning effort while completing this task."
+policy:
+  allow_implicit_invocation: false
