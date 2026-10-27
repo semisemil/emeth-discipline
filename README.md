@@ -30,6 +30,12 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | 6.1 Sol medium | None | 195.0/196 | 6.3/14 | 6분 21초 | $0.330 |
 | 6.1 Sol medium | Core | 195.7/196 | 6.7/14 | 7분 23초 | $0.345 |
 | 6.1 Sol medium | Workflow | 196/196 | 6.7/14 | 9분 27초 | $0.803 |
+| 6.1 Terra medium | None | 195.7/196 | 3.7/14 | 3분 10초 | $0.083 |
+| 6.1 Terra medium | Core | 195.7/196 | 4.7/14 | 3분 50초 | $0.096 |
+| 6.1 Terra medium | Workflow | 195.7/196 | 6.7/14 | 5분 29초 | $0.346 |
+| 6.1 Terra high | None | 196/196 | 4.7/14 | 3분 54초 | $0.083 |
+| 6.1 Terra high | Core | 195.3/196 | 5.3/14 | 4분 38초 | $0.128 |
+| 6.1 Terra high | Workflow | 196/196 | 7.7/14 | 7분 29초 | $0.419 |
 
 
 [평가 항목과 회차별 결과](docs/benchmarks/README.md) / [원본 데이터](docs/benchmarks/superjson.json)
