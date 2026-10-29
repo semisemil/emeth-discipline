@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Code Map"
+  short_description: "Map code responsibilities and execution flow"
+  default_prompt: "Use $code-map to show the responsibilities and relationships in the current source code."
+
+policy:
+  allow_implicit_invocation: true
