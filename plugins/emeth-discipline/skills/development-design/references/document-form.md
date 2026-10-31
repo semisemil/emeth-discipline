@@ -11,7 +11,7 @@ Consolidate repeated explanations and omit routine steps that add no choice, con
 Delete content that fails this test rather than moving it to a supporting document.
 When an existing workspace rule constrains the change, explain its specific effect and reference its source instead of copying the rule or design workflow instructions into the body.
 Include proposals, examples, reported experiments and optional follow-up work only when they pass the content selection criteria, preserving their stated status when included.
-Keep the Design's unresolved matters together in one consolidated location so the reader can review its remaining decisions and missing facts, with the affected parts and their impact identified.
+Keep the Design's open matters together in one consolidated location so the reader can review its remaining decisions and missing facts, with the affected parts and their impact identified.
 Link to that list from affected sections instead of maintaining separate unresolved records there.
 Keep candidate selection history, investigation records and review reports in supporting documents when those records are needed.
 
@@ -40,7 +40,8 @@ Keep a view only when it passes the content selection criteria, and place it bes
 Use C4 for context and structural views, and sequence or state diagrams for behavior.
 Use Mermaid in Markdown documents that support it, unless the user specifies another documentation format.
 Apply technology constraints to their stated target: a product renderer restriction governs the product, while the document's rendering support governs its diagrams.
-Identify element roles and label directed relationships.
+Identify element roles and label directed relationships at the level established by sources and accepted decisions for a current or settled design.
+State when a participant, responsibility or connection is not established by the available sources; describe it as undecided in the design only when evidence confirms that status.
 C4 views distinguish system boundaries and external actors (context), applications and data stores (containers), and internal responsibilities within one container (components).
 For new or changed operation contracts, specify inputs, successful outputs, and failure conditions.
 For structured data changes, specify affected fields, their types and meanings, and validity conditions.

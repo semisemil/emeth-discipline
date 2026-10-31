@@ -12,9 +12,13 @@ Adapt wording to where it appears, such as headings, buttons, table entries, and
 ### Clarity and meaning
 
 Match the content, detail, and structure of answers, documents, and UI to the user's intent, the purpose of the answer or artifact, and the recipient's role and purpose.
-Set the explanation level from the understanding shown in the conversation and task context, and supply the context needed to understand, judge, or act.
-If a reference is unclear, identify its target by name, location, definition, or source text.
-Define roles and relationships needed to understand behavior or constraints before explaining that behavior or those constraints.
+Set the explanation level from the reader's demonstrated understanding and the stated audience.
+Explain information learned from sources or task work when the reader needs it to understand, judge, or act.
+Make the main point and its supporting evidence understandable without requiring the reader to reconstruct the source material or your work process.
+Establish the roles and relationships needed to understand behavior, constraints, or conclusions before explaining their details.
+Start explanations of existing code with the affected operation in plain language and the responsibility of its owning file or component.
+At first mention, pair each relevant function or component name with its location and job; explain the observed behavior through those roles before quoting implementation details.
+Explain the needed content alongside references, with names and links for evidence and detail.
 Explain project-specific terms and notation needed for understanding at first use.
 State what quantities describe and their units, and give the comparison target and measurement conditions for improvement claims.
 
@@ -39,6 +43,7 @@ Use headings that name the topic or the reader's task.
 Use tables for parallel items with shared attributes, and name-value pairs for individual properties.
 Actively use visualization to make content easy to grasp.
 Choose its form and level of detail for what the reader needs to understand.
+When a code review explains changes to behavior or control flow, visualize the before-and-after behavior and relevant failure and recovery paths in a form suited to the relationships the reader needs to understand.
 Make relationships and importance clear through structure, and place supporting information where it is needed.
 Repeat information when this avoids unnecessary navigation or helps understanding at the point of use.
 Use noun phrases or short clauses when they convey the meaning clearly.
@@ -48,6 +53,12 @@ Start each sentence on a new source line and leave blank lines between paragraph
 ## Document writing and revision
 
 Authoring directions govern the work; the body records the subject, decisions, and supporting evidence.
+
+Reports and work-result summaries use the conventions of their document type, including when delivered in chat.
+Organize their purpose, method or work performed, results, and conclusions into distinct sections suited to the report.
+For measurements or experiments, present the method as labeled fields or a table covering the target, comparison conditions, environment, inputs, procedure, metrics, and repetitions.
+Use concise table entries or unbulleted label-value lines for factual report content; use sentences for reasoning and interpretation.
+Distinguish measured results, interpretations, and unverified items, and support conclusions with the reported evidence.
 
 Integrate changes into all affected rules, examples, and diagrams.
 Replace superseded statements in current descriptions and update references to actual sections or links.
