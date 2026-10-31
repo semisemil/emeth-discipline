@@ -15,7 +15,7 @@
     projects: [],
     selectedProjectId: null,
     index: null,
-    view: 'work',
+    view: globalThis.location.pathname === '/' ? 'inbox' : globalThis.location.pathname === '/architecture' ? 'architecture' : 'work',
     globalSearch: '',
     projectSearch: '',
     issueQuick: 'active',
@@ -74,7 +74,6 @@
     background: byId('background-button'),
     backgroundFile: byId('background-file'),
     accent: byId('accent-color'),
-    architectureLink: byId('architecture-link'),
   };
 
   function make(tag, className, text) {
@@ -99,12 +98,7 @@
     if (state.expectedVersion) params.set('expected_version', state.expectedVersion);
     if (projectId) params.set('project', projectId);
     const suffix = params.size ? `?${params}` : '';
-    globalThis.history.replaceState(null, '', `/dashboard${suffix}`);
-    if (elements.architectureLink) {
-      const architectureParams = new URLSearchParams();
-      if (projectId) architectureParams.set('project', projectId);
-      elements.architectureLink.href = `/architecture${architectureParams.size ? `?${architectureParams}` : ''}`;
-    }
+    if (state.view !== 'inbox' && state.view !== 'architecture') globalThis.history.replaceState(null, '', '/dashboard' + suffix);
   }
 
   function readableError(error, fallback) {
@@ -287,6 +281,14 @@
   async function selectProject(projectId, options = {}) {
     const project = state.projects.find((item) => item.id === projectId);
     if (!project) return;
+    if (options.save !== false && state.view !== 'work') {
+      if (state.view === 'architecture') globalThis.EmethArchitecture.leave();
+      state.view = 'work';
+      updateTabs();
+      updateProjectLocation(project.id);
+      renderProjects();
+      renderView();
+    }
     if (state.selectedProjectId === projectId && state.index && !state.loading) {
       if (isMobile()) closeDrawer(options.focusReturn !== false);
       return;
@@ -294,7 +296,7 @@
     const transition = motion.begin(elements.viewPanel);
     state.projectTransition = transition;
     const mobile = isMobile();
-    const focusKey = core.projectSelectionFocusKey(project.id, globalThis.innerWidth);
+    const focusKey = options.focusReturn === false ? null : core.projectSelectionFocusKey(project.id, globalThis.innerWidth);
     indexRequestGate.invalidate();
     state.selectedProjectId = project.id;
     state.index = null;
@@ -312,7 +314,13 @@
     renderProjects(focusKey);
     updateContext();
     try {
-      if (project.availability === 'available') {
+      if (state.view === 'architecture' && project.availability === 'available') {
+        state.loading = false;
+        state.notice = null;
+        renderStatus();
+        renderView();
+        await globalThis.EmethArchitecture.load(project.id, new URLSearchParams(globalThis.location.search).get('document'));
+      } else if (project.availability === 'available') {
         await loadIndex(false);
       } else {
         state.loading = false;
@@ -346,16 +354,22 @@
 
   function updateContext() {
     const project = selectedProject();
-    elements.currentProject.textContent = project ? project.name : '선택 안 됨';
-    elements.currentProject.title = project?.root || '';
+    document.body.dataset.workspaceView = state.view;
+    const inbox = state.view === 'inbox';
+    byId('context-scope').textContent = inbox ? '작업 공간' : '프로젝트';
+    elements.currentProject.textContent = inbox ? '작업 수신함' : project?.name || '선택 안 됨';
+    elements.currentProject.title = inbox ? '' : project?.root || '';
     elements.currentProjectPath.textContent = project?.root || '';
     elements.currentProjectPath.title = project?.root || '';
     elements.projectCount.textContent = String(state.projects.length);
-    elements.viewTitle.textContent = { work: '작업 현황', documents: '프로젝트 문서', flow: '흐름 점검' }[state.view];
+    elements.viewTitle.textContent = { architecture: '프로젝트 문서', inbox: '작업 수신함', work: '작업 현황', documents: '프로젝트 문서', flow: '흐름 점검' }[state.view];
+    const collections = byId('document-collections');
+    collections.hidden = !['documents', 'architecture'].includes(state.view) || project?.availability !== 'available';
+    for (const choice of collections.children) choice.setAttribute('aria-pressed', String(choice.dataset.collection === state.view));
     document.title = `${elements.viewTitle.textContent} · Emeth Discipline`;
     const available = project?.availability === 'available';
-    elements.globalSearch.disabled = !available;
-    elements.refresh.disabled = !available || state.loading;
+    elements.globalSearch.disabled = state.view === 'inbox' || !available;
+    elements.refresh.disabled = state.view !== 'inbox' && (!available || state.loading);
   }
 
   function renderProjects(focusKey = document.activeElement?.dataset?.focusKey || null) {
@@ -373,8 +387,8 @@
       option.dataset.projectId = project.id;
       option.dataset.focusKey = `project:${project.id}`;
       option.setAttribute('role', 'option');
-      option.setAttribute('aria-selected', String(project.id === state.selectedProjectId));
-      if (project.id === state.selectedProjectId) option.setAttribute('aria-current', 'true');
+      option.setAttribute('aria-selected', String(project.id === state.selectedProjectId && state.view !== 'inbox'));
+      if (project.id === state.selectedProjectId && state.view !== 'inbox') option.setAttribute('aria-current', 'true');
       const name = make('span', 'project-name', project.name);
       const availability = project.availability === 'available' ? '사용 가능' : '사용 불가';
       const counts = project.availability === 'available'
@@ -630,22 +644,19 @@
     section.append(make('h3', '', '연결 문서'));
     const chain = make('dl', 'linked-documents');
     for (const [kind, ids] of [['design', issue.design_ids || []], ['plan', issue.plan_ids || []], ['spec', issue.spec_ids || []]]) {
+      if (!ids.length) continue;
       chain.append(make('dt', '', ({ design: '설계', plan: '기존 플랜', spec: '기존 스펙' })[kind]));
       const group = make('dd');
-      if (ids.length === 0) {
-        group.append(make('span', 'linked-document-empty', '연결 없음'));
-      } else {
-        for (const id of ids) {
-          const record = state.index[({ design: 'designs', plan: 'plans', spec: 'specs' })[kind]]?.find((item) => item.id === id);
-          const link = button('', 'text-link linked-document');
-          link.append(make('span', 'linked-document-id', id), make('span', '', record?.title || '문서를 찾을 수 없음'));
-          link.addEventListener('click', () => openDocument(kind, id));
-          group.append(link);
-        }
+      for (const id of ids) {
+        const record = state.index[({ design: 'designs', plan: 'plans', spec: 'specs' })[kind]]?.find((item) => item.id === id);
+        const link = button('', 'text-link linked-document');
+        link.append(make('span', 'linked-document-id', id), make('span', '', record?.title || '문서를 찾을 수 없음'));
+        link.addEventListener('click', () => openDocument(kind, id));
+        group.append(link);
       }
       chain.append(group);
     }
-    section.append(chain);
+    section.append(chain.childElementCount ? chain : make('p', 'flow-state-text', '연결 없음'));
     const signals = core.signalLabels(issue.flow_signal_ids);
     if (signals.length) section.append(make('p', 'flow-state-text', `흐름 상태: ${signals.join(', ')}`));
     return section;
@@ -904,6 +915,11 @@
   ) {
     updateContext();
     if (state.projectTransition && state.loading) return;
+    if (state.view === 'inbox') {
+      const board = globalThis.EmethInbox.show(state.projects);
+      if (board.parentNode !== elements.viewPanel) elements.viewPanel.replaceChildren(board);
+      return;
+    }
     state.workScrollLeft = elements.viewPanel.querySelector('.issue-table-wrap')?.scrollLeft || 0;
     elements.viewPanel.replaceChildren();
     const project = selectedProject();
@@ -913,6 +929,10 @@
     }
     if (project.availability !== 'available') {
       commitView(renderUnavailable(project), focusKey, fallbackFocusKey);
+      return;
+    }
+    if (state.view === 'architecture') {
+      elements.viewPanel.append(globalThis.EmethArchitecture.reader);
       return;
     }
     if (state.loading && !state.index) {
@@ -929,9 +949,14 @@
   }
 
   function updateTabs() {
+    const inbox = state.view === 'inbox';
+    if (inbox) byId('inbox-link').setAttribute('aria-current', 'page');
+    else byId('inbox-link').removeAttribute('aria-current');
+    elements.viewPanel.setAttribute('role', inbox ? 'region' : 'tabpanel');
+    if (inbox) elements.viewPanel.setAttribute('aria-labelledby', 'view-title');
     const tabs = [...elements.tabs.querySelectorAll('[role="tab"]')];
     for (const tab of tabs) {
-      const selected = tab.dataset.view === state.view;
+      const selected = tab.dataset.view === (state.view === 'architecture' ? 'documents' : state.view);
       tab.setAttribute('aria-selected', String(selected));
       tab.tabIndex = selected ? 0 : -1;
       if (selected) elements.viewPanel.setAttribute('aria-labelledby', tab.id);
@@ -939,11 +964,19 @@
   }
 
   function activateTab(view, focus = false) {
+    if (view === 'architecture' && selectedProject()?.availability !== 'available') view = 'documents';
+    if (view === 'architecture' && state.view === view) return;
+    const leftReader = state.view === 'architecture';
+    if (leftReader) globalThis.EmethArchitecture.leave();
     state.view = view;
+    if (view !== 'inbox') updateProjectLocation(state.selectedProjectId);
+    else globalThis.history.replaceState(null, '', '/' + (state.expectedVersion ? '?expected_version=' + encodeURIComponent(state.expectedVersion) : ''));
     updateTabs();
     renderView();
+    if (view === 'architecture') globalThis.EmethArchitecture.load(state.selectedProjectId);
+    if (leftReader && !state.index && selectedProject()?.availability === 'available') loadIndex();
     animateEntrance(elements.viewPanel);
-    if (focus) elements.tabs.querySelector(`[data-view="${view}"]`)?.focus();
+    if (focus) elements.tabs.querySelector('[aria-selected="true"]')?.focus();
   }
 
   function animateEntrance(node) {
@@ -1004,10 +1037,7 @@
     elements.shell.classList.toggle('project-panel-collapsed', state.projectPanelCollapsed);
     elements.panel.inert = false;
     elements.panel.removeAttribute('aria-hidden');
-    elements.menu.setAttribute('aria-expanded', String(!state.projectPanelCollapsed));
     const label = state.projectPanelCollapsed ? '프로젝트 목록 펼치기' : '프로젝트 목록 접기';
-    elements.menu.setAttribute('aria-label', label);
-    elements.menu.dataset.tooltip = label;
     elements.panelToggle.setAttribute('aria-expanded', String(!state.projectPanelCollapsed));
     elements.panelToggle.setAttribute('aria-label', label);
     elements.panelToggle.title = label;
@@ -1166,20 +1196,24 @@
       state.globalSearch = elements.globalSearch.value;
       renderView();
     });
-    elements.refresh.addEventListener('click', () => loadIndex(true));
-    elements.menu.addEventListener('click', () => {
-      if (isMobile()) openDrawer();
-      else setProjectPanelCollapsed(!state.projectPanelCollapsed);
-    });
+    elements.refresh.addEventListener('click', () => state.view === 'inbox' ? globalThis.EmethInbox.refresh() : state.view === 'architecture' ? globalThis.EmethArchitecture.refresh() : loadIndex(true));
+    elements.menu.addEventListener('click', openDrawer);
     elements.panelToggle.addEventListener('click', () => setProjectPanelCollapsed(!state.projectPanelCollapsed));
     document.querySelector('.appearance-settings summary').addEventListener('click', () => {
       if (!isMobile() && state.projectPanelCollapsed) setProjectPanelCollapsed(false);
     });
     elements.close.addEventListener('click', () => closeDrawer(true));
     elements.scrim.addEventListener('click', () => closeDrawer(true));
+    byId('document-collections').addEventListener('click', event => {
+      const choice = event.target.closest('[data-collection]');
+      if (choice) activateTab(choice.dataset.collection);
+    });
+    function selectProjectTab(view, focus) {
+      activateTab(view === 'documents' && state.view !== 'documents' ? 'architecture' : view, focus);
+    }
     elements.tabs.addEventListener('click', (event) => {
       const tab = event.target.closest('[role="tab"]');
-      if (tab) activateTab(tab.dataset.view);
+      if (tab) selectProjectTab(tab.dataset.view);
     });
     elements.tabs.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -1190,7 +1224,7 @@
       else if (event.key === 'End') next = tabs.length - 1;
       else next = (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
       event.preventDefault();
-      activateTab(tabs[next].dataset.view, true);
+      selectProjectTab(tabs[next].dataset.view, true);
     });
     elements.projectList.addEventListener('keydown', (event) => {
       if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
@@ -1238,11 +1272,12 @@
     elements.accent.addEventListener('input', () => applyAccent(elements.accent.value));
     globalThis.addEventListener('resize', syncResponsiveState);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && selectedProject()?.availability === 'available') loadIndex(false, true);
+      if (state.view !== 'architecture' && document.visibilityState === 'visible' && selectedProject()?.availability === 'available') loadIndex(false, true);
     });
   }
 
   async function boot() {
+    updateTabs();
     bindEvents();
     syncResponsiveState();
     renderProjects();
@@ -1258,7 +1293,7 @@
     renderStatus();
     await loadProjects();
     globalThis.setInterval(() => {
-      if (document.visibilityState === 'visible' && selectedProject()?.availability === 'available') loadIndex(false, true);
+      if (state.view !== 'architecture' && document.visibilityState === 'visible' && selectedProject()?.availability === 'available') loadIndex(false, true);
     }, 30000);
   }
 

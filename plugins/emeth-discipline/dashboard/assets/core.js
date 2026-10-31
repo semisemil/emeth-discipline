@@ -342,9 +342,14 @@
       tokens.push(html);
       return token;
     };
+    function fileRef(href, label) {
+      const name = href.split(/[\\/]/).pop();
+      return storeToken(`<code class="file-reference" title="${href}">${label || name}</code>`);
+    }
     let text = escapedText.replace(/`([^`\n]+)`/g, (_match, value) => {
       return storeToken(`<code>${value}</code>`);
     });
+    text = text.replace(/&amp;#(?:x0*20|0*32);/gi,' ');
     text = text.replace(/(^|[^!])\[([^\]\n]+)\]\(([^)\s]+)\)/g, (match, prefix, label, href) => {
       const safe = safeHttpUrl(href);
       if (safe) {
@@ -360,10 +365,15 @@
             && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(rawHref)) {
           options.onUnresolvedLink(rawHref);
         }
+        if (/^(?:[a-z]:[\\/]|\.{0,2}\/)|^[\w.-]+\//i.test(href)) {
+          return prefix + fileRef(href, /[\\/\uE000]/.test(label) ? '' : label);
+        }
         return `${prefix}${label} (${href})`;
       }
       return `${prefix}${storeToken(`<a href="${internal}" data-architecture-link="true">${label}</a>`)}`;
     });
+    text = text.replace(/\*?\(((?:[a-z]:[\\/]|\.{1,2}[\\/]|\/)[^()\n]+)\)\*?/gi,
+      (_, href) => fileRef(href));
     text = text
       .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
       .replace(/__([^_\n]+)__/g, '<strong>$1</strong>')
@@ -470,7 +480,7 @@
   function initialArchitectureDocumentId(documents, requestedId) {
     const requested = String(requestedId || '');
     if ((documents || []).some((document) => document.id === requested)) return requested;
-    return documents?.[0]?.id || null;
+    return documents?.find(document => document.kind === 'index')?.id || documents?.[0]?.id || null;
   }
 
   function normalizeArchitecturePath(value) {

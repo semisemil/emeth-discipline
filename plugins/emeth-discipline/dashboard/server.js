@@ -11,6 +11,7 @@ const {
   ProjectIndexService,
 } = require('./records/project-index.js');
 const { ArchitectureService } = require('./architecture.js');
+const { readInbox, setDisposition } = require('./inbox.js');
 
 const HOST = '127.0.0.1';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -233,7 +234,7 @@ function staticRelativePath(target) {
           || queryEntries[0][1].length === 0)) {
       throw new ProjectApiError('query-invalid', '허용되지 않은 query입니다.', 400);
     }
-    return 'index.html';
+    return 'dashboard.html';
   }
   if (target.pathname === '/dashboard') {
     const entries = [...target.searchParams.entries()];
@@ -261,7 +262,7 @@ function staticRelativePath(target) {
         ))) {
       throw new ProjectApiError('query-invalid', '허용되지 않은 query입니다.', 400);
     }
-    return 'architecture.html';
+    return 'dashboard.html';
   }
   if (target.search !== '') {
     throw new ProjectApiError('query-invalid', '허용되지 않은 query입니다.', 400);
@@ -349,6 +350,11 @@ function routeApiRequest(request, response, target, options, service, architectu
       && target.pathname === '/api/v1/projects'
       && target.search === '') {
     sendJson(request, response, 200, { projects: service.listProjects() });
+    return true;
+  }
+
+  if (['GET', 'HEAD'].includes(request.method) && target.pathname === '/api/v1/inbox' && !target.search) {
+    sendJson(request, response, 200, readInbox(service.readProjects(), options.registryOptions));
     return true;
   }
 
@@ -448,6 +454,16 @@ function createRequestHandler(options) {
       return;
     }
     const { expectedOrigin, origin } = boundary;
+    const disposition = request.method === 'POST' && /^\/api\/v1\/inbox\/([0-9a-f]{64})\/(later|done|open)$/.exec(request.url);
+    if (disposition) {
+      if (origin !== expectedOrigin) return sendError(request, response, 403, 'origin-required', '동일 Origin이 필요합니다.');
+      try {
+        if (setDisposition(service.readProjects(), disposition[1], disposition[2], options.registryOptions)) return sendEmpty(response, 204);
+        return sendError(request, response, 404, 'item-not-found', '항목을 찾을 수 없습니다.');
+      } catch {
+        return sendError(request, response, 500, 'write-failed', '항목 상태를 저장할 수 없습니다.');
+      }
+    }
     if (!new Set(['GET', 'HEAD', 'DELETE']).has(request.method)) {
       sendError(request, response, 405, 'method-not-allowed', '허용되지 않은 method입니다.', {
         Allow: 'GET, HEAD, DELETE',

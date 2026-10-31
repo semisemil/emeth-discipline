@@ -12,6 +12,9 @@
   <script src="/core.js" defer></script>
   <script src="/vendor/pele.global.js" defer></script>
   <script src="/diagrams.js" defer></script>
+  <link rel="stylesheet" href="/inbox.css">
+  <script src="/inbox.js" defer></script>
+  <script src="/architecture.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -23,8 +26,7 @@
         <button class="icon-button drawer-close" id="drawer-close" type="button" aria-label="프로젝트 목록 닫기" data-tooltip="프로젝트 목록 닫기">×</button>
       </div>
       <nav class="project-panel-navigation" aria-label="화면 전환">
-        <a class="surface-link project-panel-link" href="/dashboard" aria-current="page" aria-label="대시보드" title="대시보드"><span class="nav-symbol icon-work" aria-hidden="true"></span><span class="nav-label">대시보드</span></a>
-        <a class="surface-link project-panel-link" id="architecture-link" href="/architecture" aria-label="아키텍처" title="아키텍처"><span class="nav-symbol icon-architecture" aria-hidden="true"></span><span class="nav-label">아키텍처</span></a>
+        <a class="surface-link project-panel-link" id="inbox-link" href="/" aria-label="작업 수신함" title="작업 수신함"><span aria-hidden="true">⌂</span><span class="nav-label">작업 수신함</span><span id="unread-count" hidden></span></a>
       </nav>
       <div class="sidebar-section-heading"><span title="활성 작업 우선 · 최근 작업 등록순">프로젝트 <span class="project-order-hint">활성·최신순</span></span><span id="project-count" class="sidebar-count">0</span></div>
       <label class="project-search search-field"><span class="visually-hidden">프로젝트 찾기</span><input id="project-search" type="search" autocomplete="off" placeholder="프로젝트 찾기"></label>
@@ -45,7 +47,7 @@
       <header class="context-bar">
         <div class="context-main">
           <button class="icon-button menu-button" id="menu-button" type="button" aria-label="프로젝트 목록 접기" aria-expanded="true" aria-controls="project-panel" data-tooltip="프로젝트 목록 접기"><span class="nav-symbol icon-panel" aria-hidden="true"></span></button>
-          <div class="current-context"><span>프로젝트</span><span class="context-divider" aria-hidden="true">/</span><strong id="current-project">선택 안 됨</strong></div>
+          <div class="current-context"><span id="context-scope">프로젝트</span><span class="context-divider" aria-hidden="true">/</span><strong id="current-project">선택 안 됨</strong><span class="workspace-path" id="current-project-path"></span></div>
         </div>
         <div class="context-actions">
           <button id="refresh-button" type="button" disabled><span class="nav-symbol icon-refresh" aria-hidden="true"></span>다시 읽기</button>
@@ -54,19 +56,61 @@
       </header>
       <div class="workspace-content">
         <div class="status-stack" id="status-stack" aria-live="polite" aria-atomic="true"></div>
-        <div class="workspace-heading"><div><h1 id="view-title">작업 현황</h1></div><p class="workspace-path" id="current-project-path"></p></div>
-        <nav class="view-tabs" aria-label="대시보드 보기">
-          <div role="tablist" aria-label="대시보드 보기" id="view-tabs">
-            <button id="tab-work" role="tab" aria-selected="true" aria-controls="view-panel" tabindex="0" data-view="work"><span class="nav-symbol icon-work" aria-hidden="true"></span>작업</button>
+        <div class="workspace-heading"><div><h1 id="view-title">작업 현황</h1></div><label class="global-search search-field"><span class="visually-hidden">선택 프로젝트 통합 검색</span><input id="global-search" type="search" autocomplete="off" placeholder="검색" disabled></label></div>
+
+        <nav class="view-tabs" aria-label="프로젝트 보기">
+          <div role="tablist" aria-label="프로젝트 보기" id="view-tabs">
+            <button id="tab-work" role="tab" aria-selected="true" aria-controls="view-panel" tabindex="0" data-view="work"><span class="nav-symbol icon-work" aria-hidden="true"></span>작업 현황</button>
             <button id="tab-documents" role="tab" aria-selected="false" aria-controls="view-panel" tabindex="-1" data-view="documents"><span class="nav-symbol icon-document" aria-hidden="true"></span>문서</button>
             <button id="tab-flow" role="tab" aria-selected="false" aria-controls="view-panel" tabindex="-1" data-view="flow"><span class="nav-symbol icon-flow" aria-hidden="true"></span>흐름 점검</button>
           </div>
-          <label class="global-search search-field"><span class="visually-hidden">선택 프로젝트 통합 검색</span><input id="global-search" type="search" autocomplete="off" placeholder="검색" disabled></label>
+
         </nav>
+        <div id="document-collections" class="collection-switch" role="group" aria-label="문서 모음" hidden>
+          <button type="button" data-collection="architecture">아키텍처</button>
+          <button type="button" data-collection="documents">개발 문서</button>
+        </div>
         <main class="main-panel transition-host" id="main-content" tabindex="-1"><div id="view-panel" role="tabpanel" aria-labelledby="tab-work"></div><div class="project-loading" role="status" aria-live="polite"><span>읽는 중</span></div></main>
       </div>
     </div>
   </div>
+  <template id="architecture-template">
+    <section class="architecture-reader">
+      <div class="architecture-navigation">
+        <header class="section-heading"><div class="section-heading-text"><h2>문서 목록</h2><p id="architecture-count"></p></div></header>
+        <input class="architecture-search" type="search" aria-label="아키텍처 문서 제목, 경로, 본문 검색" placeholder="아키텍처 문서 검색">
+        <button class="mobile-toc-toggle" type="button" aria-controls="architecture-documents" aria-expanded="false">목차 펼치기</button>
+        <nav id="architecture-documents" aria-label="아키텍처 문서 목록"></nav>
+      </div>
+      <div class="transition-host">
+        <div id="architecture-status" role="status"></div>
+        <article class="architecture-document" id="architecture-document" tabindex="-1"></article>
+        <div class="project-loading" role="status"><span>읽는 중</span></div>
+      </div>
+    </section>
+  </template>
+  <template id="inbox-template">
+    <div id="inbox">
+      <div class="inbox-tools">
+        <nav class="queue-nav" aria-label="작업 처리 상태">
+          <button type="button" data-folder="open" aria-pressed="true">검토 대기 <span></span></button>
+          <button type="button" data-folder="active" aria-pressed="false">진행 중 <span></span></button>
+          <button type="button" data-folder="later" aria-pressed="false">나중에 <span></span></button>
+          <button type="button" data-folder="done" aria-pressed="false">완료 <span></span></button>
+        </nav>
+        <div class="section-heading inbox-list-heading"><div class="section-heading-text"><h2>검토 대기</h2><p></p></div><select class="inbox-scope" aria-label="표시할 프로젝트"><option value="all">전체 프로젝트</option></select></div>
+      </div>
+      <div id="inbox-status" role="status"></div>
+      <div class="queue-paper">
+        <p class="queue-empty" hidden></p>
+        <section data-kind="question" aria-label="질문"><span class="count" hidden></span><div class="entries"></div></section>
+        <section data-kind="result" aria-label="결과"><span class="count" hidden></span><div class="entries"></div></section>
+        <section data-kind="active" aria-label="진행 중"><span class="count" hidden></span><div class="entries"></div></section>
+        <section data-kind="later" aria-label="나중에"><span class="count" hidden></span><div class="entries"></div></section>
+        <section data-kind="done" aria-label="완료"><span class="count" hidden></span><div class="entries"></div></section>
+      </div>
+    </div>
+  </template>
   <template id="loading-template"><div class="empty-state" role="status"><h2>불러오는 중</h2></div></template>
 </body>
 </html>

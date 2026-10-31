@@ -105,7 +105,7 @@ function readSecureFile(options) {
     if (!opened.isFile() || !sameIdentity(before, opened)) {
       throw architectureError('architecture-unavailable', '아키텍처 문서를 읽을 수 없습니다.');
     }
-    const buffer = Buffer.alloc(Number(opened.size));
+    const buffer = Buffer.alloc(Math.min(Number(opened.size), options.prefixBytes ?? Infinity));
     let offset = 0;
     while (offset < buffer.length) {
       const count = fs.readSync(descriptor, buffer, offset, buffer.length - offset, offset);
@@ -133,7 +133,8 @@ function readSecureFile(options) {
     }
 
     return {
-      content: decodeUtf8(buffer, options.utf8Code, options.utf8Message),
+      content: decodeUtf8(options.prefixBytes && opened.size > BigInt(buffer.length)
+        ? buffer.subarray(0, Math.max(0, buffer.lastIndexOf(10))) : buffer, options.utf8Code, options.utf8Message),
       modifiedAt: new Date(Number(current.mtimeMs)).toISOString(),
     };
   } catch (error) {
@@ -377,7 +378,16 @@ class ArchitectureService {
       language: state.manifest.language,
       git_checkpoint: state.manifest.git_checkpoint,
       manifest_path: state.manifestRelativePath,
-      documents: state.manifest.documents,
+      documents: state.manifest.documents.map(document => {
+        try {
+          const header = readRegisteredFile(state, document, 4096).content;
+          const title = header.match(/^# +(.+?)\s*$/m)?.[1];
+          return title ? { ...document, title } : document;
+        } catch {
+          // Unavailable documents remain selectable so the reader can show the specific error.
+          return document;
+        }
+      }),
     };
   }
 
@@ -406,7 +416,12 @@ function readArchitectureDocument(state, documentId) {
   if (!registered) {
     throw architectureError('architecture-document-not-found', '아키텍처 문서를 찾을 수 없습니다.', 404);
   }
+  return readRegisteredFile(state, registered);
+}
+
+function readRegisteredFile(state, registered, prefixBytes) {
   return readSecureFile({
+    prefixBytes,
     path: path.resolve(state.architectureRoot, ...registered.path.split('/')),
     projectRoot: state.projectRoot,
     storageRoot: state.architectureRoot,

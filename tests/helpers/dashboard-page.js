@@ -15,6 +15,7 @@ function deferred() {
 }
 
 async function openPage(t, { page = 'dashboard', query = '', routes = {}, storage = {}, width = 1024, setup } = {}) {
+  routes = { '/api/v1/inbox': {items: []}, '/api/v1/health': {version: '1'}, ...routes };
   const calls = [], errors = [], intervals = [];
   class Assets extends ResourceLoader {
     fetch(url) {
@@ -24,8 +25,8 @@ async function openPage(t, { page = 'dashboard', query = '', routes = {}, storag
   }
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', error => errors.push(error));
-  const dom = new JSDOM(fs.readFileSync(path.join(assets, page === 'intro' ? 'index.html' : `${page}.html`), 'utf8'), {
-    url: `http://127.0.0.1/${page === 'intro' ? '' : page}${query}`,
+  const dom = new JSDOM(fs.readFileSync(path.join(assets, 'dashboard.html'), 'utf8'), {
+    url: `http://127.0.0.1/${page === 'home' ? '' : page}${query}`,
     runScripts: 'dangerously', resources: new Assets(), virtualConsole, pretendToBeVisual: true,
     beforeParse(window) {
       window.innerWidth = width;
@@ -78,6 +79,7 @@ function index(project, title = project.name) {
 async function dashboard(t, options = {}) {
   const projects = options.projects || [project('alpha'), project('beta')];
   const routes = { '/api/v1/health': { version: '0.22.2' }, '/api/v1/projects': { projects },
+    ...Object.fromEntries(projects.map(p => [`/api/v1/projects/${p.id}/architecture/index`, {documents: []}])),
     ...Object.fromEntries(projects.map(p => [`/api/v1/projects/${p.id}/index`, index(p)])), ...options.routes };
   return openPage(t, { ...options, routes });
 }

@@ -17,6 +17,32 @@
     diagram.replaceChildren(template.content);
   }
 
+  function c4Relationships(source) {
+    const model = globalThis.pele.parse(source);
+    if (!model.rels.length) return null;
+    const names = new Map([...model.shapes, ...model.boundaries].map(node => [node.alias, node.label]));
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = `연결 관계 ${model.rels.length}개`;
+    const table = document.createElement('table');
+    const headings = table.createTHead().insertRow();
+    for (const label of ['출발', '도착', '관계']) {
+      const heading = document.createElement('th');
+      heading.textContent = label;
+      headings.append(heading);
+    }
+    const body = table.createTBody();
+    for (const rel of model.rels) {
+      const row = body.insertRow();
+      for (const value of [names.get(rel.from) || rel.from, names.get(rel.to) || rel.to, [rel.label, rel.techn, rel.descr].filter(Boolean).join(' / ')]) {
+        row.insertCell().textContent = value;
+      }
+    }
+    details.className = 'c4-relationships';
+    details.append(summary, table);
+    return details;
+  }
+
   async function render(root) {
     const blocks = [...root.querySelectorAll('pre > code.language-mermaid')];
     if (blocks.length === 0 || !globalThis.pele) return false;
@@ -35,7 +61,7 @@
         const style = getComputedStyle(diagram);
         await document.fonts.load(`16px ${style.fontFamily}`, code.textContent);
         if (!diagram.isConnected) continue;
-        const { svg } = globalThis.pele.render(code.textContent, {
+        const { svg, type } = globalThis.pele.render(code.textContent, {
           idPrefix: `emeth-diagram-${++nextId}`,
           fontFamily: style.fontFamily,
           fontSize: 16,
@@ -44,6 +70,26 @@
           images: false,
         });
         insertSvg(diagram, svg);
+        if (type === 'c4') {
+          diagram.classList.add('c4-overview');
+          diagram.setAttribute('aria-label', 'C4 구조도');
+          const toggle = document.createElement('button');
+          toggle.type = 'button';
+          toggle.className = 'diagram-scale';
+          toggle.textContent = '원래 크기로 보기';
+          toggle.addEventListener('click', () => {
+            const fit = diagram.classList.toggle('c4-overview');
+            toggle.textContent = fit ? '원래 크기로 보기' : '전체 구조 보기';
+          });
+          const toolbar = document.createElement('div');
+          toolbar.className = 'diagram-toolbar';
+          const caption = document.createElement('strong');
+          caption.textContent = 'C4 구조도';
+          toolbar.append(caption, toggle);
+          diagram.before(toolbar);
+          const relationships = c4Relationships(code.textContent);
+          if (relationships) diagram.after(relationships);
+        }
       } catch {
         if (diagram.isConnected) {
           diagram.replaceWith(original);

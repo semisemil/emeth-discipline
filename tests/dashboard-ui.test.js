@@ -88,6 +88,7 @@ async function documentPage(t, routes = {}) {
     ['/api/v1/projects/' + AVAILABLE_ID + '/index']: { ...indexFixture, read_at: 'initial' }, ...routes,
   } });
   page.click('[data-view="documents"]');
+  page.click('[data-collection="documents"]');
   return page;
 }
 const documentRoute = (kind, id) => '/api/v1/projects/' + AVAILABLE_ID + '/documents/' + kind + '/' + id;
@@ -164,6 +165,7 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
   assert.deepEqual([...page.document.querySelectorAll('[data-project-id]')].map(node => node.dataset.projectId), [UNAVAILABLE_ID]);
   page.change('#project-search', '', 'input');
   page.click('[data-view="documents"]');
+  page.click('[data-collection="documents"]');
   const tabs = page.get('#view-tabs');
   assert.equal(tabs.getAttribute('role'), 'tablist');
   assert.equal(page.get('#status-stack').getAttribute('aria-live'), 'polite');
@@ -196,6 +198,7 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
   page.click('[data-focus-key="work:list-toggle"]');
   assert.equal(page.get('#work-list').hidden, true);
   page.click('[data-view="documents"]');
+  page.click('[data-collection="documents"]');
   for (const [key, value] of [['documents:kind', 'spec'], ['documents:status', 'completed'], ['documents:sort', 'id-asc']]) {
     const selector = `[data-focus-key="${key}"]`;
     page.get(selector).focus(); page.change(selector, value);
@@ -207,7 +210,7 @@ test('dashboard controls keep keyboard focus, sort state and independent list vi
   page.click('[data-focus-key="documents:list-toggle"]');
   assert.equal(page.get('#document-list').hidden, true);
   assert.equal(tabs.querySelector('[aria-selected="true"]').dataset.view, 'documents');
-  assert.equal(new URL(page.get('#architecture-link').href).searchParams.get('project'), AVAILABLE_ID);
+  assert.equal(page.get('[data-collection="documents"]').getAttribute('aria-pressed'), 'true');
   page.change('[data-focus-key="documents:status"]', 'ready');
   page.change('#global-search', 'PL-9999', 'input');
   assert.match(page.get('#document-list').textContent, /SPEC-0005/);
@@ -242,8 +245,8 @@ test('visible-page refresh, unavailable removal and Markdown rendering use real 
   assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="A"]'));
   assert.ok(page.get('.diagram .pele-flowchart .pele-node[data-id="B"]'));
   const before = page.calls.length;
-  assert.equal(page.intervals[0].delay, 30000);
-  page.intervals[0].callback(); await page.settle();
+  assert.equal(page.intervals.find(interval => interval.delay === 30000).delay, 30000);
+  page.intervals.find(interval => interval.delay === 30000).callback(); await page.settle();
   page.document.dispatchEvent(new page.window.Event('visibilitychange')); await page.settle();
   assert.equal(page.calls.slice(before).filter(call => call.url.endsWith('/index')).length, 2);
   const gone = { ...project('gone'), availability: 'unavailable' };

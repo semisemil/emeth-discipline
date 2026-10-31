@@ -1,18 +1,19 @@
 ---
 name: dashboard-server
-when_to_use: "Explicit request only: add, open, inspect, or stop the Emeth dashboard."
+when_to_use: "Explicit request only: manage the Emeth dashboard or switch inbox recording on or off."
 disable-model-invocation: true
-description: Add the current Emeth Discipline project, start and open the dashboard, or inspect or stop its server.
-argument-hint: "add | open | status | stop"
+description: Register a project, open or manage the dashboard server, or toggle inbox recording.
+argument-hint: "add | open | status | stop | on | off"
 ---
 
 # Dashboard Server
 
-Accept exactly one action: `add`, `open`, `status`, or `stop`.
+Accept exactly one action from the list below.
 
 Resolve `<plugin-root>` from this SKILL.md; do not substitute a project-local script.
 The dashboard listens on `http://127.0.0.1:43127`.
 
+- `on` or `off`: Run `node <plugin-root>/dashboard/inbox.js <action>` and report the returned setting. It applies to this user's registered projects across Codex, Claude Code and Mixdog and defaults to off.
 - `add`: Treat the current working directory as the project root.
   If it contains neither a `.emeth` nor a legacy `.proofline` directory, report that it is not an initialized Emeth Discipline project and stop without creating state.
   Otherwise run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-current-working-directory>`.

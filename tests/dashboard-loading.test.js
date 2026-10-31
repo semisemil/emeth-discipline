@@ -10,7 +10,7 @@ test('background refresh cannot supersede a pending project switch and a failed 
   page.routes['/api/v1/projects/beta/index'] = pending.promise;
   page.click('[data-project-id="beta"]');
   page.document.dispatchEvent(new page.window.Event('visibilitychange'));
-  page.intervals[0].callback();
+  page.intervals.find(interval => interval.delay === 30000).callback();
   assert.equal(page.calls.filter(call => call.url === '/api/v1/projects/beta/index').length, 1);
   pending.resolve({ error: { code: 'project-unavailable', message: 'Offline' } });
   await page.settle();

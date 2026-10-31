@@ -31,6 +31,12 @@ async function run(input) {
   }
 
   if (event === 'UserPromptSubmit') {
+    try {
+      const dashboard = require('../dashboard/inbox').notice(input);
+      if (dashboard) contexts.push(dashboard);
+    } catch (error) {
+      process.stderr.write(`Dashboard unavailable: ${error.message}\n`);
+    }
     const context = require('../lib/document-number').notice(input);
     if (context) contexts.push(context);
     const source = require('../lib/request-source').notice(input);

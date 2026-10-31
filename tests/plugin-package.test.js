@@ -120,15 +120,15 @@ test('isolated package starts its dashboard and serves packaged assets', async t
     assert.equal(running.version, JSON.parse(fs.readFileSync(path.join(f.plugin, '.codex-plugin/plugin.json'), 'utf8')).version);
     const origin = `http://127.0.0.1:${running.port}`;
     for (const [route, file] of [
-      [`/?expected_version=${running.version}`, 'index.html'],
+      [`/?expected_version=${running.version}`, 'dashboard.html'],
       ['/dashboard?project=11111111-1111-4111-8111-111111111111', 'dashboard.html'],
-      ['/architecture?project=11111111-1111-4111-8111-111111111111&document=system-context', 'architecture.html'],
+      ['/architecture?project=11111111-1111-4111-8111-111111111111&document=system-context', 'dashboard.html'],
     ]) {
       const page = await fetch(origin + route);
       assert.equal(page.status, 200, route);
       assert.equal(await page.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', file), 'utf8'));
     }
-    for (const asset of ['core.js', 'motion.js', 'app.js', 'intro.js', 'architecture.js', 'diagrams.js', 'styles.css', 'vendor/pele.global.js']) {
+    for (const asset of ['core.js', 'motion.js', 'app.js', 'inbox.js', 'inbox.css', 'architecture.js', 'diagrams.js', 'styles.css', 'vendor/pele.global.js']) {
       const response = await fetch(`${origin}/${asset}`);
       assert.equal(response.status, 200, asset);
       assert.equal(await response.text(), fs.readFileSync(path.join(f.plugin, 'dashboard/assets', asset), 'utf8'));
