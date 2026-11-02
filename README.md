@@ -179,6 +179,32 @@ flowchart LR
 
 `issue-ledger`는 버그, 일반 작업, 기능, 조사, 문서화, 유지보수 항목을 프로젝트에 저장합니다.
 
+**이슈 자동 등록과 관련 Design 자동 갱신은 기본 비활성화**입니다.
+직접 요청한 기록 작업과 워크플로의 필수 문서 작업은 설정과 관계없이 수행합니다.
+
+전역 자동 기록은 대시보드 명령으로 설정합니다.
+
+```text
+/emeth-discipline:dashboard-server work-records on
+/emeth-discipline:dashboard-server work-records off
+/emeth-discipline:dashboard-server work-records status
+```
+
+`on`은 켜기, `off`는 끄기, `status`는 전역 설정 확인입니다.
+명령이 다음 위치의 `work-records.json`을 관리합니다.
+
+| 환경 | 전역 설정 위치 |
+| --- | --- |
+| Windows | `%APPDATA%\emeth\work-records.json` |
+| Linux, macOS | `$XDG_CONFIG_HOME/emeth/work-records.json`, 미설정 시 `~/.config/emeth/work-records.json` |
+
+```json
+{"schema_version": 1, "enabled": true}
+```
+
+프로젝트의 `.emeth/work-records.json`은 같은 형식을 쓰며 **전역 설정보다 우선**합니다.
+설정 안내는 새 대화나 컨텍스트 재구성 시 반영됩니다.
+
 ```text
 /emeth-discipline:issue-ledger
 설정 파일 호환성 문제를 이슈로 등록해줘.
@@ -267,6 +293,9 @@ Codex, Claude Code, Mixdog의 공통 수신함 기록은 기본적으로 꺼져 
 | `/emeth-discipline:dashboard-server open` | 필요하면 서버를 시작하고 대시보드 열기 |
 | `/emeth-discipline:dashboard-server on` | 등록된 모든 프로젝트에서 수신함 기록 켜기 |
 | `/emeth-discipline:dashboard-server off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
+| `/emeth-discipline:dashboard-server work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
+| `/emeth-discipline:dashboard-server work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
+| `/emeth-discipline:dashboard-server work-records status` | 전역 자동 기록 설정 확인 |
 | `/emeth-discipline:dashboard-server status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
 | `/emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
 

@@ -17,8 +17,7 @@ const {
 } = require('../../../dashboard/records/record-parser.js');
 
 function fail(message, code = 1) {
-  console.error(message);
-  process.exit(code);
+  throw Object.assign(new Error(message), { exitCode: code });
 }
 
 function parseArgs(argv) {
@@ -91,16 +90,9 @@ function readAllIssues(root) {
   return { issues, errors };
 }
 
-function findIssue(root, id) {
-  const matches = [];
-  for (const filePath of listIssueFiles(root)) {
-    try {
-      const issue = readIssue(filePath);
-      if (issue.id === id) matches.push({ filePath, issue });
-    } catch {
-      // Invalid files cannot identify the requested issue.
-    }
-  }
+function findIssue(root, id, issues = readAllIssues(root).issues) {
+  const matches = issues.filter(issue => issue.id === id)
+    .map(issue => ({ filePath: path.join(root, issue.fileName), issue }));
 
   if (matches.length === 0) {
     fail(`이슈를 찾지 못했습니다: ${id}`);
@@ -111,22 +103,20 @@ function findIssue(root, id) {
   return matches[0];
 }
 
-function loadJsonFile(filePath, label) {
+function loadJsonFile(filePath, label, data) {
+  if (data !== undefined) {
+    if (filePath !== undefined) fail('Choose a file/stdin input or --data');
+    try { return JSON.parse(decodeURIComponent(data)); }
+    catch (error) { fail(`${label} --data는 URI로 인코딩한 JSON이어야 합니다: ${error.message}`); }
+  }
   if (!filePath) {
     fail(`${label} JSON 파일 경로가 필요합니다.`);
   }
   try {
-    return JSON.parse(fs.readFileSync(path.resolve(filePath), 'utf8'));
+    return JSON.parse(fs.readFileSync(filePath === '-' ? 0 : path.resolve(filePath), 'utf8').replace(/^\uFEFF/, ''));
   } catch (error) {
     fail(`${label} JSON을 읽지 못했습니다: ${error.message}`);
   }
-}
-
-function containsLinkWork(operation) {
-  return operation?.type === 'link_work'
-    || (operation?.type === 'batch'
-      && Array.isArray(operation.operations)
-      && operation.operations.some((item) => item?.type === 'link_work'));
 }
 
 function requireOption(options, key, label) {
@@ -145,7 +135,7 @@ function validateWorkBacklink(issueId, work, projectRoot) {
   if (!fs.existsSync(artifactPath) || !fs.statSync(artifactPath).isFile()) {
     fail(`연결할 ${label} 문서가 없습니다: ${artifactPath}`);
   }
-  const content = fs.readFileSync(artifactPath, 'utf8');
+  const content = fs.readFileSync(artifactPath, 'utf8').replace(/^\ufeff/, '');
   let metadata;
   try {
     const { metadataText } = parseFrontmatter(content);
@@ -163,12 +153,14 @@ function validateWorkBacklink(issueId, work, projectRoot) {
   }
 }
 
-function writeV2Issue(filePath, issue) {
-  const resolved = path.resolve(filePath);
-  if (path.extname(resolved) !== '.json') {
-    fail('v2 구조화 갱신은 .json 파일에서만 허용됩니다.');
-  }
-  fs.writeFileSync(resolved, model.serializeIssue(issue), 'utf8');
+function withIssueStoreLock(root, action) {
+  assertIssuesRoot(root);
+  // Share the creation lock because relation validation reads the whole store.
+  const lockFile = path.join(root, '.create.lock');
+  return withFileLock(lockFile, action, {
+    code: 'issue-store-locked',
+    message: `다른 이슈 저장이 끝나지 않았습니다: ${lockFile}`
+  });
 }
 
 function resolveProjectRoot(issuesRoot, explicitProjectRoot) {
@@ -182,17 +174,21 @@ function resolveProjectRoot(issuesRoot, explicitProjectRoot) {
   return process.cwd();
 }
 
-function registerWrittenProject(issuesRoot, explicitProjectRoot) {
+function registerWrittenProject(issuesRoot, explicitProjectRoot, emit = true) {
   const projectRoot = resolveProjectRoot(issuesRoot, explicitProjectRoot);
   try {
-    console.error(`registration: ${JSON.stringify(registerProject(projectRoot))}`);
+    const registration=registerProject(projectRoot);
+    if (emit) console.error(`registration: ${JSON.stringify(registration)}`);
+    return {status:registration.status};
   } catch (error) {
-    console.error(`registration-failed: ${JSON.stringify({
+    const failure={
       error: {
         code: error.code || 'registration-failed',
         message: error.message
       }
-    })}`);
+    };
+    if (emit) console.error(`registration-failed: ${JSON.stringify(failure)}`);
+    return failure;
   }
 }
 
@@ -209,6 +205,17 @@ function commandList(options) {
     .filter((issue) => !query || issue.searchText.includes(query))
     .sort((left, right) => left.id.localeCompare(right.id, undefined, { numeric: true }));
 
+  if (options.details) {
+    const limit = options.limit === undefined ? 10 : Number(options.limit);
+    const offset = options.offset === undefined ? 0 : Number(options.offset);
+    if (typeof options.limit === 'boolean' || typeof options.offset === 'boolean'
+        || !Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0) {
+      fail('--details: --limit은 1~100, --offset은 0 이상의 정수여야 합니다.');
+    }
+    visible.slice(offset, offset + limit).forEach(issue => process.stdout.write(model.buildBrief(issue)));
+    if (offset + limit < visible.length) console.log(`more: ${visible.length - offset - limit}; next: --offset ${offset + limit}`);
+    return;
+  }
   visible.forEach((issue) => console.log(`${issue.id}\t${issue.status}\t${issue.title}`));
 }
 
@@ -328,8 +335,8 @@ function fillGeneratedFields(issue) {
   return Boolean(issue?.identity && (issue.identity.id === undefined || issue.identity.id === 'PL-0000'));
 }
 
-// Readers see either no file or the complete Issue.
-function publishNewIssue(filePath, issue) {
+// Readers see the previous complete Issue or its complete replacement.
+function publishIssue(filePath, issue) {
   const temporary = `${filePath}.${crypto.randomUUID()}.tmp`;
   try {
     fs.writeFileSync(temporary, model.serializeIssue(issue), { encoding: 'utf8', flag: 'wx' });
@@ -340,10 +347,11 @@ function publishNewIssue(filePath, issue) {
 }
 
 // Concurrent creates allocate IDs and publish one at a time.
-function createUnderLock(root, issue, generatedId) {
+function createUnderLock(root, issue, generatedId, ifEmpty = false) {
   const loaded = readAllIssues(root);
   if (loaded.errors.length) return { error: loaded.errors.join('\n') };
   const existing = loaded.issues;
+  if (ifEmpty && existing.length) return { error: 'issue-store-changed: Issue store is populated; refresh discovery before choosing or registering work.' };
   if (generatedId) issue.identity.id = model.nextIssueId(fs.readdirSync(root), existing);
   const validation = model.validateV2Issue(issue);
   if (!validation.valid) return { error: validation.errors.join('\n') };
@@ -355,29 +363,75 @@ function createUnderLock(root, issue, generatedId) {
   if (relationErrors.length) return { error: relationErrors.join('\n') };
   const filePath = path.join(root, `${issue.identity.id}.json`);
   if (fs.existsSync(filePath)) return { error: `이미 존재하는 파일입니다: ${filePath}` };
-  publishNewIssue(filePath, issue);
-  return { filePath, warnings: validation.warnings };
+  publishIssue(filePath, issue);
+  return { filePath, warnings: validation.warnings, view: candidate };
 }
 
 function commandCreate(options) {
+  const format = options.input_format === undefined ? 'v2' : options.input_format;
+  if (!['v2', 'brief'].includes(format)) fail('--input-format은 v2 또는 brief여야 합니다.');
+  if (options.if_empty !== undefined && options.if_empty !== true) fail('--if-empty는 값을 받지 않는 플래그입니다.');
+  if (options.output_format !== undefined && options.output_format !== 'json') fail('--output-format accepts json only');
   const root = resolveIssuesRoot(options.root);
   ensureDefaultStore(root);
   assertIssuesRoot(root);
-  const issue = loadJsonFile(options.input, '이슈');
+  const input = loadJsonFile(options.input, '이슈', options.data);
+  const issue = format === 'brief' ? expandBriefIssue(input) : input;
   const generatedId = fillGeneratedFields(issue);
-  const lockFile = path.join(root, '.create.lock');
-  let result;
-  try {
-    result = withFileLock(lockFile, () => createUnderLock(root, issue, generatedId),
-      { code: 'issue-create-locked', message: `다른 이슈 생성이 끝나지 않았습니다: ${lockFile}` });
-  } catch (error) {
-    if (error.code !== 'issue-create-locked') throw error;
-    fail(error.message);
-  }
+  const result = withIssueStoreLock(root, () => createUnderLock(root, issue, generatedId, options.if_empty === true));
   if (result.error) fail(result.error);
-  registerWrittenProject(root, options.project_root);
-  result.warnings.forEach((warning) => console.error(`warning: ${warning}`));
-  console.log(result.filePath);
+  const registration=registerWrittenProject(root, options.project_root,options.output_format!=='json');
+  if (options.output_format === 'json') console.log(JSON.stringify({path:result.filePath,id:result.view.id,
+    state:result.view.raw.state,criteria:result.view.raw.criteria,claims:result.view.raw.problem?.claims||[],registration,warnings:result.warnings}));
+  else {
+    result.warnings.forEach((warning) => console.error(`warning: ${warning}`));
+    console.log(result.filePath);
+    if (format === 'brief') process.stdout.write(model.buildBrief(result.view));
+  }
+}
+
+function briefObject(value, fields, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label}: 객체가 필요합니다.`);
+  }
+  const unknown = Object.keys(value).filter(key => !fields.includes(key));
+  if (unknown.length) throw new Error(`${label}: 알 수 없는 필드 ${unknown.join(', ')}`);
+  return value;
+}
+
+function briefTexts(value, label) {
+  if (!Array.isArray(value) || value.some(text => typeof text !== 'string' || !text.trim())) {
+    throw new Error(`${label}: 비어 있지 않은 문자열 배열이 필요합니다.`);
+  }
+  return value;
+}
+
+function expandBriefIssue(input) {
+  briefObject(input, ['type', 'title', 'risk', 'origin', 'current_summary', 'next_action', 'problem', 'objective', 'criteria', 'relations'], 'brief');
+  const origin = briefObject(input.origin, ['kind', 'summary', 'refs'], 'origin');
+  const usesClaims = ['bug', 'research'].includes(input.type);
+  if (usesClaims && input.objective !== undefined || !usesClaims && input.problem !== undefined) {
+    throw new Error('brief: type에 맞는 problem 또는 objective만 사용합니다.');
+  }
+  const subject = usesClaims
+    ? briefObject(input.problem, ['claims', 'impact'], 'problem')
+    : briefObject(input.objective, ['summary', 'constraints'], 'objective');
+  const relations = input.relations === undefined ? [] : input.relations;
+  if (!Array.isArray(relations)) throw new Error('relations: 배열이 필요합니다.');
+  relations.forEach(relation => briefObject(relation, ['type', 'target'], 'relations'));
+  return {
+    schema_version: 2,
+    identity: { id: 'PL-0000', aliases: [], type: input.type, mode: 'simple', title: input.title, risk: input.risk },
+    origin: { ...origin, refs: origin.refs === undefined ? [] : origin.refs },
+    state: { status: 'open', current_summary: input.current_summary === undefined ? origin.summary : input.current_summary, next_action: input.next_action },
+    ...(usesClaims ? { problem: {
+      claims: briefTexts(subject.claims, 'problem.claims').map((text, index) => ({ id: `P${index + 1}`, state: 'reported', text, evidence_refs: [] })),
+      impact: subject.impact,
+    } } : { objective: { summary: subject.summary, constraints: subject.constraints === undefined ? [] : subject.constraints } }),
+    criteria: briefTexts(input.criteria, 'criteria').map((text, index) => ({ id: `C${index + 1}`, text, evidence_refs: [] })),
+    relations,
+    context: [], artifacts: [], evidence: [], events: [],
+  };
 }
 
 function commandUpdate(options) {
@@ -385,25 +439,32 @@ function commandUpdate(options) {
   if (!id) {
     fail('update 명령에는 이슈 ID가 필요합니다.');
   }
+  if (options.output_format !== undefined && options.output_format !== 'json') fail('--output-format accepts json only');
   const root = resolveIssuesRoot(options.root);
-  const { filePath, issue } = findIssue(root, id);
+  const format = options.input_format === undefined ? 'v2' : options.input_format;
+  if (!['v2', 'brief'].includes(format)) fail('--input-format은 v2 또는 brief여야 합니다.');
+  const input = loadJsonFile(options.operation, 'operation', options.data);
+  const { filePath, result, candidate } = withIssueStoreLock(root, () => updateUnderLock(root, id, options, format, input));
+  const registration=registerWrittenProject(root, options.project_root,options.output_format!=='json');
+  if (options.output_format === 'json') console.log(JSON.stringify({path:filePath,brief:model.buildBrief(candidate),registration,warnings:result.validation.warnings}));
+  else {
+    result.validation.warnings.forEach((warning) => console.error(`warning: ${warning}`));
+    console.log(filePath);
+  }
+}
+
+function updateUnderLock(root, id, options, format, input) {
+  const loaded = readAllIssues(root);
+  if (loaded.errors.length) fail(loaded.errors.join('\n'));
+  const { filePath, issue } = findIssue(root, id, loaded.issues);
   if (path.extname(filePath) !== '.json') {
     fail('레거시 Markdown은 먼저 검토 기반 마이그레이션이 필요합니다.');
   }
-  const operation = loadJsonFile(options.operation, 'operation');
-  if (containsLinkWork(operation)) {
-    fail('link_work는 역링크를 검증하는 link-work 명령으로 실행해야 합니다.');
-  }
   const raw = issue.raw;
-  let result;
-  try {
-    result = model.applyOperation(raw, operation);
-  } catch (error) {
-    fail(error.message);
-  }
-  const loaded = readAllIssues(root);
-  if (loaded.errors.length) {
-    fail(loaded.errors.join('\n'));
+  const operation = format === 'brief' ? expandBriefUpdate(input, raw) : input;
+  const result = model.applyOperation(raw, operation);
+  for (const item of operation.type === 'batch' ? operation.operations : [operation]) {
+    if (item.type === 'link_work') validateWorkBacklink(id, item.work, path.resolve(options.project_root || process.cwd()));
   }
   const candidate = model.toViewModel(result.issue, path.basename(filePath), result.validation);
   const issues = loaded.issues.map((issue) => issue.id === id ? candidate : issue);
@@ -411,10 +472,49 @@ function commandUpdate(options) {
   if (relationErrors.length) {
     fail(relationErrors.join('\n'));
   }
-  writeV2Issue(filePath, result.issue);
-  registerWrittenProject(root, options.project_root);
-  result.validation.warnings.forEach((warning) => console.error(`warning: ${warning}`));
-  console.log(filePath);
+  publishIssue(filePath, result.issue);
+  return { filePath, result, candidate };
+}
+
+function expandBriefUpdate(input, issue) {
+  briefObject(input, ['current_summary', 'work', 'evidence', 'status', 'next_action'], 'brief update');
+  const list = (value, label) => {
+    if (value === undefined) return [];
+    if (!Array.isArray(value)) throw new Error(`${label}: 배열이 필요합니다.`);
+    return value;
+  };
+  const work = list(input.work, 'work');
+  const evidence = list(input.evidence, 'evidence');
+  work.forEach(item => briefObject(item, ['kind', 'id', 'location'], 'work'));
+  evidence.forEach(item => briefObject(item, ['id', 'kind', 'location', 'observation', 'observed_at', 'targets', 'claims'], 'evidence'));
+  const used = new Set([...issue.evidence.map(item => item.id), ...evidence.map(item => item.id)]);
+  let next = 1;
+  const operations = work.map(item => ({ type: 'link_work', work: item }));
+  const now = new Date().toISOString();
+  for (const item of evidence) {
+    const claims = list(item.claims, 'evidence.claims');
+    claims.forEach(claim => briefObject(claim, ['id', 'state'], 'evidence.claims'));
+    let id = item.id;
+    if (id === undefined) {
+      while (used.has(`E${next}`)) next++;
+      id = `E${next++}`;
+      used.add(id);
+    }
+    const targets = briefTexts(item.targets === undefined ? [] : item.targets, 'evidence.targets');
+    operations.push({ type: 'add_evidence', evidence: {
+      id, kind: item.kind, location: item.location, observation: item.observation,
+      observed_at: item.observed_at === undefined ? now : item.observed_at,
+    }, targets: [...new Set([...targets, ...claims.map(claim => claim.id)])] });
+    for (const claim of claims) operations.push({ type: 'set_claim_state', claim_id: claim.id, state: claim.state, evidence_refs: [id] });
+  }
+  const status = input.status === undefined ? issue.state.status : input.status;
+  if (!['open', 'doing', 'resolved'].includes(status)) throw new Error('brief update: status는 open, doing 또는 resolved여야 합니다.');
+  if (status === 'resolved' && Object.hasOwn(input, 'next_action')) throw new Error('brief update: resolved에는 next_action을 전달하지 않습니다.');
+  operations.push({ type: 'set_state', status,
+    ...(input.next_action !== undefined ? { next_action: input.next_action }
+      : status === 'resolved' ? {} : { next_action: issue.state.next_action }),
+  });
+  return { type: 'batch', current_summary: input.current_summary, operations };
 }
 
 function commandLinkWork(options) {
@@ -423,6 +523,17 @@ function commandLinkWork(options) {
     fail('link-work 명령에는 이슈 ID가 필요합니다.');
   }
   const root = resolveIssuesRoot(options.root);
+  const { filePath, result, unchanged } = withIssueStoreLock(root, () => linkWorkUnderLock(root, id, options));
+  if (unchanged) {
+    console.log(`no-op: ${filePath}`);
+    return;
+  }
+  registerWrittenProject(root, options.project_root);
+  result.validation.warnings.forEach((warning) => console.error(`warning: ${warning}`));
+  console.log(filePath);
+}
+
+function linkWorkUnderLock(root, id, options) {
   const { filePath, issue } = findIssue(root, id);
   if (path.extname(filePath) !== '.json') {
     fail('레거시 Markdown은 먼저 검토 기반 마이그레이션이 필요합니다.');
@@ -444,22 +555,14 @@ function commandLinkWork(options) {
     }
   }
 
-  let result;
-  try {
-    result = model.applyOperation(raw, operation);
-  } catch (error) {
-    fail(error.message);
-  }
+  const result = model.applyOperation(raw, operation);
   validateWorkBacklink(id, operation.work, path.resolve(options.project_root || process.cwd()));
   const comparable = { ...result.issue, updated_at: raw.updated_at };
   if (model.serializeIssue(comparable) === model.serializeIssue(raw)) {
-    console.log(`no-op: ${filePath}`);
-    return;
+    return { filePath, unchanged: true };
   }
-  writeV2Issue(filePath, result.issue);
-  registerWrittenProject(root, options.project_root);
-  result.validation.warnings.forEach((warning) => console.error(`warning: ${warning}`));
-  console.log(filePath);
+  publishIssue(filePath, result.issue);
+  return { filePath, result };
 }
 
 function printLinkWorkHelp() {
@@ -474,15 +577,29 @@ function printHelp() {
   console.log(`Emeth Discipline Issue Ledger v2
 
 Usage:
-  issue-ledger.js list [--root DIR] [--all] [--search TEXT]
+  issue-ledger.js list [--root DIR] [--all] [--search TEXT] [--details [--limit N] [--offset N]]
   issue-ledger.js show ID [--root DIR] [--evidence E1,E2] [--events]
   issue-ledger.js validate [FILE] [--root DIR]
-  issue-ledger.js create --input ISSUE.json [--root DIR]
-  issue-ledger.js update ID --operation OPERATION.json [--root DIR]
+  issue-ledger.js create --input ISSUE.json|- [--input-format v2|brief] [--output-format json] [--if-empty] [--root DIR]
+  issue-ledger.js update ID --operation OPERATION.json|- [--input-format v2|brief] [--output-format json] [--project-root DIR] [--root DIR]
   issue-ledger.js link-work ID --help
 
 Update operation types:
-  batch, set_state, add_evidence, link_evidence, add_event, set_milestone, add_relation`);
+  batch, set_state, set_claim_state, link_work, add_evidence, link_evidence, add_event, set_milestone, add_relation
+
+Brief create: type, title, risk, origin {kind, summary, refs?}, next_action,
+  criteria (strings), problem {claims (strings), impact} for bug/research,
+  or objective {summary, constraints?} otherwise; current_summary and relations optional.
+  Stores a validated simple/open v2 issue with generated IDs and timestamps.
+  Claims start reported. Unknown fields are rejected. Default input format remains v2.
+  Create/update also accept --data URI_ENCODED_JSON instead of --input/--operation.
+  Create --output-format json returns path, id, state, criteria and claims for sequential work.
+  --if-empty rechecks the store inside the create lock and refuses a populated store.
+Brief update: current_summary, work? [{kind,id,location}], evidence? [{id?,kind,
+  location,observation,observed_at?,targets?,claims?:[{id,state}]}], status?, next_action?.
+  Supplies unused evidence IDs/timestamps; claim changes are explicit, not inferred.
+  Links, proof and open/doing/resolved state validate together before one save.
+  --output-format json returns the saved path and validated current brief; default output remains the path.`);
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -510,7 +627,12 @@ function main(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) {
-  main();
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = error.exitCode || 1;
+  }
 }
 
 module.exports = {

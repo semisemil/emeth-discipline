@@ -1,6 +1,8 @@
 # Issue Ledger v2
 
-Read this reference for normal update operation shapes, schema repair, or tool maintenance. Creation from templates does not require the full reference. Run the CLI from the project root.
+This reference defines v2 state, criteria and evidence semantics.
+Ordinary brief updates use the supplied work-record contract or CLI help.
+Run the CLI from the project root.
 
 ## Canonical groups
 
@@ -13,8 +15,8 @@ Read this reference for normal update operation shapes, schema repair, or tool m
 - `criteria`: independently verifiable C-ID conditions
 - `milestones`: composite-only M-ID outcomes
 - `relations`: directional issue links
-- `context`: related files or documents that do not prove a judgment
-- `artifacts`: external reports, full logs, tables, hashes, and methods
+- `context`: objects with `kind` and `location` for related files or documents that do not prove a judgment, such as `{"kind":"source","location":"src/report.js"}`
+- `artifacts`: objects with `kind`, `location`, and `summary` for external reports, full logs, tables, hashes, and methods
 - `evidence`: immutable E-ID observations
 - `events`: immutable D-ID decisions and T-ID state transitions
 - `created_at`, `updated_at`
@@ -22,6 +24,8 @@ Read this reference for normal update operation shapes, schema repair, or tool m
 Local IDs are unique only inside one issue. Use `PL-0001#E1` for external reference. P/C/D records reference E-IDs; evidence never owns the judgment mapping.
 
 ## State invariants
+
+Resolution covers the full tracked outcome and required validation, including work carried forward beyond the current task.
 
 | Status | Required | Forbidden |
 | --- | --- | --- |
@@ -39,28 +43,6 @@ Evidence must contain `id`, `kind`, `location`, `observation`, and `observed_at`
 
 Decisions may reference earlier D-IDs through `supersedes`. New evidence may reference old E-IDs through `supersedes` or `invalidates`. Current valid decisions are those not superseded by a later decision.
 
-## CLI
+## Full operations
 
-```text
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js list [--root DIR] [--all] [--search TEXT]
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js show ID [--root DIR] [--evidence E1,E2] [--events]
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js validate [FILE] [--root DIR]
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js create --input ISSUE.json [--root DIR]
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js update ID --operation OPERATION.json [--root DIR]
-node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js link-work ID --help
-```
-
-Supported update operation types are `batch`, `set_state`, `add_evidence`, `link_evidence`, `add_event`, `set_milestone`, and `add_relation`. Every update requires one top-level `current_summary` confirmation. Use `batch.operations` when evidence, its P/C/D link, a decision, or a terminal-state change must become valid atomically. `add_evidence.targets` can link a new observation to one or more existing P/C/D IDs in one operation. A changed `set_state` automatically appends a T-ID transition, using `transition_summary` when supplied and otherwise the confirmed current summary. The dedicated `link-work` command validates the Design or legacy Plan/Spec backlink, adds one canonical context path, may update active state, is idempotent, and refuses terminal issues. JSON output uses stable top-level key order and two-space indentation.
-
-Minimal operation shapes:
-
-```json
-{"type":"set_state","status":"blocked","current_summary":"...","next_action":"...","blocker":"...","unblock_condition":"...","updated_at":"..."}
-{"type":"add_evidence","current_summary":"...","evidence":{"id":"E2","kind":"test","location":"...","observation":"...","observed_at":"..."},"targets":["C1"]}
-{"type":"link_evidence","current_summary":"...","target":"D1","evidence_id":"E2"}
-{"type":"add_event","current_summary":"...","event":{"id":"D2","kind":"decision","at":"...","summary":"...","evidence_refs":[]}}
-{"type":"set_milestone","current_summary":"...","milestone_id":"M2","status":"done"}
-{"type":"add_relation","current_summary":"...","relation":{"type":"follow_up_to","target":"PL-0001"}}
-```
-
-For an atomic change, put the same inner objects without `current_summary` in order under `{"type":"batch","current_summary":"...","updated_at":"...","operations":[...]}`. When a new decision and its new evidence are created together, add the D-event first, then add evidence targeting that D-ID. Omit active-state fields from a terminal `set_state`; include the cancellation or replacement decision in the same batch.
+For composite milestones, decisions, blocked/cancelled/superseded states, explicit claim-state mutations or repair, use [v2-operations.md: CLI](v2-operations.md#cli).

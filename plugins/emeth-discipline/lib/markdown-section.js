@@ -1,6 +1,6 @@
 'use strict';
 
-function readMarkdownSection(text, title) {
+function markdownHeadings(text) {
   const headings = [];
   let offset = 0;
   let fence = null;
@@ -56,6 +56,11 @@ function readMarkdownSection(text, title) {
     }
     paragraph.push({ start, line });
   }
+  return headings;
+}
+
+function readMarkdownSection(text, title) {
+  const headings = markdownHeadings(text);
   const matches = headings.filter(heading => heading.title === title);
   if (matches.length !== 1) {
     const error = new Error(matches.length ? `절 제목이 중복되었습니다: ${title}` : `절 제목을 찾을 수 없습니다: ${title}`);
@@ -67,4 +72,4 @@ function readMarkdownSection(text, title) {
   return text.slice(selected.start, next ? next.start : text.length);
 }
 
-module.exports = { readMarkdownSection };
+module.exports = { readMarkdownSection, markdownHeadings };

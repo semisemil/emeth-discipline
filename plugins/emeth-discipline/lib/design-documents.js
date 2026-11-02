@@ -28,8 +28,13 @@ function readDesignDocuments(root, record) {
   }
   const documents = (record.metadata.documents || []).map(name => {
     const file = path.join(directory, ...name.split('/'));
-    const { content } = readSecureRecord(file, { root, directory });
-    return { path: path.posix.join(path.posix.dirname(record.relativePath), name), body: content };
+    try {
+      const { content } = readSecureRecord(file, { root, directory });
+      return { path: path.posix.join(path.posix.dirname(record.relativePath), name), body: content };
+    } catch (error) {
+      error.document = name;
+      throw error;
+    }
   });
   assertDocumentSetAvailable(record.source.filePath);
   if (readOverview() !== overview) {

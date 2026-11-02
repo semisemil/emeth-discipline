@@ -12,7 +12,8 @@ Carry its source evidence and accepted decisions through the selected [../../SKI
 4. Integrate the artifacts and resolve material findings against those contracts.
    Trace required interactions through the public interface and verify the real built artifact, including the task's required checks.
    Reuse unaffected verification and rerun checks affected by corrections.
-5. Keep the Design consistent with delivered behavior and complete the requested repository delivery.
+5. Complete the requested repository delivery and the invoked workflow's selected Design.
+   Other automatic Issue/Design recording follows the project's opt-in setting.
    Use [../challenge.md](../challenge.md) before shipping when the design remains contested.
 
 Report the delivered change, material decisions, verification evidence and unresolved limits.

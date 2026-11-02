@@ -2,7 +2,7 @@
 
 For information worth capturing under [Architecture Memory](../SKILL.md), apply the document rules for the host running this conversation:
 
-- Codex: [../../rules/codex.md: Document writing and revision](../../rules/codex.md#document-writing-and-revision).
+- Codex: [../../rules/codex.md: Documents and reports](../../rules/codex.md#documents-and-reports).
 - Claude Code: [../../rules/SKILL.md: Document writing and revision](../../rules/SKILL.md#document-writing-and-revision).
 - Mixdog: [../../rules/mixdog.md: Document writing and revision](../../rules/mixdog.md#document-writing-and-revision).
 

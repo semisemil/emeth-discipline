@@ -10,7 +10,8 @@ This skill reads and maintains project architecture documents.
 Their location is configured by `root` in `.emeth/architecture.json`.
 Codex's built-in memory has separate instructions and storage.
 
-A Design save creates the initial project architecture documents unless recording is disabled.
+Creating a Design creates the initial project architecture documents unless recording is disabled.
+Revising an existing Design preserves the connection without initializing unconnected architecture documents.
 Optional `architecture-memory-init` surveys an existing codebase; it is not a prerequisite for recording.
 With no connection, do not scan or initialize merely because architecture is mentioned.
 Read-only requests suppress writes.
@@ -34,7 +35,7 @@ Known IDs can be read directly; repeat `--id` or `--path` as needed. Pointers ar
 For no matches, paging, output limits, or tool failure, use [references/retrieval.md](references/retrieval.md).
 For maintenance requests or excessive unrelated content in partial retrieval, use [architecture-memory-maintain](../architecture-memory-maintain/SKILL.md).
 
-New implementation requirements enter the Design through its owning revision workflow.
+New implementation requirements enter the Design through its owning revision workflow when that Design work is requested, required by an invoked workflow, or project automatic work records are enabled.
 
 ## Capture at a meaningful boundary
 

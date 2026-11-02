@@ -1,10 +1,18 @@
 # Dashboard sandbox setup in Codex
 
-Use for a registration or server-start failure reporting `EPERM` or `EACCES`, or an explicit manual setup request.
+Use for a registration, server-start or settings failure reporting `EPERM` or `EACCES`, or an explicit manual setup request.
 Normal registration initializes missing storage and returns `registered` or `no-op`; those results complete registration.
 This also applies to writers that register after saving a project document.
 
 ## Resolve the required directory
+
+For `work-records on` or `work-records off`, use the parent directory of the global settings file instead of the dashboard directory:
+
+```text
+node -e "const p=require(process.argv[1]).globalSettingsPath(); console.log(require('node:path').dirname(p))" <plugin-root>/lib/work-records-policy.js
+```
+
+For other commands:
 
 Reuse the resolved dashboard directory from the failed operation when available. Otherwise resolve `<plugin-root>` from this reference and obtain the actual directory with the bundled resolver:
 
@@ -23,7 +31,7 @@ The directory contains `projects.json`, lock and temporary files, and server sta
    | `default_permissions` selects a permission profile | The profile's supported filesystem settings |
    | `workspace-write` without a selected permission profile | `[sandbox_workspace_write].writable_roots` in `$CODEX_HOME/config.toml`, falling back to `~/.codex/config.toml` |
 
-2. When access is missing, tell the user that dashboard setup needs to modify the selected configuration to allow writes to the resolved directory. Merge the directory into the selected write-access setting, preserving existing entries and other settings. For TOML, use an absolute path, not an environment-variable expression. Add only the dashboard directory; keep the current sandbox mode. Configuration edits must use the environment's permitted edit or approval mechanism. If editing is unavailable or denied, provide the exact path and required addition and report setup as pending.
+2. When access is missing, tell the user that dashboard setup needs to modify the selected configuration to allow writes to the resolved directory. Merge the directory into the selected write-access setting, preserving existing entries and other settings. For TOML, use an absolute path, not an environment-variable expression. Add only the resolved directory; keep the current sandbox mode. Configuration edits must use the environment's permitted edit or approval mechanism. If editing is unavailable or denied, provide the exact path and required addition and report setup as pending.
 3. Verify access in the session that retries the operation.
    A saved configuration change alone does not establish access in the current session; if its writable roots remain unchanged, tell the user to start a new Codex session with the updated configuration before retrying.
    Registration completes on `registered` or `no-op`; opening the dashboard completes on `opened`.

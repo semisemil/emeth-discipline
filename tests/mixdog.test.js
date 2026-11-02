@@ -20,6 +20,7 @@ function hook(t, event) {
     encoding: 'utf8', cwd: root,
     env: { ...process.env, MIXDOG_PLUGIN_ROOT: repoRoot, MIXDOG_PLUGIN_DATA: path.join(root, 'data'),
       CLAUDE_PLUGIN_ROOT: repoRoot, CLAUDE_PLUGIN_DATA: path.join(root, 'compat'),
+      APPDATA: path.join(root, 'config'),
       XDG_CONFIG_HOME: path.join(root, 'config') },
     input: JSON.stringify({ cwd: root, ...event }),
   });

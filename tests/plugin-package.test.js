@@ -91,6 +91,19 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
     cwd: f.project, session_id: 'number',
   }));
   assert.deepEqual(number.hookSpecificOutput.additionalContext.match(/\b(?:DESIGN|PL)-\d{4,}\b/g), ['DESIGN-0001']);
+
+  fs.mkdirSync(path.join(f.project, '.emeth'), { recursive: true });
+  fs.writeFileSync(path.join(f.project, '.emeth/work-records.json'), '{"schema_version":1,"enabled":true}');
+  const notice = f.run('hooks/work-records.js', [], JSON.stringify({ hook_event_name:'SessionStart', source:'startup', cwd:f.project }));
+  const entry = notice.hookSpecificOutput.additionalContext;
+  assert.ok(entry.length <= 800);
+  const command = entry.split('\n').find(line => line.startsWith('node '));
+  assert.ok(command, 'Installed callback supplies an executable record entry');
+  const queried = spawnSync(process.platform === 'win32' ? 'powershell.exe' : '/bin/sh',
+    process.platform === 'win32' ? ['-NoProfile','-NonInteractive','-Command',command] : ['-c',command],
+    {cwd:f.project,env:f.env,encoding:'utf8',windowsHide:true});
+  assert.equal(queried.status,0,queried.stderr);
+  assert.match(queried.stdout,/Context status/);
 });
 
 test('isolated package writes and reads a Design with its bundled dependencies', t => {

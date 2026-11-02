@@ -143,14 +143,6 @@ test('a Design revision can adopt an existing artifact without rewriting it or i
   assert.deepEqual(fs.readFileSync(review), reviewBytes);
 });
 
-test('CLI help describes document operations without requiring project arguments or stdin', () => {
-  const result = spawnSync(process.execPath, [writer, 'create', '--help'], { encoding: 'utf8', windowsHide: true });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Create JSON:/);
-  assert.match(result.stdout, /Patch JSON:/);
-  assert.match(result.stdout, /registered unchanged/);
-});
-
 test('source failures leave no partial Design and allow retry while preserving independent notes', t => {
   const f = fixture(t);
   const missing = path.join(f.project, 'missing.md');

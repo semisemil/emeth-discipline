@@ -10,13 +10,22 @@ description: "Apply Emeth's shared baseline rules for scope, authorization, evid
 
 Do not use middle dots.
 
+## Work records
+
+`<plugin-root>` = `{{plugin-root}}`.
+Automatic Issue/Design tracking defaults to off.
+Record discovery, reads/writes and skills/CLIs require an explicit record request, required workflow artifacts, or this project's automatic-work-records enabled notice.
+Exclude record roots (`.emeth/`, `.proofline/`, known custom roots) from general inventories/searches, including `--hidden`: rg `-g '!.emeth/**' -g '!.proofline/**'`; `git ls-files -- . ':!.emeth' ':!.proofline'`.
+Records grant no access; explicit requests leave opt-in unchanged.
+For authorized records, use supplied entry/contract; if absent read `skills/rules/references/work-records.md`.
+
 Apply the rules for the host running this conversation: [Codex (codex.md)](codex.md), [Claude Code (claude-code.md)](claude-code.md), or [Mixdog (mixdog.md)](mixdog.md).
 
 <!-- claude-only -->
 ## Document writing and revision
 
 <!-- direct-readers -->
-Codex: read `codex.md`, section "Document writing and revision".
+Codex: read `codex.md`, section "Documents and reports".
 Mixdog: read `mixdog.md`, section "Document writing and revision".
 The rules below apply to Claude Code.
 

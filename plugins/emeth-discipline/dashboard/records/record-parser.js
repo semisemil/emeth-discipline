@@ -432,6 +432,7 @@ function parseCurrentRecord(options) {
       directory: options.directory,
       expectedId: options.expectedId,
       root: options.root,
+      ...(options.includeSource ? { text: content } : {}),
     },
   };
 }

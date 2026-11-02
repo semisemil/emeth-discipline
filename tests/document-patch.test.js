@@ -34,8 +34,41 @@ function fixture(t, { bom = false, newline = '\n' } = {}) {
   return { project, file, snapshot, original, env, run, read, patch };
 }
 const changes = [
-  { old: '성공하면 ID를 반환한다.', new: '성공하면 접수 ID를 반환한다.' },
+  { old: 'ID', new: '접수 ID' },
 ];
+
+function detailedFixture(t) {
+  const f=fixture(t,{bom:true,newline:'\r\n'});
+  const original=Buffer.from(f.original.toString('utf8').replace('"related_issues": []','"related_issues": [],\r\n  "documents": ["첫 계약.md", "contracts/둘째.md"]'));
+  fs.writeFileSync(f.file,original);
+  const members=['첫 계약.md','contracts/둘째.md'].map(name=>({name,file:path.join(path.dirname(f.file),name),bytes:Buffer.from('\ufeff# 계약\r\n\r\n초기 계약\r\n')}));
+  for(const member of members){fs.mkdirSync(path.dirname(member.file),{recursive:true});fs.writeFileSync(member.file,member.bytes);}
+  return {...f,original,members};
+}
+
+test('a document-set revision preserves every original byte in its overview and Unicode member snapshots',t=>{
+  const f=detailedFixture(t);
+  const r=f.run('patch',{edits:changes,documents:[{path:f.members[0].name,edits:[{old:'초기 계약',new:'수정 계약'}]}]},['--change-kind','major','--memory','off']);
+  assert.equal(r.status,0,r.stderr);
+  const overview=path.join(f.project,r.value.write.snapshot.path);
+  assert.deepEqual(fs.readFileSync(overview),f.original);assert.deepEqual(fs.readFileSync(f.snapshot),f.original);
+  for(const member of f.members)assert.deepEqual(fs.readFileSync(path.join(path.dirname(overview),member.name)),member.bytes);
+  assert.deepEqual(fs.readFileSync(f.members[0].file),Buffer.from(f.members[0].bytes.toString('utf8').replace('초기 계약','수정 계약')));
+  assert.deepEqual(fs.readFileSync(f.members[1].file),f.members[1].bytes);
+});
+
+test('a late snapshot collision cannot overwrite independent bytes or publish the changed document set',{skip:process.platform!=='win32'},t=>{
+  const f=detailedFixture(t),collision=path.join(path.dirname(f.file),'revisions','REV-1',f.members[1].name);
+  const code=`const fs=require('node:fs'),path=require('node:path'),open=fs.openSync;let inserted=false;
+    fs.linkSync=()=>{throw Object.assign(new Error('hardlink unavailable'),{code:'EPERM'});};
+    fs.openSync=(file,flags,...rest)=>{if(!inserted&&flags==='wx'&&typeof file==='string'&&file!==process.argv[2]&&path.dirname(file)===path.dirname(process.argv[2])){inserted=true;fs.writeFileSync(process.argv[2],'Independent snapshot',{flag:'wx'});}return open(file,flags,...rest);};
+    require(process.argv[1]).main(process.argv.slice(3));`;
+  const r=spawnSync(process.execPath,['-e',code,cli,collision,'patch','--project-root',f.project,'--id','DESIGN-0001','--change-kind','major','--memory','off'],{input:JSON.stringify({edits:changes,documents:[{path:f.members[0].name,edits:[{old:'초기 계약',new:'수정 계약'}]}]}),env:f.env,encoding:'utf8',windowsHide:true});
+  assert.equal(r.status,1,r.stderr);assert.equal(JSON.parse(r.stderr).error.code,'EEXIST');
+  assert.equal(fs.readFileSync(collision,'utf8'),'Independent snapshot');
+  assert.deepEqual(fs.readFileSync(f.file),f.original);
+  for(const member of f.members)assert.deepEqual(fs.readFileSync(member.file),member.bytes);
+});
 
 test('Design write and patch support in-revision edits while operational saves preserve content', t => {
   const f = fixture(t, { bom: true, newline: '\r\n' });
@@ -119,8 +152,9 @@ test('filesystem and registration failures preserve the document publication bou
   assert.equal(value.registration.status, 'failed');
   assert.equal(value.registration.error.code, 'registry-write-failed');
   assert.match(value.registration.error.message, /EACCES/);
-  assert.equal(value.memory.status, 'created');
-  assert.ok(fs.existsSync(path.join(f.project, '.emeth/architecture.json')));
+  assert.equal(value.memory.status, 'not-connected');
+  assert.equal(fs.existsSync(path.join(f.project, '.emeth/architecture.json')), false);
+  assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture')), false);
   assert.deepEqual(fs.readFileSync(f.file), Buffer.from(f.original.toString('utf8')
     .replace('"revision": 1', '"revision": 2').replace(changes[0].old, changes[0].new)));
   assert.deepEqual(fs.readFileSync(f.snapshot), f.original);

@@ -1,6 +1,6 @@
 # Dashboard write-access recovery
 
-Use for a registration or server-start failure reporting `EPERM` or `EACCES`, or an explicit manual setup request.
+Use for a registration, server-start or settings failure reporting `EPERM` or `EACCES`, or an explicit manual setup request.
 Normal registration results `registered` and `no-op` complete registration.
 An `open` result of `opened` completes opening the dashboard.
 

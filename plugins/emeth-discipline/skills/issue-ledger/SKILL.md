@@ -1,41 +1,36 @@
 ---
 name: issue-ledger
-when_to_use: "Register or update project issues, tasks, bugs, and durable out-of-scope findings."
-description: Record and update concrete bugs, tasks, features, research, documentation, and maintenance in a project-local ledger. Use when the user asks to register or update project work, or when durable out-of-scope work should be preserved.
+when_to_use: "Explicit ledger work, workflow-required records, or enabled tracking without a supplied work-record entry or contract."
+description: "Manage project-local PL Issue files in .emeth/issues through the bundled Node CLI on explicit requests or workflow calls. For enabled automatic tracking, use this skill only when no work-record entry or contract is supplied."
 ---
 
 # Issue Ledger
 
 ## Record
 
-Record durable work with an origin, current state, next action, or completion criterion. An explicit user request and current context are sufficient origin; do not investigate solely to register it. A reported bug remains `reported` until direct evidence confirms or refutes it. Reject vague guesses, preferences, temporary notes, and immediately completed work without future value when registration was not requested.
+Automatic registration is off by default.
+Apply this workflow to explicit ledger requests, Issues required by an invoked workflow, or a project's enabled automatic work records.
+Reuse supplied Issue context and its save contract.
+For missing state, run the bundled CLI from the project:
 
-Store one v2 JSON file per issue under `.emeth/issues/`.
+```text
+node "<plugin-root>/writers/document-writer.js" context --records issues --project-root "<project>" --issue-id <known-ID> --code-context 8 --format codex-text
+```
 
-Resolve bundled paths relative to this SKILL.md. Run the CLI from the project root as `node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js ...` so its default root is the project's `.emeth/issues`. Avoid only obvious title duplicates. Create from `assets/templates/issue-claim.json` for `bug | research` or `issue-objective.json` for other types. Replace every `REPLACE:` value and adapt the type, mode, risk, and arrays, then use the CLI `create` command; it assigns the ID for the template's `PL-0000`, sets the timestamps, and creates the default store when missing. Infer available fields, but ask when identity or scope cannot be stated accurately. Cite the ID from the created file path in the final report.
+In Codex `functions.exec`, run this command in `exec_command` and read its output directly.
+The result supplies Issue state, the complete ordinary update contract, a native save example, project inventory, root build files and ancestor AGENTS.md files.
+Omit `--issue-id` for selection.
+Read the listed sources needed for verification; reuse complete supplied files.
+Repeat `--file <path>` for known project source, instruction or configuration files.
+For other hosts, paging, or missing scope, use [../rules/references/work-records.md](../rules/references/work-records.md).
 
-Successful writes report dashboard registration separately: `registered` or `no-op` completes it, and a registration failure leaves the Issue write in place. For a registration failure reporting `EPERM` or `EACCES`, follow [dashboard sandbox recovery](../dashboard-server/references/sandbox-setup.md). After an approved direct repair write, run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-project-root>` and report it the same way.
-
-## Read
-
-Read an issue with `node <plugin-root>/skills/issue-ledger/scripts/issue-ledger.js show ID` for the default AI brief before opening its file. Use `list` when the target issue needs to be found. The brief contains current state, claims or objective, criteria, milestones, current decisions, and relations; it omits observations and old transitions. Request only the needed proof with `show ID --evidence E1,E2` or audit history with `show ID --events`.
-
-## Keep current
-
-An issue is a current-state record, not a session log or experiment report. Keep `state.current_summary` current. Require `next_action` for `open | doing | blocked`; require `blocker` and `unblock_condition` for `blocked`; forbid them for `resolved | cancelled | superseded`. A resolved summary states cause or goal, change, and result.
-
-For Design or legacy document linkage and progress handoff, apply `references/work-link.md`.
-
-Keep only decisions and state transitions in `events`. Do not log wording, formatting, routine commands, or every work session. Replace the mutable current summary; Git preserves prose history. A meaningful status, next-action, blocker, milestone, decision, or completion change must rewrite or explicitly reconfirm `current_summary`.
-
-Use normal CLI operations for updates. Before an update or repair, read `references/v2-schema.md` for the operation contract and run the CLI validator. Direct issue-file edits are only for reviewed repair.
-
-## Prove
-
-`evidence` is an immutable observation that directly confirms or refutes a P-claim, supports a decision, or proves a C-criterion. Related files, future commands, implementation explanation, and full logs are not evidence; put them in `context`, `next_action`, or `artifacts`. Store each evidence item once and reference its E-ID from P/C/D. Do not leave orphan evidence. Add a new item with `supersedes` or `invalidates` instead of rewriting old evidence.
-
-Set `resolved` only when every completion criterion references current valid evidence. Use `cancelled` for intentionally stopped work and `superseded` with a replacement relation when another issue takes over.
+Use [references/v2-schema.md](references/v2-schema.md) for composite milestones, decisions, blocked/cancelled/superseded states, explicit claim-state operations or repair.
+Direct Issue-file edits require reviewed repair; normal writes use the CLI.
+Use [references/work-link.md](references/work-link.md) for legacy Plan/Spec links or an ambiguous or terminal connection.
 
 ## Boundaries
 
-Use `mode: simple` for one independently verifiable result. Use `mode: composite` with 3–7 outcome milestones for coordination work; keep implementation and experiment detail in child issues or artifacts. Split rather than append when the title no longer describes the work, completion criteria materially change, an independent deliverable appears, or another goal replaces the original. Store one directional relation: `child_of`, `superseded_by`, or `follow_up_to`.
+Keep one independently verifiable result in a simple Issue.
+An iteration, changed verification conditions, or resumed work on the same result stays in that Issue.
+Use composite Issues with 3–7 outcome milestones for coordination; separate independent deliverables or materially changed goals rather than append them.
+Store one directional relation: child_of, superseded_by, or follow_up_to.

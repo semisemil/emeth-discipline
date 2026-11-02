@@ -14,9 +14,7 @@ function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'emeth-hooks-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 10 }));
   const plugin = path.join(root, 'plugin');
-  for (const directory of ['hooks', 'lib', 'skills/rules', 'skills/architecture-memory', 'skills/issue-ledger/lib']) {
-    fs.cpSync(path.join(pluginRoot, directory), path.join(plugin, directory), { recursive: true });
-  }
+  fs.cpSync(pluginRoot, plugin, { recursive: true });
   fs.writeFileSync(path.join(plugin, 'skills/rules/SKILL.md'), '# Shared fixture rules\nApply the rules for the host running this conversation: fixture');
   fs.writeFileSync(path.join(plugin, 'skills/rules/codex.md'), 'Codex fixture rules');
   fs.writeFileSync(path.join(plugin, 'skills/rules/claude-code.md'), 'Claude fixture rules');
@@ -97,6 +95,26 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
   const child = output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'agent-a' }));
   assert.equal(child.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
+});
+
+test('project opt-in reaches fresh Codex workers and Claude/Mixdog sessions and worker dispatch', t => {
+  const f = fixture(t);
+  f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');
+  const codex = output(f.run({hook_event_name:'SubagentStart',agent_id:'opted-in-worker'}));
+  assert.match(codex.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
+  const claudeEnv = {PLUGIN_ROOT:'',PLUGIN_DATA:'',CLAUDE_PLUGIN_ROOT:f.plugin,CLAUDE_PLUGIN_DATA:path.join(f.root,'claude-data')};
+  const claude = output(f.run({hook_event_name:'SessionStart',source:'startup'}, {env:claudeEnv}));
+  assert.match(claude.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
+  const mixdogEnv = {MIXDOG_PLUGIN_ROOT:f.plugin,MIXDOG_PLUGIN_DATA:path.join(f.root,'mixdog-data')};
+  const mixdog = output(f.run({hook_event_name:'SessionStart',source:'startup'}, {env:mixdogEnv}));
+  assert.match(mixdog.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
+  const worker = {type:'spawn',agent:'worker',cwd:f.root,context:'Keep supplied task context'};
+  const dispatched = output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:worker},{env:mixdogEnv}));
+  assert.match(dispatched.hookSpecificOutput.updatedInput.context,/automatic work records: enabled/);
+  assert.deepEqual(output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:dispatched.hookSpecificOutput.updatedInput},{env:mixdogEnv})),{});
+  f.write('other/.git/HEAD','ref: refs/heads/main');
+  const other = output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:{...worker,cwd:path.join(f.root,'other')}},{env:mixdogEnv}));
+  assert.doesNotMatch(other.hookSpecificOutput.updatedInput.context,/automatic work records: enabled/);
 });
 
 function claudeEnvironment(f) {

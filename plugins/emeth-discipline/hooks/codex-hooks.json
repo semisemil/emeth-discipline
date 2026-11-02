@@ -12,6 +12,18 @@
             "statusMessage": "Loading Emeth Discipline..."
           }
         ]
+      },
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks/work-records.js\"",
+            "commandWindows": "node \"$env:PLUGIN_ROOT\\hooks\\work-records.js\"",
+            "timeout": 10,
+            "statusMessage": "Loading work record reference..."
+          }
+        ]
       }
     ],
     "SubagentStart": [

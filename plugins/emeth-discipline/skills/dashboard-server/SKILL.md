@@ -1,19 +1,23 @@
 ---
 name: dashboard-server
-when_to_use: "Explicit request only: manage the Emeth dashboard or switch inbox recording on or off."
+when_to_use: "Explicit request only: manage the Emeth dashboard, inbox recording, or global automatic Issue and Design recording."
 disable-model-invocation: true
-description: Register a project, open or manage the dashboard server, or toggle inbox recording.
-argument-hint: "add | open | status | stop | on | off"
+description: Register a project, manage the dashboard server, or configure inbox and automatic work recording.
+argument-hint: "add | open | status | stop | on | off | work-records on|off|status"
 ---
 
 # Dashboard Server
 
-Accept exactly one action from the list below.
+Accept one command from the list below.
 
 Resolve `<plugin-root>` from this SKILL.md; do not substitute a project-local script.
 The dashboard listens on `http://127.0.0.1:43127`.
 
 - `on` or `off`: Run `node <plugin-root>/dashboard/inbox.js <action>` and report the returned setting. It applies to this user's registered projects across Codex, Claude Code and Mixdog and defaults to off.
+- `work-records on`, `work-records off`, or `work-records status`: Run `node <plugin-root>/dashboard/control.js work-records <action>`.
+  Report the global setting for automatic Issue registration and related Design updates, which defaults to off.
+  Project `.emeth/work-records.json` settings take priority.
+  Changes apply at the next session or context rebuild.
 - `add`: Treat the current working directory as the project root.
   If it contains neither a `.emeth` nor a legacy `.proofline` directory, report that it is not an initialized Emeth Discipline project and stop without creating state.
   Otherwise run `node <plugin-root>/dashboard/register-project.js register --project-root <absolute-current-working-directory>`.
@@ -25,9 +29,10 @@ The dashboard listens on `http://127.0.0.1:43127`.
 - `stop`: Stop only the process whose PID and health `instance_id` match the current server state.
 
 For `open`, `status`, and `stop`, run `node <plugin-root>/dashboard/control.js <action>` and report its JSON result.
-For a registration or server-start failure reporting `EPERM` or `EACCES`, follow [references/sandbox-setup.md](references/sandbox-setup.md).
+For a registration, server-start or settings failure reporting `EPERM` or `EACCES`, follow [references/sandbox-setup.md](references/sandbox-setup.md).
 
 Never remove or discover projects.
 Apart from the automatic legacy storage migration, never create or modify project `.emeth` state.
 `add` may change the global project registry.
-`add` and `open` may change the dashboard write-access configuration described in sandbox setup.
+`work-records on` and `work-records off` change only the global automatic-work-records setting.
+`add`, `open`, and `work-records on/off` may require the write-access configuration described in sandbox setup.

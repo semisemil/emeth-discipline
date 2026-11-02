@@ -7,6 +7,7 @@ const { execFile, spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const { getDashboardConfigDir } = require('./registry.js');
 const { withFileLock } = require('../lib/file-lock.js');
+const { globalSettings } = require('../lib/work-records-policy.js');
 
 const HOST = '127.0.0.1';
 const PORT = 43127;
@@ -529,8 +530,11 @@ async function stopServer(options = {}) {
 }
 
 async function runCli(argv = process.argv.slice(2), options = {}) {
+  if (argv.length === 2 && argv[0] === 'work-records' && ['on', 'off', 'status'].includes(argv[1])) {
+    return { exitCode: 0, result: { command: 'work-records', action: argv[1], ...globalSettings(argv[1], options) } };
+  }
   if (argv.length !== 1 || !['start', 'open', 'status', 'stop'].includes(argv[0])) {
-    return { exitCode: 2, error: 'Usage: node dashboard/control.js <start|open|status|stop>' };
+    return { exitCode: 2, error: 'Usage: node dashboard/control.js <start|open|status|stop> | work-records <on|off|status>' };
   }
   const command = argv[0];
   let result;

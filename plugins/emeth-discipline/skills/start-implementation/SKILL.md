@@ -17,6 +17,8 @@ node <plugin-root>/dashboard/records/development-contracts.js --project-root <pr
 ## Implementation workflow
 
 The calling conversation owns design selection, coupled code, integration and final verification.
+Maintain the selected Design required by this invoked workflow through [../development-design/references/document-editing.md](../development-design/references/document-editing.md).
+Maintain other related Designs only when explicitly requested or project automatic work records are enabled.
 Use the workflow explicitly selected by the user.
 Otherwise, after grounding the affected paths, select verification ownership from the behavioral change before design exploration.
 Use Separate implementation and tests when the change introduces or changes any of these:

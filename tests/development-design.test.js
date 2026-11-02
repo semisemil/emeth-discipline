@@ -86,7 +86,7 @@ test('a legacy document has one successor without becoming executable or rewriti
   assert.equal(resolveContract(f.project, 'DESIGN-0002').id, 'DESIGN-0002');
 });
 
-test('disabled or prohibited Memory is preserved, and recording failure is separate from a successful Design write', t => {
+test('disabled Memory and an absent connection are preserved by existing Design revisions', t => {
   const f = fixture(t);
   const patch = (old, replacement) => {
     const result = spawnSync(process.execPath, [path.join(repo, 'writers/document-writer.js'), 'patch',
@@ -104,8 +104,22 @@ test('disabled or prohibited Memory is preserved, and recording failure is separ
   fs.unlinkSync(path.join(f.project, '.emeth/architecture.json'));
   f.write('docs/architecture/manual.md', 'Keep existing user documentation.');
   const result = patch('접수 ID', '확정 ID');
-  assert.equal(result.memory.status, 'failed');
+  assert.equal(result.memory.status, 'not-connected');
+  assert.equal(fs.existsSync(path.join(f.project, '.emeth/architecture.json')), false);
+  assert.equal(fs.existsSync(path.join(f.project, 'docs/architecture/.architecture-memory')), false);
   assert.equal(f.read('docs/architecture/manual.md'), 'Keep existing user documentation.');
+  const relative = '.emeth/designs/DESIGN-0001-notification/DESIGN.md';
+  const written = spawnSync(process.execPath, [path.join(repo,'writers/document-writer.js'),'write',
+    '--kind','design','--project-root',f.project,'--relative-path',relative],
+    {input:f.read(relative),encoding:'utf8',env:f.env,windowsHide:true});
+  assert.equal(written.status,0,written.stderr);
+  const status = spawnSync(process.execPath, [path.join(repo,'writers/document-writer.js'),'status',
+    '--project-root',f.project,'--id','DESIGN-0001','--status','completed'],
+    {encoding:'utf8',env:f.env,windowsHide:true});
+  assert.equal(status.status,0,status.stderr);
+  assert.equal(fs.existsSync(path.join(f.project,'.emeth/architecture.json')),false);
+  assert.equal(fs.existsSync(path.join(f.project,'docs/architecture/.architecture-memory')),false);
+  assert.equal(f.read('docs/architecture/manual.md'),'Keep existing user documentation.');
 });
 
 test('conversation patches retain independent changes and reject stale edits to the same record', t => {

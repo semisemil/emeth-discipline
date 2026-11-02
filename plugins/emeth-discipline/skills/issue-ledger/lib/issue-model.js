@@ -953,6 +953,19 @@
   function applyMutation(issue, operation, operationAt) {
     if (operation.type === 'set_state') {
       applyStateMutation(issue, operation, operationAt);
+    } else if (operation.type === 'set_claim_state') {
+      const claim = asArray(issue.problem?.claims).find(item => item.id === operation.claim_id);
+      if (!claim) {
+        throw new Error(`문제 주장을 찾지 못했습니다: ${operation.claim_id}`);
+      }
+      if (!claimStates.has(operation.state)) {
+        throw new Error('set_claim_state.state는 reported, confirmed, refuted 중 하나여야 합니다.');
+      }
+      if (operation.evidence_refs !== undefined && !Array.isArray(operation.evidence_refs)) {
+        throw new Error('set_claim_state.evidence_refs는 배열이어야 합니다.');
+      }
+      claim.state = operation.state;
+      for (const id of operation.evidence_refs || []) linkEvidence(issue, claim.id, id);
     } else if (operation.type === 'link_work') {
       applyLinkedWorkMutation(issue, operation, operationAt);
     } else if (operation.type === 'add_evidence') {
@@ -1014,6 +1027,10 @@
   }
 
   function linkEvidence(issue, target, evidenceId) {
+    const owner = issue.identity?.id;
+    if (owner && typeof target === 'string' && (target.startsWith(owner + '/') || target.startsWith(owner + '#'))) {
+      target = target.slice(owner.length + 1);
+    }
     const candidates = [
       ...asArray(issue.problem?.claims),
       ...asArray(issue.criteria),

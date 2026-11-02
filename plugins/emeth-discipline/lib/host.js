@@ -38,4 +38,13 @@ function logDir(options = {}) {
   return data ? path.join(data, 'log') : path.join(env.CLAUDE_CONFIG_DIR || path.join(homeDir, '.claude'), 'log');
 }
 
-module.exports = { name, dataDir, logDir };
+function commandQuoter(platform = process.platform) {
+  return platform === 'win32' ? value => "'" + value.replaceAll("'", "''") + "'"
+    : value => "'" + value.replaceAll("'", "'\"'\"'") + "'";
+}
+
+function displayPath(value) {
+  return /^[A-Za-z]:\\/.test(value) ? value.replaceAll('\\','/') : value;
+}
+
+module.exports = { name, dataDir, logDir, commandQuoter, displayPath };

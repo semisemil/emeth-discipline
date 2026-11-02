@@ -42,7 +42,9 @@ function invalidPrompt(message, code, filePath) {
 const HOST_RULES = /^Apply the rules for the host running this conversation: [^\r\n]*/m;
 const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', mixdog: 'mixdog.md' });
 
-function composeBaseline(pluginRoot, host) {
+function composeEmethPrompt(options = {}) {
+  const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
+  const host = options.host || 'codex';
   const skillPath = path.join(pluginRoot, 'skills', 'rules', 'SKILL.md');
   const hostPath = path.join(pluginRoot, 'skills', 'rules', HOST_FILES[host]);
   const shared = removeFrontmatter(readFileWithRetry(skillPath)).replace(
@@ -53,28 +55,10 @@ function composeBaseline(pluginRoot, host) {
     throw invalidPrompt('Emeth Discipline host-rules line must appear exactly once.', 'INVALID_HOST_SLOT', skillPath);
   }
   const hostRules = readFileWithRetry(hostPath).replace(/^\uFEFF/, '').trim();
-  const baseline = resolveReferences(shared.replace(HOST_RULES, () => hostRules), skillPath);
-  return baseline.replaceAll('{{plugin-root}}', pluginRoot);
+  const hostShared = host === 'codex' ? shared.replaceAll('`skills/rules/references/', '`references/') : shared;
+  const baseline = resolveReferences(hostShared.replace(HOST_RULES, () => hostRules), skillPath);
+  return baseline.replaceAll('node "{{plugin-root}}/', 'node "<plugin-root>/')
+    .replaceAll('{{plugin-root}}', pluginRoot).trimEnd();
 }
 
-function composeEmethPrompt(options = {}) {
-  const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'codex').trimEnd();
-}
-
-// The rules skill stays hidden in Claude Code; only this hook output delivers it there.
-function composeClaudePrompt(options = {}) {
-  const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'claude').trimEnd();
-}
-
-function composeMixdogPrompt(options = {}) {
-  const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
-  return composeBaseline(pluginRoot, 'mixdog').trimEnd();
-}
-
-module.exports = {
-  composeEmethPrompt,
-  composeClaudePrompt,
-  composeMixdogPrompt,
-};
+module.exports = { composeEmethPrompt };
