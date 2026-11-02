@@ -1,6 +1,6 @@
 # Architecture memory base templates
 
-Use [authoring commands](recording.md) for scaffolding and section edits. These templates describe content; document registration, headings and routing metadata are supplied by the writer.
+Use [recording.md](recording.md) for scaffolding and section edits. These templates describe content; document registration, headings and routing metadata are supplied by the writer.
 
 ## `README.md`
 

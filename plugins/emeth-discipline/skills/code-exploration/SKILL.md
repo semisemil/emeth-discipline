@@ -8,12 +8,12 @@ disable-model-invocation: true
 # Code Exploration
 
 Use the user's language for the explanation.
-Apply [Emeth execution](../start-implementation/SKILL.md#subagents) to model selection and tool execution.
+Apply [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents) to model selection and tool execution.
 
 Choose the mode from the question, then read and run its workflow.
 
 | Question | Mode |
 |---|---|
-| How code works, code evidence for design, a code walkthrough before a change, subsystem structure, ownership, placement, or layering | [how](references/how.md) |
-| Why code works this way, design rationale, historical decisions, regressions, postmortems, or data-backed thresholds | [why](references/why.md) |
-| Teach me, help me understand, or explain a change or subsystem through what it is, how it works, and why | [teach](references/teach.md) |
+| How code works, code evidence for design, a code walkthrough before a change, subsystem structure, ownership, placement, or layering | [references/how.md](references/how.md) |
+| Why code works this way, design rationale, historical decisions, regressions, postmortems, or data-backed thresholds | [references/why.md](references/why.md) |
+| Teach me, help me understand, or explain a change or subsystem through what it is, how it works, and why | [references/teach.md](references/teach.md) |

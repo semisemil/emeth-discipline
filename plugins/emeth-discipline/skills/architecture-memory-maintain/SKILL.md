@@ -16,7 +16,7 @@ For a read-only request, deliver findings and a concrete reorganization proposal
 
 Run `node <plugin-root>/skills/architecture-memory/scripts/memory.js inspect --project-root <project>` for bounded section sizes, required retrieval sizes and incoming required links.
 Repeat `--id` or `--path` to narrow the scope; continue `next_offset` with `--offset` and the returned `--revision` when the affected topics need further coverage.
-Read relevant candidates through [retrieval](../architecture-memory/references/retrieval.md), including their preambles and prerequisites.
+Read relevant candidates through [../architecture-memory/references/retrieval.md](../architecture-memory/references/retrieval.md), including their preambles and prerequisites.
 Sizes identify candidates; independent topics, repeated meaning and unnecessary dependencies determine the changes.
 Choose a coherent scope that delivers the requested reduction, rather than stopping at the first safe edit.
 For a substantial reduction, state a task-specific target before editing and measure the complete workload against it.
@@ -59,7 +59,7 @@ Separate unrelated responsibilities at the target when they would otherwise acco
 Use ordinary Markdown links for optional navigation.
 Preserve existing Markdown destinations when changing headings, or update their affected references within scope.
 
-Apply related changes together through `author.js reorganize` under [batch reorganization](../architecture-memory/references/recording.md#batch-reorganization).
+Apply related changes together through `author.js reorganize` under [../architecture-memory/references/recording.md: Batch reorganization](../architecture-memory/references/recording.md#batch-reorganization).
 It uses the ordinary recording and recovery path, including any pending init/update draft.
 Consolidated IDs remain readable as historical location records; current prerequisites point directly to their destinations.
 

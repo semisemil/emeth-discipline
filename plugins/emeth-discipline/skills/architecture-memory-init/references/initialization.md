@@ -4,7 +4,7 @@ Run commands through `<plugin-root>/skills/architecture-memory/scripts/workflow.
 
 ## Evidence pass
 
-Use `inventory` for directory counts, then `inventory --prefix <directory/>` or `--offset 0` for relevant paths. Trace entrypoints, runtime/storage units, integrations and deployment boundaries through representative code and existing documentation. Retrieve evidence with `source --path <path>`; it reads the captured commit even if the working tree or HEAD changes. `next_offset` exposes remaining lines; request only the continuation needed for the claim. Commands and recovery details are in [workflow](../../architecture-memory/references/workflow.md).
+Use `inventory` for directory counts, then `inventory --prefix <directory/>` or `--offset 0` for relevant paths. Trace entrypoints, runtime/storage units, integrations and deployment boundaries through representative code and existing documentation. Retrieve evidence with `source --path <path>`; it reads the captured commit even if the working tree or HEAD changes. `next_offset` exposes remaining lines; request only the continuation needed for the claim. Commands and recovery details are in [../../architecture-memory/references/workflow.md](../../architecture-memory/references/workflow.md).
 
 With no committed HEAD, use observed working files; the checkpoint stays null until a later `architecture-memory-update` establishes a committed baseline. Keep uncommitted implementation claims outside a committed baseline.
 
@@ -12,14 +12,14 @@ Identify purpose, scope/non-goals, physical and organizational operating conditi
 
 ## Baseline
 
-Run `author.js scaffold` under [recording](../../architecture-memory/references/recording.md), then author the baseline using [base templates](../../architecture-memory/references/base-templates.md): system context (C4 L1), containers (L2), and current project context. The scaffold includes their indexes. Tables/prose are authoritative; add Mermaid only for evidenced relationships.
+Run `author.js scaffold` under [../../architecture-memory/references/recording.md](../../architecture-memory/references/recording.md), then author the baseline using [../../architecture-memory/references/base-templates.md](../../architecture-memory/references/base-templates.md): system context (C4 L1), containers (L2), and current project context. The scaffold includes their indexes. Tables/prose are authoritative; add Mermaid only for evidenced relationships.
 
-Use [component guidance](../../architecture-memory/references/component-templates.md) where L2 cannot explain a material responsibility or risk boundary, or [decision guidance](../../architecture-memory/references/decision-templates.md) for an established consequential choice with rationale.
+Use [../../architecture-memory/references/component-templates.md](../../architecture-memory/references/component-templates.md) where L2 cannot explain a material responsibility or risk boundary, or [../../architecture-memory/references/decision-templates.md](../../architecture-memory/references/decision-templates.md) for an established consequential choice with rationale.
 
 Use C4 IDs for referenced `PER`, `SYS`, `EXT`, `CNT` and `CMP` nodes; retain existing IDs and never reuse retired IDs or ADR numbers.
 
 Before `apply`, representative sections retrieved from the draft must use consistent terminology and conditions for the same concept.
-Their retrieval results must include the prerequisites in [record format](../../architecture-memory/references/record-format.md).
+Their retrieval results must include the prerequisites in [../../architecture-memory/references/record-format.md](../../architecture-memory/references/record-format.md).
 
 Whole-document evidence review may set `verified_at` and `source_revision`; partial edits retain them. Leave registration to the authoring commands and checkpoint fields to `apply`.
 

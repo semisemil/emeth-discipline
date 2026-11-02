@@ -11,20 +11,20 @@ disable-model-invocation: true
 Set one common task from the user's requirements and the current source evidence.
 State the artifact and open boundary each candidate owns, with distinct output paths.
 Use two independent candidates and one independent judge.
-Select their settings through [Subagents](../start-implementation/SKILL.md#subagents).
+Select their settings through [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents).
 
 ## Phase B: Fan out
 
 Dispatch both candidates from the common factual baseline, before developing a preferred solution.
 Give each assignment its prescribed role prompt, source paths, owned output paths and the host's completion contract.
-Use the host mapping in [Harness](../start-implementation/SKILL.md#harness).
+Use the host mapping in [../start-implementation/SKILL.md: Harness](../start-implementation/SKILL.md#harness).
 The candidates develop their solutions independently.
 
 ## Compare and synthesize
 
 After dispatch, derive concrete comparison criteria from the task, before reading the answers.
 Once both candidates are complete, select a base and incorporate useful differences into one coherent artifact.
-For design artifacts, reconstruct the selected architecture using [design document form](../development-design/references/document-form.md) before review.
+For design artifacts, reconstruct the selected architecture using [../development-design/references/document-form.md](../development-design/references/document-form.md) before review.
 For an already supplied interface, synthesize its remaining implementation decisions; established behavior stays at its source.
 Record the selected base, accepted differences, material rejected proposals and unresolved limits once in a supporting record alongside the artifact.
 
@@ -32,12 +32,12 @@ Apply the [independent review](#independent-review) at its owning boundary.
 
 ## Independent review
 
-For implementation, the calling [implementation workflow](../start-implementation/SKILL.md#implementation-workflow) assigns the review's timing and target.
+For implementation, the calling workflow assigns the review's timing and target as defined in [../start-implementation/SKILL.md: Implementation workflow](../start-implementation/SKILL.md#implementation-workflow).
 For a design-only request or requested design checkpoint, review the selected design before handing it back or implementing it, including when candidates were not used.
-For design artifacts, apply [document form](../development-design/references/document-form.md) to review content selection, hierarchy, readability and consistency across the complete document set.
+For design artifacts, apply [../development-design/references/document-form.md](../development-design/references/document-form.md) to review content selection, hierarchy, readability and consistency across the complete document set.
 A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
 
-Use one independent judge with the settings in [Subagents](../start-implementation/SKILL.md#subagents).
+Use one independent judge with the settings in [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents).
 Give it the original requirements, source baseline, review target and verification evidence by path.
 Include candidate artifacts and comparison criteria when candidates were used.
 Use a fresh context without the owner's preference or prior analysis.

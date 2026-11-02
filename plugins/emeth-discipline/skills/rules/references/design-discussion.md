@@ -9,4 +9,4 @@ Ask for a user decision when the design depends on a choice that requires the us
 Record unresolved matters for the requested Design in its consolidated list, identifying the decisions or work they affect.
 Fill gaps in project facts and prior decision reasons from relevant contracts, code, and [Architecture Memory](../../architecture-memory/SKILL.md).
 
-For multi-topic discussions, use [progress navigation](design-navigation.md).
+For multi-topic discussions, use [design-navigation.md](design-navigation.md).

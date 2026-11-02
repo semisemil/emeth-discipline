@@ -54,4 +54,4 @@ Non-obvious things, surprising behavior, historical context, pitfalls. Skip this
 - If there's a helpful analogy, use it. If there isn't, don't force one
 - If the explorers flagged open questions or gaps, acknowledge them rather than hiding them
 
-For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [../../../../references/delegated-work.md](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.

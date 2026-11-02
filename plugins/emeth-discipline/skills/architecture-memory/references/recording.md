@@ -1,6 +1,13 @@
 # Record durable context
 
-For information worth capturing under [Architecture Memory](../SKILL.md), use [shared writing rules](../../rules/SKILL.md#document-writing-and-revision) for the body. Use the manifest language and omit empty conditional sections or rows. Template placeholders describe content, not sentence form.
+For information worth capturing under [Architecture Memory](../SKILL.md), apply the document rules for the host running this conversation:
+
+- Codex: [../../rules/codex.md: Document writing and revision](../../rules/codex.md#document-writing-and-revision).
+- Claude Code: [../../rules/SKILL.md: Document writing and revision](../../rules/SKILL.md#document-writing-and-revision).
+- Mixdog: [../../rules/mixdog.md: Document writing and revision](../../rules/mixdog.md#document-writing-and-revision).
+
+Use the manifest language and omit empty conditional sections or rows.
+Template placeholders describe content, not sentence form.
 
 ## Record placement
 
@@ -10,7 +17,7 @@ Place each passage by its function, including passages that share a topic.
 |---|---|
 | Domain meanings and relationships, operating conditions, and business background or premises that code alone does not establish | `context` |
 | System boundaries, external relationships, runtime units, and component responsibilities | The corresponding system-context, container, or component document |
-| A significant explicit business or architectural choice whose rationale affects future decisions | ADR; read [decision guidance](decision-templates.md) |
+| A significant explicit business or architectural choice whose rationale affects future decisions | ADR; read [decision-templates.md](decision-templates.md) |
 | Detailed behavior, contracts, implementation plans, and choices local to a Design | The authoritative Design |
 | Work progress, implementation chronology, and test execution results | Completion or verification report |
 
@@ -63,7 +70,7 @@ To revise a section, use `author.js read` for its current target, then supply `i
 {"document":"context","title":"Operating connectivity","body":"Operators report recurring network outages at remote sites while on-site work continues.","confidence":"confirmed","lifecycle":"current","paths":["src/terminal"]}
 ```
 
-Load [base templates](base-templates.md) for a structural survey, [component guidance](component-templates.md) when L3 is needed, or [decision guidance](decision-templates.md) for ADR content. For section retirement or exact lifecycle/metadata edits, use [low-level patches](patching.md).
+Load [base-templates.md](base-templates.md) for a structural survey, [component-templates.md](component-templates.md) when L3 is needed, or [decision-templates.md](decision-templates.md) for ADR content. For section retirement or exact lifecycle/metadata edits, use [patching.md](patching.md).
 
 ## Batch reorganization
 

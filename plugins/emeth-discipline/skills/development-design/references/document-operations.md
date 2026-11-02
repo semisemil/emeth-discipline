@@ -17,7 +17,7 @@ Keep the package's relative links valid at the destination paths.
 Kinds are `feature | bug | refactor | exact_port | maintenance`.
 Supply `--id DESIGN-NNNN` only when a particular unused ID is required.
 To replace a Design or legacy Plan/Spec, add `--supersedes <ID>` for each one; the replaced document then reads as superseded without its own status change.
-For explicit issue targets, apply [work links](../../issue-ledger/references/work-link.md).
+For explicit issue targets, apply [../../issue-ledger/references/work-link.md](../../issue-ledger/references/work-link.md).
 
 # Save results
 

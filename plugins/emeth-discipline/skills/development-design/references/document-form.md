@@ -30,7 +30,7 @@ Place each contract with its owning component or shared interface and reference 
 Use existing task and architecture documents for contracts they already establish.
 
 Keep the reasons needed to understand the selected architecture in the design, beside the affected choice or in its rationale section.
-Record significant architectural decisions through [Architecture Memory ADR guidance](../../architecture-memory/references/decision-templates.md).
+Record significant architectural decisions through [../../architecture-memory/references/decision-templates.md](../../architecture-memory/references/decision-templates.md).
 The design body describes the selected architecture and the parts affected by remaining decisions.
 
 ## Explain the design

@@ -15,10 +15,10 @@ Once authorized, run `node <workflow> update` before code or document reads for 
 Run `changes` for pending paths.
 Classify each affected responsibility and premise: boundaries, runtime/storage units, selected components, deployment, integrations, domain meanings, operating conditions, quality constraints and decision artifacts.
 Use `source --path <path> --diff` for relevant hunks and `source --path <path>` for captured context.
-With a null checkpoint, use the [initialization evidence pass](../architecture-memory-init/references/initialization.md#evidence-pass) on the captured inventory, reconcile current-state documents, and reconstruct no ADR history.
+With a null checkpoint, use the [../architecture-memory-init/references/initialization.md: Evidence pass](../architecture-memory-init/references/initialization.md#evidence-pass) on the captured inventory, reconcile current-state documents, and reconstruct no ADR history.
 
-Locate affected architecture documents with [retrieval](../architecture-memory/references/retrieval.md).
-Read and revise their draft sections through the authoring commands in [recording](../architecture-memory/references/recording.md), including `planned` sections the changes realize.
+Locate affected architecture documents with [../architecture-memory/references/retrieval.md](../architecture-memory/references/retrieval.md).
+Read and revise their draft sections through the authoring commands in [../architecture-memory/references/recording.md](../architecture-memory/references/recording.md), including `planned` sections the changes realize.
 Reconcile sections whose meaning or prerequisites depend on a changed definition, condition or decision, even when their mapped code paths did not change.
 Update stable routing paths on renames.
 Non-ancestor checkpoints describe snapshot differences, not ordered history.
@@ -29,4 +29,4 @@ Once the draft reflects every affected responsibility and premise, run `apply`, 
 Leave checkpoint fields to `apply`; it performs the structural check.
 Preserve document verification fields on partial edits.
 
-For paging, custom roots and failures, read [workflow](../architecture-memory/references/workflow.md). Publication completes at `applied`. Report changed topics and checkpoint in the user's language.
+For paging, custom roots and failures, read [../architecture-memory/references/workflow.md](../architecture-memory/references/workflow.md). Publication completes at `applied`. Report changed topics and checkpoint in the user's language.

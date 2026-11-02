@@ -6,9 +6,9 @@ disable-model-invocation: true
 
 # Why
 
-Investigate the motivation and intent behind code. The companion [how](how.md) skill answers what the code does and how it works. [why](why.md) answers what forces led to its shape.
+Investigate the motivation and intent behind code. The companion workflow in [how.md](how.md) answers what the code does and how it works. This workflow answers what forces led to its shape.
 
-Select each investigator's and synthesizer's model and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
+Select each investigator's and synthesizer's model and reasoning effort through [../../start-implementation/SKILL.md: Subagents](../../start-implementation/SKILL.md#subagents) and use the host mapping in [../../start-implementation/SKILL.md: Harness](../../start-implementation/SKILL.md#harness).
 
 Every spawn is `generalPurpose` with `readonly: false` (agent mode). **Do not use readonly/Ask mode.** It strips MCP access, which disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
 
@@ -90,7 +90,7 @@ Present the synthesis with its evidence tiers and uncertainty intact.
 
 The structure is the one in `<plugin-root>/skills/code-exploration/references/why/synthesizer-prompt.md`: The Question, The Code in Question, What We Found, What We Can Reasonably Infer, Competing Hypotheses, What We Don't Know, Sources Consulted, Confidence Summary. Adapt as needed, but keep the confidence separation intact, and keep Sources Consulted as one line per investigator, including empty searches and material source gaps.
 
-After Sources Consulted, if the user's [why](why.md) question is a precursor to changing this code, convert the lineage findings into a Preserve / Change / Avoid / Risk constraint set for planning the change.
+After Sources Consulted, if the user's question about the code's rationale is a precursor to changing this code, convert the lineage findings into a Preserve / Change / Avoid / Risk constraint set for planning the change.
 
 ## Common Failure Modes to Avoid
 

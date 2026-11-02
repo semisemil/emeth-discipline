@@ -31,7 +31,7 @@ Each returned section includes a `receipt`. On later reads, pass `--seen <receip
 
 Known IDs can be read directly; repeat `--id` or `--path` as needed. Pointers are locations, not evidence. Read the selected record with its conditions and required links.
 
-For no matches, paging, output limits, or tool failure, use [retrieval](references/retrieval.md).
+For no matches, paging, output limits, or tool failure, use [references/retrieval.md](references/retrieval.md).
 For maintenance requests or excessive unrelated content in partial retrieval, use [architecture-memory-maintain](../architecture-memory-maintain/SKILL.md).
 
 New implementation requirements enter the Design through its owning revision workflow.
@@ -40,7 +40,7 @@ New implementation requirements enter the Design through its owning revision wor
 
 Capture durable information needed to interpret or change the system that code alone does not establish: domain meanings and relationships, operating conditions, business-rule background, and the reasons, scope, and tradeoffs of decisions. Code may express a rule without establishing its business meaning or rationale. Learn what code does from the code itself; its behavior is not project context. This includes ordinary project conversation after connection.
 
-Follow [recording](references/recording.md) to distinguish capture value from document placement when the connected architecture documents need new durable context and recording is permitted.
+Follow [references/recording.md](references/recording.md) to distinguish capture value from document placement when the connected architecture documents need new durable context and recording is permitted.
 Patch at a settled decision or meaningful work boundary; unchanged information needs no write.
 
 Recording during conversation leaves the Git checkpoint unchanged. `architecture-memory-update` reconciles committed changes. Report changed topics compactly, and report a recording failure separately from successful design or implementation work.

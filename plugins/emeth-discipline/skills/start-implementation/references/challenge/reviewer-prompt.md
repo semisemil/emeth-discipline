@@ -61,4 +61,4 @@ Return your findings as a structured list:
 ...
 ```
 
-For the completion handoff, use [delegated-work return](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use [../../../../references/delegated-work.md](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.

@@ -17,4 +17,4 @@ node <plugin-root>/writers/document-writer.js status --project-root <absolute-pr
 ```
 
 Status-only requests do not authorize implementation or verification.
-Replacement is declared by the new Design through [creation](document-operations.md) `--supersedes`, not by a status change.
+Replacement is declared by the new Design through [document-operations.md](document-operations.md) `--supersedes`, not by a status change.

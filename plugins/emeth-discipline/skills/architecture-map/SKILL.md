@@ -27,6 +27,6 @@ Document repair follows a separate user request or existing authorization.
 
 ## Show the map
 
-Apply [graph presentation](../../references/graph-presentation.md).
+Apply [../../references/graph-presentation.md](../../references/graph-presentation.md).
 Reuse the same graph when revising this overview.
 Complete when the overview shows the major responsibilities and relationships supported by the documents, with source references and any material gaps identified.

@@ -10,7 +10,7 @@ Explore the codebase to explain how it works or return findings for design.
 For user-facing explanations, build a working mental model for a senior engineer onboarding onto a subsystem.
 The calling conversation owns the explanation or design evidence and checks the decisive source locations.
 
-Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [execution](../../start-implementation/SKILL.md#subagents) and use the host mapping in [Harness](../../start-implementation/SKILL.md#harness).
+Every spawn is a general subagent with read-only access. Select the explorer and explainer models and reasoning effort through [../../start-implementation/SKILL.md: Subagents](../../start-implementation/SKILL.md#subagents) and use the host mapping in [../../start-implementation/SKILL.md: Harness](../../start-implementation/SKILL.md#harness).
 
 ## 1. Assess complexity
 

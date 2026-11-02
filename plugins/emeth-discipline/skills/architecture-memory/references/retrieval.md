@@ -25,6 +25,6 @@ For `complete: false`, continue with the same IDs and original `--seen` set plus
 
 ## Legacy and failures
 
-Unannotated sections use temporary `document-id@line` IDs. Add stable routing under [record format](record-format.md) only when maintaining them.
+Unannotated sections use temporary `document-id@line` IDs. Add stable routing under [record-format.md](record-format.md) only when maintaining them.
 
 `check` validates registration and section structure, excluding ordinary Markdown links and factual accuracy. Treat invalid registration as a retrieval failure. If the helper is unavailable, inspect the manifest and relevant source sections with their shared preambles and prerequisites.

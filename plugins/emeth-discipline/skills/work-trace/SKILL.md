@@ -24,7 +24,7 @@ Verification nodes state the checks actually run, their results and material lim
 
 ## Show and update
 
-Present the first trace immediately before the final response using [graph presentation](../../references/graph-presentation.md).
+Present the first trace immediately before the final response using [../../references/graph-presentation.md](../../references/graph-presentation.md).
 On later turns, update it at that point only when new findings, consequential actions or branches, verification results, or changed conclusions materially change the trace.
 Use the last trace already in context to judge the change; an unchanged trace needs no graph read or publish call and no repeated Mermaid output.
 Reuse the same graph across those turns and preserve the identity of retained events.

@@ -25,7 +25,7 @@ The dashboard listens on `http://127.0.0.1:43127`.
 - `stop`: Stop only the process whose PID and health `instance_id` match the current server state.
 
 For `open`, `status`, and `stop`, run `node <plugin-root>/dashboard/control.js <action>` and report its JSON result.
-For a registration or server-start failure reporting `EPERM` or `EACCES`, follow [sandbox recovery](references/sandbox-setup.md).
+For a registration or server-start failure reporting `EPERM` or `EACCES`, follow [references/sandbox-setup.md](references/sandbox-setup.md).
 
 Never remove or discover projects.
 Apart from the automatic legacy storage migration, never create or modify project `.emeth` state.

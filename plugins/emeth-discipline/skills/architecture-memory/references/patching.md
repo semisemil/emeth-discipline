@@ -1,6 +1,6 @@
 # Exact record patches
 
-For ordinary creation and section edits, use [authoring](recording.md). Outside init/update, this interface remains available for exact replacements, section retirement and allowed ADR lifecycle edits. During init/update, use authoring commands or edit the returned draft directly, then workflow `apply`.
+For ordinary creation and section edits, use [recording.md](recording.md). Outside init/update, this interface remains available for exact replacements, section retirement and allowed ADR lifecycle edits. During init/update, use authoring commands or edit the returned draft directly, then workflow `apply`.
 
 For existing sections, use the `receipt` from `memory.js read` or `author.js read` as `expected`; new sections use `null`. Send UTF-8 JSON on stdin:
 
@@ -12,9 +12,9 @@ node <plugin-root>/skills/architecture-memory/scripts/record.js patch --project-
 {"edits":[{"id":"AM-example","expected":"<receipt>","text":"<complete routed section>"}]}
 ```
 
-Use [record format](record-format.md) for serialized sections. `text: null` retires a resolved temporary section only when its reasons need not remain.
+Use [record-format.md](record-format.md) for serialized sections. `text: null` retires a resolved temporary section only when its reasons need not remain.
 
-An `intro` edit uses `{"before":"<exact trimmed preamble>","after":"<replacement preamble>"}`. Set `edits: []` for introduction-only changes; preserve [accepted ADR history](decision-templates.md).
+An `intro` edit uses `{"before":"<exact trimmed preamble>","after":"<replacement preamble>"}`. Set `edits: []` for introduction-only changes; preserve accepted ADR history as required by [decision-templates.md](decision-templates.md).
 
 For related documents, omit `--document` and send `{"documents":[{"document":"context","edits":[...]},{"document":"adr-001","intro":{"before":"...","after":"..."},"edits":[]}]}`. New documents additionally need `path` and `kind`.
 

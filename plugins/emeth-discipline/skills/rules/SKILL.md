@@ -10,14 +10,15 @@ description: "Apply Emeth's shared baseline rules for scope, authorization, evid
 
 Do not use middle dots.
 
-Apply the rules for the host running this conversation: [Codex](codex.md), [Claude Code](claude-code.md), or [Mixdog](mixdog.md).
+Apply the rules for the host running this conversation: [Codex (codex.md)](codex.md), [Claude Code (claude-code.md)](claude-code.md), or [Mixdog (mixdog.md)](mixdog.md).
 
 <!-- claude-only -->
 ## Document writing and revision
 
 <!-- direct-readers -->
-For Codex and Mixdog, use [Codex document rules](codex.md#document-writing-and-revision) or [Mixdog document rules](mixdog.md#document-writing-and-revision).
-The following document rules apply to Claude Code.
+Codex: read `codex.md`, section "Document writing and revision".
+Mixdog: read `mixdog.md`, section "Document writing and revision".
+The rules below apply to Claude Code.
 
 <!-- /direct-readers -->
 Match document drafts and revisions to user intent, purpose and reader in content, depth and structure.
@@ -39,7 +40,7 @@ When writing tests:
 ## UI design
 
 <!-- direct-readers -->
-For Codex and Mixdog, read [their UI rules](references/ui-design-codex-mixdog.md).
+For Codex and Mixdog, read [references/ui-design-codex-mixdog.md](references/ui-design-codex-mixdog.md).
 The following UI reference applies to Claude Code.
 
 <!-- /direct-readers -->

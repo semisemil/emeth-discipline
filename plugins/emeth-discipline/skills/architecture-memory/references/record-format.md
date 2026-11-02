@@ -24,4 +24,4 @@ Ordinary Markdown links are optional navigation.
 Put shared prerequisites, including source scope and evidence limits, before the first level-2 heading of each affected document or in a required accompanying section.
 Reserve `always: true` for short constraints affecting every architecture-dependent task.
 
-Use a standalone `**confidence/lifecycle**` line with the values and meanings in [section fields](recording.md#section-fields). Missing labels mean unclassified.
+Use a standalone `**confidence/lifecycle**` line with the values and meanings in [recording.md: Section fields](recording.md#section-fields). Missing labels mean unclassified.

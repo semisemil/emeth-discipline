@@ -26,7 +26,7 @@ Before spawning reviewers, state the intent in one clear paragraph from the user
 
 Launch both reviewers in a single message with the host's subagent tool, labeled Reviewer A and Reviewer B.
 
-Each reviewer is read-only. Use reviewer settings and unsupported-setting handling in [execution](../SKILL.md#subagents), with the host mapping in [Harness](../SKILL.md#harness).
+Each reviewer is read-only. Use reviewer settings and unsupported-setting handling in [../SKILL.md: Subagents](../SKILL.md#subagents), with the host mapping in [../SKILL.md: Harness](../SKILL.md#harness).
 
 Read `<plugin-root>/skills/start-implementation/references/challenge/reviewer-prompt.md` and fill in the same template for every reviewer with the stated intent, the diff or file contents, the rubric from `<plugin-root>/skills/start-implementation/references/challenge/rubric.md`, and the code-quality lens from `<plugin-root>/skills/start-implementation/references/challenge/code-quality-review.md`.
 
