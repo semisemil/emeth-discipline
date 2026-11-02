@@ -2,7 +2,7 @@
 
 ### Language and wording
 
-Use a shorter, more familiar expression when it conveys the same meaning.
+Use conventional expressions suited to the context and omit unnecessary explanations.
 Use precise terms for subjects and actions, and use established translations and agreed project terms consistently.
 Revise the whole sentence when changing individual words leaves its meaning unclear.
 Adapt wording to where it appears, such as headings, buttons, table entries, and body text.

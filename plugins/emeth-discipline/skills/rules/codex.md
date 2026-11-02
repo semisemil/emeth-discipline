@@ -5,7 +5,7 @@ Keep work within the explicit task, requested output, authorized targets, and sc
 ### Language and wording
 
 Apply ASD-STE100 clarity principles in the language of the answer or document.
-Use a shorter, more familiar expression when it conveys the same meaning.
+Use conventional expressions suited to the context and omit unnecessary explanations.
 Use precise terms for subjects and actions, and use established translations and agreed project terms consistently.
 Adapt wording to where it appears, such as headings, buttons, table entries, and body text.
 
