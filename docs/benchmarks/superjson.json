@@ -7,13 +7,15 @@
       "model": "gpt-6-astra",
       "reasoning_effort": "low",
       "condition": "None",
-      "measured_at": "2026-10-25",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
       "repetitions": 3,
       "means": {
         "original_passed": 196,
-        "additional_passed": 4.666666666666667,
-        "elapsed_ms": 216428.66666666666,
-        "api_equivalent_usd": 0.9747960000000001
+        "additional_passed": 4.333333333333333,
+        "elapsed_ms": 277759.3333333333,
+        "api_equivalent_usd": 1.1101813333333335
       },
       "runs": [
         {
@@ -23,11 +25,199 @@
             "total": 196
           },
           "additional": {
-            "passed": 7,
+            "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 232211,
-          "api_equivalent_usd": 1.031022
+          "elapsed_ms": 324393,
+          "api_equivalent_usd": 1.145166,
+          "root_thread_id": "01a19e95-0848-7891-ad0e-c0c51271af16",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 3,
+            "total": 14
+          },
+          "elapsed_ms": 258103,
+          "api_equivalent_usd": 0.98684,
+          "root_thread_id": "01a19e95-0827-7473-a28e-ad38a2d10430",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 250782,
+          "api_equivalent_usd": 1.198538,
+          "root_thread_id": "01a19e95-0879-7f20-904b-3fead0ab4c17",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "reasoning_effort": "low",
+      "condition": "Core",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 4,
+        "elapsed_ms": 296034.3333333333,
+        "api_equivalent_usd": 1.2762019999999998
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 3,
+            "total": 14
+          },
+          "elapsed_ms": 261958,
+          "api_equivalent_usd": 1.098612,
+          "root_thread_id": "01a19ea3-24cc-7fd2-bf64-65298fca9c05",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 314566,
+          "api_equivalent_usd": 1.305576,
+          "root_thread_id": "01a19ea3-24e1-75e2-a374-8ed1de0ed7fd",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 311579,
+          "api_equivalent_usd": 1.424418,
+          "root_thread_id": "01a19ea3-2526-71b3-83de-ffbc54248dfe",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "reasoning_effort": "low",
+      "condition": "Workflow",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 8.333333333333334,
+        "elapsed_ms": 674347.3333333334,
+        "api_equivalent_usd": 5.351243333333334
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 810442,
+          "api_equivalent_usd": 5.448808,
+          "root_thread_id": "01a19ed0-8d3d-7421-a7ae-155ccf5d28b8",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 398912,
+          "api_equivalent_usd": 3.869296,
+          "root_thread_id": "01a19ed0-8d96-7941-977d-7a778ac4a84d",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 813688,
+          "api_equivalent_usd": 6.735626,
+          "root_thread_id": "01a19ed0-8dc2-71b0-8740-abc22864c527",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 4,
+        "elapsed_ms": 380411,
+        "api_equivalent_usd": 0.27203933333333336
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 390783,
+          "api_equivalent_usd": 0.2755656,
+          "root_thread_id": "01a19e95-08ca-7413-a6f9-274a24ca855a",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-sol-1/result"
         },
         {
           "repetition": 2,
@@ -39,8 +229,10 @@
             "passed": 4,
             "total": 14
           },
-          "elapsed_ms": 206066,
-          "api_equivalent_usd": 0.963242
+          "elapsed_ms": 362616,
+          "api_equivalent_usd": 0.2757584,
+          "root_thread_id": "01a19e95-08d8-7d20-9e3f-157cea7d5552",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-sol-2/result"
         },
         {
           "repetition": 3,
@@ -49,79 +241,29 @@
             "total": 196
           },
           "additional": {
-            "passed": 3,
+            "passed": 4,
             "total": 14
           },
-          "elapsed_ms": 211009,
-          "api_equivalent_usd": 0.930124
+          "elapsed_ms": 387834,
+          "api_equivalent_usd": 0.264794,
+          "root_thread_id": "01a19e95-08c4-7e40-942a-ed7ef291f7cb",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-sol-3/result"
         }
       ]
     },
     {
-      "model": "gpt-6-astra",
-      "reasoning_effort": "low",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
       "condition": "Core",
-      "measured_at": "2026-10-25",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
       "repetitions": 3,
       "means": {
-        "original_passed": 196,
-        "additional_passed": 6.333333333333333,
-        "elapsed_ms": 276611.3333333333,
-        "api_equivalent_usd": 1.3180046666666667
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 7,
-            "total": 14
-          },
-          "elapsed_ms": 327025,
-          "api_equivalent_usd": 1.524536
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 7,
-            "total": 14
-          },
-          "elapsed_ms": 253176,
-          "api_equivalent_usd": 1.252436
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 5,
-            "total": 14
-          },
-          "elapsed_ms": 249633,
-          "api_equivalent_usd": 1.177042
-        }
-      ]
-    },
-    {
-      "model": "gpt-6-astra",
-      "reasoning_effort": "low",
-      "condition": "Workflow",
-      "measured_at": "2026-10-25",
-      "repetitions": 3,
-      "means": {
-        "original_passed": 195.66666666666666,
-        "additional_passed": 10,
-        "elapsed_ms": 627466.6666666666,
-        "api_equivalent_usd": 5.319544666666666
+        "original_passed": 195,
+        "additional_passed": 7.666666666666667,
+        "elapsed_ms": 406137.6666666667,
+        "api_equivalent_usd": 0.3638510666666666
       },
       "runs": [
         {
@@ -131,14 +273,63 @@
             "total": 196
           },
           "additional": {
-            "passed": 11,
+            "passed": 8,
             "total": 14
           },
-          "elapsed_ms": 658728,
-          "api_equivalent_usd": 5.944688
+          "elapsed_ms": 366604,
+          "api_equivalent_usd": 0.2789436,
+          "root_thread_id": "01a19ea3-2568-77d0-b4b2-5ede6d0c4615",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-sol-1/result"
         },
         {
           "repetition": 2,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 312788,
+          "api_equivalent_usd": 0.4113256,
+          "root_thread_id": "01a19ea3-2584-78a0-a0db-39c9d7750bee",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-sol-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 539021,
+          "api_equivalent_usd": 0.401284,
+          "root_thread_id": "01a19ea3-25b5-7220-8136-785191fee0ee",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-sol-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 10,
+        "elapsed_ms": 819463.3333333334,
+        "api_equivalent_usd": 1.3247929333333335
+      },
+      "runs": [
+        {
+          "repetition": 1,
           "original": {
             "passed": 196,
             "total": 196
@@ -147,8 +338,25 @@
             "passed": 9,
             "total": 14
           },
-          "elapsed_ms": 632590,
-          "api_equivalent_usd": 4.881564
+          "elapsed_ms": 906786,
+          "api_equivalent_usd": 1.3475164,
+          "root_thread_id": "01a19ed0-8de0-71f0-b533-4c260e5090ce",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 966497,
+          "api_equivalent_usd": 1.515086,
+          "root_thread_id": "01a19ed0-8dfb-73f3-a76e-3ec375621b28",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-2/result"
         },
         {
           "repetition": 3,
@@ -160,22 +368,747 @@
             "passed": 10,
             "total": 14
           },
-          "elapsed_ms": 591082,
-          "api_equivalent_usd": 5.132382
+          "elapsed_ms": 585107,
+          "api_equivalent_usd": 1.1117764,
+          "root_thread_id": "01a19ed0-8e17-7a11-b61e-636b08b3e361",
+          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-3/result"
         }
       ]
     },
     {
-      "model": "gpt-6.1-sol",
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 5.333333333333333,
+        "elapsed_ms": 403281.6666666667,
+        "api_equivalent_usd": 0.3300686666666667
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 3,
+            "total": 14
+          },
+          "elapsed_ms": 300639,
+          "api_equivalent_usd": 0.2940988,
+          "root_thread_id": "01a19ec7-3ca0-7703-80e3-fff9a34e9176",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 482278,
+          "api_equivalent_usd": 0.342238,
+          "root_thread_id": "01a19ec7-3cc9-7930-9206-ddb8860334e0",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 426928,
+          "api_equivalent_usd": 0.3538692,
+          "root_thread_id": "01a19ec7-3cc9-7a31-8c03-a8e3e8e042c1",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "high",
+      "condition": "Workflow",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 4,
+        "elapsed_ms": 409387.3333333333,
+        "api_equivalent_usd": 0.3396718
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 466091,
+          "api_equivalent_usd": 0.3836836,
+          "root_thread_id": "01a19ec7-3d02-7000-aeb9-41d0105efdcc",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 381114,
+          "api_equivalent_usd": 0.283953,
+          "root_thread_id": "01a19ec7-3d10-7770-84bd-b2b1c506f6bc",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 380957,
+          "api_equivalent_usd": 0.3513788,
+          "root_thread_id": "01a19ec7-3d26-7ce2-ada0-53191eebd0c0",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "condition": "None",
-      "measured_at": "2026-10-25",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 191.66666666666666,
+        "additional_passed": 4,
+        "elapsed_ms": 161371.66666666666,
+        "api_equivalent_usd": 0.0755708
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 170449,
+          "api_equivalent_usd": 0.0842926,
+          "root_thread_id": "01a19e9d-529b-70d0-a267-e304c92a6e0f",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-medium-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 184,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 146960,
+          "api_equivalent_usd": 0.068496,
+          "root_thread_id": "01a19e9d-5484-7661-8971-36c6d2d11531",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-medium-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 166706,
+          "api_equivalent_usd": 0.0739238,
+          "root_thread_id": "01a19e9d-5477-7c40-94af-4c74d950fec0",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-medium-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 4.333333333333333,
+        "elapsed_ms": 176394.33333333334,
+        "api_equivalent_usd": 0.09504353333333333
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 3,
+            "total": 14
+          },
+          "elapsed_ms": 167231,
+          "api_equivalent_usd": 0.1024134,
+          "root_thread_id": "01a19ead-01e0-7633-848a-55fc98de41fc",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-medium-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 123243,
+          "api_equivalent_usd": 0.0597534,
+          "root_thread_id": "01a19ead-0203-7090-8562-167e69cd0827",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-medium-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 238709,
+          "api_equivalent_usd": 0.1229638,
+          "root_thread_id": "01a19ead-023f-7711-b64f-4febe83cf218",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-medium-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "high",
+      "condition": "None",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195,
+        "additional_passed": 4.333333333333333,
+        "elapsed_ms": 222627.33333333334,
+        "api_equivalent_usd": 0.10105393333333333
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 207372,
+          "api_equivalent_usd": 0.0875826,
+          "root_thread_id": "01a19e9d-5477-7c90-8da7-f195ed85be42",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-high-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 246008,
+          "api_equivalent_usd": 0.0936662,
+          "root_thread_id": "01a19e9d-548c-7e53-94f4-9adf521fd0c0",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-high-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 214502,
+          "api_equivalent_usd": 0.121913,
+          "root_thread_id": "01a19e9d-5477-71f1-9fe2-e6152cb824cb",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/none-terra-high-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "high",
+      "condition": "Core",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 4.666666666666667,
+        "elapsed_ms": 198593.33333333334,
+        "api_equivalent_usd": 0.086411
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 188359,
+          "api_equivalent_usd": 0.0836762,
+          "root_thread_id": "01a19ead-0259-73c3-9f97-9faf01433278",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-high-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 4,
+            "total": 14
+          },
+          "elapsed_ms": 220476,
+          "api_equivalent_usd": 0.0936044,
+          "root_thread_id": "01a19ead-026a-7031-9864-14ce63299451",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-high-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 186945,
+          "api_equivalent_usd": 0.0819524,
+          "root_thread_id": "01a19ead-0285-7fc1-b773-602d3e9b492d",
+          "source": "C:/Proofline/.local/gpt-bench-20261103/core-terra-high-3/result"
+        }
+      ]
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.33333333333334,
+        "additional_passed": 6.333333333333333,
+        "elapsed_ms": 239693.33333333334,
+        "api_equivalent_usd": 0.5735149
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 229133,
+          "api_equivalent_usd": 0.6299783000000001,
+          "session_id": "ab04553a-17b1-4e07-b750-67184ba5d978",
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-none-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 221915,
+          "api_equivalent_usd": 0.5398803,
+          "session_id": "4132a73e-eb2e-4b10-8720-f3f98c1da311",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-none-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 268032,
+          "api_equivalent_usd": 0.5506861,
+          "session_id": "8b6a14a2-ae01-4b65-86ba-3f2c461a5ed5",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-none-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 6.333333333333333,
+        "elapsed_ms": 277808.3333333333,
+        "api_equivalent_usd": 0.6389975333333334
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 273615,
+          "api_equivalent_usd": 0.6277466,
+          "session_id": "b308c1aa-3434-4f68-950c-92663906bbaa",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – exported helper functions > normalizeErrorStackOptions fills all normalized fields with correct defaults"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-core-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 234085,
+          "api_equivalent_usd": 0.5887751000000001,
+          "session_id": "8b545396-7971-4021-a643-2e3f5d06bdaf",
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-core-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 325725,
+          "api_equivalent_usd": 0.7004709,
+          "session_id": "6761bd19-56f3-4791-8ffb-de77341821f2",
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-core-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.33333333333334,
+        "additional_passed": 7.666666666666667,
+        "elapsed_ms": 433193.3333333333,
+        "api_equivalent_usd": 1.4625930666666662
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 580277,
+          "api_equivalent_usd": 1.866445299999999,
+          "session_id": "d8f559db-d3db-4b27-8e4f-b0e60dc73f93",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-workflow-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 407870,
+          "api_equivalent_usd": 1.7001711000000002,
+          "session_id": "8fe02453-7f28-478c-bf54-19e58339f265",
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-workflow-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 311433,
+          "api_equivalent_usd": 0.8211628,
+          "session_id": "618f35c2-4b10-4d9a-9a1b-8912a720ac54",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/sonnet-medium-workflow-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
       "repetitions": 3,
       "means": {
         "original_passed": 195,
         "additional_passed": 6.333333333333333,
-        "elapsed_ms": 380645.6666666667,
-        "api_equivalent_usd": 0.3300121333333333
+        "elapsed_ms": 338699,
+        "api_equivalent_usd": 1.3722288
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 301519,
+          "api_equivalent_usd": 1.4044957999999998,
+          "session_id": "1a0a3421-c9b8-4934-b33c-c3c49590ea82",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-none-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 387129,
+          "api_equivalent_usd": 1.4165071999999999,
+          "session_id": "8ffa88f9-a16d-4f41-b2be-ac6d6a84c4fd",
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-none-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 327449,
+          "api_equivalent_usd": 1.2956834000000002,
+          "session_id": "22511831-96e0-4d8b-8ed3-3c4bc00acaaa",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-none-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.33333333333334,
+        "additional_passed": 6.666666666666667,
+        "elapsed_ms": 412055.6666666667,
+        "api_equivalent_usd": 1.6837044666666667
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 362167,
+          "api_equivalent_usd": 1.6972484,
+          "session_id": "f6ab48e2-fd6a-45b6-9a78-0763b27a6027",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-core-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 403630,
+          "api_equivalent_usd": 1.6853384,
+          "session_id": "96f59dd3-6610-4cd2-b059-5718156346fc",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-core-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 193,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 470370,
+          "api_equivalent_usd": 1.6685266000000003,
+          "session_id": "4454788d-bd1a-4e4c-bc0a-390a59f3ccd3",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > redactPaths=strip_cwd removes cwd prefix",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-core-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "host": "claude-code",
+      "measured_at": "2026-11-03",
+      "plugin_version": "0.25.0",
+      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.66666666666666,
+        "additional_passed": 5.666666666666667,
+        "elapsed_ms": 1155144,
+        "api_equivalent_usd": 3.760867866666666
       },
       "runs": [
         {
@@ -185,27 +1118,20 @@
             "total": 196
           },
           "additional": {
-            "passed": 7,
-            "total": 14
-          },
-          "elapsed_ms": 444724,
-          "api_equivalent_usd": 0.4163976
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
             "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 333528,
-          "api_equivalent_usd": 0.2602664
+          "elapsed_ms": 1213814,
+          "api_equivalent_usd": 3.651114399999999,
+          "session_id": "27213e03-f7cf-4524-a34d-94e0cd6107b9",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > redactPaths=strip_cwd removes cwd prefix"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-workflow-1"
         },
         {
-          "repetition": 3,
+          "repetition": 2,
           "original": {
             "passed": 195,
             "total": 196
@@ -214,308 +1140,16 @@
             "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 363685,
-          "api_equivalent_usd": 0.3133724
-        }
-      ]
-    },
-    {
-      "model": "gpt-6.1-sol",
-      "reasoning_effort": "medium",
-      "condition": "Core",
-      "measured_at": "2026-10-25",
-      "repetitions": 3,
-      "means": {
-        "original_passed": 195.66666666666666,
-        "additional_passed": 6.666666666666667,
-        "elapsed_ms": 442727,
-        "api_equivalent_usd": 0.3451768
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 360633,
-          "api_equivalent_usd": 0.3347608
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 195,
-            "total": 196
-          },
-          "additional": {
-            "passed": 8,
-            "total": 14
-          },
-          "elapsed_ms": 430915,
-          "api_equivalent_usd": 0.332586
+          "elapsed_ms": 1761596,
+          "api_equivalent_usd": 4.254764399999999,
+          "session_id": "632358b0-5ca3-4b03-b90c-94afcaedb001",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-workflow-2"
         },
         {
           "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 536633,
-          "api_equivalent_usd": 0.3681836
-        }
-      ]
-    },
-    {
-      "model": "gpt-6.1-sol",
-      "reasoning_effort": "medium",
-      "condition": "Workflow",
-      "measured_at": "2026-10-25",
-      "repetitions": 3,
-      "means": {
-        "original_passed": 196,
-        "additional_passed": 6.666666666666667,
-        "elapsed_ms": 566575,
-        "api_equivalent_usd": 0.8029128
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 7,
-            "total": 14
-          },
-          "elapsed_ms": 598373,
-          "api_equivalent_usd": 0.8662424
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 8,
-            "total": 14
-          },
-          "elapsed_ms": 740424,
-          "api_equivalent_usd": 0.9422948
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 5,
-            "total": 14
-          },
-          "elapsed_ms": 360928,
-          "api_equivalent_usd": 0.6002012
-        }
-      ]
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "medium",
-      "condition": "Workflow",
-      "measured_at": "2026-10-27",
-      "repetitions": 3,
-      "means": {
-        "original_passed": 195.66666666666666,
-        "additional_passed": 6.666666666666667,
-        "elapsed_ms": 329455,
-        "api_equivalent_usd": 0.34604393333333333
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 8,
-            "total": 14
-          },
-          "elapsed_ms": 333005,
-          "api_equivalent_usd": 0.3671918
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 288388,
-          "api_equivalent_usd": 0.3425172
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 195,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 366972,
-          "api_equivalent_usd": 0.3284228
-        }
-      ]
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "high",
-      "condition": "Workflow",
-      "measured_at": "2026-10-27",
-      "repetitions": 3,
-      "means": {
-        "original_passed": 196,
-        "additional_passed": 7.666666666666667,
-        "elapsed_ms": 449468,
-        "api_equivalent_usd": 0.41899559999999997
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 8,
-            "total": 14
-          },
-          "elapsed_ms": 448685,
-          "api_equivalent_usd": 0.4067488
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 7,
-            "total": 14
-          },
-          "elapsed_ms": 408444,
-          "api_equivalent_usd": 0.3693436
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 8,
-            "total": 14
-          },
-          "elapsed_ms": 491275,
-          "api_equivalent_usd": 0.4808944
-        }
-      ]
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "medium",
-      "condition": "None",
-      "repetitions": 3,
-      "means": {
-        "elapsed_ms": 190052,
-        "api_equivalent_usd": 0.08267293333333332,
-        "original_passed": 195.66666666666666,
-        "additional_passed": 3.6666666666666665
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 4,
-            "total": 14
-          },
-          "elapsed_ms": 196034,
-          "api_equivalent_usd": 0.0712278
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 3,
-            "total": 14
-          },
-          "elapsed_ms": 204619,
-          "api_equivalent_usd": 0.1021112
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 195,
-            "total": 196
-          },
-          "additional": {
-            "passed": 4,
-            "total": 14
-          },
-          "elapsed_ms": 169503,
-          "api_equivalent_usd": 0.0746798
-        }
-      ],
-      "measured_at": "2026-10-27"
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "medium",
-      "condition": "Core",
-      "repetitions": 3,
-      "means": {
-        "elapsed_ms": 229704,
-        "api_equivalent_usd": 0.09581766666666668,
-        "original_passed": 195.66666666666666,
-        "additional_passed": 4.666666666666667
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 3,
-            "total": 14
-          },
-          "elapsed_ms": 169135,
-          "api_equivalent_usd": 0.0775754
-        },
-        {
-          "repetition": 2,
           "original": {
             "passed": 195,
             "total": 196
@@ -524,132 +1158,250 @@
             "passed": 5,
             "total": 14
           },
-          "elapsed_ms": 263532,
-          "api_equivalent_usd": 0.1083904
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 256445,
-          "api_equivalent_usd": 0.1014872
+          "elapsed_ms": 490022,
+          "api_equivalent_usd": 3.3767248000000003,
+          "session_id": "ffa818f6-83b3-4bb5-a6a0-5f1e23c96c0f",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > registerErrorStackProcessor fires even when no errorStack option is set"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-workflow-3"
         }
-      ],
-      "measured_at": "2026-10-27"
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "high",
-      "condition": "None",
-      "repetitions": 3,
-      "means": {
-        "elapsed_ms": 234359,
-        "api_equivalent_usd": 0.08307759999999999,
-        "original_passed": 196,
-        "additional_passed": 4.666666666666667
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 4,
-            "total": 14
-          },
-          "elapsed_ms": 249822,
-          "api_equivalent_usd": 0.0785718
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 4,
-            "total": 14
-          },
-          "elapsed_ms": 257425,
-          "api_equivalent_usd": 0.1001018
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 195830,
-          "api_equivalent_usd": 0.0705592
-        }
-      ],
-      "measured_at": "2026-10-27"
-    },
-    {
-      "model": "gpt-6.1-terra",
-      "reasoning_effort": "high",
-      "condition": "Core",
-      "repetitions": 3,
-      "means": {
-        "elapsed_ms": 278399,
-        "api_equivalent_usd": 0.12754413333333334,
-        "original_passed": 195.33333333333334,
-        "additional_passed": 5.333333333333333
-      },
-      "runs": [
-        {
-          "repetition": 1,
-          "original": {
-            "passed": 195,
-            "total": 196
-          },
-          "additional": {
-            "passed": 4,
-            "total": 14
-          },
-          "elapsed_ms": 267444,
-          "api_equivalent_usd": 0.1140908
-        },
-        {
-          "repetition": 2,
-          "original": {
-            "passed": 195,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 321765,
-          "api_equivalent_usd": 0.1583466
-        },
-        {
-          "repetition": 3,
-          "original": {
-            "passed": 196,
-            "total": 196
-          },
-          "additional": {
-            "passed": 6,
-            "total": 14
-          },
-          "elapsed_ms": 245988,
-          "api_equivalent_usd": 0.110195
-        }
-      ],
-      "measured_at": "2026-10-27"
+      ]
     }
-  ]
+  ],
+  "role_settings": "Workflow roles are explicitly fixed through isolated Codex developer_instructions. None/Core evidence is reused because all observed roles already matched the planned model and effort.",
+  "excluded_runs": [
+    {
+      "run": "workflow-astra-1",
+      "status": "completed",
+      "accounting_complete": true,
+      "stopped_for_setting_mismatch": false,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-astra-1/result",
+      "elapsed_ms": 593125,
+      "api_equivalent_usd": 3.262558,
+      "observed_api_cost_usd": 3.262558,
+      "actors": [
+        {
+          "model": "gpt-6-astra",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "workflow-astra-2",
+      "status": "completed",
+      "accounting_complete": true,
+      "stopped_for_setting_mismatch": false,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-astra-2/result",
+      "elapsed_ms": 881407,
+      "api_equivalent_usd": 5.7983664,
+      "observed_api_cost_usd": 5.7983664,
+      "actors": [
+        {
+          "model": "gpt-6-astra",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "workflow-astra-3",
+      "status": "failed",
+      "accounting_complete": false,
+      "stopped_for_setting_mismatch": true,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-astra-3/result",
+      "elapsed_ms": null,
+      "api_equivalent_usd": null,
+      "observed_api_cost_usd": 5.9352328,
+      "actors": [
+        {
+          "model": "gpt-6-astra",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "workflow-sol-1",
+      "status": "completed",
+      "accounting_complete": true,
+      "stopped_for_setting_mismatch": false,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-sol-1/result",
+      "elapsed_ms": 478482,
+      "api_equivalent_usd": 1.001192,
+      "observed_api_cost_usd": 1.001192,
+      "actors": [
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "workflow-sol-2",
+      "status": "completed",
+      "accounting_complete": true,
+      "stopped_for_setting_mismatch": false,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-sol-2/result",
+      "elapsed_ms": 540379,
+      "api_equivalent_usd": 0.7935192,
+      "observed_api_cost_usd": 0.7935192,
+      "actors": [
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "workflow-sol-3",
+      "status": "completed",
+      "accounting_complete": true,
+      "stopped_for_setting_mismatch": false,
+      "reason": "Delegated settings differed from the predeclared parent-model and effort inheritance condition; original runs remain in their original directories.",
+      "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-sol-3/result",
+      "elapsed_ms": 737080,
+      "api_equivalent_usd": 0.9995816,
+      "observed_api_cost_usd": 0.9995816,
+      "actors": [
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "codex-auto-review",
+          "efforts": [
+            "low"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "medium"
+          ]
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "efforts": [
+            "high"
+          ]
+        }
+      ]
+    }
+  ],
+  "claude_code": {
+    "claude_version": [
+      "2.1.310 (Claude Code)"
+    ],
+    "permission_mode": "auto",
+    "isolation": "--setting-sources project, --strict-mcp-config; None loads no plugin, Core and Workflow load only the release plugin with --plugin-dir",
+    "cost": "Claude Code total_cost_usd at list price, cumulative for the session including subagents; Workflow subagents ran on the parent model",
+    "timing_scope": "Sonnet runs and Opus None/Core repetitions 1-2 ran three at a time; the other Opus runs ran one at a time",
+    "excluded_runs": "Five Opus runs that stopped at the account usage limit were rerun and are not included"
+  }
 }

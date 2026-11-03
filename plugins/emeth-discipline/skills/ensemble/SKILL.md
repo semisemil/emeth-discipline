@@ -1,6 +1,6 @@
 ---
 name: ensemble
-description: "Develop two independent candidates, compare and synthesize them, and obtain one independent review."
+description: "Develop independent candidates, compare and synthesize them, and obtain one independent review."
 disable-model-invocation: true
 ---
 
@@ -10,12 +10,13 @@ disable-model-invocation: true
 
 Set one common task from the user's requirements and the current source evidence.
 State the artifact and open boundary each candidate owns, with distinct output paths.
-Use two independent candidates and one independent judge.
+Start with two independent candidates.
+Add candidates when the task covers multiple design directions.
 Select their settings through [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents).
 
 ## Phase B: Fan out
 
-Dispatch both candidates from the common factual baseline, before developing a preferred solution.
+Dispatch all candidates from the common factual baseline, before developing a preferred solution.
 Give each assignment its prescribed role prompt, source paths, owned output paths and the host's completion contract.
 Use the host mapping in [../start-implementation/SKILL.md: Harness](../start-implementation/SKILL.md#harness).
 The candidates develop their solutions independently.
@@ -23,7 +24,7 @@ The candidates develop their solutions independently.
 ## Compare and synthesize
 
 After dispatch, derive concrete comparison criteria from the task, before reading the answers.
-Once both candidates are complete, select a base and incorporate useful differences into one coherent artifact.
+Once all candidates are complete, select a base and incorporate useful differences into one coherent artifact.
 For design artifacts, reconstruct the selected architecture using [../development-design/references/document-form.md](../development-design/references/document-form.md) before review.
 For an already supplied interface, synthesize its remaining implementation decisions; established behavior stays at its source.
 Record the selected base, accepted differences, material rejected proposals and unresolved limits once in a supporting record alongside the artifact.

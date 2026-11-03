@@ -18,7 +18,7 @@ pstack 0.15.25, 커밋 `6f131f137de64fdaf928278c0fd9ecec520ccbee`에서 가져�
 | 구현과 테스트 분리형 (Separate implementation and tests) | 처리 단계의 상호작용, 상태 전환과 실행 순서 또는 표현 및 연동 경계의 호환 규칙을 도입하거나 변경 | 독립 설계 검토를 거쳐 현재 대화가 구현 | 구현 전 검토자 한 명과 별도 테스트 작성자가 원문 및 기존 동작에 근거해 검증 |
 
 설계 후보 사용 여부는 [blueprint](../plugins/emeth-discipline/skills/start-implementation/references/blueprint.md#phase-b-sketch)가 별도로 판단한다.
-중요한 설계 선택이 남아 대안을 비교할 가치가 있으면 독립 후보 둘을 사용하고, 그렇지 않으면 현재 대화가 계약을 직접 정리한다.
+중요한 설계 선택이 남아 대안을 비교할 가치가 있으면 독립 후보를 사용하고, 그렇지 않으면 현재 대화가 계약을 직접 정리한다.
 후보가 없어도 선택한 흐름의 검토와 테스트 작성 역할은 유지한다.
 
 통합 소유자는 최종 검토의 중요 지적을 수정하고 같은 검토자에게 영향을 받는 부분의 재검토를 받는다.
@@ -44,7 +44,8 @@ pstack 0.15.25, 커밋 `6f131f137de64fdaf928278c0fd9ecec520ccbee`에서 가져�
 
 ## 역할과 인계
 
-[ensemble](../plugins/emeth-discipline/skills/ensemble/SKILL.md)은 독립 후보 둘의 생성, 비교와 합성 및 독립 검토를 담당한다.
+[ensemble](../plugins/emeth-discipline/skills/ensemble/SKILL.md)은 독립 후보의 생성, 비교와 합성 및 독립 검토를 담당한다.
+후보는 기본 2개로 시작하고 여러 설계 방향을 다루면 늘린다.
 구현 요청에서는 호출한 실행 흐름이 검토 시점과 대상을 정한다.
 설계 전용 요청이나 요청된 설계 확인 단계에서는 후보 유무와 관계없이 선택된 설계를 전달하거나 구현하기 전에 독립 검토한다.
 검토 경계와 후보 없는 검토의 공통 계약은 [ensemble의 독립 검토](../plugins/emeth-discipline/skills/ensemble/SKILL.md#independent-review)에 둔다.
@@ -56,15 +57,16 @@ architecture-coop과 blueprint는 후보를 사용할 때 [공통 설계 탐색]
 역할별 전달문에는 해당 역할의 계약과 작업에 필요한 원문, 근거와 담당 경로를 전달한다.
 일반 진행사항은 최종 결과에 모으고, 다른 작업에 필요한 산출물이나 총괄의 판단이 필요한 문제는 즉시 전달한다.
 복구 범위와 중단 조건은 배정할 때 정한다.
-완료 대기는 [호스트의 완료 처리](../plugins/emeth-discipline/skills/rules/codex.md#subagent-completion)를 사용한다.
+완료 전달은 호스트의 기본 기능을 사용한다.
+Codex에서는 [완료 전달 지침](../plugins/emeth-discipline/skills/rules/references/codex-subagent-completion.md)에 따라 부모 세션에 `send_message_to_thread`를 직접 호출한다.
 
 ## 출처와 검증
 
 원본의 출처와 MIT 허가문은 [THIRD_PARTY_NOTICES.md](../plugins/emeth-discipline/THIRD_PARTY_NOTICES.md)에 둔다.
-다음 명령은 스킬 호출 메타데이터와 하위 작업 완료 처리의 실행 결과를 검증한다.
+다음 명령은 스킬 호출 메타데이터와 설치 패키지의 훅 및 문서 명령을 검증한다.
 
 ```text
-node --test --test-concurrency=1 tests/plugin-package.test.js tests/subagent-completion.test.js
+node --test --test-concurrency=1 tests/plugin-package.test.js
 ```
 
 실제 모델의 작업 선택, 품질, 시간과 비용은 별도 실행으로 측정한다.

@@ -46,4 +46,4 @@ Otherwise use the interpretation best supported by context; reuse evidence while
 ## Subagent completion
 
 Before delegating, read `references/codex-subagent-completion.md` and include that path in the assignment.
-Workers read it before executing an assignment; parent and worker apply its allocation, notification, acknowledgment and ownership contract.
+Workers read it before executing an assignment; parent and worker apply its direct parent notification and ownership contract.

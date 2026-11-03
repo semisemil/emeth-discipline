@@ -15,7 +15,7 @@ Use [../../code-exploration/references/how.md](../../code-exploration/references
 
 ## Phase B: Sketch
 
-Use two independent candidates when materially different solutions remain open and comparison can change an important boundary, interface, state ownership, algorithm or tradeoff.
+Use independent candidates when materially different solutions remain open and comparison can change an important boundary, interface, state ownership, algorithm or tradeoff.
 For that case, run [ensemble](../../ensemble/SKILL.md) with the common task, relevant evidence and [blueprint/runner-prompt.md](blueprint/runner-prompt.md), applying [../../../references/design-exploration.md](../../../references/design-exploration.md).
 Otherwise, the calling conversation derives the design contract from requirements and existing evidence.
 Reuse an accepted design while its contract and evidence remain valid.

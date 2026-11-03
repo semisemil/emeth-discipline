@@ -6,4 +6,4 @@ Each candidate investigates its question using relevant sources, follows promisi
 Existing facts inform the design; unresolved assumptions and approaches remain open for exploration.
 
 Each candidate artifact includes discoveries that change the available choices, their supporting evidence, and the conditions under which proposed possibilities apply.
-During synthesis, use findings from both candidates to select or develop the design.
+During synthesis, use findings from all candidates to select or develop the design.
