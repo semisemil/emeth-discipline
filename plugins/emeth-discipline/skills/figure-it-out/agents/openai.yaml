@@ -1,7 +1,7 @@
 interface:
   display_name: "Emeth: Figure It Out"
-  short_description: "Think through a change and carry it through implementation"
-  default_prompt: "Use $figure-it-out to think through this request and carry it through implementation."
+  short_description: "Choose workflows and complete the requested task"
+  default_prompt: "Use $figure-it-out to choose the appropriate workflows and complete the requested outcome."
 
 policy:
   allow_implicit_invocation: false

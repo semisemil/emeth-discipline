@@ -4,7 +4,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 const host = require('./host');
-const { findDocumentSkill } = require('./document-number');
 const { logDiagnostic } = require('./rules-state');
 
 function capture(directory, input) {
@@ -34,10 +33,8 @@ function capture(directory, input) {
 
 function notice(input) {
   if (input.hook_event_name !== 'UserPromptSubmit' || host.name() !== 'codex' || typeof input.prompt !== 'string') return '';
-  const skill = findDocumentSkill(input.prompt);
-  const isDesign = skill?.prefix === 'DESIGN';
   const invocation = input.prompt.trimStart().split(/\s/, 1)[0].replace(/^\$/, '/');
-  if (!isDesign && invocation !== '/emeth-discipline:start-implementation') return '';
+  if (!['/emeth-discipline:figure-it-out', '/emeth-discipline:development-design', '/emeth-discipline:start-implementation'].includes(invocation)) return '';
   const data = host.dataDir();
   if (!data || !input.session_id || !input.turn_id) return '';
   try {

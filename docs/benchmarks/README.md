@@ -13,13 +13,13 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | 6 Astra low | Workflow | 195.7/196 | 8.3/14 | 11분 14초 | $5.351 |
 | 6.1 Sol medium | None | 195.7/196 | 4.0/14 | 6분 20초 | $0.272 |
 | 6.1 Sol medium | Core | 195.0/196 | 7.7/14 | 6분 46초 | $0.364 |
-| 6.1 Sol medium | Workflow | 196/196 | 10.0/14 | 13분 39초 | $1.325 |
+| 6.1 Sol medium | Workflow | 195.7/196 | 9.0/14 | 14분 56초 | $1.386 |
 | 6.1 Terra medium | None | 191.7/196 | 4.0/14 | 2분 41초 | $0.076 |
 | 6.1 Terra medium | Core | 195.7/196 | 4.3/14 | 2분 56초 | $0.095 |
-| 6.1 Terra medium | Workflow | 196/196 | 5.3/14 | 6분 43초 | $0.330 |
+| 6.1 Terra medium | Workflow | 195.7/196 | 6.3/14 | 6분 41초 | $0.383 |
 | 6.1 Terra high | None | 195.0/196 | 4.3/14 | 3분 43초 | $0.101 |
 | 6.1 Terra high | Core | 195.7/196 | 4.7/14 | 3분 19초 | $0.086 |
-| 6.1 Terra high | Workflow | 195.7/196 | 4.0/14 | 6분 49초 | $0.340 |
+| 6.1 Terra high | Workflow | 195.3/196 | 6.0/14 | 7분 31초 | $0.394 |
 | Sonnet 5.5 medium | None | 195.3/196 | 6.3/14 | 4분 0초 | $0.574 |
 | Sonnet 5.5 medium | Core | 195.7/196 | 6.3/14 | 4분 38초 | $0.639 |
 | Sonnet 5.5 medium | Workflow | 195.3/196 | 7.7/14 | 7분 13초 | $1.463 |
@@ -29,9 +29,13 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 모든 수치는 모델과 조건별로 3회 실행한 평균이며, 검사에 실패한 실행도 포함합니다.
 
+고정 주 대조군 `readme-sol-medium-workflow-20261020`의 Sol medium Workflow 평균 비용 $1.131 대비, 수정 지침은 $1.386으로 22.6% 증가했습니다.
+
 ## 측정 조건
 
-측정 버전은 Emeth 0.25.0(`1e54785`)입니다.
+Sol/Terra Workflow는 설계 후보 비교 지침을 반영한 Emeth 0.25.2 작업 트리 스냅샷으로 측정했습니다.
+해당 지침은 0.25.3에 포함됩니다.
+나머지 조건은 Emeth 0.25.0(`1e54785`) 측정값입니다.
 같은 기준 코드와 과제 원문을 사용했습니다.
 GPT는 Codex에서, Claude는 Claude Code의 auto 권한 모드에서 실행했습니다.
 None과 Core의 사용자 입력은 동일하며, Workflow 입력 앞에만 스킬 호출을 붙였습니다.
@@ -47,13 +51,14 @@ Workflow의 하위 역할은 부모와 같은 모델과 추론 수준으로 고�
 | 모델 | Core 비용 | Workflow 비용 | Core 시간 | Workflow 시간 |
 | --- | ---: | ---: | ---: | ---: |
 | 6 Astra low | 1.15배 | 4.82배 | 1.07배 | 2.43배 |
-| 6.1 Sol medium | 1.34배 | 4.87배 | 1.07배 | 2.15배 |
-| 6.1 Terra medium | 1.26배 | 4.37배 | 1.09배 | 2.50배 |
-| 6.1 Terra high | 0.86배 | 3.36배 | 0.89배 | 1.84배 |
+| 6.1 Sol medium | 1.34배 | 5.10배 | 1.07배 | 2.36배 |
+| 6.1 Terra medium | 1.26배 | 5.07배 | 1.09배 | 2.48배 |
+| 6.1 Terra high | 0.86배 | 3.90배 | 0.89배 | 2.03배 |
 | Sonnet 5.5 medium | 1.11배 | 2.55배 | 1.16배 | 1.81배 |
 | Opus 5.5 medium | 1.23배 | 2.74배 | 1.22배 | 3.41배 |
 
 각 배율은 조건별 3회 평균을 같은 모델의 None 평균으로 나눈 값입니다.
+Sol/Terra의 Workflow 배율은 수정 지침과 0.25.0의 None 기준값을 비교합니다.
 
 ## 회차별 결과
 
@@ -74,27 +79,27 @@ Workflow의 하위 역할은 부모와 같은 모델과 추론 수준으로 고�
 | 6.1 Sol medium | Core | 1 | 195/196 | 8/14 | 6분 7초 | $0.279 |
 | 6.1 Sol medium | Core | 2 | 194/196 | 7/14 | 5분 13초 | $0.411 |
 | 6.1 Sol medium | Core | 3 | 196/196 | 8/14 | 8분 59초 | $0.401 |
-| 6.1 Sol medium | Workflow | 1 | 196/196 | 9/14 | 15분 7초 | $1.348 |
-| 6.1 Sol medium | Workflow | 2 | 196/196 | 11/14 | 16분 6초 | $1.515 |
-| 6.1 Sol medium | Workflow | 3 | 196/196 | 10/14 | 9분 45초 | $1.112 |
+| 6.1 Sol medium | Workflow | 1 | 195/196 | 8/14 | 16분 1초 | $1.401 |
+| 6.1 Sol medium | Workflow | 2 | 196/196 | 9/14 | 14분 44초 | $1.323 |
+| 6.1 Sol medium | Workflow | 3 | 196/196 | 10/14 | 14분 4초 | $1.435 |
 | 6.1 Terra medium | None | 1 | 195/196 | 4/14 | 2분 50초 | $0.084 |
 | 6.1 Terra medium | None | 2 | 184/196 | 4/14 | 2분 27초 | $0.068 |
 | 6.1 Terra medium | None | 3 | 196/196 | 4/14 | 2분 47초 | $0.074 |
 | 6.1 Terra medium | Core | 1 | 196/196 | 3/14 | 2분 47초 | $0.102 |
 | 6.1 Terra medium | Core | 2 | 196/196 | 5/14 | 2분 3초 | $0.060 |
 | 6.1 Terra medium | Core | 3 | 195/196 | 5/14 | 3분 59초 | $0.123 |
-| 6.1 Terra medium | Workflow | 1 | 196/196 | 3/14 | 5분 1초 | $0.294 |
-| 6.1 Terra medium | Workflow | 2 | 196/196 | 7/14 | 8분 2초 | $0.342 |
-| 6.1 Terra medium | Workflow | 3 | 196/196 | 6/14 | 7분 7초 | $0.354 |
+| 6.1 Terra medium | Workflow | 1 | 196/196 | 6/14 | 6분 30초 | $0.378 |
+| 6.1 Terra medium | Workflow | 2 | 196/196 | 7/14 | 8분 2초 | $0.466 |
+| 6.1 Terra medium | Workflow | 3 | 195/196 | 6/14 | 5분 30초 | $0.305 |
 | 6.1 Terra high | None | 1 | 195/196 | 4/14 | 3분 27초 | $0.088 |
 | 6.1 Terra high | None | 2 | 195/196 | 5/14 | 4분 6초 | $0.094 |
 | 6.1 Terra high | None | 3 | 195/196 | 4/14 | 3분 35초 | $0.122 |
 | 6.1 Terra high | Core | 1 | 196/196 | 5/14 | 3분 8초 | $0.084 |
 | 6.1 Terra high | Core | 2 | 196/196 | 4/14 | 3분 40초 | $0.094 |
 | 6.1 Terra high | Core | 3 | 195/196 | 5/14 | 3분 7초 | $0.082 |
-| 6.1 Terra high | Workflow | 1 | 196/196 | 4/14 | 7분 46초 | $0.384 |
-| 6.1 Terra high | Workflow | 2 | 196/196 | 4/14 | 6분 21초 | $0.284 |
-| 6.1 Terra high | Workflow | 3 | 195/196 | 4/14 | 6분 21초 | $0.351 |
+| 6.1 Terra high | Workflow | 1 | 196/196 | 6/14 | 6분 38초 | $0.415 |
+| 6.1 Terra high | Workflow | 2 | 195/196 | 6/14 | 9분 16초 | $0.283 |
+| 6.1 Terra high | Workflow | 3 | 195/196 | 6/14 | 6분 39초 | $0.485 |
 | Sonnet 5.5 medium | None | 1 | 196/196 | 6/14 | 3분 49초 | $0.630 |
 | Sonnet 5.5 medium | None | 2 | 195/196 | 6/14 | 3분 42초 | $0.540 |
 | Sonnet 5.5 medium | None | 3 | 195/196 | 7/14 | 4분 28초 | $0.551 |
@@ -122,6 +127,10 @@ Workflow의 하위 역할은 부모와 같은 모델과 추론 수준으로 고�
 - 6.1 Sol medium None 1회차: 195/196
 - 6.1 Sol medium Core 1회차: 195/196
 - 6.1 Sol medium Core 2회차: 194/196
+- 6.1 Sol medium Workflow 1회차: 195/196
+- 6.1 Terra medium Workflow 3회차: 195/196
+- 6.1 Terra high Workflow 2회차: 195/196
+- 6.1 Terra high Workflow 3회차: 195/196
 - 6.1 Terra medium None 1회차: 195/196
 - 6.1 Terra medium None 2회차: 184/196
 - 6.1 Terra medium Core 3회차: 195/196
@@ -129,7 +138,6 @@ Workflow의 하위 역할은 부모와 같은 모델과 추론 수준으로 고�
 - 6.1 Terra high None 2회차: 195/196
 - 6.1 Terra high None 3회차: 195/196
 - 6.1 Terra high Core 3회차: 195/196
-- 6.1 Terra high Workflow 3회차: 195/196
 - Sonnet 5.5 medium None 2회차: 195/196
 - Sonnet 5.5 medium None 3회차: 195/196
 - Sonnet 5.5 medium Core 1회차: 195/196

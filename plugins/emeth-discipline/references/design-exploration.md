@@ -1,8 +1,8 @@
 # Design exploration
 
-The calling workflow frames complementary open questions from the user's goal and accepted constraints for the existing ensemble candidates.
-Include this contract and each candidate's question in its assignment.
-Each candidate investigates its question using relevant sources, follows promising directions it discovers, and develops its design.
+The calling workflow frames one common design task from the user's goal, accepted constraints and relevant evidence.
+Give each ensemble candidate that same task and this contract.
+Each candidate independently investigates the material open choices, follows promising directions it discovers, and develops a coherent design addressing the whole task.
 Existing facts inform the design; unresolved assumptions and approaches remain open for exploration.
 
 Each candidate artifact includes discoveries that change the available choices, their supporting evidence, and the conditions under which proposed possibilities apply.

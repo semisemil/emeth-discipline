@@ -318,30 +318,145 @@
       "reasoning_effort": "medium",
       "condition": "Workflow",
       "measured_at": "2026-11-03",
-      "plugin_version": "0.25.0",
-      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "plugin_version": "0.25.2",
+      "source_origin": "working-tree snapshot based on d80ca6cccd344ffafeb76e858fb52bad380700ef; see source-proof.json",
+      "source_commit": "d80ca6cccd344ffafeb76e858fb52bad380700ef",
+      "release_version": "0.25.3",
       "repetitions": 3,
       "means": {
-        "original_passed": 196,
-        "additional_passed": 10,
-        "elapsed_ms": 819463.3333333334,
-        "api_equivalent_usd": 1.3247929333333335
+        "original_passed": 195.66666666666666,
+        "additional_passed": 9,
+        "elapsed_ms": 896138,
+        "api_equivalent_usd": 1.3863186666666667
       },
       "runs": [
         {
           "repetition": 1,
           "original": {
-            "passed": 196,
+            "passed": 195,
             "total": 196
           },
           "additional": {
-            "passed": 9,
+            "passed": 8,
             "total": 14
           },
-          "elapsed_ms": 906786,
-          "api_equivalent_usd": 1.3475164,
-          "root_thread_id": "01a19ed0-8de0-71f0-b533-4c260e5090ce",
-          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-1/result"
+          "elapsed_ms": 961133,
+          "api_equivalent_usd": 1.4006236,
+          "root_thread_id": "01a1a14d-bbde-7801-b603-d998968a602b",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-sol-1/result",
+          "usage": {
+            "input_tokens": 6024743,
+            "cached_input_tokens": 5830656,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 47783,
+            "reasoning_output_tokens": 10576,
+            "total_tokens": 6072526,
+            "uncached_input_tokens": 194087,
+            "cost": {
+              "uncached_input_usd": 0.343742,
+              "cached_input_usd": 0.5810816,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.4758,
+              "total_usd": 1.4006236
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-sol",
+                "request_count": 51,
+                "thread_ids": [
+                  "01a1a14d-bbde-7801-b603-d998968a602b"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.14973,
+                  "cached_input_usd": 0.3698432,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.23869,
+                  "total_usd": 0.7582632
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a14d-bf8c-7be1-af70-1aef78090a4f"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-sol",
+                "request_count": 60,
+                "thread_ids": [
+                  "01a1a14e-91d1-74d2-80e6-636025ff649c",
+                  "01a1a14e-a78e-79f2-aef8-cf8394f0062f",
+                  "01a1a14e-d185-7191-8920-969f7c0790d9",
+                  "01a1a151-fcea-7d02-ab4c-564aa446be30"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.194012,
+                  "cached_input_usd": 0.2112384,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.23711,
+                  "total_usd": 0.6423604
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 51,
+              "cost": 0.7582632
+            },
+            {
+              "actor": "/root/design_a",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 6,
+              "cost": 0.0805348
+            },
+            {
+              "actor": "/root/design_b",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 7,
+              "cost": 0.0853968
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 22,
+              "cost": 0.2451324
+            },
+            {
+              "actor": "/root/review",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 25,
+              "cost": 0.2312964
+            }
+          ]
         },
         {
           "repetition": 2,
@@ -350,13 +465,126 @@
             "total": 196
           },
           "additional": {
-            "passed": 11,
+            "passed": 9,
             "total": 14
           },
-          "elapsed_ms": 966497,
-          "api_equivalent_usd": 1.515086,
-          "root_thread_id": "01a19ed0-8dfb-73f3-a76e-3ec375621b28",
-          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-2/result"
+          "elapsed_ms": 883658,
+          "api_equivalent_usd": 1.3230448,
+          "root_thread_id": "01a1a14d-bc00-73c0-9d43-f2b493c86fbc",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-sol-2/result",
+          "usage": {
+            "input_tokens": 5184144,
+            "cached_input_tokens": 4943232,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41763,
+            "reasoning_output_tokens": 7406,
+            "total_tokens": 5225907,
+            "uncached_input_tokens": 240912,
+            "cost": {
+              "uncached_input_usd": 0.418412,
+              "cached_input_usd": 0.4902528,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.41438,
+              "total_usd": 1.3230448
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-sol",
+                "request_count": 45,
+                "thread_ids": [
+                  "01a1a14d-bc00-73c0-9d43-f2b493c86fbc"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.157606,
+                  "cached_input_usd": 0.278848,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.18553,
+                  "total_usd": 0.621984
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 3,
+                "thread_ids": [
+                  "01a1a14d-bfa3-7370-9391-647fb4ede753"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-sol",
+                "request_count": 65,
+                "thread_ids": [
+                  "01a1a14e-eeec-7971-9506-c39044405f50",
+                  "01a1a14f-038b-78e2-aae0-590267f3c721",
+                  "01a1a14f-31bc-79c2-a97d-6febe94b0884",
+                  "01a1a153-1a02-7b70-8676-07fa2b6c98f3"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.260806,
+                  "cached_input_usd": 0.2114048,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.22885,
+                  "total_usd": 0.7010608
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 45,
+              "cost": 0.621984
+            },
+            {
+              "actor": "/root/design_a",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 6,
+              "cost": 0.074974
+            },
+            {
+              "actor": "/root/design_b",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 8,
+              "cost": 0.0991188
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 33,
+              "cost": 0.3516064
+            },
+            {
+              "actor": "/root/design_review",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 18,
+              "cost": 0.1753616
+            }
+          ]
         },
         {
           "repetition": 3,
@@ -368,10 +596,123 @@
             "passed": 10,
             "total": 14
           },
-          "elapsed_ms": 585107,
-          "api_equivalent_usd": 1.1117764,
-          "root_thread_id": "01a19ed0-8e17-7a11-b61e-636b08b3e361",
-          "source": "C:/Proofline/.local/gpt-wf-fixed-20261103/workflow-sol-3/result"
+          "elapsed_ms": 843623,
+          "api_equivalent_usd": 1.4352876,
+          "root_thread_id": "01a1a14d-bdc8-75f2-8a68-b0b0b14eee47",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-sol-3/result",
+          "usage": {
+            "input_tokens": 5752912,
+            "cached_input_tokens": 5491712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41083,
+            "reasoning_output_tokens": 7610,
+            "total_tokens": 5793995,
+            "uncached_input_tokens": 261200,
+            "cost": {
+              "uncached_input_usd": 0.482708,
+              "cached_input_usd": 0.5447296,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.40785,
+              "total_usd": 1.4352876
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-sol",
+                "request_count": 52,
+                "thread_ids": [
+                  "01a1a14d-bdc8-75f2-8a68-b0b0b14eee47"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.160452,
+                  "cached_input_usd": 0.3463552,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.20572,
+                  "total_usd": 0.7125272
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 3,
+                "thread_ids": [
+                  "01a1a14d-c0b0-75a3-81d3-3ffda4f7db88"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-sol",
+                "request_count": 57,
+                "thread_ids": [
+                  "01a1a14e-93d4-7473-8be7-ebeff23d138b",
+                  "01a1a14e-aad3-7a91-bf65-c323d527ddf2",
+                  "01a1a14e-ca52-7641-88a7-5903e13e796c",
+                  "01a1a151-5111-7c70-b9e2-da5ce1e4ddb8"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.322256,
+                  "cached_input_usd": 0.1983744,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.20213,
+                  "total_usd": 0.7227604
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 52,
+              "cost": 0.7125272
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 22,
+              "cost": 0.262776
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 6,
+              "cost": 0.098734
+            },
+            {
+              "actor": "/root/contract_tests",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 21,
+              "cost": 0.2806668
+            },
+            {
+              "actor": "/root/design_judge",
+              "model": "gpt-6.1-sol",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 8,
+              "cost": 0.0805836
+            }
+          ]
         }
       ]
     },
@@ -380,14 +721,16 @@
       "reasoning_effort": "medium",
       "condition": "Workflow",
       "measured_at": "2026-11-03",
-      "plugin_version": "0.25.0",
-      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "plugin_version": "0.25.2",
+      "source_origin": "working-tree snapshot based on d80ca6cccd344ffafeb76e858fb52bad380700ef; see source-proof.json",
+      "source_commit": "d80ca6cccd344ffafeb76e858fb52bad380700ef",
+      "release_version": "0.25.3",
       "repetitions": 3,
       "means": {
-        "original_passed": 196,
-        "additional_passed": 5.333333333333333,
-        "elapsed_ms": 403281.6666666667,
-        "api_equivalent_usd": 0.3300686666666667
+        "original_passed": 195.66666666666666,
+        "additional_passed": 6.333333333333333,
+        "elapsed_ms": 400658.6666666667,
+        "api_equivalent_usd": 0.38280013333333335
       },
       "runs": [
         {
@@ -397,13 +740,126 @@
             "total": 196
           },
           "additional": {
-            "passed": 3,
+            "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 300639,
-          "api_equivalent_usd": 0.2940988,
-          "root_thread_id": "01a19ec7-3ca0-7703-80e3-fff9a34e9176",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-1/result"
+          "elapsed_ms": 390285,
+          "api_equivalent_usd": 0.378052,
+          "root_thread_id": "01a1a14d-bdec-7da2-bf92-5e55fb25a4c8",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-medium-1/result",
+          "usage": {
+            "input_tokens": 2879999,
+            "cached_input_tokens": 2715648,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 19755,
+            "reasoning_output_tokens": 1915,
+            "total_tokens": 2899754,
+            "uncached_input_tokens": 164351,
+            "cost": {
+              "uncached_input_usd": 0.145973,
+              "cached_input_usd": 0.134784,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.097295,
+              "total_usd": 0.378052
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 44,
+                "thread_ids": [
+                  "01a1a14d-bdec-7da2-bf92-5e55fb25a4c8"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.051131,
+                  "cached_input_usd": 0.099136,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.057455,
+                  "total_usd": 0.207722
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a14d-c0b4-7051-972e-7eae06fc5b0a"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 32,
+                "thread_ids": [
+                  "01a1a14e-2c53-78c3-8eb3-e4e7e66287f7",
+                  "01a1a14e-3bb7-7530-ba27-2c693da5e0d8",
+                  "01a1a14f-a10e-7ce2-aa92-9ebf261cab74",
+                  "01a1a14f-b13c-79f2-8335-ace6ff971846"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.094842,
+                  "cached_input_usd": 0.035648,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.03984,
+                  "total_usd": 0.17033
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 44,
+              "cost": 0.207722
+            },
+            {
+              "actor": "/root/candidate1",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 6,
+              "cost": 0.0412782
+            },
+            {
+              "actor": "/root/candidate2",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 7,
+              "cost": 0.0458932
+            },
+            {
+              "actor": "/root/judge",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 11,
+              "cost": 0.0393164
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 8,
+              "cost": 0.0438422
+            }
+          ]
         },
         {
           "repetition": 2,
@@ -415,25 +871,251 @@
             "passed": 7,
             "total": 14
           },
-          "elapsed_ms": 482278,
-          "api_equivalent_usd": 0.342238,
-          "root_thread_id": "01a19ec7-3cc9-7930-9206-ddb8860334e0",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-2/result"
+          "elapsed_ms": 482056,
+          "api_equivalent_usd": 0.4655722,
+          "root_thread_id": "01a1a14d-bdec-72b0-b902-b20fb5fb7c82",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-medium-2/result",
+          "usage": {
+            "input_tokens": 3770245,
+            "cached_input_tokens": 3579904,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 23179,
+            "reasoning_output_tokens": 3542,
+            "total_tokens": 3793424,
+            "uncached_input_tokens": 190341,
+            "cost": {
+              "uncached_input_usd": 0.173145,
+              "cached_input_usd": 0.1780672,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.11436,
+              "total_usd": 0.4655722
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 54,
+                "thread_ids": [
+                  "01a1a14d-bdec-72b0-b902-b20fb5fb7c82"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.047946,
+                  "cached_input_usd": 0.1348608,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.075845,
+                  "total_usd": 0.2586518
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a14d-c0f4-7a73-a6e3-a68d6cf709f5"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 34,
+                "thread_ids": [
+                  "01a1a14e-5723-71d1-ad32-1b6d9d8d270f",
+                  "01a1a14e-658a-7ac3-bb3e-455d57d95ae6",
+                  "01a1a14f-0f96-79c2-b90e-c4fc44e2d697",
+                  "01a1a14f-b816-7b60-a005-c065e2a6b84a"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.125199,
+                  "cached_input_usd": 0.0432064,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.038515,
+                  "total_usd": 0.2069204
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 54,
+              "cost": 0.2586518
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 4,
+              "cost": 0.032173
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 4,
+              "cost": 0.0345692
+            },
+            {
+              "actor": "/root/design_review",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 18,
+              "cost": 0.0998666
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 8,
+              "cost": 0.0403116
+            }
+          ]
         },
         {
           "repetition": 3,
           "original": {
-            "passed": 196,
+            "passed": 195,
             "total": 196
           },
           "additional": {
             "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 426928,
-          "api_equivalent_usd": 0.3538692,
-          "root_thread_id": "01a19ec7-3cc9-7a31-8c03-a8e3e8e042c1",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-medium-3/result"
+          "elapsed_ms": 329635,
+          "api_equivalent_usd": 0.3047762,
+          "root_thread_id": "01a1a14d-bdec-71d0-9814-1b913e44d547",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-medium-3/result",
+          "usage": {
+            "input_tokens": 2145665,
+            "cached_input_tokens": 2005248,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 16994,
+            "reasoning_output_tokens": 2063,
+            "total_tokens": 2162659,
+            "uncached_input_tokens": 140417,
+            "cost": {
+              "uncached_input_usd": 0.121509,
+              "cached_input_usd": 0.0993472,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.08392,
+              "total_usd": 0.3047762
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 34,
+                "thread_ids": [
+                  "01a1a14d-bdec-71d0-9814-1b913e44d547"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.040559,
+                  "cached_input_usd": 0.0740288,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.05227,
+                  "total_usd": 0.1668578
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a14d-c04f-7ff0-8f82-fafe10ff1f21"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 23,
+                "thread_ids": [
+                  "01a1a14e-5ef5-7c03-a45a-4069502f7eb8",
+                  "01a1a14e-6bd8-7fd0-b4af-d27a6942c635",
+                  "01a1a14f-4564-7320-8594-9da791182934",
+                  "01a1a150-2d67-7df2-babd-714ba0413b78"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.08095,
+                  "cached_input_usd": 0.0253184,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.03165,
+                  "total_usd": 0.1379184
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 34,
+              "cost": 0.1668578
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 4,
+              "cost": 0.0318394
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 4,
+              "cost": 0.0184458
+            },
+            {
+              "actor": "/root/judge",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 8,
+              "cost": 0.044578
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "medium"
+              ],
+              "requests": 7,
+              "cost": 0.0430552
+            }
+          ]
         }
       ]
     },
@@ -442,14 +1124,16 @@
       "reasoning_effort": "high",
       "condition": "Workflow",
       "measured_at": "2026-11-03",
-      "plugin_version": "0.25.0",
-      "source_commit": "1e547850efc4f1be9a4d1a86eff5cf98a7114fb2",
+      "plugin_version": "0.25.2",
+      "source_origin": "working-tree snapshot based on d80ca6cccd344ffafeb76e858fb52bad380700ef; see source-proof.json",
+      "source_commit": "d80ca6cccd344ffafeb76e858fb52bad380700ef",
+      "release_version": "0.25.3",
       "repetitions": 3,
       "means": {
-        "original_passed": 195.66666666666666,
-        "additional_passed": 4,
-        "elapsed_ms": 409387.3333333333,
-        "api_equivalent_usd": 0.3396718
+        "original_passed": 195.33333333333334,
+        "additional_passed": 6,
+        "elapsed_ms": 451182,
+        "api_equivalent_usd": 0.39448773333333337
       },
       "runs": [
         {
@@ -459,28 +1143,254 @@
             "total": 196
           },
           "additional": {
-            "passed": 4,
+            "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 466091,
-          "api_equivalent_usd": 0.3836836,
-          "root_thread_id": "01a19ec7-3d02-7000-aeb9-41d0105efdcc",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-1/result"
+          "elapsed_ms": 398105,
+          "api_equivalent_usd": 0.4151052,
+          "root_thread_id": "01a1a15d-cea4-78f2-bdb4-82f61f980958",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-high-1/result",
+          "usage": {
+            "input_tokens": 3554522,
+            "cached_input_tokens": 3402112,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 23750,
+            "reasoning_output_tokens": 3958,
+            "total_tokens": 3578272,
+            "uncached_input_tokens": 152410,
+            "cost": {
+              "uncached_input_usd": 0.128334,
+              "cached_input_usd": 0.1694912,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.11728,
+              "total_usd": 0.4151052
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 48,
+                "thread_ids": [
+                  "01a1a15d-cea4-78f2-bdb4-82f61f980958"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.046016,
+                  "cached_input_usd": 0.1116352,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.061165,
+                  "total_usd": 0.2188162
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a15d-cff4-7031-ba1b-1f05c19b5c35"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 42,
+                "thread_ids": [
+                  "01a1a15e-47c6-7382-aeed-c8d642849f81",
+                  "01a1a15e-5503-7521-8350-f25627fee664",
+                  "01a1a15f-3bd3-7ed2-8382-08e12621a15a",
+                  "01a1a161-91fc-7402-90b2-dc0af729b522"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.082318,
+                  "cached_input_usd": 0.057856,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.056115,
+                  "total_usd": 0.196289
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 48,
+              "cost": 0.2188162
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 5,
+              "cost": 0.0300828
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 5,
+              "cost": 0.0359306
+            },
+            {
+              "actor": "/root/design_review",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 18,
+              "cost": 0.0691126
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 14,
+              "cost": 0.061163
+            }
+          ]
         },
         {
           "repetition": 2,
           "original": {
-            "passed": 196,
+            "passed": 195,
             "total": 196
           },
           "additional": {
-            "passed": 4,
+            "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 381114,
-          "api_equivalent_usd": 0.283953,
-          "root_thread_id": "01a19ec7-3d10-7770-84bd-b2b1c506f6bc",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-2/result"
+          "elapsed_ms": 556339,
+          "api_equivalent_usd": 0.2830072,
+          "root_thread_id": "01a1a15d-ceaf-7e31-beea-8ca46f631562",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-high-2/result",
+          "usage": {
+            "input_tokens": 1974284,
+            "cached_input_tokens": 1852416,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 18024,
+            "reasoning_output_tokens": 2527,
+            "total_tokens": 1992308,
+            "uncached_input_tokens": 121868,
+            "cost": {
+              "uncached_input_usd": 0.102158,
+              "cached_input_usd": 0.0916992,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.08915,
+              "total_usd": 0.2830072
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 30,
+                "thread_ids": [
+                  "01a1a15d-ceaf-7e31-beea-8ca46f631562"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.038566,
+                  "cached_input_usd": 0.0636416,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.05227,
+                  "total_usd": 0.1544776
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a15d-d000-7f70-8dad-38f911fb4f18"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 25,
+                "thread_ids": [
+                  "01a1a15e-eb2e-7912-a268-8fb8b6c7aad8",
+                  "01a1a15f-161f-79f0-920d-287b72500776",
+                  "01a1a15f-cc6d-7fa1-b207-02dedc58b337",
+                  "01a1a160-ab12-74d3-bf18-5d1901e5eb00"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.063592,
+                  "cached_input_usd": 0.0280576,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.03688,
+                  "total_usd": 0.1285296
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 30,
+              "cost": 0.1544776
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 5,
+              "cost": 0.0359494
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 5,
+              "cost": 0.0211868
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 7,
+              "cost": 0.0427564
+            },
+            {
+              "actor": "/root/judge",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 8,
+              "cost": 0.028637
+            }
+          ]
         },
         {
           "repetition": 3,
@@ -489,13 +1399,126 @@
             "total": 196
           },
           "additional": {
-            "passed": 4,
+            "passed": 6,
             "total": 14
           },
-          "elapsed_ms": 380957,
-          "api_equivalent_usd": 0.3513788,
-          "root_thread_id": "01a19ec7-3d26-7ce2-ada0-53191eebd0c0",
-          "source": "C:/Proofline/.local/gpt-bench-20261103/workflow-terra-high-3/result"
+          "elapsed_ms": 399102,
+          "api_equivalent_usd": 0.4853508,
+          "root_thread_id": "01a1a15d-cebf-7bf3-aa0b-e4f4e9a7021b",
+          "source": "C:/Proofline/.local/design-required-20261103/workflow-terra-high-3/result",
+          "usage": {
+            "input_tokens": 3729426,
+            "cached_input_tokens": 3520256,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 24190,
+            "reasoning_output_tokens": 2702,
+            "total_tokens": 3753616,
+            "uncached_input_tokens": 209170,
+            "cost": {
+              "uncached_input_usd": 0.190809,
+              "cached_input_usd": 0.1751168,
+              "cache_write_input_usd": 0,
+              "output_usd": 0.119425,
+              "total_usd": 0.4853508
+            },
+            "cost_by_role_model": [
+              {
+                "role": "coordinator",
+                "model": "gpt-6.1-terra",
+                "request_count": 48,
+                "thread_ids": [
+                  "01a1a15d-cebf-7bf3-aa0b-e4f4e9a7021b"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.083486,
+                  "cached_input_usd": 0.114784,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.0642,
+                  "total_usd": 0.26247
+                }
+              },
+              {
+                "role": "guardian",
+                "model": "codex-auto-review",
+                "request_count": 2,
+                "thread_ids": [
+                  "01a1a15d-d02b-7110-8fc7-dbe22dee4671"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0,
+                  "cached_input_usd": 0,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0,
+                  "total_usd": 0
+                }
+              },
+              {
+                "role": "native-agent",
+                "model": "gpt-6.1-terra",
+                "request_count": 44,
+                "thread_ids": [
+                  "01a1a15e-5a7e-7342-b27e-a4b427eece34",
+                  "01a1a15e-681a-7270-9781-7871132d4d01",
+                  "01a1a15e-d05f-7690-9232-de0012c448c8",
+                  "01a1a15f-6287-7ec3-bd3d-d011ec7de84e"
+                ],
+                "cost": {
+                  "uncached_input_usd": 0.107323,
+                  "cached_input_usd": 0.0603328,
+                  "cache_write_input_usd": 0,
+                  "output_usd": 0.055225,
+                  "total_usd": 0.2228808
+                }
+              }
+            ]
+          },
+          "actors": [
+            {
+              "actor": "/root",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 48,
+              "cost": 0.26247
+            },
+            {
+              "actor": "/root/candidate_a",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 6,
+              "cost": 0.0292896
+            },
+            {
+              "actor": "/root/candidate_b",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 6,
+              "cost": 0.0275312
+            },
+            {
+              "actor": "/root/tests",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 18,
+              "cost": 0.1163042
+            },
+            {
+              "actor": "/root/judge",
+              "model": "gpt-6.1-terra",
+              "efforts": [
+                "high"
+              ],
+              "requests": 14,
+              "cost": 0.0497558
+            }
+          ]
         }
       ]
     },
@@ -1403,5 +2426,59 @@
     "cost": "Claude Code total_cost_usd at list price, cumulative for the session including subagents; Workflow subagents ran on the parent model",
     "timing_scope": "Sonnet runs and Opus None/Core repetitions 1-2 ran three at a time; the other Opus runs ran one at a time",
     "excluded_runs": "Five Opus runs that stopped at the account usage limit were rerun and are not included"
+  },
+  "workflow_remeasurement": {
+    "release_version": "0.25.3",
+    "measured_manifest_version": "0.25.2",
+    "source_origin": "working-tree snapshot based on d80ca6cccd344ffafeb76e858fb52bad380700ef; see source-proof.json",
+    "source_proof": "C:/Proofline/.local/design-required-20261103/source-proof.json",
+    "source_proof_sha256": "e3d3392daa8f9a11bd3eafb2bd20e9a79c0c6a3508b7857d3939193ccc5c85f2",
+    "models": [
+      {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium"
+      },
+      {
+        "model": "gpt-6.1-terra",
+        "reasoning_effort": "medium"
+      },
+      {
+        "model": "gpt-6.1-terra",
+        "reasoning_effort": "high"
+      }
+    ],
+    "repetitions": 3,
+    "codex_version": "0.163.0",
+    "windows_sandbox": "mxc",
+    "parallel_runs": 6,
+    "pricing": {
+      "source": "C:/Proofline/.local/skill-token-benchmark/pricing.mjs",
+      "sha256": "de614d97c4b59232b83f292773593c105fd8c2fd67a6b3621ffa5e8c71269673",
+      "unchanged_from_previous": true
+    },
+    "primary_control": {
+      "id": "readme-sol-medium-workflow-20261020",
+      "source": "C:/Proofline/.local/readme-control-20261025/CONTROL.json",
+      "means": {
+        "elapsed_ms": 567101.6666666666,
+        "api_equivalent_usd": 1.1309325333333333,
+        "additional_passed": 8.666666666666666
+      },
+      "sol_workflow_comparison": {
+        "cost_ratio": 1.225819070374254,
+        "elapsed_ratio": 1.5802069587757634
+      }
+    },
+    "procedures": {
+      "candidate_comparison_runs": 9,
+      "how_guide_read_runs": 3,
+      "why_guide_read_runs": 0,
+      "why_omission_reasons": 8
+    },
+    "limits": "Three runs per group, one implementation task, no matched random seeds. Observed differences do not establish a general causal quality benefit.",
+    "coverage": "One fixed SuperJSON implementation task; does not evaluate the newly supported investigation, architecture collaboration, document, test-only or measurement-only outcomes.",
+    "completion": "The isolated native sessions do not expose the Codex app send_message_to_thread tool. The installed workflow explicitly handles unavailable delivery by reporting that limit. These runs do not validate app-tool notification delivery.",
+    "fast_mode": "unverified; service tier not recorded",
+    "source": "C:/Proofline/.local/design-required-20261103/results.json"
   }
 }

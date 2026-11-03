@@ -18,7 +18,6 @@ const DESIGN_DOCUMENT = Object.freeze({ directory: ['.emeth', 'designs'], prefix
 const DOCUMENT_SKILLS = Object.freeze({
   '/emeth-discipline:issue-ledger': ISSUE_DOCUMENT,
   '/emeth-discipline:development-design': DESIGN_DOCUMENT,
-  '/emeth-discipline:figure-it-out': DESIGN_DOCUMENT,
 });
 
 function findDocumentSkill(prompt) {

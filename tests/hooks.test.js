@@ -44,6 +44,14 @@ function output(result) {
   return result.stdout ? JSON.parse(result.stdout) : {};
 }
 
+function requestSource(response) {
+  const context = response.hookSpecificOutput?.additionalContext || '';
+  const source = context.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
+  assert.ok(source, 'The workflow receives an original request path');
+  assert.ok(path.isAbsolute(source));
+  return source;
+}
+
 test('numbering and memory notices compose independently, including a failed number lookup', (t) => {
   const f = fixture(t); f.memory();
   const response = output(f.run({ prompt: '/emeth-discipline:development-design' }));
@@ -68,21 +76,55 @@ test('numbering and memory notices compose independently, including a failed num
   assert.equal(entry.filePath, issues);
 });
 
-test('Codex design entry preserves the exact request as a reusable source', (t) => {
+test('Codex figure-it-out preserves the exact request without a Design number', (t) => {
   const f = fixture(t);
-  const prompt = '/emeth-discipline:figure-it-out\r\n상태는 `new`, `done`, `failed`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal을 유지하세요.\n';
-  const input = { turn_id: 'turn-a', prompt };
-  const response = output(f.run(input));
-  const source = response.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: '))?.slice('Current request source: '.length);
-  assert.ok(source, 'The workflow receives an original request path');
-  assert.deepEqual(fs.readFileSync(source), Buffer.from(prompt, 'utf8'));
-  assert.equal(output(f.run(input)).hookSpecificOutput.additionalContext, response.hookSpecificOutput.additionalContext);
-  const later = prompt + '추가 요구사항';
-  const next = output(f.run({ turn_id: 'turn-b', prompt: later }));
-  const nextSource = next.hookSpecificOutput.additionalContext.split('\n').find(line => line.startsWith('Current request source: ')).slice('Current request source: '.length);
-  assert.notEqual(nextSource, source);
-  assert.equal(fs.readFileSync(nextSource, 'utf8'), later);
-  assert.equal(fs.readFileSync(source, 'utf8'), prompt);
+  for (const [index, invocation] of ['/emeth-discipline:figure-it-out', '$emeth-discipline:figure-it-out'].entries()) {
+    const prompt = `${invocation}\r\n상태는 \`new\`, \`done\`, \`failed\`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal, 🧪을 유지하세요.  \n`;
+    const input = { session_id: `session-${index}`, turn_id: 'turn-a', prompt };
+    const response = output(f.run(input));
+    assert.doesNotMatch(response.hookSpecificOutput.additionalContext, /\bDESIGN-\d{4,}\b/);
+    const source = requestSource(response);
+    assert.deepEqual(fs.readFileSync(source), Buffer.from(prompt, 'utf8'));
+    assert.equal(output(f.run(input)).hookSpecificOutput.additionalContext, response.hookSpecificOutput.additionalContext);
+
+    const later = prompt + '추가 요구사항';
+    const nextSource = requestSource(output(f.run({ ...input, turn_id: 'turn-b', prompt: later })));
+    const otherSessionSource = requestSource(output(f.run({ ...input, session_id: `other-session-${index}` })));
+    assert.equal(new Set([source, nextSource, otherSessionSource]).size, 3);
+    assert.deepEqual(fs.readFileSync(nextSource), Buffer.from(later, 'utf8'));
+    assert.deepEqual(fs.readFileSync(otherSessionSource), Buffer.from(prompt, 'utf8'));
+    assert.deepEqual(fs.readFileSync(source), Buffer.from(prompt, 'utf8'));
+  }
+});
+
+test('direct Codex design and implementation entries retain their request sources', (t) => {
+  const f = fixture(t);
+  for (const skill of ['development-design', 'start-implementation']) {
+    for (const sigil of ['/', '$']) {
+      const prompt = `${sigil}emeth-discipline:${skill}\r\n원문을 \\그대로 보존하세요.\n`;
+      const input = { turn_id: `${skill}-${sigil === '/' ? 'slash' : 'mention'}`, prompt };
+      const response = output(f.run(input));
+      if (skill === 'development-design') assert.match(response.hookSpecificOutput.additionalContext, /\bDESIGN-0001\b/);
+      const source = requestSource(response);
+      assert.deepEqual(fs.readFileSync(source), Buffer.from(prompt, 'utf8'));
+      assert.equal(requestSource(output(f.run(input))), source);
+    }
+  }
+});
+
+test('ordinary text and similar skill names do not number or capture a request', (t) => {
+  const f = fixture(t);
+  const prompts = [
+    'figure-it-out을 사용해 조사해 주세요.',
+    '다음 작업은 $emeth-discipline:figure-it-out으로 진행합니다.',
+    '/emeth-discipline:figure-it-out-later 조사해 주세요.',
+    '$emeth-discipline:development-design-review 검토해 주세요.',
+    '/emeth-discipline:start-implementation-later 구현해 주세요.',
+  ];
+  for (const [index, prompt] of prompts.entries()) {
+    assert.deepEqual(output(f.run({ turn_id: `ordinary-${index}`, prompt })), {});
+  }
+  assert.equal(fs.existsSync(path.join(f.env.PLUGIN_DATA, 'request-sources')), false);
 });
 
 test('startup, resume, compact and subagents keep their prompt and memory lifecycle boundaries', (t) => {

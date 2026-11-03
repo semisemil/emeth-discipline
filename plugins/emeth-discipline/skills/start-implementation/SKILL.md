@@ -52,6 +52,13 @@ For Combined implementation and tests, supply the completed implementation, orig
 Resolve material findings and obtain that judge's review of the affected corrections before delivery.
 Both workflows finish with verification of the complete public result on the real artifact.
 
+### Implementation candidates
+
+Optionally use [../ensemble/SKILL.md](../ensemble/SKILL.md) to compare the smallest useful scope of actual implementation candidates when the comparison can resolve a remaining implementation choice.
+Use [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md) for candidate assignments under the accepted Design.
+Use an isolated experiment when only an observation is needed to decide; implementation candidates supply code intended for integration.
+Keep the selected workflow's implementation ownership and independent review and test roles.
+
 ## Principles
 
 Read the leaf guidance document in full for any principle you apply. Each entry names when it applies.
