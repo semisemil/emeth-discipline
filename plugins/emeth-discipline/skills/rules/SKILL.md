@@ -10,6 +10,11 @@ description: "Apply Emeth's shared baseline rules for scope, authorization, evid
 
 Do not use middle dots.
 
+## Language
+
+Before delivering a report, check its summary, findings, and decision criteria.
+Match verbs to their subjects, name measured and calculated values by what they represent, and make clear when each action applies.
+
 ## Work records
 
 `<plugin-root>` = `{{plugin-root}}`.
