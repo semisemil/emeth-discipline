@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Sharpen"
+  short_description: "Sharpen goals, expert practice and perspectives"
+  default_prompt: "Use $sharpen to strengthen this task with a clear goal, expert methods and tools, external verification and multidisciplinary subagents."
+
+policy:
+  allow_implicit_invocation: false

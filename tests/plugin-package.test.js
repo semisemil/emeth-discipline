@@ -46,7 +46,7 @@ test('Codex skill metadata keeps invocation policies and the figure-it-out entry
     ['architecture-memory-init', false], ['architecture-memory', true],
     ['architecture-memory-update', true], ['architecture-memory-maintain', true], ['figure-it-out', false],
     ['architecture-map', true], ['code-map', true], ['work-trace', true],
-    ['adaptive-reasoning', false],
+    ['adaptive-reasoning', false], ['sharpen', false],
   ]) {
     const metadata = parse(fs.readFileSync(path.join(packageRoot, 'skills', name, 'agents/openai.yaml'), 'utf8'));
     assert.equal(metadata.policy.allow_implicit_invocation, implicit, name);
