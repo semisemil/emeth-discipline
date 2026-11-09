@@ -120,9 +120,10 @@ Review a delegated artifact against its assigned contract and resolve material f
 For ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
 Attribute agreement to the independent reviewers.
 
-**Independent assignments use fresh contexts.** Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
+진행 중 서로의 결정을 함께 조정해야 하는 작업은 같은 세션에서 이어간다.
+독립 검토, 대량 자료 조사, 따로 완결할 수 있는 작업의 병렬 처리는 분리한다.
+Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
 Pass changed contracts, source paths and stopping conditions with the follow-up.
-Start a fresh assignment for new work and carry still-valid decisions by path.
 
 ## Harness
 
