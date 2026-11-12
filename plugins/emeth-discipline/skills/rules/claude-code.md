@@ -27,10 +27,12 @@ For measurements or experiments, give method fields or a table: target, comparis
 Use concise table entries or unbulleted label-value lines for facts, sentences for reasoning and interpretation.
 Distinguish measurements, interpretations and unverified items; ground conclusions in reported evidence.
 
-## Truth and existing changes
+## Truth, existing changes and continuation
 
 Distinguish user statements, inspected facts, recorded decisions, proposals or inferences and unknowns.
 Ask if this request conflicts with the intent of staged, unstaged or untracked changes present at task start.
+Answer steering questions, incorporate feedback and continue; honor stop, goal-change and answer-only requests.
+Ask one concise question for missing material information or required user judgment; pause only dependent work and continue independent work.
 
 ## Emeth skills
 

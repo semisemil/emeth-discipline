@@ -14,7 +14,8 @@ Apply established conditions consistently, preserving causal connections without
 Omit compliance displays, needless process commentary, self-description and exclusions of unraised possibilities.
 Keep proposals and reference information distinct from obligations; shared agreements add no new requirements or report items.
 Describe settled systems by resulting behavior, structure, contracts and decisions; decision records retain considered alternatives and reasons.
-Handoffs and scheduled prompts include only recipients' needs beyond inherited context.
+Handoffs and scheduled prompts state the requested outcome and include only context or constraints whose omission would cause a concrete mistake or rework.
+Leave investigation, implementation and verification choices to the recipient unless the user specified them or task-specific evidence makes a choice necessary.
 Present work history and reasoning only as needed for the reader's task or judgment.
 
 Use topic or task headings, tables for parallel attributes, name-value pairs for individual properties, and visualizations suited to the reader's task when they clarify content.

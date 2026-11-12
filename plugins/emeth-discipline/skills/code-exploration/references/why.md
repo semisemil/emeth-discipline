@@ -10,7 +10,7 @@ Investigate the motivation and intent behind code. The companion workflow in [ho
 
 Select each investigator's and synthesizer's model and reasoning effort through [../../start-implementation/SKILL.md: Subagents](../../start-implementation/SKILL.md#subagents) and use the host mapping in [../../start-implementation/SKILL.md: Harness](../../start-implementation/SKILL.md#harness).
 
-Every spawn is `generalPurpose` with `readonly: false` (agent mode). **Do not use readonly/Ask mode.** It strips MCP access, which disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
+Spawn every investigator and the synthesizer as a general subagent with connected MCP tools available; the MCP-backed investigators and the synthesizer's citation spot-checks depend on them. Where the host's read-only mode removes MCP access, spawn without that mode and state the write restriction in the assignment prompt.
 
 ## Operating Posture
 
@@ -52,7 +52,7 @@ For delegated research, assign independent evidence questions and the tools need
 Run independent investigations concurrently.
 
 Each investigator's prompt is `<plugin-root>/skills/code-exploration/references/why/investigator-prompt.md` filled in, plus:
-- the category playbook `references/sources/<source>.md` for the selected MCP, adapted from the examples in `<plugin-root>/skills/code-exploration/references/why/source-playbook.md`
+- the category playbook selected and adapted from the [source playbook index](why/source-playbook.md)
 - `<plugin-root>/skills/code-exploration/references/why/sources/incident-postmortem.md` **if the target code looks defensive** (null checks, retry logic, timeout handling, rate limiting, feature flags, egress guards, OOM handlers)
 - the code anchor and the user's original question
 

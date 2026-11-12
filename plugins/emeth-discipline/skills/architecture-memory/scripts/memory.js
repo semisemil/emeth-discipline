@@ -112,8 +112,13 @@ function recordsFromSources(state, sources) {
     if (sourceBytes > MAX_CORPUS_BYTES) fail('memory-corpus-limit', 'Registered Markdown exceeds 32 MiB; narrow the registered collection.');
     digest.update(document.path).update('\0').update(source);
     const parsed = sections(source);
+    const preamble = outsideFences(parsed.intro);
+    const decision = document.kind === 'decision' ? {
+      status: preamble.match(/^- (?:Status|상태): (accepted|proposed|deprecated|superseded)[ \t]*\r?$/m)?.[1] || 'unknown',
+      superseded_by: preamble.match(/^- (?:Superseded by|대체한 결정|후속 결정): ([A-Za-z0-9][A-Za-z0-9._-]{0,127})[ \t]*\r?$/m)?.[1] || null,
+    } : null;
     // A shared preamble is included with every selected section; put routing on sections, not the preamble.
-    if (outsideFences(parsed.intro).includes('<!-- am:')) fail('memory-metadata-invalid', `${document.path}: move am metadata under a level-2 heading`);
+    if (preamble.includes('<!-- am:')) fail('memory-metadata-invalid', `${document.path}: move am metadata under a level-2 heading`);
     for (const section of parsed.sections) {
       const visible = outsideFences(section.text);
       const meta = routing(visible, `${document.path}:${section.line}`);
@@ -128,6 +133,7 @@ function recordsFromSources(state, sources) {
         line: section.line,
         title: section.text.match(/^#{1,2} (.+)/m)?.[1]?.trim() || document.id,
         kind: document.kind,
+        ...(decision ? { decision: { ...decision } } : {}),
         confidence: status?.[1] || 'unclassified',
         lifecycle: status?.[2] || (document.kind === 'decision' ? 'historical' : 'unclassified'),
         paths: meta?.paths || [],
@@ -140,11 +146,19 @@ function recordsFromSources(state, sources) {
     }
   }
   const byId = new Map();
+  const byDocument = new Map();
   for (const record of records) {
     if (byId.has(record.id)) fail('memory-id-duplicate', `Duplicate memory ID: ${record.id}`);
     byId.set(record.id, record);
+    if (!byDocument.has(record.document)) byDocument.set(record.document, []);
+    byDocument.get(record.document).push(record.id);
   }
   for (const record of records) {
+    if (record.decision) {
+      const successor = record.decision.superseded_by;
+      record.decision.superseded_by = successor && successor !== 'none'
+        ? { document: successor, ids: byDocument.get(successor) || [] } : null;
+    }
     for (const link of record.links) {
       if (!byId.has(link)) fail('memory-link-missing', `${record.id}: missing required record ${link}`);
     }
@@ -155,6 +169,8 @@ function recordsFromSources(state, sources) {
 function pointer(record) {
   return {
     id: record.id, path: record.path, line: record.line, title: record.title,
+    document: record.document, kind: record.kind,
+    ...(record.decision ? { decision: record.decision } : {}),
     confidence: record.confidence, lifecycle: record.lifecycle, stable: record.stable,
   };
 }
@@ -217,7 +233,7 @@ function search(corpus, options = {}) {
 }
 
 function receiptFor(record) {
-  return `${record.id}=${hash(JSON.stringify([record.path, record.text, record.intro, record.links, record.confidence, record.lifecycle]))}`;
+  return `${record.id}=${hash(JSON.stringify([record.document, record.kind, record.path, record.text, record.intro, record.links, record.confidence, record.lifecycle, record.decision]))}`;
 }
 
 function selectedRecords(corpus, ids) {
@@ -251,7 +267,7 @@ function inspect(corpus, options = {}) {
     const selected = selectedRecords(corpus, [record.id]);
     const preambles = new Map(selected.map(item => [item.path, item.intro]));
     return {
-      ...pointer(record), document: record.document,
+      ...pointer(record),
       section_chars: record.text.length, preamble_chars: record.intro.length,
       read_chars: selected.reduce((size, item) => size + item.text.length, 0)
         + [...preambles.values()].reduce((size, text) => size + text.length, 0),
@@ -296,7 +312,9 @@ function read(corpus, options = {}) {
     let document = result.documents.find((item) => item.path === record.path);
     const addedDocument = !document;
     if (!document) {
-      document = { path: record.path, intro: record.intro, sections: [] };
+      document = { id: record.document, kind: record.kind,
+        ...(record.decision ? { decision: record.decision } : {}),
+        path: record.path, intro: record.intro, sections: [] };
       result.documents.push(document);
     }
     document.sections.push({ id: record.id, receipt, line: record.line, confidence: record.confidence, lifecycle: record.lifecycle, text: record.text });

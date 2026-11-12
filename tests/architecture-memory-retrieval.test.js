@@ -101,6 +101,41 @@ test('current proposals and accepted plans stay distinct; historical ADRs requir
   assert.equal(search(f.load(), { query: 'queue', history: true, limit: 50 }).total, 5);
 });
 
+test('decision pointers derive lifecycle metadata without inferring legacy status or hiding missing successors', t => {
+  const f = fixture(t, {
+    'context.md': '# 저장 조건\n\n- Status: accepted\n\n' + record('AM-context', '저장 조건.'),
+    'decisions/korean.md': '# 저장 결정\r\n\r\n- 상태: superseded\r\n- 후속 결정: ADR-9999\r\n\r\n'
+      + record('AM-korean', '로컬 저장.'),
+    'decisions/legacy.md': '# 저장 결정\n\n```text\n- Status: accepted\n```\n\n'
+      + record('AM-legacy', '로컬 저장.'),
+    'decisions/proposal.md': '# 저장 결정\n\n- Status: proposed\n- Superseded by: none\n\n'
+      + record('AM-proposal', '원격 저장.', {}, 'proposed/planned'),
+    'decisions/deprecated.md': '# 저장 결정\n\n- 상태: deprecated\n- 대체한 결정: none\n\n'
+      + record('AM-deprecated', '이전 저장.'),
+  });
+  const corpus = f.load();
+  const hits = search(corpus, { query: '저장', history: true, limit: 50 }).matches;
+  assert.equal(hits.find(hit => hit.id === 'AM-context').decision, undefined);
+  const korean = hits.find(hit => hit.id === 'AM-korean');
+  assert.equal(korean.kind, 'decision');
+  assert.deepEqual(korean.decision, { status: 'superseded', superseded_by: { document: 'ADR-9999', ids: [] } });
+  assert.deepEqual(hits.find(hit => hit.id === 'AM-legacy').decision, { status: 'unknown', superseded_by: null });
+  assert.deepEqual(hits.find(hit => hit.id === 'AM-proposal').decision, { status: 'proposed', superseded_by: null });
+  assert.deepEqual(hits.find(hit => hit.id === 'AM-deprecated').decision, { status: 'deprecated', superseded_by: null });
+  const readDecision = read(corpus, { ids: [korean.id] }).documents[0];
+  assert.equal(readDecision.id, korean.document);
+  assert.deepEqual(readDecision.decision, korean.decision);
+
+  f.manifest.documents.push({ id: 'ADR-9999', kind: 'decision', path: 'decisions/successor.md',
+    order: 5, verified_at: null, source_revision: null });
+  fs.writeFileSync(f.manifestPath, JSON.stringify(f.manifest));
+  fs.writeFileSync(path.join(f.architecture, 'decisions/successor.md'),
+    '# 새 저장 결정\n\n- Status: accepted\n- Superseded by: none\n\n' + record('AM-successor', '새 저장 조건.'));
+  const updated = read(f.load(), { ids: [korean.id], seen: readDecision.sections.map(section => section.receipt) });
+  assert.equal(updated.reused, 0);
+  assert.deepEqual(updated.documents[0].decision.superseded_by, { document: 'ADR-9999', ids: ['AM-successor'] });
+});
+
 test('read budgets omit whole sections and expose incomplete prerequisites', (t) => {
   const huge = 'A condition with its exception. '.repeat(100);
   const f = fixture(t, { 'context.md': record('AM-small', 'Use only with constraint.', { links: ['AM-huge'] }) + record('AM-huge', huge) });

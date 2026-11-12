@@ -37,7 +37,7 @@ Candidate use leaves the selected workflow's review and test roles in place.
 
 | Workflow | Selection | Independent work |
 | --- | --- | --- |
-| Combined implementation and tests | The change does not meet a Separate implementation and tests condition, and its required and preserved behavior are grounded | The calling conversation selects the design, implements and verifies it; one independent judge reviews the completed result |
+| Combined implementation and tests | The change does not meet a Separate implementation and tests condition, and its required and preserved behavior are grounded | The calling conversation selects the design, implements and verifies it; one independent judge reviews the completed result, except for a contained change |
 | Separate implementation and tests | The change meets any Separate implementation and tests condition above | One independent judge reviews the selected design before implementation; a fresh test author works alongside the calling conversation's implementation |
 
 Use the selected workflow throughout the task's playbook, retaining its reproduction, behavior-preservation and delivery checks.
@@ -50,6 +50,7 @@ Implement in parallel, then integrate the tests and resolve failures against the
 Use the [../ensemble/SKILL.md: Independent review](../ensemble/SKILL.md#independent-review) at the selected workflow's review boundary, including when no design candidates were used.
 For Combined implementation and tests, supply the completed implementation, original requirements, source baseline, any candidate artifacts and verification evidence.
 Resolve material findings and obtain that judge's review of the affected corrections before delivery.
+A contained change in Combined implementation and tests stays inside one component, leaves public contracts unchanged, and has its complete required result verified by existing tests or direct observation; the calling conversation's verification completes its review unless the user or the Design requests an independent review.
 Both workflows finish with verification of the complete public result on the real artifact.
 
 ### Implementation candidates
@@ -120,8 +121,8 @@ Review a delegated artifact against its assigned contract and resolve material f
 For ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
 Attribute agreement to the independent reviewers.
 
-진행 중 서로의 결정을 함께 조정해야 하는 작업은 같은 세션에서 이어간다.
-독립 검토, 대량 자료 조사, 따로 완결할 수 있는 작업의 병렬 처리는 분리한다.
+Keep work in the same session when its parts must coordinate decisions with each other as they progress.
+Separate independent reviews, bulk research, and parallel work that can be completed on its own.
 Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
 Pass changed contracts, source paths and stopping conditions with the follow-up.
 
@@ -185,9 +186,9 @@ Batch independent reads and return the selected ranges, rather than filtering a 
 
 ## Internal references
 
-The playbooks and their called procedures own the invocation conditions and order.
+The playbooks and their called procedures own sequencing.
 
 - [references/blueprint.md](references/blueprint.md).
-- [references/impact-analysis.md](references/impact-analysis.md).
+- [references/impact-analysis.md](references/impact-analysis.md): Use for requested blast-radius analysis or when a concrete risk outside the changed paths needs investigation before delivery.
 - [references/regression-test.md](references/regression-test.md).
 - [references/challenge.md](references/challenge.md).

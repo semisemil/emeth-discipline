@@ -4,7 +4,11 @@ Run `<plugin-root>/skills/architecture-memory/scripts/memory.js` with Node. Ever
 
 ## Selection
 
-`search --query "<domain terms>" [--path <path>]` uses lexical matches, so use the project's vocabulary. Repeat `--path` for multiple owners; paths are literal prefixes, not globs. Follow `next_offset` when the current candidates do not cover an affected responsibility. History requires `--history`; a required historical link can still accompany a current record.
+`search --query "<domain terms>" [--path <path>]` uses lexical matches, so use the project's vocabulary. Repeat `--path` for multiple owners; paths are literal prefixes, not globs. Follow `next_offset` when the current candidates do not cover an affected responsibility.
+
+For decision reasons, previously considered alternatives or direction changes, add `--history` to include ADRs and historical sections. Results identify their `document` and `kind`; ADRs also return `decision.status` and `decision.superseded_by`. An ADR section's `historical` lifecycle describes its decision-time account, not whether the decision is still in force. Missing status remains `unknown`.
+
+To apply a past decision now, read its successors and the current architecture description as well. `decision.superseded_by` contains the successor document ID and its section `ids`, usable with `read --id`; empty `ids` means the referenced document is unavailable and its direction remains unverified. A required historical link can still accompany a current record without history search.
 
 `read --id <ID> [--id <ID>] --revision <search-revision>` returns whole level-2 sections with document preambles, `always` records and required links. A stale revision requires a fresh search.
 

@@ -75,8 +75,18 @@ test('accepted ADR creation and supersession keep historical bodies and update c
   const old = one.documents.find(doc => doc.kind === 'decision');
   assert.equal(old.id, 'ADR-0001');
   const oldSections = M.sections(f.live(old.path)).sections;
+  const firstCorpus = M.loadRecords(f.root);
+  const firstHit = M.search(firstCorpus, { query: '로컬', history: true }).matches.find(hit => hit.document === old.id);
+  assert.equal(firstHit.kind, 'decision');
+  assert.equal(firstHit.lifecycle, 'historical');
+  assert.deepEqual(firstHit.decision, { status: 'accepted', superseded_by: null });
+  const firstRead = M.read(firstCorpus, { ids: [firstHit.id] });
+  const seen = firstRead.documents.flatMap(doc => doc.sections.map(section => section.receipt));
   assert.ok(f.live('04-context.md').includes('(decisions/ADR-0001.md)'));
-  const two = f.run('decision', choice(f, current, { title: '영속 큐', supersedes: old.id }));
+  const two = f.run('decision', choice(f, current, { title: '영속 큐', supersedes: old.id,
+    body: '### 결정\n영속 큐를 사용한다.\n\n### 근거\n전송 재시도를 보장한다.',
+    current: { id: current, expected: f.read(current).receipt, body: '접수 기록은 영속 큐에 보존한다.', confidence: 'confirmed', lifecycle: 'planned' },
+  }));
   const next = two.documents.find(doc => doc.kind === 'decision');
   assert.equal(next.id, 'ADR-0002');
   assert.deepEqual(M.sections(f.live(old.path)).sections.map(x => x.text), oldSections.map(x => x.text));
@@ -86,6 +96,24 @@ test('accepted ADR creation and supersession keep historical bodies and update c
   assert.match(f.live('decisions/README.md'), /ADR-0001.*superseded/);
   assert.match(f.live('decisions/README.md'), /ADR-0002.*accepted/);
   assert.ok(f.live('04-context.md').includes('(decisions/ADR-0002.md)'));
+  const corpus = M.loadRecords(f.root);
+  assert.ok(!M.search(corpus, { query: '로컬' }).matches.some(hit => hit.document === old.id));
+  const oldHit = M.search(corpus, { query: '로컬', history: true }).matches.find(hit => hit.document === old.id);
+  assert.equal(oldHit.decision.status, 'superseded');
+  assert.equal(oldHit.decision.superseded_by.document, next.id);
+  const refreshed = M.read(corpus, { ids: [oldHit.id], seen });
+  assert.equal(refreshed.documents[0].decision.status, 'superseded');
+  assert.match(refreshed.documents[0].sections[0].text, /로컬/);
+  const successor = M.read(corpus, { ids: oldHit.decision.superseded_by.ids });
+  assert.equal(successor.complete, true);
+  const successorDoc = successor.documents.find(doc => doc.id === next.id);
+  assert.deepEqual(successorDoc.decision, { status: 'accepted', superseded_by: null });
+  assert.match(successorDoc.sections[0].text, /영속 큐/);
+  const currentRead = M.read(corpus, { ids: [current] });
+  assert.equal(currentRead.documents[0].kind, 'context');
+  assert.equal(currentRead.documents[0].decision, undefined);
+  assert.equal(currentRead.documents[0].sections[0].lifecycle, 'planned');
+  assert.match(currentRead.documents[0].sections[0].text, /영속 큐/);
   const before = f.live('decisions/README.md');
   assert.throws(() => f.run('decision', choice(f, current, { title: '중복 대체', supersedes: old.id })), { code: 'memory-author-invalid' });
   assert.equal(f.live('decisions/README.md'), before);

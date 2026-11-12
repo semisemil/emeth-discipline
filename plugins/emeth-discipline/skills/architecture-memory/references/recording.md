@@ -25,6 +25,8 @@ Place each passage by its function, including passages that share a topic.
 
 Reuse the canonical section or search the concept before adding one. Preserve a task-specific decision's scope when referencing it. Keep evidence supporting a durable premise or decision with that record.
 
+For context or decisions whose validity depends on a condition, state what established that condition and what change would warrant reconsideration. Keep this in the owning passage, using required `links` for shared premises. A changed premise calls for reassessment; an existing decision remains recorded until explicitly revised or superseded.
+
 ## Author documents and sections
 
 Run commands with UTF-8 JSON on stdin, except `scaffold` and `recover`:

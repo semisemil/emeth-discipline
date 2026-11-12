@@ -55,6 +55,8 @@ Distinguish connections confirmed in static code from results observed during ex
 
 ## Compose and present the map
 
+Apply [../../references/graph-presentation.md](../../references/graph-presentation.md).
+
 Represent projects, packages, or actual responsibility boundaries as groups, with nested groups when needed.
 Use node types and colors for roles meaningful in this map, such as ViewModel, Mediator, Processor, or file writing.
 Add progress status only when requested.
