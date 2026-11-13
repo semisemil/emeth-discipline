@@ -1,7 +1,7 @@
 ---
 name: scope-integrity
 when_to_use: "Preserve multiple requirements and completion criteria across paths or implementation stages."
-description: Use for large or multi-stage work where requirements could be dropped. Preserve the user's requirements, constraints, and completion criteria across all paths and stages.
+description: Use when user requirements or constraints must carry across multiple entry points, workflows, or stages, or when a partial implementation could leave a requested outcome unmet. Verify each requirement wherever it applies.
 ---
 
 # Scope Integrity

@@ -1,7 +1,7 @@
 ---
 name: refactor-proof
 when_to_use: "Verify structural refactors of responsibilities, call paths, dependencies, or state flow."
-description: Use for structural refactors involving responsibility ownership, call paths, dependencies, or state/data flow. Verify that the intended structure is actually used.
+description: Use when moving responsibilities between modules, rerouting calls or data flow, changing dependency direction, or transferring state ownership. Identify the intended structure before editing, then verify that real entry points use it and required behavior is preserved.
 ---
 
 # Refactor Proof
