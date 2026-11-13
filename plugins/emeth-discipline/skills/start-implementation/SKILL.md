@@ -122,7 +122,7 @@ For ensemble and challenge seats, a second opinion uses the same prompt in an in
 Attribute agreement to the independent reviewers.
 
 Keep work in the same session when its parts must coordinate decisions with each other as they progress.
-Separate independent reviews, bulk research, and parallel work that can be completed on its own.
+Use a fresh agent context when delegating independent reviews, bulk research, or self-contained parallel work.
 Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
 Pass changed contracts, source paths and stopping conditions with the follow-up.
 
@@ -137,7 +137,7 @@ pstack was written for Cursor. In another harness (Claude Code, Codex, Pi, OpenC
 - **Transcripts.** Read only the active workspace's sessions, never other projects'. Cursor: the `agent-transcripts/` directory the system prompt names. Claude Code: `~/.claude/projects/<slug>/*.jsonl`, where `<slug>` is the workspace path with every character that isn't a letter or digit turned into "-". Pi: `~/.pi/agent/sessions/--<slug>--/*.jsonl`, where `<slug>` is the workspace path with the leading slash dropped and each "/" turned into "-". Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, keeping files whose first line has `payload.cwd` equal to the workspace path. OpenCode: `~/.local/share/opencode/storage/`.
 - **Skill folders.** Project: `.cursor/skills/` (Cursor), `.claude/skills/` (Claude Code), `.pi/skills/` (Pi), `.agents/skills/` (Codex, OpenCode, and others). User: `~/.cursor/skills/`, `~/.claude/skills/`, `~/.pi/agent/skills/`, `~/.codex/skills/`, `~/.agents/skills/`.
 - **Questions.** `AskQuestion` means the host's structured-question tool, such as `request_user_input_async` in Codex. Without one, ask in chat with numbered options.
-- **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in skill-authoring skill. Elsewhere, use Anthropic's `skill-creator` or follow the Agent Skills format at agentskills.io. `deslop`, `control-cli`, and `control-ui` come from Cursor's `cursor-team-kit` plugin. Without `deslop`, reread the diff before commit and cut AI slop yourself. Without the control skills, drive the app with the automation you have: Playwright or a CDP browser for web and Electron, tmux or a PTY for CLIs and TUIs. `/loop` is built into Cursor and Claude Code. For delegated work, use the host's completion mechanism. In Codex, follow the [../rules/codex.md: Subagent completion](../rules/codex.md#subagent-completion).
+- **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in skill-authoring skill. Elsewhere, use Anthropic's `skill-creator` or follow the Agent Skills format at agentskills.io. `deslop`, `control-cli`, and `control-ui` come from Cursor's `cursor-team-kit` plugin. Without `deslop`, reread the diff before commit and cut AI slop yourself. Without the control skills, drive the app with the automation you have: Playwright or a CDP browser for web and Electron, tmux or a PTY for CLIs and TUIs. `/loop` is built into Cursor and Claude Code. For delegated work, use the host's completion mechanism. In Codex, follow the [delegated work completion rules](../rules/codex.md#delegated-work-completion).
 
 ## Comments
 

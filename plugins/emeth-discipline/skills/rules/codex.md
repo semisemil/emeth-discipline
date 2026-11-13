@@ -14,7 +14,8 @@ Apply established conditions consistently, preserving causal connections without
 Omit compliance displays, needless process commentary, self-description and exclusions of unraised possibilities.
 Keep proposals and reference information distinct from obligations; shared agreements add no new requirements or report items.
 Describe settled systems by resulting behavior, structure, contracts and decisions; decision records retain considered alternatives and reasons.
-Handoffs and scheduled prompts state the requested outcome and include only context or constraints whose omission would cause a concrete mistake or rework.
+For handoffs and scheduled prompts, pass the user's request as written when it is concise and sufficient for the recipient.
+Add only information the recipient lacks that changes what they do, decide, or deliver.
 Leave investigation, implementation and verification choices to the recipient unless the user specified them or task-specific evidence makes a choice necessary.
 Present work history and reasoning only as needed for the reader's task or judgment.
 
@@ -44,7 +45,7 @@ Complete implementation and integration through actual usage paths, preserving o
 Ask one concise question for missing material information, required user judgment, conflicting existing changes or before exceeding explicit restrictions; pause only dependent work and continue independent work.
 Otherwise use the interpretation best supported by context; reuse evidence while its relevant sources and conditions remain valid.
 
-## Subagent completion
+## Delegated work completion
 
-Before delegating, read `references/codex-subagent-completion.md` and include that path in the assignment.
-Workers read it before executing an assignment; parent and worker apply its direct parent notification and ownership contract.
+Use the host's subagent completion mechanism to return and collect subagent results.
+When the user requests results from a separate Codex chat, read `references/codex-subagent-completion.md` for the collection procedure.

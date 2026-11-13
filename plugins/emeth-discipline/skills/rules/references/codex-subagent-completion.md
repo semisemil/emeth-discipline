@@ -1,13 +1,12 @@
-## Subagent completion
+# Collect results from a separate Codex chat
 
-After completing or failing its assignment, the worker calls the Codex app's `send_message_to_thread` tool directly, then returns its result.
-Use the parent session identified by the session creation relationship as `threadId`.
-The `prompt` reports the outcome and the result or artifact paths the parent needs to continue.
-Omit `model` and `thinking` to preserve the parent's settings.
-If the parent session or tool is unavailable, or delivery fails, report that limit with the result.
+The worker returns the result, artifact paths, or blocker in its final response.
+Retain the ready `threadId` and `hostId` from `create_thread` and continue independent work while the assignment runs.
+When the result is needed, call `wait_threads` with those IDs and carry its latest cursor into the next bounded wait if the chat is still running.
+Use the assigned turn's final response from the wait.
+If that response is missing or insufficient, call `read_thread` for the assigned turn.
+If the chat needs user input or approval, surface that need and continue available independent work.
+If the chat fails or its result is unavailable, report the affected chat and the blocker.
 
-Workers own their assigned artifacts until a completed handoff.
-Each assignment has a designated completion recipient, including work dispatched through another worker.
-Consume completed handoffs and finish available independent work.
-When the next action needs an unfinished assignment, end the turn and resume from its completion notification; timed sleeps and repeated output checks are not a completion mechanism.
-A worker blocked on input outside its coordination returns that missing input through its completion handoff; its coordinator resumes the role when ready.
+Use `send_message_to_thread` for a separate notification only with explicit user authorization to message the destination chat.
+Omit `model` and `thinking` for that notification to preserve the destination's settings.

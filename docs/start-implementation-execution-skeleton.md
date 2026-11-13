@@ -68,7 +68,8 @@ architecture-coop과 blueprint는 후보를 사용할 때 [공통 설계 탐색]
 일반 진행사항은 최종 결과에 모으고, 다른 작업에 필요한 산출물이나 총괄의 판단이 필요한 문제는 즉시 전달한다.
 복구 범위와 중단 조건은 배정할 때 정한다.
 완료 전달은 호스트의 기본 기능을 사용한다.
-Codex에서는 [완료 전달 지침](../plugins/emeth-discipline/skills/rules/references/codex-subagent-completion.md)에 따라 부모 세션에 `send_message_to_thread`를 직접 호출한다.
+Codex 서브에이전트는 호스트의 완료 기능으로 결과를 반환한다.
+사용자가 별도 채팅의 결과를 요청하면 요청 채팅이 [완료 전달 지침](../plugins/emeth-discipline/skills/rules/references/codex-subagent-completion.md)에 따라 최종 응답을 회수한다.
 
 ## 요청 원문과 번호 안내
 
