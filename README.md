@@ -42,9 +42,12 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | Opus 5.5 medium | None | 195.0/196 | 6.3/14 | 5분 39초 | $1.372 |
 | Opus 5.5 medium | Core | 194.3/196 | 6.7/14 | 6분 52초 | $1.684 |
 | Opus 5.5 medium | Workflow | 194.7/196 | 5.7/14 | 19분 15초 | $3.761 |
+| Fable 5.2 medium | None | 194.3/196 | 7.0/14 | 6분 47초 | $3.096 |
+| Fable 5.2 medium | Core | 194.7/196 | 7.3/14 | 6분 20초 | $2.889 |
+| Fable 5.2 medium | Workflow | 194.7/196 | 8.3/14 | 13분 31초 | $9.495 |
 
 모든 수치는 조건별 3회 평균이며 실패한 실행도 포함합니다.
-Sol/Terra Workflow는 새 설계 후보 비교 지침으로 측정했고, 나머지 조건은 Emeth 0.25.0 측정값입니다.
+Sol/Terra Workflow는 새 설계 후보 비교 지침으로 측정했고, Astra, Sonnet, Opus와 Sol/Terra의 None, Core는 Emeth 0.25.0 측정값입니다.
 비용은 상위 작업과 하위 작업을 합산한 API 환산 추정치입니다.
 
 [평가 항목과 회차별 결과](docs/benchmarks/README.md) / [원본 데이터](docs/benchmarks/superjson.json)

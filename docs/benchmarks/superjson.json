@@ -2190,6 +2190,229 @@
           "source": "C:/Proofline/.local/claude-bench-20261103/runs/opus-medium-workflow-3"
         }
       ]
+    },
+    {
+      "model": "claude-fable-5-2",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "host": "claude-code",
+      "measured_at": "2026-11-13",
+      "plugin_version": "0.25.5",
+      "source_commit": "6da95a3a4b834dbd7d57a1e00e5e04841d95c1e7",
+      "claude_version": "2.1.322 (Claude Code)",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.33333333333334,
+        "additional_passed": 7,
+        "elapsed_ms": 406599.6666666667,
+        "api_equivalent_usd": 3.0963950000000007
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 415248,
+          "api_equivalent_usd": 3.5143694,
+          "session_id": "a2aa579f-1451-4b92-bb1d-a9db13121c52",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-none-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 410434,
+          "api_equivalent_usd": 2.9616476000000005,
+          "session_id": "fbed9fe3-b19e-4bfb-9232-a0b2e9d36bda",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-none-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 7,
+            "total": 14
+          },
+          "elapsed_ms": 394117,
+          "api_equivalent_usd": 2.8131680000000006,
+          "session_id": "756062f9-ba8b-40f3-b017-e0abe3c39f35",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-none-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-fable-5-2",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "host": "claude-code",
+      "measured_at": "2026-11-13",
+      "plugin_version": "0.25.5",
+      "source_commit": "6da95a3a4b834dbd7d57a1e00e5e04841d95c1e7",
+      "claude_version": "2.1.322 (Claude Code)",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.66666666666666,
+        "additional_passed": 7.333333333333333,
+        "elapsed_ms": 380172,
+        "api_equivalent_usd": 2.889043733333333
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 398814,
+          "api_equivalent_usd": 2.9875858,
+          "session_id": "c898d8c3-a5a1-4fd6-af0e-8f73854eebf7",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-core-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 383037,
+          "api_equivalent_usd": 2.9414839999999995,
+          "session_id": "d34154b4-1430-45f1-9b48-51d8143a80cc",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-core-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 6,
+            "total": 14
+          },
+          "elapsed_ms": 358665,
+          "api_equivalent_usd": 2.7380613999999994,
+          "session_id": "244bc9e3-7f36-4855-86ef-4b850be8d19c",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-core-3"
+        }
+      ]
+    },
+    {
+      "model": "claude-fable-5-2",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "host": "claude-code",
+      "measured_at": "2026-11-13",
+      "plugin_version": "0.25.5",
+      "source_commit": "6da95a3a4b834dbd7d57a1e00e5e04841d95c1e7",
+      "claude_version": "2.1.322 (Claude Code)",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.66666666666666,
+        "additional_passed": 8.333333333333334,
+        "elapsed_ms": 810966.3333333334,
+        "api_equivalent_usd": 9.494879333333335
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 674177,
+          "api_equivalent_usd": 8.6263056,
+          "session_id": "2b4feeb5-226b-46e4-badd-914a55932419",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-workflow-1"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 831492,
+          "api_equivalent_usd": 9.879384200000002,
+          "session_id": "12e12cb4-c48b-43a8-8c6a-c6221678f824",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-workflow-2"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 927230,
+          "api_equivalent_usd": 9.9789482,
+          "session_id": "682f6303-0904-4980-a901-0a1a1a906849",
+          "official_failed_tests": [
+            "[f2p] src/error-stack.test.ts: Error Stack – additional public API behavior > sanitizeMessage is NOT applied to cause errors that fail classFilter",
+            "[f2p] src/error-stack.test.ts: Error Stack – redactPaths > string mode applies redactPaths, then maxStackLines, then stripInternalFrames"
+          ],
+          "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-workflow-3"
+        }
+      ]
     }
   ],
   "role_settings": "Workflow roles are explicitly fixed through isolated Codex developer_instructions. None/Core evidence is reused because all observed roles already matched the planned model and effort.",
@@ -2419,13 +2642,14 @@
   ],
   "claude_code": {
     "claude_version": [
-      "2.1.310 (Claude Code)"
+      "2.1.310 (Claude Code)",
+      "2.1.322 (Claude Code)"
     ],
     "permission_mode": "auto",
     "isolation": "--setting-sources project, --strict-mcp-config; None loads no plugin, Core and Workflow load only the release plugin with --plugin-dir",
     "cost": "Claude Code total_cost_usd at list price, cumulative for the session including subagents; Workflow subagents ran on the parent model",
-    "timing_scope": "Sonnet runs and Opus None/Core repetitions 1-2 ran three at a time; the other Opus runs ran one at a time",
-    "excluded_runs": "Five Opus runs that stopped at the account usage limit were rerun and are not included"
+    "timing_scope": "Sonnet runs and Opus None/Core repetitions 1-2 ran three at a time; the other Opus runs ran one at a time; Fable runs ran one at a time",
+    "excluded_runs": "Five Opus runs that stopped at the account usage limit were rerun and are not included; nine Fable runs that stopped at the account usage limit were rerun and are not included"
   },
   "workflow_remeasurement": {
     "release_version": "0.25.3",

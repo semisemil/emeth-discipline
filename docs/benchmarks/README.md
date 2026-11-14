@@ -26,6 +26,9 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | Opus 5.5 medium | None | 195.0/196 | 6.3/14 | 5분 39초 | $1.372 |
 | Opus 5.5 medium | Core | 194.3/196 | 6.7/14 | 6분 52초 | $1.684 |
 | Opus 5.5 medium | Workflow | 194.7/196 | 5.7/14 | 19분 15초 | $3.761 |
+| Fable 5.2 medium | None | 194.3/196 | 7.0/14 | 6분 47초 | $3.096 |
+| Fable 5.2 medium | Core | 194.7/196 | 7.3/14 | 6분 20초 | $2.889 |
+| Fable 5.2 medium | Workflow | 194.7/196 | 8.3/14 | 13분 31초 | $9.495 |
 
 모든 수치는 모델과 조건별로 3회 실행한 평균이며, 검사에 실패한 실행도 포함합니다.
 
@@ -35,7 +38,7 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 Sol/Terra Workflow는 설계 후보 비교 지침을 반영한 Emeth 0.25.2 작업 트리 스냅샷으로 측정했습니다.
 해당 지침은 0.25.3에 포함됩니다.
-나머지 조건은 Emeth 0.25.0(`1e54785`) 측정값입니다.
+Astra, Sonnet, Opus와 Sol/Terra의 None, Core는 Emeth 0.25.0(`1e54785`) 측정값입니다.
 같은 기준 코드와 과제 원문을 사용했습니다.
 GPT는 Codex에서, Claude는 Claude Code의 auto 권한 모드에서 실행했습니다.
 None과 Core의 사용자 입력은 동일하며, Workflow 입력 앞에만 스킬 호출을 붙였습니다.
@@ -56,6 +59,7 @@ Workflow의 하위 역할은 부모와 같은 모델과 추론 수준으로 고�
 | 6.1 Terra high | 0.86배 | 3.90배 | 0.89배 | 2.03배 |
 | Sonnet 5.5 medium | 1.11배 | 2.55배 | 1.16배 | 1.81배 |
 | Opus 5.5 medium | 1.23배 | 2.74배 | 1.22배 | 3.41배 |
+| Fable 5.2 medium | 0.93배 | 3.07배 | 0.94배 | 1.99배 |
 
 각 배율은 조건별 3회 평균을 같은 모델의 None 평균으로 나눈 값입니다.
 Sol/Terra의 Workflow 배율은 수정 지침과 0.25.0의 None 기준값을 비교합니다.
@@ -118,6 +122,15 @@ Sol/Terra의 Workflow 배율은 수정 지침과 0.25.0의 None 기준값을 비
 | Opus 5.5 medium | Workflow | 1 | 194/196 | 6/14 | 20분 14초 | $3.651 |
 | Opus 5.5 medium | Workflow | 2 | 195/196 | 6/14 | 29분 22초 | $4.255 |
 | Opus 5.5 medium | Workflow | 3 | 195/196 | 5/14 | 8분 10초 | $3.377 |
+| Fable 5.2 medium | None | 1 | 195/196 | 7/14 | 6분 55초 | $3.514 |
+| Fable 5.2 medium | None | 2 | 194/196 | 7/14 | 6분 50초 | $2.962 |
+| Fable 5.2 medium | None | 3 | 194/196 | 7/14 | 6분 34초 | $2.813 |
+| Fable 5.2 medium | Core | 1 | 195/196 | 8/14 | 6분 39초 | $2.988 |
+| Fable 5.2 medium | Core | 2 | 194/196 | 8/14 | 6분 23초 | $2.941 |
+| Fable 5.2 medium | Core | 3 | 195/196 | 6/14 | 5분 59초 | $2.738 |
+| Fable 5.2 medium | Workflow | 1 | 195/196 | 8/14 | 11분 14초 | $8.626 |
+| Fable 5.2 medium | Workflow | 2 | 195/196 | 9/14 | 13분 51초 | $9.879 |
+| Fable 5.2 medium | Workflow | 3 | 194/196 | 8/14 | 15분 27초 | $9.979 |
 
 ## 공식 검사 실패
 
@@ -151,5 +164,14 @@ Sol/Terra의 Workflow 배율은 수정 지침과 0.25.0의 None 기준값을 비
 - Opus 5.5 medium Workflow 1회차: 194/196
 - Opus 5.5 medium Workflow 2회차: 195/196
 - Opus 5.5 medium Workflow 3회차: 195/196
+- Fable 5.2 medium None 1회차: 195/196
+- Fable 5.2 medium None 2회차: 194/196
+- Fable 5.2 medium None 3회차: 194/196
+- Fable 5.2 medium Core 1회차: 195/196
+- Fable 5.2 medium Core 2회차: 194/196
+- Fable 5.2 medium Core 3회차: 195/196
+- Fable 5.2 medium Workflow 1회차: 195/196
+- Fable 5.2 medium Workflow 2회차: 195/196
+- Fable 5.2 medium Workflow 3회차: 194/196
 
 검사별 기록은 [원본 데이터](superjson.json)의 각 실행 경로에서 확인할 수 있습니다.
