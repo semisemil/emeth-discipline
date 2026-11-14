@@ -15,7 +15,7 @@ function validateDocumentPaths(paths) {
   return paths;
 }
 
-function readDesignDocuments(root, record) {
+function readDesignDocuments(root, record, documentName) {
   const { readSecureRecord, parseFrontmatter, parseDesignMetadata } = require('../dashboard/records/record-parser.js');
   const directory = path.dirname(record.source.filePath);
   root = record.source.root || root;
@@ -26,7 +26,8 @@ function readDesignDocuments(root, record) {
   if (current.body !== record.body || JSON.stringify(parseDesignMetadata(current.metadataText)) !== JSON.stringify(record.metadata)) {
     throw Object.assign(new Error('Design changed while reading its document set'), { code: 'document-changed' });
   }
-  const documents = (record.metadata.documents || []).map(name => {
+  const paths = record.metadata.documents || [];
+  const documents = (documentName === undefined ? paths : paths.filter(name => name === documentName)).map(name => {
     const file = path.join(directory, ...name.split('/'));
     try {
       const { content } = readSecureRecord(file, { root, directory });

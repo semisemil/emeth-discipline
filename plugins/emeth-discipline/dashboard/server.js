@@ -12,6 +12,7 @@ const {
 } = require('./records/project-index.js');
 const { ArchitectureService } = require('./architecture.js');
 const { readInbox, setDisposition } = require('./inbox.js');
+const { DESIGN_ID } = require('./records/record-parser.js');
 
 const HOST = '127.0.0.1';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -239,12 +240,15 @@ function staticRelativePath(target) {
   if (target.pathname === '/dashboard') {
     const entries = [...target.searchParams.entries()];
     const names = new Set(entries.map(([name]) => name));
-    if (entries.length > 2
-        || names.size !== entries.length
+    if (names.size !== entries.length
+        || (names.has('design') && !names.has('project'))
+        || (names.has('file') && !names.has('design'))
         || entries.some(([name, value]) => (
-          (name !== 'project' && name !== 'expected_version')
+          !['project', 'expected_version', 'design', 'file'].includes(name)
           || (name === 'project' && !UUID.test(value))
           || (name === 'expected_version' && value.length === 0)
+          || (name === 'design' && !DESIGN_ID.test(value))
+          || (name === 'file' && value.length === 0)
         ))) {
       throw new ProjectApiError('query-invalid', '허용되지 않은 query입니다.', 400);
     }
@@ -293,7 +297,7 @@ function parseRequestTarget(rawTarget) {
   if (typeof rawTarget !== 'string'
       || !rawTarget.startsWith('/')
       || rawTarget.startsWith('//')
-      || rawTarget.includes('%')
+      || rawTarget.split('?', 1)[0].includes('%')
       || rawTarget.includes('\\')
       || rawTarget.includes('\0')
       || rawTarget.split(/[/?#]/).includes('..')) {
@@ -409,13 +413,18 @@ function routeApiRequest(request, response, target, options, service, architectu
   const documentMatch = target.pathname.match(
     /^\/api\/v1\/projects\/([0-9a-f-]+)\/documents\/(issue|plan|spec|design)\/([A-Z]+-\d{4,})$/,
   );
-  if ((request.method === 'GET' || request.method === 'HEAD')
-      && documentMatch
-      && target.search === '') {
+  if ((request.method === 'GET' || request.method === 'HEAD') && documentMatch
+      && (target.search === '' || documentMatch[2] === 'design')) {
+    const entries = [...target.searchParams.entries()];
+    if (target.search !== ''
+        && (entries.length !== 1 || entries[0][0] !== 'file' || !entries[0][1])) {
+      throw new ProjectApiError('query-invalid', '허용되지 않은 query입니다.', 400);
+    }
     sendJson(request, response, 200, service.getDocument(
       documentMatch[1],
       documentMatch[2],
       documentMatch[3],
+      target.searchParams.get('file') ?? undefined,
     ));
     return true;
   }

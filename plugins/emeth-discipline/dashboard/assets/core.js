@@ -328,7 +328,7 @@
   function safeInternalUrl(value) {
     try {
       const parsed = new URL(String(value || ''), 'http://emeth.local');
-      if (parsed.origin !== 'http://emeth.local' || parsed.pathname !== '/architecture') return null;
+      if (parsed.origin !== 'http://emeth.local' || !['/architecture', '/dashboard'].includes(parsed.pathname)) return null;
       return escapeHtml(`${parsed.pathname}${parsed.search}${parsed.hash}`);
     } catch {
       return null;
@@ -342,6 +342,7 @@
       tokens.push(html);
       return token;
     };
+    const restoreTokens = (text) => text.replace(/\uE000(\d+)\uE001/g, (_match, index) => tokens[Number(index)] || '');
     function fileRef(href, label) {
       const name = href.split(/[\\/]/).pop();
       return storeToken(`<code class="file-reference" title="${href}">${label || name}</code>`);
@@ -350,12 +351,15 @@
       return storeToken(`<code>${value}</code>`);
     });
     text = text.replace(/&amp;#(?:x0*20|0*32);/gi,' ');
-    text = text.replace(/(^|[^!])\[([^\]\n]+)\]\(([^)\s]+)\)/g, (match, prefix, label, href) => {
+    text = text.replace(/(?<!!)\[([^\]\n]+)\]\((?:&lt;(.+?)&gt;|([^\s)]+))\)/g, (_match, label, enclosedHref, bareHref) => {
+      const href = enclosedHref ?? bareHref;
       const safe = safeHttpUrl(href);
       if (safe) {
-        return `${prefix}${storeToken(`<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`)}`;
+        return storeToken(`<a href="${safe}" target="_blank" rel="noopener noreferrer">${restoreTokens(label)}</a>`);
       }
-      const rawHref = href.replace(/&amp;/g, '&');
+      const rawHref = href.replace(/&(amp|lt|gt|quot|#39);/g, (entity) => ({
+        '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'",
+      })[entity]);
       const resolved = typeof options.resolveLink === 'function' ? options.resolveLink(rawHref) : null;
       const internal = safeInternalUrl(resolved);
       if (!internal) {
@@ -366,11 +370,11 @@
           options.onUnresolvedLink(rawHref);
         }
         if (/^(?:[a-z]:[\\/]|\.{0,2}\/)|^[\w.-]+\//i.test(href)) {
-          return prefix + fileRef(href, /[\\/\uE000]/.test(label) ? '' : label);
+          return fileRef(href, /[\\/\uE000]/.test(label) ? '' : label);
         }
-        return `${prefix}${label} (${href})`;
+        return `${label} (${href})`;
       }
-      return `${prefix}${storeToken(`<a href="${internal}" data-architecture-link="true">${label}</a>`)}`;
+      return storeToken(`<a href="${internal}">${restoreTokens(label)}</a>`);
     });
     text = text.replace(/\*?\(((?:[a-z]:[\\/]|\.{1,2}[\\/]|\/)[^()\n]+)\)\*?/gi,
       (_, href) => fileRef(href));
@@ -379,7 +383,7 @@
       .replace(/__([^_\n]+)__/g, '<strong>$1</strong>')
       .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
       .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
-    return text.replace(/\uE000(\d+)\uE001/g, (_match, index) => tokens[Number(index)] || '');
+    return restoreTokens(text);
   }
 
   function splitTableRow(line) {
@@ -483,7 +487,7 @@
     return documents?.find(document => document.kind === 'index')?.id || documents?.[0]?.id || null;
   }
 
-  function normalizeArchitecturePath(value) {
+  function normalizeRelativePath(value) {
     const output = [];
     for (const segment of String(value || '').replace(/\\/g, '/').split('/')) {
       if (!segment || segment === '.') continue;
@@ -497,9 +501,9 @@
     return output.join('/');
   }
 
-  function resolveArchitectureDocumentId(documents, currentPath, href) {
+  function resolveRelativeDocumentPath(currentPath, href) {
     const candidate = String(href || '').trim();
-    if (!candidate || candidate.startsWith('#') || candidate.startsWith('/')
+    if (!candidate || candidate.startsWith('#') || /^[\\/]/.test(candidate)
         || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(candidate)) return null;
     const withoutSuffix = candidate.split(/[?#]/, 1)[0];
     if (!withoutSuffix) return null;
@@ -509,13 +513,17 @@
       try { segments[index] = decodeURIComponent(segment); } catch { /* Keep literal percent characters in registered filenames. */ }
       if (segments[index] !== segment && (/[/\\]/.test(segments[index]) || segments[index] === '.' || segments[index] === '..')) return null;
     }
-    const current = normalizeArchitecturePath(currentPath);
+    const current = normalizeRelativePath(currentPath);
     if (!current) return null;
     const directory = current.includes('/') ? current.slice(0, current.lastIndexOf('/') + 1) : '';
-    const resolved = normalizeArchitecturePath(`${directory}${segments.join('/')}`);
+    return normalizeRelativePath(`${directory}${segments.join('/')}`);
+  }
+
+  function resolveArchitectureDocumentId(documents, currentPath, href) {
+    const resolved = resolveRelativeDocumentPath(currentPath, href);
     if (!resolved) return null;
     return (documents || []).find(
-      (document) => normalizeArchitecturePath(document.path) === resolved,
+      (document) => normalizeRelativePath(document.path) === resolved,
     )?.id || null;
   }
 
@@ -541,6 +549,7 @@
     relatedState,
     renderMarkdown,
     resolveArchitectureDocumentId,
+    resolveRelativeDocumentPath,
     restoreFocusByKey,
     safeHttpUrl,
     signalLabels,

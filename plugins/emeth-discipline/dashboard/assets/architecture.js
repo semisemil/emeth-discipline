@@ -418,7 +418,7 @@
     focusTarget?.focus({ preventScroll:true });
   });
   elements.detail.addEventListener('click', (event) => {
-    const link = event.target.closest('a[data-architecture-link="true"]');
+    const link = event.target.closest('a[href^="/architecture?"]');
     if (!link) return;
     const target = new URL(link.href).searchParams.get('document');
     if (!target) return;

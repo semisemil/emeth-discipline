@@ -214,3 +214,34 @@ test('summary and index omit large Plan and Spec bodies while detail returns the
   assert.equal(document.status, 200);
   assert.equal(JSON.parse(document.body).body, 'P'.repeat(128 * 1024));
 });
+
+test('Design detail links open registered Markdown from a configured document root', async (t) => {
+  const { availableRoot, server } = await fixture(t, { assetFiles: { 'dashboard.html': '<!doctype html>' } });
+  const id = 'DESIGN-0001';
+  const file = 'contracts/상세 설계.md';
+  const design = path.join(availableRoot, '..', 'vault', 'designs', id);
+  fs.mkdirSync(path.join(design, 'contracts'), { recursive: true });
+  fs.writeFileSync(path.join(availableRoot, '.emeth', 'documents.json'), JSON.stringify({ schema_version: 1, root: '../vault' }));
+  const metadata = {
+    schema_version: 2, id, title: 'Design', kind: 'feature', status: 'ready', revision: 1,
+    supersedes: [], superseded_by: null, related_issues: [], documents: [file, 'missing.md'],
+  };
+  const overview = '# Overview\n\n[Details](<' + file + '>)';
+  fs.writeFileSync(path.join(design, 'DESIGN.md'), '---\n' + JSON.stringify(metadata) + '\n---\n' + overview);
+  fs.writeFileSync(path.join(design, file), '# Detail\n\n[Overview](../DESIGN.md)');
+  fs.writeFileSync(path.join(design, 'unlisted.md'), '# Private notes');
+
+  const query = new URLSearchParams({ file });
+  const route = `/api/v1/projects/${AVAILABLE_ID}/documents/design/${id}`;
+  const page = await request(server, { path: `/dashboard?project=${AVAILABLE_ID}&design=${id}&${query}` });
+  assert.equal(page.status, 200);
+  const main = await request(server, { path: route });
+  assert.equal(main.status, 200);
+  assert.equal(JSON.parse(main.body).body, overview);
+  const detail = await request(server, { path: `${route}?${query}` });
+  assert.equal(detail.status, 200);
+  assert.equal(JSON.parse(detail.body).body, '# Detail\n\n[Overview](../DESIGN.md)');
+  assert.equal(JSON.parse(detail.body).relative_path, `.emeth/designs/${id}/${file}`);
+  assert.equal((await request(server, { path: `${route}?file=unlisted.md` })).status, 404);
+  assert.equal((await request(server, { path: `${route}?file=..%2FUNREGISTERED.md` })).status, 404);
+});

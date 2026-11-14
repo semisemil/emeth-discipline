@@ -11,11 +11,13 @@
     project: 'emeth.dashboard.project',
     theme: 'emeth.dashboard.theme',
   });
+  const initialLocation = new URLSearchParams(globalThis.location.search);
   const state = {
     projects: [],
     selectedProjectId: null,
     index: null,
-    view: globalThis.location.pathname === '/' ? 'inbox' : globalThis.location.pathname === '/architecture' ? 'architecture' : 'work',
+    view: globalThis.location.pathname === '/' ? 'inbox' : globalThis.location.pathname === '/architecture' ? 'architecture'
+      : initialLocation.has('design') ? 'documents' : 'work',
     globalSearch: '',
     projectSearch: '',
     issueQuick: 'active',
@@ -37,8 +39,8 @@
     notice: null,
     error: null,
     health: null,
-    expectedVersion: new URLSearchParams(globalThis.location.search).get('expected_version'),
-    requestedProjectId: new URLSearchParams(globalThis.location.search).get('project'),
+    expectedVersion: initialLocation.get('expected_version'),
+    requestedProjectId: initialLocation.get('project'),
     projectPanelCollapsed: document.documentElement.dataset.sidebar === 'collapsed',
     projectTransition: null,
     drawerOpen: false,
@@ -93,12 +95,19 @@
     return state.projects.find((project) => project.id === state.selectedProjectId) || null;
   }
 
-  function updateProjectLocation(projectId) {
+  function dashboardLocation(projectId, designId, file) {
     const params = new URLSearchParams();
     if (state.expectedVersion) params.set('expected_version', state.expectedVersion);
     if (projectId) params.set('project', projectId);
-    const suffix = params.size ? `?${params}` : '';
-    if (state.view !== 'inbox' && state.view !== 'architecture') globalThis.history.replaceState(null, '', '/dashboard' + suffix);
+    if (designId) params.set('design', designId);
+    if (file) params.set('file', file);
+    return '/dashboard' + (params.size ? `?${params}` : '');
+  }
+
+  function updateProjectLocation(projectId, designId, file) {
+    if (state.view !== 'inbox' && state.view !== 'architecture') {
+      globalThis.history.replaceState(null, '', dashboardLocation(projectId, designId, file));
+    }
   }
 
   function readableError(error, fallback) {
@@ -269,12 +278,9 @@
     renderProjects();
     renderView();
     if (reloadDocument && reloadDocument === state.selectedDocument) {
-      const separator = reloadDocument.indexOf(':');
-      await openDocument(
-        reloadDocument.slice(0, separator),
-        reloadDocument.slice(separator + 1),
-        { force: true },
-      );
+      const [record, query] = reloadDocument.split('?');
+      const [kind, id] = record.split(':');
+      await openDocument(kind, id, { force: true, file: new URLSearchParams(query).get('file') ?? undefined });
     }
   }
 
@@ -721,7 +727,7 @@
 
   function renderDocumentOption(item) {
     const key = `${item.document_kind}:${item.id}`;
-    const selected = state.selectedDocument === key;
+    const selected = state.selectedDocument?.split('?', 1)[0] === key;
     const option = button('', 'document-option');
     option.dataset.focusKey = core.documentOptionFocusKey(item.document_kind, item.id);
     option.setAttribute('aria-pressed', String(selected));
@@ -781,7 +787,25 @@
       metadata.append(make('dt', '', term), make('dd', '', value || '없음'));
     }
     const body = make('div', 'markdown-body');
-    body.innerHTML = core.renderMarkdown(typeof detail.body === 'string' ? detail.body : '');
+    const overviewPath = detail.kind === 'design'
+      ? state.index.designs?.find(item => item.id === detail.id)?.relative_path
+      : null;
+    const overviewDirectory = overviewPath?.slice(0, overviewPath.lastIndexOf('/') + 1);
+    body.innerHTML = core.renderMarkdown(typeof detail.body === 'string' ? detail.body : '', {
+      resolveLink(href) {
+        if (!overviewDirectory) return null;
+        const targetPath = core.resolveRelativeDocumentPath(detail.relative_path, href);
+        if (targetPath === overviewPath) return dashboardLocation(state.selectedProjectId, detail.id);
+        if (!targetPath?.startsWith(overviewDirectory)) return null;
+        const name = targetPath.slice(overviewDirectory.length);
+        return detail.metadata?.documents?.includes(name) ? dashboardLocation(state.selectedProjectId, detail.id, name) : null;
+      },
+    });
+    if (overviewPath && detail.relative_path !== overviewPath) {
+      const link = make('a', 'linked-document', '설계 개요');
+      link.href = dashboardLocation(state.selectedProjectId, detail.id);
+      header.append(link);
+    }
     region.append(header, metadata, body);
     return region;
   }
@@ -801,9 +825,11 @@
     const project = selectedProject();
     if (!project) return;
     const requestProjectId = project.id;
-    const requestKey = `${kind}:${id}`;
+    const query = options.file === undefined ? '' : '?' + new URLSearchParams({ file: options.file });
+    const requestKey = `${kind}:${id}${query}`;
     const focusKey = core.documentOptionFocusKey(kind, id);
     state.view = 'documents';
+    updateProjectLocation(requestProjectId, kind === 'design' ? id : undefined, options.file);
     state.selectedDocument = requestKey;
     state.documentErrors.delete(requestKey);
     updateTabs();
@@ -812,7 +838,7 @@
     state.documents.delete(requestKey);
     const documentRequest = documentRequestGate.begin(requestProjectId, requestKey);
     try {
-      const detail = await api(`/api/v1/projects/${requestProjectId}/documents/${kind}/${id}`);
+      const detail = await api(`/api/v1/projects/${requestProjectId}/documents/${kind}/${id}${query}`);
       const disposition = documentRequestGate.disposition(
         documentRequest,
         state.selectedProjectId,
@@ -1292,6 +1318,10 @@
     }
     renderStatus();
     await loadProjects();
+    const designId = initialLocation.get('design');
+    if (designId && state.view === 'documents' && state.index && state.selectedProjectId === initialLocation.get('project')) {
+      await openDocument('design', designId, { file: initialLocation.get('file') ?? undefined });
+    }
     globalThis.setInterval(() => {
       if (state.view !== 'architecture' && document.visibilityState === 'visible' && selectedProject()?.availability === 'available') loadIndex(false, true);
     }, 30000);

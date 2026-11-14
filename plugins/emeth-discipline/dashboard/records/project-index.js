@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { migrateProject } = require('../../lib/storage-migration');
 const path = require('node:path');
 const roots = require('../../lib/document-roots.js');
+const { readDesignDocuments } = require('../../lib/design-documents.js');
 
 const issueModel = require('../../skills/issue-ledger/lib/issue-model.js');
 
@@ -1003,7 +1004,7 @@ class ProjectIndexService {
     return this.loadIndex(project, options.refresh === true).publicIndex;
   }
 
-  getDocument(projectId, kind, recordId) {
+  getDocument(projectId, kind, recordId, documentName) {
     const patterns = { issue: ISSUE_ID, plan: PLAN_ID, spec: SPEC_ID, design: DESIGN_ID };
     if (!patterns[kind] || !patterns[kind].test(recordId || '')) {
       throw new ProjectApiError('record-id-invalid', '기록 종류 또는 ID가 올바르지 않습니다.', 400);
@@ -1017,8 +1018,10 @@ class ProjectIndexService {
     if (!indexed) {
       throw new ProjectApiError('record-not-found', '기록을 찾을 수 없습니다.', 404);
     }
+    let current;
+    let document;
     try {
-      const current = parseCurrentRecord({
+      current = parseCurrentRecord({
         kind,
         filePath: indexed.source.filePath,
         directory: indexed.source.directory,
@@ -1030,11 +1033,16 @@ class ProjectIndexService {
       });
       if (indexed.supersededBy) { current.status = 'superseded'; current.supersededBy = indexed.supersededBy; }
       if (indexed.contractError) current.status = 'blocked';
-      return publicDocument(current);
+      if (kind === 'design' && documentName !== undefined && current.metadata.documents?.includes(documentName)) {
+        [document] = readDesignDocuments(project.root, current, documentName);
+      }
     } catch (error) {
       this.invalidateProject(project.id);
       throw new ProjectApiError('record-unavailable', '기록을 읽을 수 없습니다.', 409, error);
     }
+    if (documentName === undefined) return publicDocument(current);
+    if (!document) throw new ProjectApiError('record-not-found', '기록을 찾을 수 없습니다.', 404);
+    return { ...publicDocument(current), body: document.body, relative_path: document.path };
   }
 
   forgetUnavailableProject(projectId) {

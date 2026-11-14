@@ -122,6 +122,45 @@ test('late document response is cached for its own key without replacing selecte
   assert.equal(page.calls.filter(call => call.url === documentRoute('plan', 'PLAN-0002')).length, 1);
 });
 
+test('Design Markdown renders links that reopen a supporting document and its overview', async t => {
+  const id = 'DESIGN-0001';
+  const directory = '.emeth/designs/DESIGN-0001-example/';
+  const file = 'contracts/상세 설계.md';
+  const design = { id, title: '설계 개요', status: 'ready', relative_path: directory + 'DESIGN.md' };
+  const route = documentRoute('design', id);
+  const routes = {
+    ['/api/v1/projects/' + AVAILABLE_ID + '/index']: { ...indexFixture, designs: [design] },
+    [route]: {
+      ...design, kind: 'design', metadata: { documents: [file] },
+      body: '[`상세 설계`](<' + file + '>)\n\n[미등록](unlisted.md)',
+    },
+    [route + '?' + new URLSearchParams({ file })]: {
+      ...design, kind: 'design', metadata: { documents: [file] }, relative_path: directory + file,
+      body: '# 계약\n\n[개요](../DESIGN.md)',
+    },
+  };
+  const page = await documentPage(t, routes);
+  page.click('[data-focus-key="documents:item:design:DESIGN-0001"]');
+  await page.settle();
+  const link = page.get('.markdown-body a');
+  assert.equal(link.textContent, '상세 설계');
+  assert.equal(page.document.querySelectorAll('.markdown-body a').length, 1);
+  const destination = new URL(link.href);
+  assert.equal(destination.pathname, '/dashboard');
+  assert.equal(destination.searchParams.get('project'), AVAILABLE_ID);
+  assert.equal(destination.searchParams.get('design'), id);
+  assert.equal(destination.searchParams.get('file'), file);
+
+  const detailPage = await dashboard(t, { projects: [projects[1]], query: destination.search, routes });
+  assert.equal(detailPage.get('.markdown-body h1').textContent, '계약');
+  assert.equal(detailPage.get('.document-path').textContent, directory + file);
+  assert.equal(detailPage.get('[data-kind="design"]').getAttribute('aria-pressed'), 'true');
+  const overview = new URL(detailPage.get('.markdown-body a').href);
+  assert.equal(overview.searchParams.get('design'), id);
+  assert.equal(overview.searchParams.has('file'), false);
+  assert.equal(detailPage.get('.document-detail-header a').href, overview.href);
+});
+
 test('safe Markdown escapes HTML and only creates hardened HTTP links', () => {
   const rendered = core.renderMarkdown([
     '# 제목',
