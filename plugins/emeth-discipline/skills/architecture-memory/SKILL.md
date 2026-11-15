@@ -21,7 +21,9 @@ Explicit disabled settings stay disabled.
 ## Retrieve for a decision
 
 Reuse context from the conversation and inspected materials when it is sufficient for the current decision.
-When context is missing and project architecture documents are connected and enabled, search domain terms and affected paths, then read only the sections needed to fill that gap:
+When context is missing and project architecture documents are connected and enabled, search domain terms and affected paths, then read only the sections needed to fill that gap.
+Start with current records for an existing design or policy. Add `--history` to the first search for past alternatives, past decisions, or ADRs. Search history when current records do not supply the needed rationale.
+
 
 ```text
 node <plugin-root>/skills/architecture-memory/scripts/memory.js search --project-root <project> --query "<topic>" --path <code-path>
@@ -32,7 +34,7 @@ Each returned section includes a `receipt`. On later reads, pass `--seen <receip
 
 Known IDs can be read directly; repeat `--id` or `--path` as needed. Pointers are locations, not evidence. Read the selected record with its conditions and required links.
 
-For decision reasons, past alternatives, direction changes, no matches, paging, output limits, or tool failure, use [references/retrieval.md](references/retrieval.md).
+For interpreting history results, no matches, paging, output limits, or tool failure, use [references/retrieval.md](references/retrieval.md).
 For maintenance requests or excessive unrelated content in partial retrieval, use [architecture-memory-maintain](../architecture-memory-maintain/SKILL.md).
 
 New implementation requirements enter the Design through its owning revision workflow when that Design work is requested, required by an invoked workflow, or project automatic work records are enabled.

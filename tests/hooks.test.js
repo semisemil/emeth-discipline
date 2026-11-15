@@ -132,6 +132,8 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   output(f.run({ prompt: '$emeth-discipline focus' }));
   const start = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' }));
   assert.ok(start.hookSpecificOutput.additionalContext.startsWith(codexRules + '\n\n'));
+  assert.match(start.hookSpecificOutput.additionalContext, /keep or change an existing design or project policy/);
+  assert.match(start.hookSpecificOutput.additionalContext, /read the relevant records even when the current behavior is clear/);
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' })), {});
   const compact = output(f.run({ hook_event_name: 'SessionStart', source: 'compact' }));
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);

@@ -55,8 +55,10 @@ function notice(input, options = {}) {
   S.saveJson(cache, { fingerprint });
   if (fingerprint === 'inactive') return 'Project architecture document connection is unavailable or disabled.';
   const connected = `Project architecture documents are connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
+  const guidance = "Before recommending whether to keep or change an existing design or project policy, establish why it was adopted. If the rationale is missing, use this skill to find and read the relevant records even when the current behavior is clear. Also use this skill when the answer or action depends on a project goal, domain meaning or rule, operating constraint, or design rationale that the available evidence does not establish.";
   const behind = commitsBehind(project, linked.root);
-  return behind ? `${connected} Its Git checkpoint is ${behind} ${behind === 1 ? 'commit' : 'commits'} behind HEAD; suggest architecture-memory-update when this affects the task.` : connected;
+  const checkpoint = behind ? ` Its Git checkpoint is ${behind} ${behind === 1 ? 'commit' : 'commits'} behind HEAD; suggest architecture-memory-update when this affects the task.` : '';
+  return `${connected}${checkpoint}\n${guidance}`;
 }
 // Only a recorded checkpoint is measured; a minimal Memory has none until its first update.
 function commitsBehind(project, root) {
