@@ -1,6 +1,6 @@
 ---
 name: code-map
-description: Show the code units responsible for behavior and their calls, events, and implementation choices in Graph Viewer. Use when the user wants to understand the current code structure, collaboration, or a feature's execution flow.
+description: Show the code units responsible for behavior and their calls, events, and implementation choices in Graph Viewer. Use when the user asks for a graph or map of the current code structure, collaboration, or a feature's execution flow.
 ---
 
 # Code Map

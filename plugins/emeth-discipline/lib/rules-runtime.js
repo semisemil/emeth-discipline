@@ -6,7 +6,8 @@ const host = require('./host');
 function load(input) {
   if (input.hook_event_name === 'SessionStart' && input.source === 'resume') return '';
   const currentHost = host.name();
-  const baseline = composeEmethPrompt({ host: currentHost });
+  const audience = input.hook_event_name === 'SubagentStart' ? 'subagent' : 'main';
+  const baseline = composeEmethPrompt({ host: currentHost, audience });
   // Codex SessionStart has a separate callback; fresh workers and other hosts need the same policy.
   const context = currentHost !== 'codex' || input.hook_event_name === 'SubagentStart'
     ? require('./work-records-policy').notice(input.cwd) : '';

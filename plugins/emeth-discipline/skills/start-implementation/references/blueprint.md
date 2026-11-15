@@ -27,9 +27,8 @@ Supplied interfaces, types and required behavior constrain the candidates; explo
 For work that applies an already selected concrete design or mechanically follows an established shape, reuse that design while its contract and evidence remain valid.
 Cite the source, any completed candidate comparison and how they settle the affected responsibility, state ownership and data-flow decisions.
 At the start of Sketch, report whether you will generate candidates or reuse an existing design, naming the open internal decisions or the reuse evidence.
-Candidate selection does not change verification ownership or independent roles defined in [../SKILL.md: Implementation workflow](../SKILL.md#implementation-workflow).
 Synthesize the selected design using [../../development-design/references/document-form.md](../../development-design/references/document-form.md) before review.
-Apply [../../ensemble/SKILL.md: Independent review](../../ensemble/SKILL.md#independent-review) at its owning boundary whether or not candidates were used, including for a design-only request or requested design checkpoint.
+Apply [../../ensemble/SKILL.md: Independent review](../../ensemble/SKILL.md#independent-review) at its owning boundary.
 Select the design before dependent implementation.
 The selected artifact records the boundaries, decisions and verification criteria.
 Keep supplied types, APIs and examples authoritative at their source.
@@ -42,7 +41,7 @@ For a requested design checkpoint, present the selected design, its material eff
 Resolve required user decisions through [../../rules/references/design-discussion.md](../../rules/references/design-discussion.md).
 Use [challenge.md](challenge.md) when the contract remains contested.
 
-## Phase D: Implement and revise
+## Phase C: Implement and revise
 
 Implement against the accepted boundaries under the selected workflow's ownership and verification roles.
 A necessary contract change returns to the affected design decision.

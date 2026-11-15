@@ -28,4 +28,4 @@ The prose that ships alongside the type sketch. One page. Sentence-case headings
 
 ## Next implementation step
 
-*The first thing to build against the sketch. One sentence. What you'd start writing immediately after synthesis (or after Phase D sign-off, if a checkpoint was opted into).*
+*The first thing to build against the sketch. One sentence. What you'd start writing immediately after synthesis (or after the Phase B checkpoint sign-off, if a checkpoint was opted into).*

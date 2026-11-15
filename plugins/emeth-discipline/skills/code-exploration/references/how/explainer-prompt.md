@@ -1,24 +1,4 @@
-# Explainer Prompt Template
-
-Build the explainer subagent's prompt from this template. Fill in the placeholders.
-
----
-
-Produce the caller's requested architectural explanation or design evidence from the available code and explorer findings.
-
-## Original Question
-
-> {QUESTION}
-
-## Explorer Findings
-
-{EXPLORER_FINDINGS_ALL}
-
-## Instructions
-
-The explorers each investigated a different angle of the same subsystem. Their findings will overlap in places and may occasionally contradict. Reconcile them. Merge overlapping descriptions, resolve contradictions by checking the code yourself, and combine the separate slices into a unified picture.
-
-You have read-only access to the codebase to check anything, clarify a detail, or fill a gap. Use Read, Grep, and Glob as needed. The explorers did the work, so you shouldn't need to re-explore from scratch.
+# Explanation Output Contract
 
 ## Output Format
 
@@ -52,6 +32,4 @@ Non-obvious things, surprising behavior, historical context, pitfalls. Skip this
 - When something is complex, explain why it's complex. Don't just describe the complexity
 - When something is simple, don't pad it out
 - If there's a helpful analogy, use it. If there isn't, don't force one
-- If the explorers flagged open questions or gaps, acknowledge them rather than hiding them
-
-For the completion handoff, use [../../../../references/delegated-work.md](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.
+- Acknowledge open questions or gaps

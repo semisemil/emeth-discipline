@@ -14,10 +14,10 @@ Reuse supplied Issue context and its save contract.
 For missing state, run the bundled CLI from the project:
 
 ```text
-node "<plugin-root>/writers/document-writer.js" context --records issues --project-root "<project>" --issue-id <known-ID> --code-context 8 --format codex-text
+node "<plugin-root>/writers/document-writer.js" context --records issues --project-root "<project>" --issue-id <known-ID> --code-context 8 --format text
 ```
 
-In Codex `functions.exec`, run this command in `exec_command` and read its output directly.
+In Codex `functions.exec`, run this command with `--format codex-text` in `exec_command` and read its output directly.
 The result supplies Issue state, the complete ordinary update contract, a native save example, project inventory, root build files and ancestor AGENTS.md files.
 Omit `--issue-id` for selection.
 Read the listed sources needed for verification; reuse complete supplied files.

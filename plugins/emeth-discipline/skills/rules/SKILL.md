@@ -17,12 +17,12 @@ Match verbs to their subjects, name measured and calculated values by what they 
 
 ## Work records
 
-`<plugin-root>` = `{{plugin-root}}`.
+`<plugin-root>` = `{{plugin-root}}`, the directory containing `skills/`.
 Automatic Issue/Design tracking defaults to off.
-Record discovery, reads/writes and skills/CLIs require an explicit record request, required workflow artifacts, or this project's automatic-work-records enabled notice.
+Search, read or write work records, or run record skills and CLIs, only on an explicit record request, a required workflow artifact, or this project's automatic-work-records enabled notice.
 Exclude record roots (`.emeth/`, `.proofline/`, known custom roots) from general inventories/searches, including `--hidden`: rg `-g '!.emeth/**' -g '!.proofline/**'`; `git ls-files -- . ':!.emeth' ':!.proofline'`.
 Records grant no access; explicit requests leave opt-in unchanged.
-For authorized records, use supplied entry/contract; if absent read `skills/rules/references/work-records.md`.
+For authorized records, use supplied entry/contract; if absent read `references/work-records.md`.
 
 Apply the rules for the host running this conversation: [Codex (codex.md)](codex.md), [Claude Code (claude-code.md)](claude-code.md), or [Mixdog (mixdog.md)](mixdog.md).
 
@@ -36,8 +36,6 @@ The rules below apply to Claude Code.
 
 <!-- /direct-readers -->
 Match document drafts and revisions to user intent, purpose and reader in content, depth and structure.
-Apply ASD-STE100 clarity in the document's language: short, single-topic sentences, consistent terms, explicit actions and conditions, technical accuracy and natural grammar.
-Describe current decisions by subject through resulting behavior, structure and decisions.
 Authoring directions govern the work; the body records the subject, decisions and evidence.
 Replace superseded descriptions; update all affected rules, examples, diagrams and references to sections or links.
 <!-- /claude-only -->

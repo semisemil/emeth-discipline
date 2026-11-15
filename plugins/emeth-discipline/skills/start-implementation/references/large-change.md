@@ -1,10 +1,10 @@
 ---
 name: large-change
-description: "Design an auditable playbook when no narrower one fits: a large migration, an ambitious multi-part change, or work a human reviews after stepping away. Scales rigor to the task, runs a hypothesis loop, and logs decisions. Use for /large-change or 'figure it out'."
+description: "Design an auditable playbook when no narrower one fits: a large migration, an ambitious multi-part change, or work a human reviews after stepping away. Scales rigor to the task, runs a hypothesis loop, and logs decisions."
 disable-model-invocation: true
 ---
 
-# Figure it out
+# Large change
 
 When the task matches no playbook, design one. The deliverable before any code is the workflow itself: a sequence of phases that scales rigor to the task, runs the scientific method, and leaves a decision trail a human can audit after stepping away.
 
@@ -22,7 +22,7 @@ Ground first, then commit. Don't start the run until you can state:
 - Scope, quantified: rough units and effort, plus the blockers grounding surfaced.
 - The rigor level, biased high. One-way doors and high blast radius get more. Reversible low-stakes steps get less. Rigor is gates and artifacts, not "try harder".
 
-Present the framing and tradeoffs before committing to a long run. Reversible work proceeds (the guidance in [../../../references/pstack/guidance/never-block-on-the-human.md](../../../references/pstack/guidance/never-block-on-the-human.md)), but a multi-hour run earns one checkpoint.
+Present the framing and tradeoffs before committing to a long run. Reversible work proceeds (the guidance in [../../../references/pstack/guidance/never-block-on-the-human.md](../../../references/pstack/guidance/never-block-on-the-human.md)), but a multi-hour run waits at one checkpoint for the user's go-ahead.
 
 ## Phase B: Design the workflow
 
@@ -30,7 +30,7 @@ Decompose into atomic, independently-landable units. Sequence riskiest-unknown-f
 
 - Build the verification harness before the work, with the baseline captured from the pre-change state, so the check reads as "old value vs new value".
 - For one-way-door design decisions, run the workflow in [blueprint.md](blueprint.md) (it runs [ensemble](../../ensemble/SKILL.md)). Skip it for mechanical work whose shape is already concrete. A second ensemble over a settled design is over-engineering (the guidance in [../../../references/pstack/guidance/laziness-protocol.md](../../../references/pstack/guidance/laziness-protocol.md)).
-- Decide what fans out. Parallelize only across seams, and give each worker its own worktree or branch (the guidance in [../../../references/pstack/guidance/separate-before-serializing-shared-state.md](../../../references/pstack/guidance/separate-before-serializing-shared-state.md)). Don't over-fan. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the [../SKILL.md: Subagents](../SKILL.md#subagents).
+- Decide what fans out. Parallelize only across seams, and give each worker its own worktree or branch (the guidance in [../../../references/pstack/guidance/separate-before-serializing-shared-state.md](../../../references/pstack/guidance/separate-before-serializing-shared-state.md)). Don't over-fan. Pick each subagent's model and reasoning level per [subagents.md: Subagents](subagents.md#subagents).
 - Write the designed phase list down. That list is what the human reviews.
 
 Then execute the design. Add its steps to the todolist as concrete items between the Phase C and Phase D entries. Run each under the Phase C loop discipline, and weave the Phase D log through them, a row as each step lands, rather than saving the whole trail for the end.

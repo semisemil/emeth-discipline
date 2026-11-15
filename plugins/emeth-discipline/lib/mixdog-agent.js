@@ -8,7 +8,7 @@ function beforeAgent(input) {
   const args = input.tool_input;
   if (input.tool_name !== 'agent' || !args || typeof args !== 'object'
       || Array.isArray(args) || args.type !== 'spawn') return {};
-  const baseline = composeEmethPrompt({ host: 'mixdog' });
+  const baseline = composeEmethPrompt({ host: 'mixdog', audience: 'subagent' });
   const notice = require('./work-records-policy').notice(typeof args.cwd === 'string' ? args.cwd : input.cwd);
   const context = typeof args.context === 'string' ? args.context : '';
   const missing = [!context.includes(baseline) ? baseline : '', notice && !context.includes(notice) ? notice : ''].filter(Boolean);

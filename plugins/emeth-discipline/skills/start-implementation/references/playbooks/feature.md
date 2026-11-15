@@ -4,7 +4,6 @@ The calling conversation owns the feature's design, code, integration and final 
 Carry its source evidence and accepted decisions through the selected [../../SKILL.md: Implementation workflow](../../SKILL.md#implementation-workflow).
 
 1. Complete the Ground and Sketch phases in [../blueprint.md](../blueprint.md), reusing a reviewed Design and its still-valid evidence.
-   Select the design before dependent implementation, with independent review at the selected workflow's boundary.
 2. Settle blocking contracts and assign distinct paths for artifacts that can progress independently.
    Keep coupled code and integration with the current owner.
 3. Implement the selected contract and run the selected workflow's independent work.

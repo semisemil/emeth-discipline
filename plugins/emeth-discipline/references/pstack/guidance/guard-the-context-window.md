@@ -6,7 +6,5 @@ disable-model-invocation: true
 
 # Guard the Context Window
 
-**Why:** Context overflow degrades reasoning quality, creates compression artifacts, and halts progress.
-
-**Pattern:**
+- **Route bulk to subagents.** For large outputs, long files, repeated reads or fan-out, keep summaries in the main thread rather than raw payloads.
 - **Size phases and cap scope.** Limit files per phase, set turn budgets, account for mechanism costs.

@@ -23,7 +23,7 @@ The key types, services, classes, and abstractions. For each: name, file path, a
 The execution flow step by step. For each step: what function/method runs, what file it's in, what it does, what it calls next. Include the data that flows between steps.
 
 ### Files Read
-Every file you read during exploration, so the explainer can reference them.
+Every file you read during exploration, so the calling conversation can reference them.
 
 ### Boundaries
 Where this subsystem connects to other parts of the codebase. The inputs and outputs.
@@ -34,4 +34,4 @@ Anything surprising, historically motivated, or easy to get wrong. Things that l
 ### Open Questions
 Anything you couldn't fully trace or understand. Be honest about gaps.
 
-For the completion handoff, use [../../../../references/delegated-work.md](../../../../references/delegated-work.md). Keep every artifact and finding required above; the handoff points to the complete output.
+For the completion handoff, use `<plugin-root>/references/delegated-work.md`. Keep every artifact and finding required above; the handoff points to the complete output.

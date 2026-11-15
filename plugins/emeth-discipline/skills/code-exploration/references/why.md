@@ -8,9 +8,9 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion workflow in [how.md](how.md) answers what the code does and how it works. This workflow answers what forces led to its shape.
 
-Select each investigator's and synthesizer's model and reasoning effort through [../../start-implementation/SKILL.md: Subagents](../../start-implementation/SKILL.md#subagents) and use the host mapping in [../../start-implementation/SKILL.md: Harness](../../start-implementation/SKILL.md#harness).
+Select each investigator's model and reasoning effort through [../../start-implementation/references/subagents.md: Subagents](../../start-implementation/references/subagents.md#subagents) and use the host mapping in [../../start-implementation/references/subagents.md: Harness](../../start-implementation/references/subagents.md#harness).
 
-Spawn every investigator and the synthesizer as a general subagent with connected MCP tools available; the MCP-backed investigators and the synthesizer's citation spot-checks depend on them. Where the host's read-only mode removes MCP access, spawn without that mode and state the write restriction in the assignment prompt.
+Spawn every investigator as a general subagent with connected MCP tools available; the MCP-backed investigators depend on them. Where the host's read-only mode removes MCP access, spawn without that mode and state the write restriction in the assignment prompt.
 
 ## Operating Posture
 
@@ -24,7 +24,7 @@ If the target is vague ("why do we do it this way?" with no clear referent), mak
 
 ## Step 2. Establish the Code Anchor
 
-Before spawning investigators, build the seed context inline: file paths and line ranges, key symbols (functions, classes, constants), the last few commits touching the target, PR numbers from merge commits (pattern `(#1234)` in the subject line), and any linked ticket IDs. Run `git blame -L <start>,<end> <file>` for last-touch commits, `git log --follow -p -- <file>` for full history with patches through renames, `git log --oneline -20 -- <file>` for recent commits with PR numbers visible, and `git log -1 --format=%B <commit>` to extract PR numbers. Then pull the PR bodies and discussion for any substantive commit: `gh pr view <number> --json title,body,author,createdAt,mergedAt,labels,closingIssuesReferences,comments,reviews`. This anchor goes to every investigator and to the synthesizer.
+Before spawning investigators, build the seed context inline: file paths and line ranges, key symbols (functions, classes, constants), the last few commits touching the target, PR numbers from merge commits (pattern `(#1234)` in the subject line), and any linked ticket IDs. Run `git blame -L <start>,<end> <file>` for last-touch commits, `git log --follow -p -- <file>` for full history with patches through renames, `git log --oneline -20 -- <file>` for recent commits with PR numbers visible, and `git log -1 --format=%B <commit>` to extract PR numbers. Then pull the PR bodies and discussion for any substantive commit: `gh pr view <number> --json title,body,author,createdAt,mergedAt,labels,closingIssuesReferences,comments,reviews`. This anchor goes to every investigator and into the synthesis.
 
 ## Step 3. Spawn Parallel Investigators
 
@@ -34,7 +34,7 @@ Delegate self-contained research when parallel work or a separate context window
 
 ### Discovery
 
-Before spawning investigators, list the MCP servers connected to your harness. Use the available-tools map when present. In Cursor, you can also inspect the `mcps/` directory it exposes for enabled MCP servers. In other harnesses, MCP tools usually appear in your tool list with the server name in the tool name (for example `mcp__<server>__<tool>` in Claude Code).
+Before spawning investigators, list the MCP servers connected to your harness. Use the available-tools map when present. MCP tools usually appear in your tool list with the server name in the tool name (for example `mcp__<server>__<tool>` in Claude Code).
 
 Map each available MCP to one evidence category:
 

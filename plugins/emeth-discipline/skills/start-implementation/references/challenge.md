@@ -20,13 +20,13 @@ Package the diff or file contents with any surrounding context files the reviewe
 
 ## Step 2, Intent
 
-Before spawning reviewers, state the intent in one clear paragraph from the user's message, commit messages, the PR description if one exists, and the code. If you're unsure about the intent, ask the user before proceeding.
+Before spawning reviewers, state the intent in one clear paragraph from the user's message, commit messages, the PR description if one exists, and the code. If the intent is unclear, state the best-supported reading as an assumption and proceed; ask the user first only when competing readings would change what reviewers check.
 
 ## Step 3, Spawn Reviewers
 
 Launch both reviewers in a single message with the host's subagent tool, labeled Reviewer A and Reviewer B.
 
-Each reviewer is read-only. Use reviewer settings and unsupported-setting handling in [../SKILL.md: Subagents](../SKILL.md#subagents), with the host mapping in [../SKILL.md: Harness](../SKILL.md#harness).
+Each reviewer is read-only. Use reviewer settings and unsupported-setting handling in [subagents.md: Subagents](subagents.md#subagents), with the host mapping in [subagents.md: Harness](subagents.md#harness).
 
 Read `<plugin-root>/skills/start-implementation/references/challenge/reviewer-prompt.md` and fill in the same template for every reviewer with the stated intent, the diff or file contents, the rubric from `<plugin-root>/skills/start-implementation/references/challenge/rubric.md`, and the code-quality lens from `<plugin-root>/skills/start-implementation/references/challenge/code-quality-review.md`.
 

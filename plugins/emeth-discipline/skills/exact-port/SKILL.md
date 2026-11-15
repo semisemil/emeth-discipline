@@ -12,7 +12,7 @@ Reuse existing plans and evidence records. When a separate document is useful, u
 
 The source is authoritative. Do not simplify, rewrite, omit, rename, or change behavior unless the user approved it.
 
-If an unapproved deviation is needed, stop before editing and ask approval or report blocked.
+If an unapproved deviation is needed, leave the affected mapping unit unedited and ask approval or report it blocked; continue units that do not depend on it.
 
 Track source-target mapping and every approved deviation with reason, approval, and evidence.
 

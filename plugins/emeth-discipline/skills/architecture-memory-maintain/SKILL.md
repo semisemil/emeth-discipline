@@ -1,6 +1,6 @@
 ---
 name: architecture-memory-maintain
-when_to_use: "Reorganize connected architecture documents when maintenance is requested or partial retrieval carries excessive unrelated content."
+when_to_use: "Reorganize connected architecture documents on a maintenance request."
 description: Split, consolidate and shorten connected architecture documents while preserving their meaning, evidence and retrieval prerequisites.
 ---
 
@@ -59,7 +59,7 @@ Separate unrelated responsibilities at the target when they would otherwise acco
 Use ordinary Markdown links for optional navigation.
 Preserve existing Markdown destinations when changing headings, or update their affected references within scope.
 
-Apply related changes together through `author.js reorganize` under [../architecture-memory/references/recording.md: Batch reorganization](../architecture-memory/references/recording.md#batch-reorganization).
+Apply related changes together through `author.js reorganize` under [Batch reorganization](references/batch-reorganization.md).
 It uses the ordinary recording and recovery path, including any pending init/update draft.
 Consolidated IDs remain readable as historical location records; current prerequisites point directly to their destinations.
 

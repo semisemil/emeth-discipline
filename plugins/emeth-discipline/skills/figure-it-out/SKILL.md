@@ -25,11 +25,12 @@ Reuse completed work while its sources, artifact versions and conditions remain 
 
 ## Implementation
 
-Select the [../start-implementation/SKILL.md: Implementation workflow](../start-implementation/SKILL.md#implementation-workflow) before design exploration for an implementation request.
+First select the [../start-implementation/SKILL.md: Implementation workflow](../start-implementation/SKILL.md#implementation-workflow), reading that section alone; the rest of that skill belongs to stage 3.
 Run these skills in order, starting at the first incomplete stage:
 
 1. [development-design](../development-design/SKILL.md): prepare or revise the Design until it is `ready`.
-2. [tenet-me](../tenet-me/SKILL.md): review the Design and return material findings to development-design for revision; after a revision, review only the outcomes it affects. This stage is complete when the current revision has no material finding. A `ready` Design still needs it unless this conversation already reviewed its current revision.
+2. [tenet-me](../tenet-me/SKILL.md): review the Design once per revision and return material findings to development-design for revision; after a revision, review only the outcomes it affects.
+   Under Separate implementation and tests, this review is that workflow's independent design review, run by its judge through [../ensemble/SKILL.md: Independent review](../ensemble/SKILL.md#independent-review); under Combined implementation and tests, the calling conversation runs it, except that a request limited to design uses that independent review.
+   This stage is complete when the current revision has no material finding. A `ready` Design still needs it unless this conversation already reviewed its current revision.
 3. [start-implementation](../start-implementation/SKILL.md): implement the reviewed Design through its pstack playbook, unless the user limited the work to an earlier stage.
-
-Match the grounding, synthesized sketch and review findings to the implementation playbook's steps.
+   The Design's grounding, selected design and stage 2 review complete the playbook's Ground, Sketch and design review while that revision and its evidence remain unchanged.

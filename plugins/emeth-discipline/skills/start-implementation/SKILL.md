@@ -32,24 +32,21 @@ Fill material evidence gaps before selecting.
 Assess the changed relationships and contracts; an existing pipeline or stateful component alone does not select Separate implementation and tests.
 Detailed requirements and specified interfaces do not remove these verification conditions.
 Keep the selection for the same work contract; reconsider it when new behavioral evidence or accepted requirements change that classification.
-Select design candidates separately through [references/blueprint.md: Phase B: Sketch](references/blueprint.md#phase-b-sketch).
-Candidate use leaves the selected workflow's review and test roles in place.
-
-| Workflow | Selection | Independent work |
-| --- | --- | --- |
-| Combined implementation and tests | The change does not meet a Separate implementation and tests condition, and its required and preserved behavior are grounded | The calling conversation selects the design, implements and verifies it; one independent judge reviews the completed result, except for a contained change |
-| Separate implementation and tests | The change meets any Separate implementation and tests condition above | One independent judge reviews the selected design before implementation; a fresh test author works alongside the calling conversation's implementation |
+Use [references/blueprint.md: Phase B: Sketch](references/blueprint.md#phase-b-sketch) for design candidate selection; candidates do not replace the selected workflow's review or test roles.
 
 Use the selected workflow throughout the task's playbook, retaining its reproduction, behavior-preservation and delivery checks.
 Reuse a reviewed Design, candidate artifacts and verification while their contracts and source evidence remain valid.
 
-For Separate implementation and tests, assign independent public-contract tests through the [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md).
+When delegating work or mapping workflow tools to the host, read [references/subagents.md](references/subagents.md).
+
+For Separate implementation and tests, obtain independent review of the selected design before implementation through [../ensemble/SKILL.md: Independent review](../ensemble/SKILL.md#independent-review).
+Have a fresh test author write independent public-contract tests using [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md).
 Supply requirement and baseline source paths, test conventions and distinct owned test paths under that role's input contract.
 Implement in parallel, then integrate the tests and resolve failures against their contract basis.
 
-Use the [../ensemble/SKILL.md: Independent review](../ensemble/SKILL.md#independent-review) at the selected workflow's review boundary, including when no design candidates were used.
-For Combined implementation and tests, supply the completed implementation, original requirements, source baseline, any candidate artifacts and verification evidence.
-Resolve material findings and obtain that judge's review of the affected corrections before delivery.
+For Combined implementation and tests, implement and test in the calling conversation, then obtain [../ensemble/SKILL.md: Independent review](../ensemble/SKILL.md#independent-review) of the completed implementation, supplying original requirements, source baseline, any candidate artifacts and verification evidence.
+Independent review applies even without design candidates, except for a contained change as defined below.
+For either workflow, resolve material findings and obtain that judge's review of the affected corrections before delivery.
 A contained change in Combined implementation and tests stays inside one component, leaves public contracts unchanged, and has its complete required result verified by existing tests or direct observation; the calling conversation's verification completes its review unless the user or the Design requests an independent review.
 Both workflows finish with verification of the complete public result on the real artifact.
 
@@ -58,86 +55,44 @@ Both workflows finish with verification of the complete public result on the rea
 Optionally use [../ensemble/SKILL.md](../ensemble/SKILL.md) to compare the smallest useful scope of actual implementation candidates when the comparison can resolve a remaining implementation choice.
 Use [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md) for candidate assignments under the accepted Design.
 Use an isolated experiment when only an observation is needed to decide; implementation candidates supply code intended for integration.
-Keep the selected workflow's implementation ownership and independent review and test roles.
 
 ## Principles
 
-Read the leaf guidance document in full for any principle you apply. Each entry names when it applies.
+Read the relevant guidance when its trigger applies.
 
 **Core**
 
-- [../../references/pstack/guidance/laziness-protocol.md](../../references/pstack/guidance/laziness-protocol.md): Refactoring, sizing a diff, or tempted to add abstractions, layers, or signal threading. Bias to deletion and the smallest change that solves the problem.
-- [../../references/pstack/guidance/foundational-thinking.md](../../references/pstack/guidance/foundational-thinking.md): Before writing logic: core types and data structures, scaffold-vs-feature sequencing, what concurrent actors share.
-- [../../references/pstack/guidance/redesign-from-first-principles.md](../../references/pstack/guidance/redesign-from-first-principles.md): Integrating a new requirement into an existing design. Redesign as if it had been foundational from day one.
-- [../../references/pstack/guidance/subtract-before-you-add.md](../../references/pstack/guidance/subtract-before-you-add.md): Sequencing an addition, refactor, or rewrite. Remove dead weight first, then build on the simpler base.
-- [../../references/pstack/guidance/minimize-reader-load.md](../../references/pstack/guidance/minimize-reader-load.md): Reviewing or shaping code that's hard to trace. Count layers and hidden state, collapse one-caller wrappers, shrink mutable scope.
-- [../../references/pstack/guidance/outcome-oriented-execution.md](../../references/pstack/guidance/outcome-oriented-execution.md): Planned rewrites and migrations with explicit phase boundaries. Converge on the target architecture, don't preserve throwaway compatibility states.
-- [../../references/pstack/guidance/exhaust-the-design-space.md](../../references/pstack/guidance/exhaust-the-design-space.md): A novel interaction or architectural decision with no precedent. Build 2-3 competing prototypes and compare before committing.
-- [../../references/pstack/guidance/build-the-lever.md](../../references/pstack/guidance/build-the-lever.md): Any non-trivial work. Build the tool that does or proves it (codemod, script, generator), not by hand. The tool is the artifact a reviewer reruns.
+- [Laziness protocol](../../references/pstack/guidance/laziness-protocol.md): Refactoring, diff sizing or proposed abstractions.
+- [Foundational thinking](../../references/pstack/guidance/foundational-thinking.md): Core data shapes, scaffolding or shared state.
+- [Redesign from first principles](../../references/pstack/guidance/redesign-from-first-principles.md): New requirements in an existing design.
+- [Subtract before you add](../../references/pstack/guidance/subtract-before-you-add.md): Sequencing an addition, refactor or rewrite.
+- [Minimize reader load](../../references/pstack/guidance/minimize-reader-load.md): Code that is hard to trace.
+- [Outcome-oriented execution](../../references/pstack/guidance/outcome-oriented-execution.md): Rewrites or migrations with phase boundaries.
+- [Exhaust the design space](../../references/pstack/guidance/exhaust-the-design-space.md): Novel interactions or architecture without precedent.
+- [Build the lever](../../references/pstack/guidance/build-the-lever.md): Repeated work or a needed rerunnable proof.
 
 **Architecture**
 
-- [../../references/pstack/guidance/model-the-domain.md](../../references/pstack/guidance/model-the-domain.md): Writing stateful logic, or code that branches a lot or repeats a shape assumption across files. Encode the domain in a structure (state machine, typed model, table or registry, reducer, boundary, the right collection) instead of scattered conditionals.
-- [../../references/pstack/guidance/boundary-discipline.md](../../references/pstack/guidance/boundary-discipline.md): Wiring validation, error handling, or framework adapters. Guards at system boundaries, trust internal types, keep business logic pure.
-- [../../references/pstack/guidance/make-operations-idempotent.md](../../references/pstack/guidance/make-operations-idempotent.md): Designing commands, lifecycle steps, or loops that run amid crashes and retries. Converge to the same end state.
-- [../../references/pstack/guidance/migrate-callers-then-delete-legacy-apis.md](../../references/pstack/guidance/migrate-callers-then-delete-legacy-apis.md): Introducing a new internal API while old callers exist. Migrate and delete in one wave.
-- [../../references/pstack/guidance/separate-before-serializing-shared-state.md](../../references/pstack/guidance/separate-before-serializing-shared-state.md): Concurrent actors might write the same file, branch, key, or object. Eliminate the sharing first.
+- [Model the domain](../../references/pstack/guidance/model-the-domain.md): Stateful logic, heavy branching or repeated shape assumptions.
+- [Boundary discipline](../../references/pstack/guidance/boundary-discipline.md): Validation, error handling or framework adapters.
+- [Make operations idempotent](../../references/pstack/guidance/make-operations-idempotent.md): Commands or loops subject to crashes and retries.
+- [Migrate callers then delete legacy APIs](../../references/pstack/guidance/migrate-callers-then-delete-legacy-apis.md): New internal APIs with existing callers.
+- [Separate before serializing shared state](../../references/pstack/guidance/separate-before-serializing-shared-state.md): Concurrent writers to the same mutable object.
 
 **Verification**
 
-- [../../references/pstack/guidance/prove-it-works.md](../../references/pstack/guidance/prove-it-works.md): After a task, before declaring done. Verify against the real artifact, not a proxy or "it compiles".
-- [../../references/pstack/guidance/fix-root-causes.md](../../references/pstack/guidance/fix-root-causes.md): Debugging. Trace each symptom back to the first place the system went wrong and fix it there. A guard is a fix only when the state it handles is legitimate.
-- [../../references/pstack/guidance/sequence-verifiable-units.md](../../references/pstack/guidance/sequence-verifiable-units.md) (**principle-sequence-verifiable-units**). Multi-step work (sweeps, migrations, runs of similar edits) and how you stack commits and PRs. Break work into small units that each end in a check, verify each before the next, and order delivery so the sequence proves itself.
+- [Prove it works](../../references/pstack/guidance/prove-it-works.md): Before declaring completion.
+- [Fix root causes](../../references/pstack/guidance/fix-root-causes.md): Debugging.
+- [Sequence verifiable units](../../references/pstack/guidance/sequence-verifiable-units.md): Multi-step work or stacked commits and PRs.
 
 **Delegation**
 
-- [../../references/pstack/guidance/guard-the-context-window.md](../../references/pstack/guidance/guard-the-context-window.md): Context fills up: large outputs, long files, repeated reads, fan-out planning. Route bulk to subagents, keep summaries in the main thread.
-- [../../references/pstack/guidance/never-block-on-the-human.md](../../references/pstack/guidance/never-block-on-the-human.md): Tempted to ask "should I do X?" on reversible work. Proceed, present the result, let the human course-correct.
+- [Guard the context window](../../references/pstack/guidance/guard-the-context-window.md): Large outputs, long files, repeated reads or fan-out.
+- [Never block on the human](../../references/pstack/guidance/never-block-on-the-human.md): Approval questions about reversible work.
 
 **Meta**
 
-- [../../references/pstack/guidance/encode-lessons-in-structure.md](../../references/pstack/guidance/encode-lessons-in-structure.md): You catch yourself writing the same instruction a second time. Encode it as a lint, metadata flag, runtime check, or script instead of more text.
-
-## Subagents
-
-Use the [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md) for separable implementation or verification artifacts inside a playbook step.
-The calling conversation runs the playbook and retains coupled implementation and integration.
-Routed workflows keep their own roles and role prompts.
-
-**Defaults for every subagent call.** Pass the role prompt and [../../references/delegated-work.md](../../references/delegated-work.md) by path, with the assignment's source and owned artifact paths.
-Use background execution and keep connected tools available when the role needs them.
-
-**Model selection.** Explicit user settings take precedence over workflow settings and role defaults.
-For settings left unspecified by the user or owning workflow, run:
-
-```text
-node "<plugin-root>/lib/model-routing.js"
-```
-
-Apply the returned guidance through the host's supported model and reasoning arguments, within the user's usage limits.
-Report unsupported explicit requirements instead of substituting them.
-
-Review a delegated artifact against its assigned contract and resolve material findings with affected verification.
-For ensemble and challenge seats, a second opinion uses the same prompt in an independent context.
-Attribute agreement to the independent reviewers.
-
-Keep work in the same session when its parts must coordinate decisions with each other as they progress.
-Use a fresh agent context when delegating independent reviews, bulk research, or self-contained parallel work.
-Continue an assignment with its owner when correcting its artifact or reviewing affected corrections.
-Pass changed contracts, source paths and stopping conditions with the follow-up.
-
-## Harness
-
-`Read`, `Grep` and `Glob` mean the host's file-reading, content-search and path-search tools. Read-only parameters express the role's write restrictions; when Codex has no such argument, keep that restriction in the assignment prompt.
-
-pstack was written for Cursor. In another harness (Claude Code, Codex, Pi, OpenCode, and others), read Cursor-specific instructions in this skill, its playbooks, and the routed skills through these mappings. If you can't tell which harness you are, check which of the paths below exist.
-
-- **Subagents.** `Task` means your subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`), `task` in OpenCode (`subagent_type: general`), `spawn_agent` in Codex. For a fresh Codex assignment, use `fork_turns: "none"` with the prescribed role prompt and paths to its task, grounding, and output artifacts. Drop parameters your tool doesn't have. `environment: "cloud"` means a Cursor cloud agent. Elsewhere, run that agent locally in its own worktree. If your harness has no subagent tool, as in Pi without an extension, do each delegated step yourself, one after another.
-- **Implementation delegates.** Where the source names `poteto-agent`, use a general subagent with the [../../references/pstack/implementation-prompt.md](../../references/pstack/implementation-prompt.md).
-- **Transcripts.** Read only the active workspace's sessions, never other projects'. Cursor: the `agent-transcripts/` directory the system prompt names. Claude Code: `~/.claude/projects/<slug>/*.jsonl`, where `<slug>` is the workspace path with every character that isn't a letter or digit turned into "-". Pi: `~/.pi/agent/sessions/--<slug>--/*.jsonl`, where `<slug>` is the workspace path with the leading slash dropped and each "/" turned into "-". Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, keeping files whose first line has `payload.cwd` equal to the workspace path. OpenCode: `~/.local/share/opencode/storage/`.
-- **Skill folders.** Project: `.cursor/skills/` (Cursor), `.claude/skills/` (Claude Code), `.pi/skills/` (Pi), `.agents/skills/` (Codex, OpenCode, and others). User: `~/.cursor/skills/`, `~/.claude/skills/`, `~/.pi/agent/skills/`, `~/.codex/skills/`, `~/.agents/skills/`.
-- **Questions.** `AskQuestion` means the host's structured-question tool, such as `request_user_input_async` in Codex. Without one, ask in chat with numbered options.
-- **Tools pstack doesn't ship.** `create-skill` is Cursor's built-in skill-authoring skill. Elsewhere, use Anthropic's `skill-creator` or follow the Agent Skills format at agentskills.io. `deslop`, `control-cli`, and `control-ui` come from Cursor's `cursor-team-kit` plugin. Without `deslop`, reread the diff before commit and cut AI slop yourself. Without the control skills, drive the app with the automation you have: Playwright or a CDP browser for web and Electron, tmux or a PTY for CLIs and TUIs. `/loop` is built into Cursor and Claude Code. For delegated work, use the host's completion mechanism. In Codex, follow the [delegated work completion rules](../rules/codex.md#delegated-work-completion).
+- [Encode lessons in structure](../../references/pstack/guidance/encode-lessons-in-structure.md): Repeated instructions or recurring corrections.
 
 ## Comments
 
@@ -160,29 +115,9 @@ User-facing output follows the user's language.
 
 Before fan-out, retain the original task and accepted directives by source path; save their exact text when they exist only in the conversation. Pass those paths and the shared grounding with each role's prescribed prompt. Extend the grounding with source ranges needed to answer a new question; reuse the evidence while its sources and conditions remain unchanged.
 
-Use the [../../references/delegated-work.md](../../references/delegated-work.md) without replacing a role's required prompt, artifact, findings or verification. Reuse delivered context and unchanged evidence. Keep stage, accepted decisions and artifact versions through the [work-context helper](#work-context).
+Use the [../../references/delegated-work.md](../../references/delegated-work.md) without replacing a role's required prompt, artifact, findings or verification.
 
-### Work context
-
-Reuse a read or decision while its artifact version and relevant conditions remain unchanged.
-For a new question or missing context after compaction, retrieve the needed range again.
-
-When the host offers versioned artifact reads and workflow state, use them.
-The read response identifies the artifact version, returns its first content, and then returns changes or an unchanged result.
-Request a full refresh when the previous content is no longer sufficient.
-
-For other hosts, the packaged helper provides the same read behavior:
-
-```text
-node <plugin-root>/lib/work-context.js read --state <temporary-state-file> --path <file> [--from <line> --to <line>] [--refresh]
-```
-
-At a completed work boundary, retain the stage, accepted decisions, remaining issues, and artifact versions in the host's workflow state.
-Recover that state after compaction before deciding which evidence is missing.
-The helper also supports `checkpoint --state <file> --stage <stage> --decision <decision> --pending <issue>` and `status --state <file>`.
-
-Use line-based search with bounded context for a local question.
-Batch independent reads and return the selected ranges, rather than filtering a whole-file string.
+For versioned reads, work-boundary checkpoints or recovery after compaction, read [references/work-context.md](references/work-context.md).
 
 ## Internal references
 

@@ -1,15 +1,19 @@
 ## Language and presentation
 
-Apply ASD-STE100 writing principles when answering.
+Apply ASD-STE100 clarity to answers and documents: short, single-topic sentences, explicit actions and conditions, technical accuracy and natural grammar.
 Use conventional expressions suited to the context and omit unnecessary explanations.
 Use precise, consistent terms, established translations and agreed project terms suited to their placement; rewrite whole sentences if word edits leave meaning unclear.
 Match explanations to reader role, purpose, demonstrated understanding and audience.
 Supply source findings and task context needed to understand, judge or act without reconstructing sources or work history; explain needed content beside named reference links.
 Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
+<!-- main-only -->
 For existing code, start with the affected operation in plain language and its owning file or component's responsibility.
 At first mention, give each relevant function or component's location and job; explain behavior through those roles before implementation details.
+<!-- /main-only -->
 Give quantities' meanings and units, plus comparison targets and measurement conditions for improvement claims.
+<!-- main-only -->
 Questions identify what to assess or provide, references or criteria, and response format.
+<!-- /main-only -->
 Apply established conditions consistently, preserving causal connections without contradictions.
 
 Omit compliance or correction displays, needless process commentary, self-description, unrelated information and exclusions of unraised possibilities.
@@ -17,23 +21,28 @@ Define settled designs through structure, behavior and contracts; decision recor
 Scheduled tasks, subagents and other-session instructions include only assignment needs; shared agreements add no new requirements or report items.
 
 Use tables for parallel attributes and name-value pairs for individual properties; prefer clear noun phrases or short clauses.
+<!-- main-only -->
 Actively use visualizations suited in form and detail to the reader's needs.
 Code reviews explaining behavior or control-flow changes visualize before and after behavior and relevant failure and recovery paths.
 
 ## Reports
 
+A format set by the user or caller takes precedence over this section.
 Reports and work-result summaries, including chat, follow their document type's conventions with distinct sections for purpose, method or work performed, results and conclusions.
 For measurements or experiments, give method fields or a table: target, comparison conditions, environment, inputs, procedure, metrics and repetitions.
 Use concise table entries or unbulleted label-value lines for facts, sentences for reasoning and interpretation.
+<!-- /main-only -->
 Distinguish measurements, interpretations and unverified items; ground conclusions in reported evidence.
 
 ## Truth, existing changes and continuation
 
 Distinguish user statements, inspected facts, recorded decisions, proposals or inferences and unknowns.
+<!-- main-only -->
 Ask if this request conflicts with the intent of staged, unstaged or untracked changes present at task start.
 Answer steering questions, incorporate feedback and continue; honor stop, goal-change and answer-only requests.
 Ask one concise question for missing material information or required user judgment; pause only dependent work and continue independent work.
-
-## Emeth skills
-
-Emeth skills use `<plugin-root>` = `{{plugin-root}}`, the directory containing `skills/`.
+<!-- /main-only -->
+<!-- subagent-only -->
+Preserve the intent of staged, unstaged or untracked changes present at task start.
+Return missing material information, required user judgment and conflicts with existing changes to the caller as open items; continue independent work.
+<!-- /subagent-only -->

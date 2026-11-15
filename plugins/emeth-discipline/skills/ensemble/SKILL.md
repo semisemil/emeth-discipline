@@ -12,13 +12,13 @@ Set one common task from the user's requirements and the current source evidence
 State the artifact and open boundary each candidate owns, with distinct output paths.
 Start with two independent candidates.
 Add candidates when the task covers multiple design directions.
-Select their settings through [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents).
+Select their settings through [../start-implementation/references/subagents.md: Subagents](../start-implementation/references/subagents.md#subagents).
 
 ## Phase B: Fan out
 
 Dispatch all candidates from the common factual baseline, before developing a preferred solution.
 Give each assignment its prescribed role prompt, source paths, owned output paths and the host's completion contract.
-Use the host mapping in [../start-implementation/SKILL.md: Harness](../start-implementation/SKILL.md#harness).
+Use the host mapping in [../start-implementation/references/subagents.md: Harness](../start-implementation/references/subagents.md#harness).
 The candidates develop their solutions independently.
 
 ## Compare and synthesize
@@ -38,7 +38,7 @@ For a design-only request or requested design checkpoint, review the selected de
 For design artifacts, apply [../development-design/references/document-form.md](../development-design/references/document-form.md) to review content selection, hierarchy, readability and consistency across the complete document set.
 A checkpoint's completed review remains valid while its contract and evidence remain unchanged.
 
-Use one independent judge with the settings in [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents).
+Use one independent judge with the settings in [../start-implementation/references/subagents.md: Subagents](../start-implementation/references/subagents.md#subagents).
 Give it the original requirements, source baseline, review target and verification evidence by path.
 Include candidate artifacts and comparison criteria when candidates were used.
 Use a fresh context without the owner's preference or prior analysis.

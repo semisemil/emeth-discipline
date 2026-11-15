@@ -8,7 +8,7 @@ disable-model-invocation: true
 # Code Exploration
 
 Use the user's language for the explanation.
-Apply [../start-implementation/SKILL.md: Subagents](../start-implementation/SKILL.md#subagents) to model selection and tool execution.
+Apply [../start-implementation/references/subagents.md: Subagents](../start-implementation/references/subagents.md#subagents) to model selection and tool execution.
 
 Choose the mode from the question, then read and run its workflow.
 

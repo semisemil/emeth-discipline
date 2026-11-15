@@ -141,6 +141,18 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   assert.equal(child.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);
 });
 
+test('subagents receive caller-facing rules instead of user-facing presentation rules', t => {
+  const f = fixture(t);
+  fs.writeFileSync(path.join(f.plugin, 'skills/rules/codex.md'),
+    'Shared rule\n<!-- main-only -->\nAsk the user\n<!-- /main-only -->\n<!-- subagent-only -->\nReport to the caller\n<!-- /subagent-only -->\n');
+  const session = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' })).hookSpecificOutput.additionalContext;
+  const worker = output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'agent-b' })).hookSpecificOutput.additionalContext;
+  assert.match(session, /Shared rule\nAsk the user/);
+  assert.match(worker, /Shared rule\nReport to the caller/);
+  assert.doesNotMatch(session, /Report to the caller|<!--/);
+  assert.doesNotMatch(worker, /Ask the user|<!--/);
+});
+
 test('project opt-in reaches fresh Codex workers and Claude/Mixdog sessions and worker dispatch', t => {
   const f = fixture(t);
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');

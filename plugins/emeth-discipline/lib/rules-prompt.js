@@ -40,6 +40,8 @@ function invalidPrompt(message, code, filePath) {
 
 // Direct readers follow this line's links; the hook inlines the running host's rules in its place.
 const HOST_RULES = /^Apply the rules for the host running this conversation: [^\r\n]*/m;
+// Subagents report to their caller, so user-facing presentation rules stay in the main conversation.
+const AUDIENCE_BLOCK = /<!-- (main|subagent)-only -->\r?\n([\s\S]*?)<!-- \/\1-only -->\r?\n?/g;
 const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', mixdog: 'mixdog.md' });
 
 function composeEmethPrompt(options = {}) {
@@ -56,7 +58,9 @@ function composeEmethPrompt(options = {}) {
   }
   const hostRules = readFileWithRetry(hostPath).replace(/^\uFEFF/, '').trim();
   const hostShared = host === 'codex' ? shared.replaceAll('`skills/rules/references/', '`references/') : shared;
-  const baseline = resolveReferences(hostShared.replace(HOST_RULES, () => hostRules), skillPath);
+  const audience = options.audience === 'subagent' ? 'subagent' : 'main';
+  const baseline = resolveReferences(hostShared.replace(HOST_RULES, () => hostRules), skillPath)
+    .replace(AUDIENCE_BLOCK, (_match, reader, content) => reader === audience ? content : '');
   return baseline.replaceAll('node "{{plugin-root}}/', 'node "<plugin-root>/')
     .replaceAll('{{plugin-root}}', pluginRoot).trimEnd();
 }
