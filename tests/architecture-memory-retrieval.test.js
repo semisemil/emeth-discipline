@@ -69,6 +69,24 @@ test('read receipts reuse exact evidence but changed preambles and newly require
   assert.match(JSON.stringify(changed), /safety interlocks/);
 });
 
+test('lookup returns evidence for multiple topics with their shared prerequisite and reports gaps', (t) => {
+  const f = fixture(t, {
+    'context.md': record('AM-scan', 'Accept scans while offline.', { terms: ['키오스크'], links: ['AM-power'] })
+      + record('AM-report', 'Batch reports daily.', { terms: ['마감보고'], links: ['AM-power'] }),
+    'power.md': record('AM-power', 'Only supervisors may restart the terminal.'),
+    'unrelated.md': record('AM-unrelated', 'Use the main office printer.'),
+  });
+  const response = spawnSync(process.execPath, [cli, 'lookup', '--project-root', f.root,
+    '--topic', '키오스크', '--topic', '마감보고', '--topic', '없는주제'], { encoding: 'utf8' });
+  assert.equal(response.status, 0, response.stderr);
+  const found = JSON.parse(response.stdout);
+  assert.equal(found.complete, true);
+  assert.deepEqual(found.unmatched, ['없는주제']);
+  assert.deepEqual(found.documents.flatMap(document => document.sections.map(section => section.id)).sort(),
+    ['AM-power', 'AM-report', 'AM-scan']);
+  assert.match(JSON.stringify(found.documents), /Only supervisors may restart the terminal/);
+});
+
 test('a compact cursor covers dependencies exactly once and rejects a changed corpus or selection', (t) => {
   const dependencies = Array.from({ length: 15 }, (_, index) => 'AM-required-' + index);
   const f = fixture(t, { 'graph.md': record('AM-root', 'Root.', { links: dependencies })

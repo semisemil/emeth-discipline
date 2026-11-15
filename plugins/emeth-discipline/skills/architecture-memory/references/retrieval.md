@@ -4,6 +4,8 @@ Run `<plugin-root>/skills/architecture-memory/scripts/memory.js` with Node. Ever
 
 ## Selection
 
+`lookup --topic "<subject>" [--topic "<other subject>"]` uses the same lexical ranking as search and reads the first match per topic, including required links and shared constraints. `--limit` sets the match count per topic. `unmatched` lists topics with no match. For a weak or ambiguous match, inspect the candidates with `search`.
+
 `search --query "<domain terms>" [--path <path>]` uses lexical matches, so use the project's vocabulary. Repeat `--path` for multiple owners; paths are literal prefixes, not globs. Follow `next_offset` when the current candidates do not cover an affected responsibility.
 
 Search with `--history` to include ADRs and historical sections. Results identify their `document` and `kind`; ADRs also return `decision.status` and `decision.superseded_by`. An ADR section's `historical` lifecycle describes its decision-time account, not whether the decision is still in force. Missing status remains `unknown`.
@@ -23,7 +25,7 @@ Sizes are JavaScript string lengths in UTF-16 code units, including routing meta
 It is not a token count or a per-page byte size.
 Use `--limit`, `--offset`, `--max-chars` and the first page's `--revision` for bounded inspection.
 
-For `complete: false`, continue with the same IDs and original `--seen` set plus `--cursor <next_cursor>`; do not accumulate receipts for pages of one read. Keep preceding pages in context until completion. The cursor is valid only for the same corpus and selection.
+For `complete: false`, continue with the same IDs or lookup topics and options, the original `--seen` set and `--cursor <next_cursor>`; do not accumulate receipts for pages of one read. Keep preceding pages in context until completion. The cursor is valid only for the same corpus and selection.
 
 `--max-chars` sets the per-response limit. For a single larger section, inspect its exact source range with shared preamble and prerequisites. If the section and its prerequisites exceed the working context, leave the affected decision unresolved.
 

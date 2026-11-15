@@ -54,8 +54,11 @@ function notice(input, options = {}) {
   if (fingerprint === 'inactive' && !previous) return '';
   S.saveJson(cache, { fingerprint });
   if (fingerprint === 'inactive') return 'Project architecture document connection is unavailable or disabled.';
-  const connected = `Project architecture documents are connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json. Skill: ${JSON.stringify(skill)}.`;
-  const guidance = "Before recommending whether to keep or change an existing design or project policy, establish why it was adopted. If the rationale is missing, use this skill to find and read the relevant records even when the current behavior is clear. Also use this skill when the answer or action depends on a project goal, domain meaning or rule, operating constraint, or design rationale that the available evidence does not establish.";
+  const connected = `Project architecture documents are connected at ${JSON.stringify(linked.root)} via .emeth/architecture.json.`;
+  const cli = JSON.stringify(path.join(path.dirname(skill), 'scripts', 'memory.js').split(path.sep).join('/'));
+  const projectArg = JSON.stringify(project.split(path.sep).join('/'));
+  const retrieval = JSON.stringify(path.join(path.dirname(skill), "references", "retrieval.md").split(path.sep).join("/"));
+  const guidance = `For read-only project context, start the lookup directly from this notice: node ${cli} lookup --project-root ${projectArg} --topic "<subject>". Repeat --topic for independent subjects in the same command. Use --history for past decisions or missing rationale. Reuse sufficient evidence. For an overview of project practices, use the retrieved evidence to cover standards for the work itself as well as the process used to produce it. Include applicable standards even when the project records them under a separate subject. Apply recorded withdrawals and accepted conditional decisions when their triggers are established. Verify implementation when the question depends on what is in use. Batch any independently needed exact source reads with the lookup. If a gap, conflict, or verification need remains, use the appropriate source. For incomplete or ambiguous retrieval, see ${retrieval}. For recording, use the Architecture Memory skill.`;
   const behind = commitsBehind(project, linked.root);
   const checkpoint = behind ? ` Its Git checkpoint is ${behind} ${behind === 1 ? 'commit' : 'commits'} behind HEAD; suggest architecture-memory-update when this affects the task.` : '';
   return `${connected}${checkpoint}\n${guidance}`;

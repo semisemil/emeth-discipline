@@ -131,9 +131,13 @@ test('startup, resume, compact and subagents keep their prompt and memory lifecy
   const f = fixture(t); f.memory();
   output(f.run({ prompt: '$emeth-discipline focus' }));
   const start = output(f.run({ hook_event_name: 'SessionStart', source: 'startup' }));
-  assert.ok(start.hookSpecificOutput.additionalContext.startsWith(codexRules + '\n\n'));
-  assert.match(start.hookSpecificOutput.additionalContext, /keep or change an existing design or project policy/);
-  assert.match(start.hookSpecificOutput.additionalContext, /read the relevant records even when the current behavior is clear/);
+  const context = start.hookSpecificOutput.additionalContext;
+  const cli = JSON.stringify(path.join(f.plugin, 'skills', 'architecture-memory', 'scripts', 'memory.js').split(path.sep).join('/'));
+  const project = JSON.stringify(f.root.split(path.sep).join('/'));
+  assert.ok(context.startsWith(codexRules + '\n\n'));
+  assert.ok(context.includes(`node ${cli} lookup --project-root ${project} --topic "<subject>"`));
+  assert.match(context, /Use --history for past decisions or missing rationale/);
+  assert.match(context, /architecture-memory\/references\/retrieval\.md/);
   assert.deepEqual(output(f.run({ hook_event_name: 'SessionStart', source: 'resume' })), {});
   const compact = output(f.run({ hook_event_name: 'SessionStart', source: 'compact' }));
   assert.equal(compact.hookSpecificOutput.additionalContext, start.hookSpecificOutput.additionalContext);

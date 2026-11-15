@@ -174,7 +174,31 @@ function plan(state, sources, command, input) {
       introduction(indexDoc, `# ${words['decision-index']}\n\n| ADR | Status |\n|---|---|`);
     }
   } else if (command === 'section') {
-    section(select(input.document), input);
+    if (input.sections === undefined) {
+      section(select(input.document), input);
+    } else {
+      if (!Array.isArray(input.sections) || !input.sections.length || Object.keys(input).length !== 1) {
+        invalid('Supply a nonempty sections array of ordinary section inputs.');
+      }
+      for (const value of input.sections) {
+        if (!object(value)) invalid('Each section must be an object.');
+        section(select(value.document), value);
+      }
+    }
+  } else if (command === 'append') {
+    const doc = select(input.document);
+    const parsed = M.sections(body(input.markdown));
+    if (parsed.intro) invalid('Begin the Markdown with a level-2 section heading.');
+    const key = heading => heading.normalize('NFKC').toLowerCase();
+    const titles = new Set(initial.records.filter(record => owner(record)?.id === doc.id).map(record => key(record.title)));
+    for (const entry of parsed.sections) {
+      const match = entry.text.match(/^## ([^\r\n]+)\r?\n(?:[ \t]*\r?\n)*\*\*([a-z]+)\/([a-z]+)\*\*\r?\n([\s\S]+)$/u);
+      if (!match) invalid('Start each section with a level-2 heading and a confidence/lifecycle line.');
+      const heading = title(match[1]);
+      if (titles.has(key(heading))) invalid(`Section already exists: ${heading}. Read it before revising.`);
+      titles.add(key(heading));
+      section(doc, { title: heading, confidence: match[2], lifecycle: match[3], body: match[4] });
+    }
   } else if (command === 'reorganize') {
     if (input.revision !== initial.revision) S.fail('memory-changed', 'Read the current corpus before reorganizing.');
     const values = input.sections ?? [];
@@ -328,14 +352,19 @@ function run(project, command, input = {}, options = {}) {
 function main() {
   try {
     const [command, ...args] = process.argv.slice(2);
-    if (!['scaffold', 'document', 'component', 'decision', 'section', 'reorganize', 'read', 'recover'].includes(command)) invalid('Commands: scaffold, document, component, decision, section, reorganize, read, recover.');
+    if (!['scaffold', 'document', 'component', 'decision', 'section', 'append', 'reorganize', 'read', 'recover'].includes(command)) invalid('Commands: scaffold, document, component, decision, section, append, reorganize, read, recover.');
     const options = {};
+    const allowed = command === 'append' ? ['project-root', 'root', 'document'] : ['project-root', 'root'];
     for (let i = 0; i < args.length; i += 2) {
       const key = args[i].replace(/^--/, '');
-      if (args[i] !== `--${key}` || !['project-root', 'root'].includes(key) || options[key] !== undefined || !args[i + 1]) invalid('Use --project-root and optional --root.');
+      if (args[i] !== `--${key}` || !allowed.includes(key) || options[key] !== undefined || !args[i + 1]) invalid('Use --project-root, optional --root, and --document with append.');
       options[key] = args[i + 1];
     }
-    const input = ['scaffold', 'recover'].includes(command) ? {} : JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(fs.readFileSync(0)));
+    let input = {};
+    if (command !== 'scaffold' && command !== 'recover') {
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(fs.readFileSync(0));
+      input = command === 'append' ? { document: options.document, markdown: text } : JSON.parse(text);
+    }
     process.stdout.write(JSON.stringify(run(options['project-root'], command, input, options)) + '\n');
   } catch (error) {
     process.stderr.write(JSON.stringify({ error: { code: error.code || 'memory-author-failed', message: error.message } }) + '\n');

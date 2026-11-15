@@ -48,6 +48,40 @@ test('section creation and revision share live/draft contracts, preserve metadat
   assert.equal(f.read(id).text.includes('새 조건.'), true);
 });
 
+test('section batches publish related changes together and reject a stale member without saving the others', t => {
+  const f = fixture(t);
+  const id = f.baseline();
+  const newSection = { document: 'containers', title: '동기화 조건', body: '통신을 복구한 뒤 동기화한다.',
+    confidence: 'confirmed', lifecycle: 'current' };
+  const revision = { document: 'context', id, expected: f.read(id).receipt, body: '로컬 저장을 적용할 예정이다.',
+    confidence: 'confirmed', lifecycle: 'planned' };
+  const containers = f.live('02-containers.md');
+
+  const result = f.run('section', { sections: [newSection, revision] });
+  assert.equal(result.status, 'updated');
+  assert.equal(f.read(result.ids[0]).text.includes(newSection.body), true);
+  assert.equal(f.read(id).lifecycle, 'planned');
+
+  const published = f.live('02-containers.md');
+  assert.notEqual(published, containers);
+  assert.throws(() => f.run('section', { sections: [newSection, revision] }), { code: 'memory-record-changed' });
+  assert.equal(f.live('02-containers.md'), published);
+});
+
+test('one Markdown append publishes new sections and preserves the document on a title conflict', t => {
+  const f = fixture(t);
+  f.baseline();
+  const markdown = '## 외부 운영\n\n**confirmed/current**\n\n야간에도 접수한다.\n\n## 동기화\n\n**unknown/current**\n\n동기화 시점은 미정이다.';
+  const before = f.live('04-context.md');
+  assert.throws(() => f.run('append', { document: 'context',
+    markdown: markdown + '\n\n## 저장 조건\n\n**confirmed/current**\n\n기존 절.' }), { code: 'memory-author-invalid' });
+  assert.equal(f.live('04-context.md'), before);
+  const batch = f.run('append', { document: 'context', markdown });
+  assert.equal(batch.ids.length, 2);
+  assert.match(f.read(batch.ids[0]).text, /야간에도 접수한다/);
+  assert.equal(f.read(batch.ids[1]).confidence, 'unknown');
+});
+
 test('component creation adds its file, registration and both indexes, preserving unrelated content', t => {
   const f = fixture(t);
   f.baseline();

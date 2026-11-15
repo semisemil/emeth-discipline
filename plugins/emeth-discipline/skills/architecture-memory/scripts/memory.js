@@ -340,27 +340,45 @@ function read(corpus, options = {}) {
   return result;
 }
 
+function lookup(corpus, options) {
+  const topics = [...new Set(options.topics || [])];
+  if (!topics.length) fail('memory-query-required', 'Use --topic TEXT.');
+  const ids = new Set();
+  const unmatched = [];
+  for (const topic of topics) {
+    const matches = search(corpus, { query: topic, history: options.history, limit: options.limit ?? 1 }).matches;
+    if (!matches.length) unmatched.push(topic);
+    for (const match of matches) ids.add(match.id);
+  }
+  const maxChars = options.maxChars ?? 12000;
+  const details = read(corpus, { ...options, ids: ids.size ? [...ids] : ['@global'],
+    maxChars: maxChars - JSON.stringify({ unmatched }).length });
+  return { ...details, unmatched };
+}
+
 function parseArgs(argv) {
   const [command, ...args] = argv;
   const options = { paths: [], ids: [], seen: [] };
-  const names = { '--project-root': 'projectRoot', '--query': 'query', '--path': 'paths', '--id': 'ids', '--seen': 'seen', '--cursor': 'cursor', '--revision': 'revision', '--limit': 'limit', '--offset': 'offset', '--max-chars': 'maxChars' };
+  const names = { '--project-root': 'projectRoot', '--query': 'query', '--topic': 'topics', '--path': 'paths', '--id': 'ids', '--seen': 'seen', '--cursor': 'cursor', '--revision': 'revision', '--limit': 'limit', '--offset': 'offset', '--max-chars': 'maxChars' };
   const allowed = {
     search: new Set(['projectRoot', 'query', 'paths', 'limit', 'offset', 'maxChars']),
+    lookup: new Set(['projectRoot', 'topics', 'limit', 'seen', 'cursor', 'revision', 'maxChars']),
     inspect: new Set(['projectRoot', 'ids', 'paths', 'revision', 'limit', 'offset', 'maxChars']),
     read: new Set(['projectRoot', 'ids', 'seen', 'cursor', 'revision', 'maxChars']),
     check: new Set(['projectRoot']),
   };
-  if (!allowed[command]) fail('memory-command-invalid', 'Usage: memory.js search|read|inspect|check --project-root DIR [--query TEXT] [--path PATH] [--id ID]');
+  if (!allowed[command]) fail('memory-command-invalid', 'Usage: memory.js search|read|lookup|inspect|check --project-root DIR [--query TEXT] [--topic TEXT] [--path PATH] [--id ID]');
   const seen = new Set();
   for (let index = 0; index < args.length; index += 1) {
     const flag = args[index];
-    if (flag === '--history' && command === 'search' && !seen.has(flag)) {
+    if (flag === '--history' && ['search', 'lookup'].includes(command) && !seen.has(flag)) {
       options.history = true; seen.add(flag); continue;
     }
     const name = names[flag];
     if (!name || !allowed[command].has(name)) fail('memory-argument-invalid', `Unknown option: ${flag}`);
     const value = args[++index];
     if (value === undefined || value.startsWith('--')) fail('memory-argument-invalid', `Missing value: ${flag}`);
+    if (name === 'topics') { (options.topics ??= []).push(value); continue; }
     if (['paths', 'ids', 'seen'].includes(name)) { options[name].push(value); continue; }
     if (seen.has(flag)) fail('memory-argument-invalid', `Duplicate option: ${flag}`);
     seen.add(flag);
@@ -380,7 +398,7 @@ function main(argv = process.argv.slice(2)) {
     const { command, options } = parseArgs(argv);
     const corpus = loadRecords(options.projectRoot);
     const result = command === 'search' ? search(corpus, options) : command === 'read' ? read(corpus, options)
-      : command === 'inspect' ? inspect(corpus, options) : {
+      : command === 'lookup' ? lookup(corpus, options) : command === 'inspect' ? inspect(corpus, options) : {
       valid: true, documents: corpus.state.manifest.documents.length, records: corpus.records.length,
       source_bytes: corpus.sourceBytes, revision: corpus.revision,
     };
