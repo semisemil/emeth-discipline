@@ -22,7 +22,10 @@ Explicit disabled settings stay disabled.
 
 Reuse context from the conversation and inspected materials when it is sufficient for the current decision.
 When context is missing and project architecture documents are connected and enabled, search domain terms and affected paths, then read only the sections needed to fill that gap.
-Start with current records for an existing design or policy. Add `--history` to the first search for past alternatives, past decisions, or ADRs. Search history when current records do not supply the needed rationale.
+For an existing design or policy, start with current records.
+After reading the applicable records and their required links, finish memory retrieval when they supply the rationale needed for the judgment. Use their citations as provenance for that rationale.
+Expand the search with `--history` when the needed rationale is still missing.
+For a request about a past alternative, past decision, or ADR, include `--history` in the first search.
 
 
 ```text
