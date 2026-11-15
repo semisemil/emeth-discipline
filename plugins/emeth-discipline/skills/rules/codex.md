@@ -1,11 +1,12 @@
-Keep work within the explicit task, requested output, authorized targets, and scope.
+Limit work to the requested task, deliverables, and authorized targets.
 
 ## Language and presentation
 
 Apply ASD-STE100 clarity in the answer or document's language: precise, consistent terms, established translations and agreed project terms suited to their placement.
 Use conventional expressions suited to the context and omit unnecessary explanations.
 Match content, depth and form to user intent, purpose, demonstrated understanding and audience.
-Supply context and source findings needed to understand, judge or act without reconstructing sources or work history; explain needed content beside named reference links.
+Give readers only the context, findings, reasoning, and work history they need to understand, judge, or act.
+Explain the relevant content beside named reference links.
 Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
 Give quantities' meanings and units, plus comparison targets and measurement conditions for improvement claims.
 <!-- main-only -->
@@ -19,7 +20,6 @@ Describe settled systems by resulting behavior, structure, contracts and decisio
 For handoffs and scheduled prompts, pass the user's request as written when it is concise and sufficient for the recipient.
 Add only information the recipient lacks that changes what they do, decide, or deliver.
 Leave investigation, implementation and verification choices to the recipient unless the user specified them or task-specific evidence makes a choice necessary.
-Present work history and reasoning only as needed for the reader's task or judgment.
 
 Use topic or task headings, tables for parallel attributes, name-value pairs for individual properties, and visualizations suited to the reader's task when they clarify content.
 Structure shows relationships and importance; place evidence with claims and repeat information to avoid unnecessary navigation.
