@@ -24,6 +24,12 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
+| 6.2 Sol medium | None | 195.7/196 | 10.3/14 | 7분 42초 | $0.412 |
+| 6.2 Sol medium | Core | 195.3/196 | 10.7/14 | 7분 44초 | $0.396 |
+| 6.2 Sol medium | Workflow | 196/196 | 11.0/14 | 13분 56초 | $1.918 |
+| 6.2 Astra low | None | 195.3/196 | 8.7/14 | 4분 29초 | $0.658 |
+| 6.2 Astra low | Core | 194.3/196 | 9.0/14 | 3분 57초 | $0.737 |
+| 6.2 Astra low | Workflow | 195.0/196 | 10.3/14 | 5분 22초 | $2.420 |
 | 6 Astra low | None | 196/196 | 4.3/14 | 4분 38초 | $1.110 |
 | 6 Astra low | Core | 196/196 | 4.0/14 | 4분 56초 | $1.276 |
 | 6 Astra low | Workflow | 195.7/196 | 8.3/14 | 11분 14초 | $5.351 |
@@ -47,7 +53,9 @@ SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행�
 | Fable 5.2 medium | Workflow | 194.7/196 | 8.3/14 | 13분 31초 | $9.495 |
 
 모든 수치는 조건별 3회 평균이며 실패한 실행도 포함합니다.
-Sol/Terra Workflow는 새 설계 후보 비교 지침으로 측정했고, Astra, Sonnet, Opus와 Sol/Terra의 None, Core는 Emeth 0.25.0 측정값입니다.
+GPT-6.2 Sol과 Astra의 Core와 Workflow는 Emeth 0.25.10에서 측정했습니다.
+6.1 Sol과 6.1 Terra의 Workflow는 새 설계 후보 비교 지침으로 측정했습니다.
+6 Astra, Sonnet, Opus의 세 조건과 6.1 Sol, 6.1 Terra의 None과 Core는 Emeth 0.25.0에서 측정했습니다.
 비용은 상위 작업과 하위 작업을 합산한 API 환산 추정치입니다.
 
 [평가 항목과 회차별 결과](docs/benchmarks/README.md) / [원본 데이터](docs/benchmarks/superjson.json)

@@ -4,6 +4,378 @@
   "aggregation": "Arithmetic mean of three selected runs per model and condition, including failed checks.",
   "groups": [
     {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "medium",
+      "condition": "None",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.66666666666666,
+        "additional_passed": 10.333333333333334,
+        "elapsed_ms": 461837.6666666667,
+        "api_equivalent_usd": 0.41249
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 445298,
+          "api_equivalent_usd": 0.3428152,
+          "root_thread_id": "01a1eab9-81e3-7981-9eed-87a9167215dc",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-sol-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 485235,
+          "api_equivalent_usd": 0.4202684,
+          "root_thread_id": "01a1eac8-e1c1-7732-b65a-076a3a4185ef",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-sol-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 454980,
+          "api_equivalent_usd": 0.4743864,
+          "root_thread_id": "01a1ead7-cc88-78b2-844d-255cd026e945",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-sol-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "medium",
+      "condition": "Core",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.33333333333334,
+        "additional_passed": 10.666666666666666,
+        "elapsed_ms": 463905,
+        "api_equivalent_usd": 0.39565373333333337
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 483160,
+          "api_equivalent_usd": 0.4091548,
+          "root_thread_id": "01a1eab9-7e18-7b62-920a-3ad8edd357bf",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-sol-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 423242,
+          "api_equivalent_usd": 0.374846,
+          "root_thread_id": "01a1eac8-de7a-7220-9392-96423f21f600",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-sol-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 485313,
+          "api_equivalent_usd": 0.4029604,
+          "root_thread_id": "01a1ead7-c826-7490-b7ca-6375116fb505",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-sol-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "medium",
+      "condition": "Workflow",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 196,
+        "additional_passed": 11,
+        "elapsed_ms": 836188.3333333334,
+        "api_equivalent_usd": 1.9181133333333333
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 853270,
+          "api_equivalent_usd": 1.7227568,
+          "root_thread_id": "01a1eab9-7de1-71c2-9078-608bc00eab5e",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-sol-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 766040,
+          "api_equivalent_usd": 1.89704,
+          "root_thread_id": "01a1eac8-de7a-7491-baf3-11a87dfee586",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-sol-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 12,
+            "total": 14
+          },
+          "elapsed_ms": 889255,
+          "api_equivalent_usd": 2.1345432,
+          "root_thread_id": "01a1ead7-c817-7750-a25d-1c76af898260",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-sol-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-astra",
+      "reasoning_effort": "low",
+      "condition": "None",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.33333333333334,
+        "additional_passed": 8.666666666666666,
+        "elapsed_ms": 268953.3333333333,
+        "api_equivalent_usd": 0.6582368
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 273158,
+          "api_equivalent_usd": 0.6995328,
+          "root_thread_id": "01a1eab9-81f1-78b1-86f2-8050e7c5dc1d",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 305005,
+          "api_equivalent_usd": 0.6240256,
+          "root_thread_id": "01a1eac8-e1bd-7943-93f2-8b84919554d2",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 228697,
+          "api_equivalent_usd": 0.651152,
+          "root_thread_id": "01a1ead7-cc83-7e70-9ea2-21a6f2fdd085",
+          "source": "C:/Proofline/.local/gpt62-20261118/none-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-astra",
+      "reasoning_effort": "low",
+      "condition": "Core",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 194.33333333333334,
+        "additional_passed": 9,
+        "elapsed_ms": 236868.33333333334,
+        "api_equivalent_usd": 0.7366394666666666
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 8,
+            "total": 14
+          },
+          "elapsed_ms": 261286,
+          "api_equivalent_usd": 0.8216,
+          "root_thread_id": "01a1eab9-7e25-7433-b9f0-b7faf0a84dcc",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 204372,
+          "api_equivalent_usd": 0.676712,
+          "root_thread_id": "01a1eac8-de93-7fe3-bcbf-5ecf2a389f2b",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 9,
+            "total": 14
+          },
+          "elapsed_ms": 244947,
+          "api_equivalent_usd": 0.7116064,
+          "root_thread_id": "01a1ead7-c850-7ec1-9d17-fd09ef5c0d4f",
+          "source": "C:/Proofline/.local/gpt62-20261118/core-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-astra",
+      "reasoning_effort": "low",
+      "condition": "Workflow",
+      "measured_at": "2026-11-18",
+      "plugin_version": "0.25.10",
+      "source_commit": "0da6aa6532fdcd9c10bc904a44a345947c166a35",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195,
+        "additional_passed": 10.333333333333334,
+        "elapsed_ms": 321675.3333333333,
+        "api_equivalent_usd": 2.4195125333333336
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 326128,
+          "api_equivalent_usd": 1.8655808,
+          "root_thread_id": "01a1eab9-7e05-7270-bddf-bb26da5c5333",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 354126,
+          "api_equivalent_usd": 2.776352,
+          "root_thread_id": "01a1eac8-de7a-7ae1-b2cf-1b23963c79f2",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 284772,
+          "api_equivalent_usd": 2.6166048,
+          "root_thread_id": "01a1ead7-c816-75b0-90aa-067695c2c9cf",
+          "source": "C:/Proofline/.local/gpt62-20261118/workflow-astra-3/result"
+        }
+      ]
+    },
+    {
       "model": "gpt-6-astra",
       "reasoning_effort": "low",
       "condition": "None",
