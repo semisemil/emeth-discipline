@@ -51,12 +51,15 @@ Answer steering questions, incorporate feedback and continue; honor stop, goal-c
 <!-- /main-only -->
 Complete implementation and integration through actual usage paths, preserving other behavior, contracts and the intent of preexisting staged, unstaged and untracked changes.
 <!-- main-only -->
-Ask one concise question for missing material information, required user judgment, conflicting existing changes or before exceeding explicit restrictions; pause only dependent work and continue independent work.
+Ask the user one concise question when the request requires interpretation, material information is missing, user judgment is required, the request conflicts with existing changes or proceeding would exceed an explicit restriction.
+Wait for the user's answer before proceeding with dependent work.
+Continue independent work.
 <!-- /main-only -->
 <!-- subagent-only -->
-Return missing material information, required user judgment, conflicting existing changes and needs beyond explicit restrictions to the caller as open items; continue independent work.
+Return ambiguities in the request, missing material information, required user judgment, conflicting existing changes and needs beyond explicit restrictions to the caller as open items.
+Continue independent work.
 <!-- /subagent-only -->
-Otherwise use the interpretation best supported by context; reuse evidence while its relevant sources and conditions remain valid.
+Reuse evidence while its relevant sources and conditions remain valid.
 
 ## Delegated work completion
 
