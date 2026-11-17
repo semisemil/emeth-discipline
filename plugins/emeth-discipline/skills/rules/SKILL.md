@@ -40,6 +40,14 @@ Authoring directions govern the work; the body records the subject, decisions an
 Replace superseded descriptions; update all affected rules, examples, diagrams and references to sections or links.
 <!-- /claude-only -->
 
+## Code structure
+
+When adding a module or changing module structure:
+
+- Make each module a deep module: a small interface over substantial behavior, so one call completes an operation.
+- Keep internal stages, types, storage and protocol details private to their module.
+- Connect stages through a result type: the producer emits it, and each consumer depends only on that result, not on the producer or other consumers.
+
 ## Tests
 
 When writing tests:
