@@ -8,8 +8,6 @@ const { logDiagnostic } = require('../lib/rules-state');
 
 async function run(input) {
   const event = input.hook_event_name;
-  const mixdog = require('../lib/host').name() === 'mixdog';
-  if (event === 'PreToolUse' && mixdog) return require('../lib/mixdog-agent').beforeAgent(input);
   if (!['SessionStart', 'SubagentStart', 'UserPromptSubmit'].includes(event)) return {};
   migrateWorkingProject(typeof input.cwd === 'string' ? input.cwd : process.cwd());
   const contexts = [];
@@ -18,7 +16,7 @@ async function run(input) {
 
   try {
     const runtime = require('../lib/rules-runtime');
-    const context = event !== 'UserPromptSubmit' || mixdog ? runtime.load(input) : runtime.reload(input);
+    const context = event !== 'UserPromptSubmit' ? runtime.load(input) : runtime.reload(input);
     if (context) contexts.push(context);
   } catch (error) {
     logDiagnostic({

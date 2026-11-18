@@ -42,7 +42,7 @@ function invalidPrompt(message, code, filePath) {
 const HOST_RULES = /^Apply the rules for the host running this conversation: [^\r\n]*/m;
 // Subagents report to their caller, so user-facing presentation rules stay in the main conversation.
 const AUDIENCE_BLOCK = /<!-- (main|subagent)-only -->\r?\n([\s\S]*?)<!-- \/\1-only -->\r?\n?/g;
-const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', mixdog: 'mixdog.md' });
+const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md' });
 // GPT-6.2 follows OpenAI's 6.2 prompt guidance; earlier and unknown Codex models keep codex.md.
 const GPT_6_2 = /^gpt-6\.2(?:-|$)/;
 

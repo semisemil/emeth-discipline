@@ -22,8 +22,7 @@ mkdirSync(join(root, 'codex'));
 // CODEX_HOME is the CLI's supported per-process configuration location.
 const env = { ...process.env, CODEX_HOME: join(root, 'codex'),
   APPDATA: join(root, 'config'), XDG_CONFIG_HOME: join(root, 'config') };
-for (const name of ['MIXDOG_PLUGIN_ROOT', 'MIXDOG_PLUGIN_DATA', 'MIXDOG_DATA_DIR', 'MIXDOG_ROOT', 'MIXDOG_HOME',
-  'PLUGIN_ROOT', 'PLUGIN_DATA', 'CLAUDE_PLUGIN_ROOT', 'CLAUDE_PLUGIN_DATA']) delete env[name];
+for (const name of ['PLUGIN_ROOT', 'PLUGIN_DATA', 'CLAUDE_PLUGIN_ROOT', 'CLAUDE_PLUGIN_DATA']) delete env[name];
 const cli = process.argv[2] || 'codex';
 const requests = [];
 const notifications = [];

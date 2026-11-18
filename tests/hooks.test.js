@@ -188,7 +188,7 @@ test('a mid-session switch to another Codex model generation replaces the inject
   assert.equal(submit('gpt-6.2-sol', { session_id: 'unrecorded' }), undefined);
 });
 
-test('project opt-in reaches fresh Codex workers and Claude/Mixdog sessions and worker dispatch', t => {
+test('project opt-in reaches fresh Codex workers and Claude sessions', t => {
   const f = fixture(t);
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');
   const codex = output(f.run({hook_event_name:'SubagentStart',agent_id:'opted-in-worker'}));
@@ -196,16 +196,6 @@ test('project opt-in reaches fresh Codex workers and Claude/Mixdog sessions and 
   const claudeEnv = {PLUGIN_ROOT:'',PLUGIN_DATA:'',CLAUDE_PLUGIN_ROOT:f.plugin,CLAUDE_PLUGIN_DATA:path.join(f.root,'claude-data')};
   const claude = output(f.run({hook_event_name:'SessionStart',source:'startup'}, {env:claudeEnv}));
   assert.match(claude.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
-  const mixdogEnv = {MIXDOG_PLUGIN_ROOT:f.plugin,MIXDOG_PLUGIN_DATA:path.join(f.root,'mixdog-data')};
-  const mixdog = output(f.run({hook_event_name:'SessionStart',source:'startup'}, {env:mixdogEnv}));
-  assert.match(mixdog.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
-  const worker = {type:'spawn',agent:'worker',cwd:f.root,context:'Keep supplied task context'};
-  const dispatched = output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:worker},{env:mixdogEnv}));
-  assert.match(dispatched.hookSpecificOutput.updatedInput.context,/automatic work records: enabled/);
-  assert.deepEqual(output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:dispatched.hookSpecificOutput.updatedInput},{env:mixdogEnv})),{});
-  f.write('other/.git/HEAD','ref: refs/heads/main');
-  const other = output(f.run({hook_event_name:'PreToolUse',tool_name:'agent',tool_input:{...worker,cwd:path.join(f.root,'other')}},{env:mixdogEnv}));
-  assert.doesNotMatch(other.hookSpecificOutput.updatedInput.context,/automatic work records: enabled/);
 });
 
 function claudeEnvironment(f) {

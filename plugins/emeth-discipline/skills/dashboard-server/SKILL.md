@@ -13,7 +13,7 @@ Accept one command from the list below.
 Resolve `<plugin-root>` from this SKILL.md; do not substitute a project-local script.
 The dashboard listens on `http://127.0.0.1:43127`.
 
-- `on` or `off`: Run `node <plugin-root>/dashboard/inbox.js <action>` and report the returned setting. It applies to this user's registered projects across Codex, Claude Code and Mixdog and defaults to off.
+- `on` or `off`: Run `node <plugin-root>/dashboard/inbox.js <action>` and report the returned setting. It applies to this user's registered projects across Codex and Claude Code and defaults to off.
 - `work-records on`, `work-records off`, or `work-records status`: Run `node <plugin-root>/dashboard/control.js work-records <action>`.
   Report the global setting for automatic Issue registration and related Design updates, which defaults to off.
   Project `.emeth/work-records.json` settings take priority.

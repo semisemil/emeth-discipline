@@ -1,20 +1,15 @@
 ## Language and presentation
 
 Apply ASD-STE100 clarity to answers and documents: short, single-topic sentences, explicit actions and conditions, technical accuracy and natural grammar.
-Use conventional expressions suited to the context and omit unnecessary explanations.
+Omit unnecessary explanations.
 Use precise, consistent terms, established translations and agreed project terms suited to their placement; rewrite whole sentences if word edits leave meaning unclear.
 Match explanations to reader role, purpose, demonstrated understanding and audience.
 Supply source findings and task context needed to understand, judge or act without reconstructing sources or work history; explain needed content beside named reference links.
-Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
 <!-- main-only -->
 For existing code, start with the affected operation in plain language and its owning file or component's responsibility.
 At first mention, give each relevant function or component's location and job; explain behavior through those roles before implementation details.
-<!-- /main-only -->
-Give quantities' meanings and units, plus comparison targets and measurement conditions for improvement claims.
-<!-- main-only -->
 Questions identify what to assess or provide, references or criteria, and response format.
 <!-- /main-only -->
-Apply established conditions consistently, preserving causal connections without contradictions.
 
 Omit compliance or correction displays, needless process commentary, self-description, unrelated information and exclusions of unraised possibilities.
 Define settled designs through structure, behavior and contracts; decision records retain considered alternatives.

@@ -65,28 +65,25 @@ test('ordinary Codex hook supplies a writer and review state survives reopening 
   assert.equal(load().items[0].state,'done');
 });
 
-for (const host of ['claude','mixdog']) {
-  test(host + ' prompt hook follows the shared opt-in and supplies a usable task identity', t => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(),'emeth-inbox-hook-'));
-    t.after(() => fs.rmSync(root,{recursive:true,force:true}));
-    const plugin = path.resolve('plugins/emeth-discipline');
-    const env = { ...process.env, APPDATA:root, XDG_CONFIG_HOME:root, PLUGIN_ROOT:'', PLUGIN_DATA:'',
-      CLAUDE_PLUGIN_ROOT:plugin, CLAUDE_PLUGIN_DATA:root,
-      MIXDOG_PLUGIN_ROOT:host === 'mixdog' ? plugin : '', MIXDOG_PLUGIN_DATA:'' };
-    const options = {registryPath:getRegistryPath({env})};
-    const project = registerProject(root,options).project;
-    const run = (file,args,input) => execFileSync(process.execPath,[path.join(plugin,file),...args],{env,cwd:root,input,encoding:'utf8'});
-    const submit = () => run('hooks/run.js',[],JSON.stringify({hook_event_name:'UserPromptSubmit',cwd:root,
-      session_id:host === 'claude' ? 'chat' : undefined,prompt:'Inspect the result'}));
-    assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
-    run('dashboard/inbox.js',['on']);
-    const context = JSON.parse(submit()).hookSpecificOutput.additionalContext;
-    const match = context.match(/inbox\.js" "([^"]+)" "([^"]+)"/);
-    assert.ok(match);
-    assert.ok(match[1].startsWith(host + ':'));
-    run('dashboard/inbox.js',[match[1],match[2],'result','Completed','Ready for review']);
-    assert.equal(readInbox([project],options).items[0].text,'Ready for review');
-    run('dashboard/inbox.js',['off']);
-    assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
-  });
-}
+test('claude prompt hook follows the shared opt-in and supplies a usable task identity', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(),'emeth-inbox-hook-'));
+  t.after(() => fs.rmSync(root,{recursive:true,force:true}));
+  const plugin = path.resolve('plugins/emeth-discipline');
+  const env = { ...process.env, APPDATA:root, XDG_CONFIG_HOME:root, PLUGIN_ROOT:'', PLUGIN_DATA:'',
+    CLAUDE_PLUGIN_ROOT:plugin, CLAUDE_PLUGIN_DATA:root };
+  const options = {registryPath:getRegistryPath({env})};
+  const project = registerProject(root,options).project;
+  const run = (file,args,input) => execFileSync(process.execPath,[path.join(plugin,file),...args],{env,cwd:root,input,encoding:'utf8'});
+  const submit = () => run('hooks/run.js',[],JSON.stringify({hook_event_name:'UserPromptSubmit',cwd:root,
+    session_id:'chat',prompt:'Inspect the result'}));
+  assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
+  run('dashboard/inbox.js',['on']);
+  const context = JSON.parse(submit()).hookSpecificOutput.additionalContext;
+  const match = context.match(/inbox\.js" "([^"]+)" "([^"]+)"/);
+  assert.ok(match);
+  assert.ok(match[1].startsWith('claude:'));
+  run('dashboard/inbox.js',[match[1],match[2],'result','Completed','Ready for review']);
+  assert.equal(readInbox([project],options).items[0].text,'Ready for review');
+  run('dashboard/inbox.js',['off']);
+  assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
+});

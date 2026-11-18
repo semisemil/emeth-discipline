@@ -81,7 +81,7 @@
         const actions = element('div','');
         actions.className = 'entry-actions';
         actions.append(project);
-        if (!/^(claude|mixdog):/.test(item.id)) {
+        if (!/^claude:/.test(item.id)) {
           const chat = element('a','채팅 열기');
           chat.href = 'codex://threads/' + encodeURIComponent(item.id);
           actions.append(chat);

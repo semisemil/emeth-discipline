@@ -8,8 +8,6 @@ const host = require('./host');
 const policies = {
   codex: 'codex.md',
   claude: 'claude-code.md',
-  // Mixdog retains the model defaults previously shared with Codex.
-  mixdog: 'codex.md',
 };
 
 try {

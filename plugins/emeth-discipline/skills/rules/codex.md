@@ -3,16 +3,13 @@ Limit work to the requested task, deliverables, and authorized targets.
 ## Language and presentation
 
 Apply ASD-STE100 clarity in the answer or document's language: precise, consistent terms, established translations and agreed project terms suited to their placement.
-Use conventional expressions suited to the context and omit unnecessary explanations.
+Omit unnecessary explanations.
 Match content, depth and form to user intent, purpose, demonstrated understanding and audience.
 Give readers only the context, findings, reasoning, and work history they need to understand, judge, or act.
 Explain the relevant content beside named reference links.
-Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
-Give quantities' meanings and units, plus comparison targets and measurement conditions for improvement claims.
 <!-- main-only -->
 Questions identify what to assess, references or criteria, and response format.
 <!-- /main-only -->
-Apply established conditions consistently, preserving causal connections without contradictions.
 
 Omit compliance displays, needless process commentary, self-description and exclusions of unraised possibilities.
 Keep proposals and reference information distinct from obligations; shared agreements add no new requirements or report items.
@@ -39,7 +36,7 @@ Unless the user or caller sets a format, read `references/codex-reports.md` befo
 
 ## UI design
 
-Before designing, implementing or reviewing UI, read `references/ui-design-codex-mixdog.md`.
+Before designing, implementing or reviewing UI, read `references/ui-design-codex.md`.
 
 ## Truth, scope and continuation
 

@@ -64,15 +64,12 @@ test('Codex skill metadata keeps invocation policies and the figure-it-out entry
 
 test('isolated package delivers host rules and numbering through its hook CLI', t => {
   const f = fixture(t);
-  const markers = { codex: 'Fixture Codex rules', claude: 'Fixture Claude rules', mixdog: 'Fixture Mixdog rules' };
-  for (const [host, file] of [['codex', 'codex.md'], ['claude', 'claude-code.md'], ['mixdog', 'mixdog.md']]) {
+  const markers = { codex: 'Fixture Codex rules', claude: 'Fixture Claude rules' };
+  for (const [host, file] of [['codex', 'codex.md'], ['claude', 'claude-code.md']]) {
     fs.appendFileSync(path.join(f.plugin, 'skills/rules', file), '\n\n' + markers[host]);
   }
-  for (const host of ['codex', 'claude', 'mixdog']) {
-    const overrides = host === 'mixdog' ? {
-      MIXDOG_PLUGIN_ROOT: f.plugin, MIXDOG_PLUGIN_DATA: path.join(f.root, 'mixdog-data'),
-      CLAUDE_PLUGIN_ROOT: f.plugin, CLAUDE_PLUGIN_DATA: path.join(f.root, 'compat-data'),
-    } : host === 'claude' ? {
+  for (const host of ['codex', 'claude']) {
+    const overrides = host === 'claude' ? {
       PLUGIN_ROOT: undefined, PLUGIN_DATA: undefined,
       CLAUDE_PLUGIN_ROOT: f.plugin, CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data'),
     } : {};
@@ -80,7 +77,7 @@ test('isolated package delivers host rules and numbering through its hook CLI', 
       hook_event_name: 'SessionStart', source: 'startup', cwd: f.project, session_id: host,
     }), overrides);
     const context = result.hookSpecificOutput.additionalContext;
-    const uiRules = host === 'claude' ? 'ui-design.md' : 'ui-design-codex-mixdog.md';
+    const uiRules = host === 'claude' ? 'ui-design.md' : 'ui-design-codex.md';
     assert.ok(context.includes(path.join(f.plugin, 'skills/rules/references', uiRules)));
     for (const [source, marker] of Object.entries(markers)) {
       assert.equal(context.includes(marker), source === host, `${host}: ${source}`);

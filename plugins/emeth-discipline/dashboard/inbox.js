@@ -48,7 +48,7 @@ function registeredProject(cwd, options) {
 }
 
 function record(project, thread, task, kind, title, text, options) {
-  if (!/^(?:(?:claude|mixdog):)?[\w-]{1,128}$/.test(thread || '') || !/^[\w-]{1,128}$/.test(task || '') ||
+  if (!/^(?:claude:)?[\w-]{1,128}$/.test(thread || '') || !/^[\w-]{1,128}$/.test(task || '') ||
       !['active','question','result'].includes(kind) || !title?.trim() || title.length > 240 ||
       typeof text !== 'string' || text.length > 16000) throw Error('Invalid dashboard work item');
   const key = createHash('sha256').update(JSON.stringify([project.id,thread,task])).digest('hex');

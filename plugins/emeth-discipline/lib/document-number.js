@@ -29,10 +29,6 @@ function findDocumentSkill(prompt) {
     return null;
   }
   let invocation = firstLine.trim().split(/[ \t]+/, 1)[0];
-  if (host.name() === 'mixdog') {
-    const name = invocation.replace(/^[$/]/, '').replace(/^emeth-discipline:/, '');
-    invocation = `/emeth-discipline:${name}`;
-  }
   // Codex keeps its native `$` skill mention as an alias of the slash form.
   if (host.name() === 'codex' && invocation.startsWith('$')) {
     invocation = `/${invocation.slice(1)}`;
