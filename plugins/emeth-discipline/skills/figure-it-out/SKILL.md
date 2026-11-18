@@ -15,6 +15,7 @@ The calling conversation coordinates the work and completes the requested delive
 | Architecture design with the user | Use [architecture-coop](../architecture-coop/SKILL.md) to develop the structure and agreed decisions. |
 | Design documents | Use [development-design](../development-design/SKILL.md) to deliver the requested Design work. |
 | Review | Use [tenet-me](../tenet-me/SKILL.md) to assess the requested design or implementation and return material findings. |
+| Project verification environment | Use [verification-harness](../verification-harness/SKILL.md) to build or extend its user-confirmed acceptance tests. |
 | Test execution, test authoring or behavior verification | Use [references/verification.md](references/verification.md) to deliver the requested checks or tests and their results. |
 | Benchmark or measurement | Use [references/measurement.md](references/measurement.md) to report the measured result, conditions and limits. |
 | Implementation, bug fix or refactoring | Use the [implementation workflow](#implementation) to deliver the verified change. |
@@ -34,3 +35,5 @@ Run these skills in order, starting at the first incomplete stage:
    This stage is complete when the current revision has no material finding. A `ready` Design still needs it unless this conversation already reviewed its current revision.
 3. [start-implementation](../start-implementation/SKILL.md): implement the reviewed Design through its pstack playbook, unless the user limited the work to an earlier stage.
    The Design's grounding, selected design and stage 2 review complete the playbook's Ground, Sketch and design review while that revision and its evidence remain unchanged.
+
+In a project whose instructions name a verification-harness environment, the final verification also meets [references/verification.md: Project harness](references/verification.md#project-harness).

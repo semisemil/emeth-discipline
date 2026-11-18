@@ -10,3 +10,7 @@ Keep test execution, test authoring and product fixes within the requested scope
 Check the real target and resulting effects through the relevant public path.
 Report the checks performed, their results and material coverage limits, including checks that could not run.
 Retain the requested proof artifacts.
+
+## Project harness
+
+When the project's instructions name a verification-harness environment, handle a new feature, behavior change or bug fix through [verification-harness](../../verification-harness/SKILL.md#extend), and include the full run result by criterion in the report.

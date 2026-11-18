@@ -1,0 +1,4 @@
+interface:
+  display_name: "Emeth: Verification Harness"
+  short_description: "Build a user-approved environment for agents to verify their work"
+  default_prompt: "Use $verification-harness to set up a verification environment for this project."
