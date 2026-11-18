@@ -43,12 +43,19 @@ const HOST_RULES = /^Apply the rules for the host running this conversation: [^\
 // Subagents report to their caller, so user-facing presentation rules stay in the main conversation.
 const AUDIENCE_BLOCK = /<!-- (main|subagent)-only -->\r?\n([\s\S]*?)<!-- \/\1-only -->\r?\n?/g;
 const HOST_FILES = Object.freeze({ codex: 'codex.md', claude: 'claude-code.md', mixdog: 'mixdog.md' });
+// GPT-6.2 follows OpenAI's 6.2 prompt guidance; earlier and unknown Codex models keep codex.md.
+const GPT_6_2 = /^gpt-6\.2(?:-|$)/;
+
+function rulesFile(host, model) {
+  if (host === 'codex' && GPT_6_2.test(typeof model === 'string' ? model.trim() : '')) return 'codex-gpt-6.2.md';
+  return HOST_FILES[host];
+}
 
 function composeEmethPrompt(options = {}) {
   const pluginRoot = options.pluginRoot || path.resolve(__dirname, '..');
   const host = options.host || 'codex';
   const skillPath = path.join(pluginRoot, 'skills', 'rules', 'SKILL.md');
-  const hostPath = path.join(pluginRoot, 'skills', 'rules', HOST_FILES[host]);
+  const hostPath = path.join(pluginRoot, 'skills', 'rules', rulesFile(host, options.model));
   const shared = removeFrontmatter(readFileWithRetry(skillPath)).replace(
     /<!-- claude-only -->\r?\n([\s\S]*?)<!-- \/claude-only -->\r?\n?/g,
     (_match, content) => host === 'claude' ? content : '',
@@ -65,4 +72,4 @@ function composeEmethPrompt(options = {}) {
     .replaceAll('{{plugin-root}}', pluginRoot).trimEnd();
 }
 
-module.exports = { composeEmethPrompt };
+module.exports = { composeEmethPrompt, rulesFile };

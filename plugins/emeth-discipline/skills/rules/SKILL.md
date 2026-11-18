@@ -24,7 +24,7 @@ Exclude record roots (`.emeth/`, `.proofline/`, known custom roots) from general
 Records grant no access; explicit requests leave opt-in unchanged.
 For authorized records, use supplied entry/contract; if absent read `references/work-records.md`.
 
-Apply the rules for the host running this conversation: [Codex (codex.md)](codex.md), [Claude Code (claude-code.md)](claude-code.md), or [Mixdog (mixdog.md)](mixdog.md).
+Apply the rules for the host running this conversation: [Codex with GPT-6.2 models (codex-gpt-6.2.md)](codex-gpt-6.2.md), [Codex with earlier models (codex.md)](codex.md), [Claude Code (claude-code.md)](claude-code.md), or [Mixdog (mixdog.md)](mixdog.md).
 
 <!-- claude-only -->
 ## Document writing and revision

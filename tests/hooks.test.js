@@ -157,6 +157,37 @@ test('subagents receive caller-facing rules instead of user-facing presentation 
   assert.doesNotMatch(worker, /Ask the user|<!--/);
 });
 
+test('Codex sessions and workers receive the rules for their GPT model generation', t => {
+  const f = fixture(t);
+  fs.writeFileSync(path.join(f.plugin, 'skills/rules/codex-gpt-6.2.md'), 'GPT-6.2 fixture rules');
+  const rules = event => output(f.run(event)).hookSpecificOutput.additionalContext;
+  for (const model of ['gpt-6.2-astra', 'gpt-6.2-sol']) {
+    assert.equal(rules({ hook_event_name: 'SessionStart', source: 'startup', model }), '# Shared fixture rules\nGPT-6.2 fixture rules');
+    assert.equal(rules({ hook_event_name: 'SubagentStart', agent_id: 'worker', model }), '# Shared fixture rules\nGPT-6.2 fixture rules');
+  }
+  for (const model of ['gpt-6.1-sol', 'gpt-6-astra', undefined]) {
+    assert.equal(rules({ hook_event_name: 'SessionStart', source: 'startup', model }), codexRules);
+  }
+  const claudeEnv = { PLUGIN_ROOT: '', PLUGIN_DATA: '', CLAUDE_PLUGIN_ROOT: f.plugin, CLAUDE_PLUGIN_DATA: path.join(f.root, 'claude-data') };
+  assert.equal(output(f.run({ hook_event_name: 'SessionStart', source: 'startup', model: 'gpt-6.2-sol' }, { env: claudeEnv }))
+    .hookSpecificOutput.additionalContext, '# Shared fixture rules\nClaude fixture rules');
+});
+
+test('a mid-session switch to another Codex model generation replaces the injected rules', t => {
+  const f = fixture(t);
+  fs.writeFileSync(path.join(f.plugin, 'skills/rules/codex-gpt-6.2.md'), 'GPT-6.2 fixture rules');
+  const submit = (model, event = {}) => output(f.run({ prompt: 'Continue.', model, ...event })).hookSpecificOutput?.additionalContext;
+  output(f.run({ hook_event_name: 'SessionStart', source: 'startup', model: 'gpt-6.1-sol' }));
+  assert.equal(submit('gpt-6.1-sol'), undefined);
+  const switched = submit('gpt-6.2-astra');
+  assert.match(switched, /^The active model changed\. These Emeth rules replace/);
+  assert.ok(switched.endsWith('# Shared fixture rules\nGPT-6.2 fixture rules'));
+  assert.equal(submit('gpt-6.2-sol'), undefined);
+  assert.equal(submit('gpt-6.1-sol', { agent_id: 'worker' }), undefined);
+  assert.ok(submit('gpt-6-astra').endsWith(codexRules));
+  assert.equal(submit('gpt-6.2-sol', { session_id: 'unrecorded' }), undefined);
+});
+
 test('project opt-in reaches fresh Codex workers and Claude/Mixdog sessions and worker dispatch', t => {
   const f = fixture(t);
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');

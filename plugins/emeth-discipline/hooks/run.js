@@ -16,18 +16,17 @@ async function run(input) {
   const response = {};
   let failure;
 
-  if (event !== 'UserPromptSubmit' || mixdog) {
-    try {
-      const context = require('../lib/rules-runtime').load(input);
-      if (context) contexts.push(context);
-    } catch (error) {
-      logDiagnostic({
-        hook: 'load-emeth',
-        event, error, pluginRoot: path.resolve(__dirname, '..'),
-        skillPath: error.emethFilePath, filePath: error.emethFilePath,
-      });
-      failure = error;
-    }
+  try {
+    const runtime = require('../lib/rules-runtime');
+    const context = event !== 'UserPromptSubmit' || mixdog ? runtime.load(input) : runtime.reload(input);
+    if (context) contexts.push(context);
+  } catch (error) {
+    logDiagnostic({
+      hook: 'load-emeth',
+      event, error, pluginRoot: path.resolve(__dirname, '..'),
+      skillPath: error.emethFilePath, filePath: error.emethFilePath,
+    });
+    failure = error;
   }
 
   if (event === 'UserPromptSubmit') {

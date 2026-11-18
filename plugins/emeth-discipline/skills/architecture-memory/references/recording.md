@@ -2,7 +2,8 @@
 
 Apply the host's document rules already in context. Look up a host rule when it is needed to write the record:
 
-- Codex: [../../rules/codex.md: Documents and reports](../../rules/codex.md#documents-and-reports).
+- Codex with GPT-6.2 models: [../../rules/codex-gpt-6.2.md: Documents and reports](../../rules/codex-gpt-6.2.md#documents-and-reports).
+- Codex with earlier models: [../../rules/codex.md: Documents and reports](../../rules/codex.md#documents-and-reports).
 - Claude Code: [../../rules/SKILL.md: Document writing and revision](../../rules/SKILL.md#document-writing-and-revision).
 - Mixdog: [../../rules/mixdog.md: Document writing and revision](../../rules/mixdog.md#document-writing-and-revision).
 

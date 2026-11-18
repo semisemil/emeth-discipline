@@ -34,5 +34,5 @@ Pass changed contracts, source paths and stopping conditions with the follow-up.
 
 - **Subagents.** Use the host subagent tool: `Agent` in Claude Code (`subagent_type: general-purpose`) or `spawn_agent` in Codex. For a fresh Codex assignment, use `fork_turns: "none"` with the prescribed role prompt and paths to its task, grounding, and output artifacts. Drop parameters your tool doesn't have. If your harness has no subagent tool, do each delegated step yourself, one after another.
 - **Questions.** Use the host's structured-question tool, such as `request_user_input_async` in Codex. Without one, ask in chat with numbered options.
-- **Completion.** For delegated work, use the host completion mechanism. In Codex, follow the [delegated work completion rules](../../rules/codex.md#delegated-work-completion).
+- **Completion.** For delegated work, use the host completion mechanism. In Codex, follow the delegated work completion rules for [GPT-6.2 models](../../rules/codex-gpt-6.2.md#delegated-work-completion) or [earlier models](../../rules/codex.md#delegated-work-completion).
 
