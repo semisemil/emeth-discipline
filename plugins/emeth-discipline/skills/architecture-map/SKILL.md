@@ -1,6 +1,6 @@
 ---
 name: architecture-map
-description: Show a whole-system graph from connected Architecture Memory documents when the user asks to see the recorded architecture.
+description: Show a system overview graph from connected Architecture Memory documents on request.
 ---
 
 # Architecture Map

@@ -1,7 +1,7 @@
 ---
 name: development-design
 when_to_use: "Explicit Design work or workflow artifacts; enabled maintenance without a supplied work-record entry or contract."
-description: "Create, revise or explore Designs on an explicit Design request or workflow call. For enabled automatic maintenance, use this skill only when no work-record entry or contract is supplied."
+description: Create, explore, revise, or report the status of an Emeth Design on explicit request or workflow call.
 ---
 
 # Development Design

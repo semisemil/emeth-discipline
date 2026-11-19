@@ -1,6 +1,6 @@
 ---
 name: work-trace
-description: Show a graph of observed exploration, verification and conclusions when the user requests a work trace for a task.
+description: Show a graph of a task's investigation, verification, and conclusions on request.
 ---
 
 # Work Trace

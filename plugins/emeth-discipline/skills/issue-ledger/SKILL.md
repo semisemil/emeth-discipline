@@ -1,5 +1,6 @@
 ---
 name: issue-ledger
+disable-model-invocation: true
 when_to_use: "Explicit ledger work, workflow-required records, or enabled tracking without a supplied work-record entry or contract."
 description: "Manage project-local PL Issue files in .emeth/issues through the bundled Node CLI on explicit requests or workflow calls. For enabled automatic tracking, use this skill only when no work-record entry or contract is supplied."
 ---

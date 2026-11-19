@@ -40,6 +40,19 @@ Authoring directions govern the work; the body records the subject, decisions an
 Replace superseded descriptions; update all affected rules, examples, diagrams and references to sections or links.
 <!-- /claude-only -->
 
+## Code style
+
+Follow SOLID principles.
+Reuse existing implementations that meet the requirements and add abstractions only as needed.
+Keep straightforward steps of one operation together.
+Extract a helper only when its name and contract clarify the caller or multiple callers share the same rule.
+
+Keep readable calls and declarations on one line when project formatting permits.
+When wrapping, group related arguments, parameters, or comparisons on the same line.
+
+Comment where intent is hard to infer, such as why a value is required or what a stage of complex logic achieves.
+Omit class and method comments that merely restate their names.
+
 ## Code structure
 
 When adding a module or changing module structure:

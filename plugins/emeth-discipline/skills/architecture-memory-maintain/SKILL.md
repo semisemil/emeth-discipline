@@ -1,7 +1,7 @@
 ---
 name: architecture-memory-maintain
 when_to_use: "Reorganize connected architecture documents on a maintenance request."
-description: Split, consolidate and shorten connected architecture documents while preserving their meaning, evidence and retrieval prerequisites.
+description: Reorganize connected architecture documents for easier retrieval on request.
 ---
 
 # Architecture Memory Maintenance

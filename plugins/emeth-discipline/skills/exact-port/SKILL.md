@@ -1,7 +1,7 @@
 ---
 name: exact-port
 when_to_use: "Port or transplant code while preserving exact source behavior; no unapproved deviations."
-description: Use when the user asks to port, migrate, copy, or transplant an implementation while preserving behavior exactly or forbidding a rewrite. Keep the source authoritative and require approval for every deviation.
+description: Port an implementation when the user requires exact behavior or forbids a rewrite.
 ---
 
 # Exact Port

@@ -1,7 +1,7 @@
 ---
 name: verification-harness
 when_to_use: "Build or extend a project's user-approved verification environment."
-description: Use when the user wants agents to verify their own work in a project, asks to set up or repair the project's verification environment, or adds a feature, behavior change or bug fix in a project whose instructions name a verification-harness environment. Agree acceptance criteria with the user, then build end-to-end tests the agent runs alone and prove each test goes red on a defect.
+description: Set up or repair a project environment for agent-run verification. Extend it for features, behavior changes, or bug fixes when project instructions name verification-harness.
 ---
 
 # Verification Harness

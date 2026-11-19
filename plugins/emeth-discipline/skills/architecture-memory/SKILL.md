@@ -1,7 +1,7 @@
 ---
 name: architecture-memory
 when_to_use: "Capture durable context or resolve retrieval problems in connected project architecture documents."
-description: Capture durable context in connected project architecture documents or resolve incomplete and ambiguous retrieval. The connection notice provides ordinary read-only lookup.
+description: Record durable context or resolve unclear lookup results in connected architecture documents.
 ---
 
 # Architecture Memory

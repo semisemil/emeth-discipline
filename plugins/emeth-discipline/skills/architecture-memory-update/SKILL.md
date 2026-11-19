@@ -1,7 +1,7 @@
 ---
 name: architecture-memory-update
 when_to_use: "After a commit that requires architecture document changes, or on an update request, when architecture memory is enabled for the project."
-description: When architecture memory is enabled, offer updates for commits that require architecture document changes, or update the documents on user request.
+description: Update connected architecture documents on request, or offer an update after a commit that warrants one.
 ---
 
 Use the completed work's context to judge whether a commit requires architecture document changes.

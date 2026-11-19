@@ -1,7 +1,7 @@
 ---
 name: slop-check
 when_to_use: "Write code without slop, or audit code for slop: needless steps, parallel implementations, unread data, unreachable guards, speculative complexity, or drift from existing conventions."
-description: Use when writing code that should fit an existing codebase, or when asked to find slop, cleanup targets, or AI-written excess in code.
+description: Follow existing code conventions when writing code, or audit code for duplication and needless complexity.
 ---
 
 # Slop Check
