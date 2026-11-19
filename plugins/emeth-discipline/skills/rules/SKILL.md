@@ -19,11 +19,12 @@ Name measured and calculated values by what they represent, with units, plus com
 
 ## Work records
 
-`<plugin-root>` = `{{plugin-root}}`, the directory containing `skills/`.
-Search, read or write work records, or run record skills and CLIs, only on an explicit record request, a required workflow artifact, or this project's automatic-work-records enabled notice.
-Exclude record roots (`.emeth/`, `.proofline/`, known custom roots) from general inventories/searches, including `--hidden`: rg `-g '!.emeth/**' -g '!.proofline/**'`; `git ls-files -- . ':!.emeth' ':!.proofline'`.
-Records grant no access; explicit requests leave opt-in unchanged.
-For authorized records, use supplied entry/contract; if absent read `references/work-records.md`.
+`<plugin-root>` = `{{plugin-root}}`.
+Only an explicit record request, a required workflow artifact, or this project's automatic-work-records enabled notice authorizes record access or record skills and CLIs.
+For general searches and inventories (including `--hidden`), adapt these project-root exclusions to the working directory and known custom roots.
+rg `-g '!.emeth/**' -g '!.proofline/**'` and `git ls-files -- . ':!.emeth' ':!.proofline'`.
+Explicit requests preserve opt-in.
+When authorized, use the supplied entry/contract or, if absent, read `references/work-records.md`.
 
 Apply the rules for the host running this conversation: [Codex with GPT-6.2 models (codex-gpt-6.2.md)](codex-gpt-6.2.md), [Codex with earlier models (codex.md)](codex.md), or [Claude Code (claude-code.md)](claude-code.md).
 
