@@ -28,6 +28,6 @@ Keep readiness in metadata only, as defined in [references/document-status.md](r
 Save through [references/document-operations.md](references/document-operations.md) or [references/document-editing.md](references/document-editing.md).
 Capture durable project context in project architecture documents through [Architecture Memory](../architecture-memory/SKILL.md).
 Use `--memory off` when recording in those documents is prohibited.
-For registration access failures, use [../dashboard-server/references/sandbox-setup.md](../dashboard-server/references/sandbox-setup.md).
+For registration access failures, use [../settings/references/sandbox-setup.md](../settings/references/sandbox-setup.md).
 
 Report the overview link (`absolute_path` when returned), readiness, and material open matters in the conversation, distinguishing save failures from registration or architecture document recording failures after a successful save.

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Settings"
+  short_description: "View or change Emeth settings and manage the dashboard"
+  default_prompt: "Use $settings to report the current Emeth settings."
+
+policy:
+  allow_implicit_invocation: false

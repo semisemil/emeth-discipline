@@ -3,6 +3,7 @@
 const path = require('node:path');
 const { createHash, randomUUID } = require('node:crypto');
 const { readRegistry, getRegistryPath } = require('./registry');
+const { isEnabled } = require('../lib/settings');
 const fs = require('node:fs');
 
 function projectFor(cwd, projects) {
@@ -76,12 +77,8 @@ function setDisposition(projects, key, state, options) {
   });
 }
 
-function recordingFlag() {
-  return path.join(path.dirname(getRegistryPath()), 'inbox.enabled');
-}
-
 function notice(input) {
-  if (!input.cwd || !fs.existsSync(recordingFlag())) return '';
+  if (!input.cwd || !isEnabled('inbox')) return '';
   const project = registeredProject(input.cwd);
   if (!project) return '';
   const host = require('../lib/host').name();
@@ -97,20 +94,8 @@ function notice(input) {
 if (require.main === module) {
   try {
     const args = process.argv.slice(2);
-    if (args.length === 1 && ['on', 'off'].includes(args[0])) {
-      const enabled = args[0] === 'on';
-      const flag = recordingFlag();
-      if (enabled) {
-        fs.mkdirSync(path.dirname(flag), { recursive: true });
-        fs.closeSync(fs.openSync(flag, 'a'));
-      } else {
-        fs.rmSync(flag, { force: true });
-      }
-      console.log(JSON.stringify({ enabled }));
-      return;
-    }
     if (args.length !== 5) throw Error('Expected thread, task, kind, title and text. Pass - for text to read it from stdin.');
-    if (!fs.existsSync(recordingFlag())) {
+    if (!isEnabled('inbox')) {
       console.log(JSON.stringify({ recorded: false, reason: 'recording-disabled' }));
       return;
     }

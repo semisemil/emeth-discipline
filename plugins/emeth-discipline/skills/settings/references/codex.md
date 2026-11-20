@@ -6,10 +6,10 @@ This also applies to writers that register after saving a project document.
 
 ## Resolve the required directory
 
-For `work-records on` or `work-records off`, use the parent directory of the global settings file instead of the dashboard directory:
+For `inbox` or `work-records` setting changes, use the parent directory of the global settings file instead of the dashboard directory:
 
 ```text
-node -e "const p=require(process.argv[1]).globalSettingsPath(); console.log(require('node:path').dirname(p))" <plugin-root>/lib/work-records-policy.js
+node -e "const p=require(process.argv[1]).settingsPath(); console.log(require('node:path').dirname(p))" <plugin-root>/lib/settings.js
 ```
 
 For other commands:

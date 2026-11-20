@@ -23,8 +23,8 @@ test('ordinary Codex hook supplies a writer and review state survives reopening 
   assert.doesNotMatch(prompt(), /inbox\.js/);
   record();
   assert.equal(fs.existsSync(path.join(path.dirname(registryPath),'work-items.sqlite')),false);
-  run('dashboard/inbox.js',['on']);
-  assert.equal(fs.existsSync(path.join(path.dirname(registryPath),'inbox.enabled')),true);
+  run('skills/settings/scripts/settings.js',['inbox','on']);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'emeth/settings.json'),'utf8')).inbox,true);
   const hook = JSON.parse(prompt());
   assert.match(hook.hookSpecificOutput.additionalContext,/inbox\.js.*test-chat.*first/);
   function record() {
@@ -33,7 +33,7 @@ test('ordinary Codex hook supplies a writer and review state survives reopening 
   record();
   const load = () => readInbox([registered],{registryPath});
   const item = load().items[0];
-  run('dashboard/inbox.js',['off']);
+  run('skills/settings/scripts/settings.js',['inbox','off']);
   assert.doesNotMatch(prompt(), /inbox\.js/);
   run('dashboard/inbox.js',['test-chat','second','result','Disabled','Should not be recorded']);
   assert.deepEqual(load().items,[item]);
@@ -77,13 +77,13 @@ test('claude prompt hook follows the shared opt-in and supplies a usable task id
   const submit = () => run('hooks/run.js',[],JSON.stringify({hook_event_name:'UserPromptSubmit',cwd:root,
     session_id:'chat',prompt:'Inspect the result'}));
   assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
-  run('dashboard/inbox.js',['on']);
+  run('skills/settings/scripts/settings.js',['inbox','on']);
   const context = JSON.parse(submit()).hookSpecificOutput.additionalContext;
   const match = context.match(/inbox\.js" "([^"]+)" "([^"]+)"/);
   assert.ok(match);
   assert.ok(match[1].startsWith('claude:'));
   run('dashboard/inbox.js',[match[1],match[2],'result','Completed','Ready for review']);
   assert.equal(readInbox([project],options).items[0].text,'Ready for review');
-  run('dashboard/inbox.js',['off']);
+  run('skills/settings/scripts/settings.js',['inbox','off']);
   assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
 });

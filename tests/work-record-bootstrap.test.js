@@ -30,13 +30,13 @@ function fixture(t, enabled = true) {
         session_id: 'public-bootstrap', hook_event_name: 'SessionStart', source: 'startup', ...event }) });
   }
   if (enabled) write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');
-  function control(...args) {
-    return spawnSync(process.execPath, [path.join(plugin, 'dashboard/control.js'), ...args], {
+  function settings(...args) {
+    return spawnSync(process.execPath, [path.join(plugin, 'skills/settings/scripts/settings.js'), ...args], {
       cwd: project, env, encoding: 'utf8', windowsHide: true,
     });
   }
   const claude = (event = {}, extraEnv = {}) => run(event, { PLUGIN_ROOT:'', PLUGIN_DATA:'', CLAUDE_PLUGIN_ROOT:plugin, ...extraEnv });
-  return { root, project, write, run, control, claude };
+  return { root, project, write, run, settings, claude };
 }
 
 function output(result) {
@@ -89,47 +89,64 @@ test('a fresh opted-in project is active from subdirectories but a nested reposi
   assert.deepEqual(output(f.run({cwd:path.join(f.project,'src')})), {});
 });
 
-test('dashboard commands report and toggle global automatic records through the real session hook', t => {
+test('settings commands report and toggle global automatic records through the real session hook', t => {
   const f = fixture(t, false);
+  const records = result => output(result).settings['work-records'];
   const before = tree(f.root);
-  const initial = output(f.control('work-records', 'status'));
-  assert.equal(initial.scope, 'global');
-  assert.equal(initial.enabled, false);
-  assert.equal(initial.configured, false);
+  const initial = output(f.settings('status'));
+  assert.deepEqual(initial.settings, { 'work-records': { enabled: false, configured: false }, inbox: { enabled: false, configured: false } });
   assert.deepEqual(tree(f.root), before, 'Reading status creates no state');
   assert.deepEqual(output(f.run()), {});
 
-  const enabled = output(f.control('work-records', 'on'));
-  assert.equal(enabled.enabled, true);
-  assert.equal(enabled.configured, true);
-  assert.deepEqual(JSON.parse(fs.readFileSync(enabled.path, 'utf8')), {schema_version:1, enabled:true});
-  assert.equal(output(f.control('work-records', 'status')).enabled, true);
+  const enabled = output(f.settings('work-records', 'on'));
+  assert.deepEqual(enabled.settings['work-records'], { enabled: true, configured: true });
+  assert.deepEqual(JSON.parse(fs.readFileSync(enabled.path, 'utf8')), {schema_version:1, work_records:true});
+  assert.equal(records(f.settings('status')).enabled, true);
   context(f.run(), 'absent');
   const other=path.join(f.root,'other-project');fs.mkdirSync(other);
   assert.ok(context(f.run({cwd:other}),'absent').replaceAll('\\','/').includes(other.replaceAll('\\','/')));
   assert.deepEqual(fs.readdirSync(other),[]);
   assert.deepEqual(fs.readdirSync(f.project), [], 'Enabling global records creates no project state');
-  assert.deepEqual(fs.readdirSync(path.dirname(enabled.path)), ['work-records.json'], 'No server, registry or inbox state');
+  assert.deepEqual(fs.readdirSync(path.dirname(enabled.path)), ['settings.json'], 'No server, registry or inbox state');
 
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":false}');
   const local = fs.readFileSync(path.join(f.project, '.emeth/work-records.json'));
-  assert.equal(output(f.control('work-records', 'on')).enabled, true);
+  assert.equal(records(f.settings('work-records', 'on')).enabled, true);
   assert.deepEqual(output(f.run()), {}, 'A project can opt out of the enabled global default');
   assert.deepEqual(fs.readFileSync(path.join(f.project, '.emeth/work-records.json')), local);
   fs.unlinkSync(path.join(f.project, '.emeth/work-records.json'));
 
-  assert.equal(output(f.control('work-records', 'off')).enabled, false);
-  assert.equal(output(f.control('work-records', 'status')).enabled, false);
+  assert.equal(records(f.settings('work-records', 'off')).enabled, false);
+  assert.equal(records(f.settings('status')).enabled, false);
   assert.deepEqual(output(f.run()), {});
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":true}');
   context(f.run(), 'absent');
 });
 
+test('settings from earlier releases stay in effect until settings.json records a new value', t => {
+  const f = fixture(t, false);
+  const legacyRecords = path.join(f.root, 'config/emeth/work-records.json');
+  const legacyInbox = path.join(f.root, 'config/emeth/dashboard/inbox.enabled');
+  fs.mkdirSync(path.dirname(legacyInbox), {recursive:true});
+  fs.writeFileSync(legacyRecords, '{"schema_version":1,"enabled":true}');
+  fs.writeFileSync(legacyInbox, '');
+  assert.deepEqual(output(f.settings('status')).settings,
+    { 'work-records': { enabled: true, configured: true }, inbox: { enabled: true, configured: true } });
+  context(f.run(), 'absent');
+
+  const changed = output(f.settings('inbox', 'off'));
+  assert.deepEqual(JSON.parse(fs.readFileSync(changed.path, 'utf8')), {schema_version:1, work_records:true, inbox:false},
+    'Changing one setting keeps the other earlier value');
+  fs.writeFileSync(legacyRecords, '{"schema_version":1,"enabled":false}');
+  assert.equal(output(f.settings('status')).settings['work-records'].enabled, true, 'settings.json takes priority');
+  assert.ok(fs.existsSync(legacyInbox), 'Earlier files stay for older installations');
+});
+
 test('an invalid project setting does not inherit global enable, while a valid project does not read global errors', t => {
   const f = fixture(t, false);
-  const globalFile = path.join(f.root, 'config/emeth/work-records.json');
+  const globalFile = path.join(f.root, 'config/emeth/settings.json');
   fs.mkdirSync(path.dirname(globalFile), {recursive:true});
-  fs.writeFileSync(globalFile, '{"schema_version":1,"enabled":true}');
+  fs.writeFileSync(globalFile, '{"schema_version":1,"work_records":true}');
   f.write('.emeth/work-records.json', '{"schema_version":1,"enabled":"false"}');
   f.write('.emeth/issues/PL-0001.json', 'Existing Issue');
   const before = tree(f.root);

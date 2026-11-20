@@ -29,6 +29,6 @@ node <plugin-root>/dashboard/register-project.js register --project-root <projec
 ```
 
 Accept registration `registered` or `no-op` as complete.
-For a registration failure reporting `EPERM` or `EACCES`, follow [../dashboard-server/references/sandbox-setup.md](../dashboard-server/references/sandbox-setup.md).
+For a registration failure reporting `EPERM` or `EACCES`, follow [../settings/references/sandbox-setup.md](../settings/references/sandbox-setup.md).
 Report the architecture document root and connection status in the user's language.
 Registration failure is separate: keep the architecture documents and report that failure.

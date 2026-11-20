@@ -56,4 +56,4 @@ Write its packet to a UTF-8 JSON file and run `node "<plugin-root>/writers/docum
 - Legacy or terminal work links: [../../issue-ledger/references/work-link.md](../../issue-ledger/references/work-link.md).
 - New Design or exploration: [Development Design](../../development-design/SKILL.md).
 - Add/remove members or repair ambiguous sections: [../../development-design/references/document-editing.md](../../development-design/references/document-editing.md).
-- Registration access failure after saving: [../../dashboard-server/references/sandbox-setup.md](../../dashboard-server/references/sandbox-setup.md).
+- Registration access failure after saving: [../../settings/references/sandbox-setup.md](../../settings/references/sandbox-setup.md).

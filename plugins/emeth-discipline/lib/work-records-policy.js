@@ -2,15 +2,11 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { randomUUID } = require('node:crypto');
 const { isIssueFileName } = require('../skills/issue-ledger/lib/issue-model');
-const { getDashboardConfigDir } = require('../dashboard/registry');
+const { isEnabled } = require('./settings');
 
-function globalSettingsPath(options = {}) {
-  return path.join(path.dirname(getDashboardConfigDir(options)), 'work-records.json');
-}
-
-function readSettings(file) {
+// A project's .emeth/work-records.json takes priority over the global setting.
+function readProjectSettings(file) {
   try {
     const stat = fs.lstatSync(file);
     if (!stat.isFile() || stat.size > 16384) throw new Error(`Invalid automatic work-record settings: ${file}`);
@@ -26,30 +22,12 @@ function readSettings(file) {
   }
 }
 
-function globalSettings(action, options = {}) {
-  const file = globalSettingsPath(options);
-  if (action === 'status') {
-    const settings = readSettings(file);
-    return { ok: true, scope: 'global', path: file, configured: settings !== null, enabled: settings?.enabled ?? false };
-  }
-  if (!['on', 'off'].includes(action)) throw new Error('Expected work-records on, off or status');
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${randomUUID()}.tmp`;
-  try {
-    fs.writeFileSync(temporary, `${JSON.stringify({ schema_version: 1, enabled: action === 'on' })}\n`, { flag: 'wx', mode: 0o600 });
-    fs.renameSync(temporary, file);
-  } finally {
-    if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
-  }
-  return { ok: true, scope: 'global', path: file, configured: true, enabled: action === 'on' };
-}
-
 function policyFor(cwd) {
   const workingRoot = path.resolve(cwd || process.cwd());
   let root = workingRoot;
   let recordRoot;
   while (true) {
-    const local = readSettings(path.join(root, '.emeth', 'work-records.json'));
+    const local = readProjectSettings(path.join(root, '.emeth', 'work-records.json'));
     if (local) return { root, enabled: local.enabled };
     if (!recordRoot && (fs.existsSync(path.join(root, '.emeth')) || fs.existsSync(path.join(root, '.proofline')))) {
       recordRoot = root;
@@ -59,8 +37,7 @@ function policyFor(cwd) {
     if (parent === root) { root = recordRoot || workingRoot; break; }
     root = parent;
   }
-  const global = readSettings(globalSettingsPath());
-  return { root, enabled: global?.enabled ?? false };
+  return { root, enabled: isEnabled('work-records') };
 }
 
 function notice(cwd) {
@@ -99,4 +76,4 @@ function notice(cwd) {
   }
 }
 
-module.exports = { policyFor, notice, globalSettingsPath, globalSettings };
+module.exports = { policyFor, notice };

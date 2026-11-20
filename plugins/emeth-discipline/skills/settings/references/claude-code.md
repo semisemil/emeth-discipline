@@ -6,7 +6,7 @@ Reuse the dashboard directory reported by the failed operation. Otherwise resolv
 node -e "console.log(require(process.argv[1]).getDashboardConfigDir())" <plugin-root>/dashboard/registry.js
 ```
 
-For `work-records on` or `work-records off`, use the parent directory of `globalSettingsPath()` from `<plugin-root>/lib/work-records-policy.js` instead.
+For `inbox` or `work-records` setting changes, use the parent directory of `settingsPath()` from `<plugin-root>/lib/settings.js` instead.
 
 Claude Code blocks writes outside the working directory only when its command sandbox is enabled; Codex configuration does not control it.
 When the failed command ran inside that sandbox, retry only the failed dashboard command once outside the sandbox through the Bash tool's sandbox bypass, which asks the user for approval.

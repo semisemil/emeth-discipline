@@ -141,7 +141,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:verification-harness` | AI가 결과물을 스스로 검증할 환경을 만들거나, 그 환경이 있는 프로젝트에서 기능 추가·동작 변경·버그 수정을 할 때 | 사용자와 확정한 기준을 E2E 수용 테스트로 만들고, 결함을 넣어 실패하는지 확인한 뒤 기준 변경을 승인제로 관리 |
 | `/emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `/emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
-| `/emeth-discipline:dashboard-server` | 통합 대시보드를 이용할 때 | 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
+| `/emeth-discipline:settings` | 설정을 확인하거나 바꾸고, 통합 대시보드를 이용할 때 | 수신함 기록과 자동 작업 기록 설정, 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
 | `/emeth-discipline:adaptive-reasoning` | Codex에서 작업 중 추론 강도를 조절하고 싶을 때 (Codex 전용) | 명시 호출 후 현재 모델을 유지하며 작업에 맞춰 추론 강도 조절 |
 
 ### Architecture
@@ -220,27 +220,28 @@ flowchart LR
 **이슈 자동 등록과 관련 Design 자동 갱신은 기본 비활성화**입니다.
 직접 요청한 기록 작업과 워크플로의 필수 문서 작업은 설정과 관계없이 수행합니다.
 
-전역 자동 기록은 대시보드 명령으로 설정합니다.
+전역 자동 기록은 설정 명령으로 켜고 끕니다.
 
 ```text
-/emeth-discipline:dashboard-server work-records on
-/emeth-discipline:dashboard-server work-records off
-/emeth-discipline:dashboard-server work-records status
+/emeth-discipline:settings work-records on
+/emeth-discipline:settings work-records off
+/emeth-discipline:settings status
 ```
 
-`on`은 켜기, `off`는 끄기, `status`는 전역 설정 확인입니다.
-명령이 다음 위치의 `work-records.json`을 관리합니다.
+`on`은 켜기, `off`는 끄기, `status`는 모든 설정 확인입니다.
+설정은 다음 위치의 `settings.json`에 저장합니다.
 
 | 환경 | 전역 설정 위치 |
 | --- | --- |
-| Windows | `%APPDATA%\emeth\work-records.json` |
-| Linux, macOS | `$XDG_CONFIG_HOME/emeth/work-records.json`, 미설정 시 `~/.config/emeth/work-records.json` |
+| Windows | `%APPDATA%\emeth\settings.json` |
+| Linux, macOS | `$XDG_CONFIG_HOME/emeth/settings.json`, 미설정 시 `~/.config/emeth/settings.json` |
 
 ```json
-{"schema_version": 1, "enabled": true}
+{"schema_version": 1, "work_records": true, "inbox": false}
 ```
 
-프로젝트의 `.emeth/work-records.json`은 같은 형식을 쓰며 **전역 설정보다 우선**합니다.
+이전 버전이 만든 `work-records.json`과 `inbox.enabled`는 `settings.json`에 해당 설정이 없을 때 읽습니다.
+프로젝트의 `.emeth/work-records.json`은 `{"schema_version": 1, "enabled": true}` 형식을 쓰며 **전역 설정보다 우선**합니다.
 설정 안내는 새 대화나 컨텍스트 재구성 시 반영됩니다.
 
 ```text
@@ -323,28 +324,27 @@ Codex와 Claude Code의 공통 수신함 기록은 기본적으로 꺼져 있습
 아키텍처 화면은 문서와 마지막 확인 커밋, Mermaid 다이어그램을 읽기 전용으로 표시합니다.
 
 이슈, Design 또는 기존 문서를 저장하거나 아키텍처 메모리를 초기화하면 해당 프로젝트를 등록합니다.
-서버는 사용자가 대시보드를 열어 달라고 요청하거나 `open`을 호출할 때 시작합니다.
+서버는 사용자가 대시보드를 열어 달라고 요청하거나 `dashboard open`을 호출할 때 시작합니다.
 
 | 명령 | 동작 |
 | --- | --- |
-| `/emeth-discipline:dashboard-server add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
-| `/emeth-discipline:dashboard-server open` | 필요하면 서버를 시작하고 대시보드 열기 |
-| `/emeth-discipline:dashboard-server on` | 등록된 모든 프로젝트에서 수신함 기록 켜기 |
-| `/emeth-discipline:dashboard-server off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
-| `/emeth-discipline:dashboard-server work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
-| `/emeth-discipline:dashboard-server work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
-| `/emeth-discipline:dashboard-server work-records status` | 전역 자동 기록 설정 확인 |
-| `/emeth-discipline:dashboard-server status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
-| `/emeth-discipline:dashboard-server stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
+| `/emeth-discipline:settings` 또는 `/emeth-discipline:settings status` | 모든 설정의 현재 값과 기본값 여부 확인 |
+| `/emeth-discipline:settings inbox on` | 등록된 모든 프로젝트에서 수신함 기록 켜기 |
+| `/emeth-discipline:settings inbox off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
+| `/emeth-discipline:settings work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
+| `/emeth-discipline:settings work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
+| `/emeth-discipline:settings dashboard add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
+| `/emeth-discipline:settings dashboard open` | 필요하면 서버를 시작하고 대시보드 열기 |
+| `/emeth-discipline:settings dashboard status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
+| `/emeth-discipline:settings dashboard stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
 
-프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `add`를 호출하세요.
+프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `dashboard add`를 호출하세요.
 이 명령은 프로젝트 파일을 새로 만들거나 다른 폴더를 검색하지 않습니다.
 
 ### 대시보드 저장 위치와 권한 설정
 
 프로젝트 목록, 서버 상태, 수신함 기록은 사용자별 공용 폴더에 저장합니다.
 세 호스트는 같은 설정을 사용합니다.
-`inbox.enabled`는 수신함 기록을 켰을 때 생성되는 공통 설정 파일입니다.
 작업 제목, 본문, 종류와 처리 상태는 `work-items.sqlite`에 저장합니다.
 Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
 다른 운영체제에서는 `$XDG_CONFIG_HOME/emeth/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/emeth/dashboard`를 사용합니다.
@@ -355,7 +355,7 @@ Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
 변경된 권한이 현재 작업에 반영되지 않으면 새 Codex 작업에서 등록을 재시도하세요.
 권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
 
-권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](plugins/emeth-discipline/skills/dashboard-server/references/sandbox-setup.md)를 참고하세요.
+권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](plugins/emeth-discipline/skills/settings/references/sandbox-setup.md)를 참고하세요.
 
 ## ✅ 개발 검증
 
