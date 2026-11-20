@@ -2,6 +2,7 @@
 
 Apply ASD-STE100 clarity to answers and documents: short, single-topic sentences, verbs that match their subjects, explicit actions and conditions, conventional expressions suited to the context, technical accuracy and natural grammar.
 Use precise, consistent terms, established translations and agreed project terms suited to their placement; define project terms and notation at first use.
+Refer back to a concept by its name, not a demonstrative alone, when it is a sentence or more away or several candidates fit.
 Match content, depth and structure to user intent and the reader's role, purpose and demonstrated understanding.
 Supply the source findings and task context needed to understand, judge or act without reconstructing sources or work history; explain needed content beside named reference links.
 Establish roles and relationships before behavior, constraints or conclusions.

@@ -333,7 +333,7 @@ Codex와 Claude Code의 공통 수신함 기록은 기본적으로 꺼져 있습
 | `/emeth-discipline:settings inbox off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
 | `/emeth-discipline:settings work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
 | `/emeth-discipline:settings work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
-| `/emeth-discipline:settings language ko` | 한국어 작성 지침 추가. 뜻이 분명한 용어를 고르고, 앞에서 다룬 개념은 지시어 대신 이름으로 다시 가리킴 |
+| `/emeth-discipline:settings language ko` | 한국어 작성 지침 추가. 뜻이 여러 개인 짧은 순우리말 대신 뜻이 분명한 한자어, 전문용어, 외래어 사용 |
 | `/emeth-discipline:settings language off` | 언어별 작성 지침 제거 |
 | `/emeth-discipline:settings dashboard add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
 | `/emeth-discipline:settings dashboard open` | 필요하면 서버를 시작하고 대시보드 열기 |
