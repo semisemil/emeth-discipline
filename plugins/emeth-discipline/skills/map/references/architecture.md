@@ -1,12 +1,7 @@
----
-name: architecture-map
-description: Show a system overview graph from connected Architecture Memory documents on request.
----
-
-# Architecture Map
+# Architecture map
 
 Show the system's overall structure from the project's connected Architecture Memory.
-Use [Architecture Memory](../architecture-memory/SKILL.md) to locate and retrieve the documents.
+Use [Architecture Memory](../../architecture-memory/SKILL.md) to locate and retrieve the documents.
 If memory is not connected or is disabled, report that source limitation and leave setup unchanged.
 
 ## Build the overview
@@ -25,8 +20,4 @@ Describe the graph as the recorded architecture; a code freshness claim needs a 
 When an overview is incomplete, distinguish a graph composition problem from missing source structure and identify the affected area.
 Document repair follows a separate user request or existing authorization.
 
-## Show the map
-
-Apply [../../references/graph-presentation.md](../../references/graph-presentation.md).
-Reuse the same graph when revising this overview.
 Complete when the overview shows the major responsibilities and relationships supported by the documents, with source references and any material gaps identified.

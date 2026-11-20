@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Map"
+  short_description: "Map code structure or the recorded architecture"
+  default_prompt: "Use $map to show the structure of the current code or the architecture recorded in this project's Architecture Memory."
+
+policy:
+  allow_implicit_invocation: true

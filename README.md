@@ -119,10 +119,11 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 
 ### 코드 구조와 실행 흐름 보기
 
-`code-map`은 현재 소스의 클래스와 함수가 호출, 이벤트, 구현 선택을 통해 어떻게 연결되는지 관계도로 보여줍니다.
+`map`은 현재 소스의 클래스와 함수가 호출, 이벤트, 구현 선택을 통해 어떻게 연결되는지 관계도로 보여줍니다.
+아키텍처 문서가 연결되어 있으면 `architecture`를 붙여 기록된 시스템 전체 구조도 볼 수 있습니다.
 
 ```text
-/emeth-discipline:code-map 파일 저장 기능의 호출과 이벤트 흐름을 보여 줘
+/emeth-discipline:map code 파일 저장 기능의 호출과 이벤트 흐름을 보여 줘
 ```
 
 ## 🧩 포함된 스킬
@@ -133,15 +134,15 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
-| `/emeth-discipline:rules` | 기본 적용 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인 |
-| `/emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표·필수 조건·완료 기준 유지, 임의 누락·축소 방지 |
+| `/emeth-discipline:rules` | 기본 적용 | 명확한 표현, 요청 범위, 수정 권한, 판단 근거 확인, 요구사항 임의 누락 방지와 완료 조건 확인 |
+| `/emeth-discipline:scope-integrity` | 규모가 크거나 위험하고 여러 단계로 진행되는 작업 | 요청한 목표, 필수 조건과 완료 기준을 모든 실행 경로와 단계에 적용 |
 | `/emeth-discipline:slop-check` | 기존 코드에 맞춰 작성하거나 불필요한 코드를 찾을 때 | 불필요한 처리, 중복 구현과 관례 이탈을 근거로 판정하고 정리 방향 제시 |
 | `/emeth-discipline:refactor-proof` | 책임, 의존 관계, 호출 구조, 상태 흐름을 바꾸는 리팩터링 | 실제 구조 변경과 기존 동작 보존 여부 검증 |
 | `/emeth-discipline:verification-harness` | AI가 결과물을 스스로 검증할 환경을 만들거나, 그 환경이 있는 프로젝트에서 기능 추가·동작 변경·버그 수정을 할 때 | 사용자와 확정한 기준을 E2E 수용 테스트로 만들고, 결함을 넣어 실패하는지 확인한 뒤 기준 변경을 승인제로 관리 |
 | `/emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `/emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
 | `/emeth-discipline:dashboard-server` | 통합 대시보드를 이용할 때 | 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
-| `/emeth-discipline:adaptive-reasoning` | Codex에서 작업 중 추론 강도를 조절하고 싶을 때 | 명시 호출 후 현재 모델을 유지하며 작업에 맞춰 추론 강도 조절 |
+| `/emeth-discipline:adaptive-reasoning` | Codex에서 작업 중 추론 강도를 조절하고 싶을 때 (Codex 전용) | 명시 호출 후 현재 모델을 유지하며 작업에 맞춰 추론 강도 조절 |
 
 ### Architecture
 
@@ -152,7 +153,6 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:architecture-coop` | 새 아키텍처를 설계하거나 기존 구조를 재설계할 때 | 추천안과 질문을 먼저 제시하고, 전체 방향을 유지하며 구조를 함께 완성 |
 | `/emeth-discipline:architecture-memory-init` | 기존 프로젝트 전반을 먼저 분석하고 싶을 때 | 코드와 기존 문서를 바탕으로 구조·제약·결정 정리 |
 | `/emeth-discipline:architecture-memory` | 프로젝트 배경을 참고하거나 새로 결정한 내용을 남길 때 | 관련 문서 검색, 사용자 결정과 운영 환경 기록 |
-| `/emeth-discipline:architecture-map` | 아키텍처 문서로 시스템 전체 구조를 보고 싶을 때 | 시스템 경계, 주요 구성 요소와 관계를 그래프로 표시 |
 | `/emeth-discipline:architecture-memory-update` | 아키텍처 문서가 연결된 프로젝트에서 커밋한 뒤 | 문서 갱신 필요 여부 확인과 변경 내용 반영 |
 | `/emeth-discipline:architecture-memory-maintain` | 문서에 여러 주제나 중복이 쌓여 필요한 내용을 찾기 어려울 때 | 의미와 근거를 보존하며 내용을 분리하거나 통합하고, 실제 검색과 부분 조회로 확인 |
 
@@ -173,11 +173,11 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | 스킬 | 이런 때 사용합니다 | 하는 일 |
 | --- | --- | --- |
 | `/emeth-discipline:code-exploration` | 코드의 동작과 설계 이유를 이해하거나 배우고 싶을 때 | 질문에 맞춰 how, why, teach 모드로 코드와 변경 이력을 조사하고 설명 |
-| `/emeth-discipline:code-map` | 현재 코드 구조나 특정 기능의 실행 흐름을 보고 싶을 때 | 동작 주체와 호출, 이벤트, 구현 선택 관계를 소스에 근거한 그래프로 표시 |
+| `/emeth-discipline:map` | 현재 코드 구조, 특정 기능의 실행 흐름이나 아키텍처 문서에 기록된 시스템 전체 구조를 보고 싶을 때 | `code`는 소스에 근거해 동작 주체와 호출, 이벤트, 구현 선택 관계를, `architecture`는 시스템 경계와 주요 구성 요소를 그래프로 표시 |
 | `/emeth-discipline:work-trace` | 작업의 탐색 과정과 결론의 근거를 보고 싶을 때 | 요청한 작업에서 의미 있는 변화가 있을 때 답변 직전에 탐색 그래프 갱신 |
 | `/emeth-discipline:ensemble` | 설계나 구현에 여러 후보를 비교하고 싶을 때 | 독립 후보 생성, 교차 평가, 좋은 부분의 합성, 결과 검증 |
 
-`code-map`, `architecture-map`, `work-trace`는 Graph Viewer가 연결되어 있으면 그래프 탭에 표시합니다.
+`map`과 `work-trace`는 Graph Viewer가 연결되어 있으면 그래프 탭에 표시합니다.
 연결되어 있지 않으면 답변에 Mermaid 흐름도를 표시합니다.
 `work-trace`는 표시를 요청한 작업에 적용되며, 새 근거, 주요 작업이나 분기, 검증 결과 또는 결론이 그래프의 의미를 바꿀 때 갱신합니다.
 실시간 갱신을 요청한 경우에도 같은 기준을 적용합니다.

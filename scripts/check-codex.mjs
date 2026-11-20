@@ -23,7 +23,15 @@ mkdirSync(join(root, 'codex'));
 const env = { ...process.env, CODEX_HOME: join(root, 'codex'),
   APPDATA: join(root, 'config'), XDG_CONFIG_HOME: join(root, 'config') };
 for (const name of ['PLUGIN_ROOT', 'PLUGIN_DATA', 'CLAUDE_PLUGIN_ROOT', 'CLAUDE_PLUGIN_DATA']) delete env[name];
-const cli = process.argv[2] || 'codex';
+// Windows cannot spawn the npm `codex.cmd` shim without a shell, so run the
+// shim's JavaScript launcher with this Node binary instead.
+function defaultCli() {
+  if (process.platform !== 'win32') return ['codex', []];
+  const shim = spawnSync('where.exe', ['codex.cmd'], { encoding: 'utf8' }).stdout.split(/\r?\n/)[0];
+  assert.ok(shim, 'codex.cmd is not on PATH; pass the Codex CLI path as an argument');
+  return [process.execPath, [join(dirname(shim), 'node_modules/@openai/codex/bin/codex.js')]];
+}
+const [cli, cliArgs] = process.argv[2] ? [process.argv[2], []] : defaultCli();
 const requests = [];
 const notifications = [];
 let child;
@@ -32,13 +40,13 @@ let control;
 let stopped = false;
 
 function command(args, json = true) {
-  const result = spawnSync(cli, args, { env, cwd: projectRoot, encoding: 'utf8', timeout: 30_000 });
+  const result = spawnSync(cli, [...cliArgs, ...args], { env, cwd: projectRoot, encoding: 'utf8', timeout: 30_000 });
   assert.equal(result.status, 0, result.stderr || result.error?.message);
   return json ? JSON.parse(result.stdout) : result.stdout.trim();
 }
 
 function connect() {
-  child = spawn(cli, ['app-server', '--stdio'], { env, cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] });
+  child = spawn(cli, [...cliArgs, 'app-server', '--stdio'], { env, cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] });
   child.stderr.resume();
   let sequence = 0;
   const pending = new Map();
@@ -136,22 +144,29 @@ try {
   assert.deepEqual(listed.errors || [], []);
   const skills = listed.skills.filter(skill => skill.pluginId === installed.pluginId);
   assert.deepEqual(skills.map(skill => skill.name).sort(),
-    readdirSync(join(packageRoot, 'skills')).map(name => `emeth-discipline:${name}`).sort());
+    ['skills', 'codex-skills'].flatMap(dir => readdirSync(join(packageRoot, dir))).map(name => `emeth-discipline:${name}`).sort());
   assert.ok(skills.every(skill => skill.enabled && skill.path.startsWith(installedRoot)));
   console.log(`Native Codex installation ${version}: ${skills.length} skills registered`);
   const entry = (await rpc('hooks/list', { cwds: [projectRoot] })).data[0];
   assert.deepEqual(entry.errors, []);
   const hooks = entry.hooks;
-  assert.deepEqual(hooks.map(hook => hook.eventName).sort(), ['sessionStart', 'subagentStart', 'userPromptSubmit']);
+  // Every handler declared in the package's Codex hook file is registered. Windows reports the
+  // declared PowerShell command as written; other platforms report the expanded command.
+  const declared = JSON.parse(readFileSync(join(packageRoot, 'hooks/codex-hooks.json'), 'utf8')).hooks;
+  const installedCommand = handler => process.platform === 'win32'
+    ? handler.commandWindows : handler.command.replace('${PLUGIN_ROOT}', installedRoot);
+  const expectedHooks = Object.entries(declared).flatMap(([event, groups]) => groups.flatMap(group => group.hooks.map(handler =>
+    `${event[0].toLowerCase()}${event.slice(1)} ${installedCommand(handler)}`)));
+  assert.deepEqual(hooks.map(hook => `${hook.eventName} ${hook.command}`).sort(), expectedHooks.sort());
   for (const hook of hooks) {
     assert.equal(hook.pluginId, installed.pluginId);
     assert.equal(hook.handlerType, 'command');
-    assert.equal(hook.command, `node "${installedRoot}/hooks/run.js"`);
     assert.equal(hook.trustStatus, 'untrusted');
-    assert.match(hook.currentHash, /^sha256:[a-f0-9]{64}$/);
+    // Codex 0.170 reports "<handler digest>/<shared digest>"; trust is keyed by the handler digest.
+    assert.match(hook.currentHash, /^sha256:[a-f0-9]{64}(?:\/sha256:[a-f0-9]{64})*$/);
     // Persist normal digest-specific trust only in this disposable config.
     appendFileSync(join(root, 'codex/config.toml'),
-      `\n[hooks.state.${JSON.stringify(hook.key)}]\ntrusted_hash = ${JSON.stringify(hook.currentHash)}\n`);
+      `\n[hooks.state.${JSON.stringify(hook.key)}]\ntrusted_hash = ${JSON.stringify(hook.currentHash.split('/')[0])}\n`);
   }
   await disconnect();
   await new Promise(resolveListen => provider.listen(0, '127.0.0.1', resolveListen));
@@ -174,7 +189,9 @@ try {
   'the provider response is returned through the native Codex event stream');
   assert.equal(requests.length, 1);
   const sent = JSON.stringify(requests[0]);
-  const sharedRules = readFileSync(join(installedRoot, 'skills/rules/codex.md'), 'utf8').trim();
+  // Compare with the installed composer's output; codex.md alone carries audience markers the hook resolves.
+  const { composeEmethPrompt } = createRequire(import.meta.url)(join(installedRoot, 'lib/rules-prompt.js'));
+  const sharedRules = composeEmethPrompt({ pluginRoot: installedRoot, host: 'codex', model: 'gpt-6.1-sol' });
   assert.ok(sent.includes(JSON.stringify(sharedRules).slice(1, -1)), 'the complete shared baseline reaches Codex');
   assert.ok(sent.includes('Next design number: DESIGN-0001'));
   assert.ok(sent.includes('# Development Design'));
@@ -203,5 +220,10 @@ try {
   await disconnect();
   if (control && !stopped) await control.stopServer({ directory: control.dashboardDirectory({ env }) });
   if (provider.listening) await new Promise(resolveClose => provider.close(resolveClose));
-  rmSync(root, { recursive: true, force: true, maxRetries: 10 });
+  // A Windows handle still held by Codex must not hide the check's own result.
+  try {
+    rmSync(root, { recursive: true, force: true, maxRetries: 10 });
+  } catch (error) {
+    console.warn(`Temporary directory not removed: ${root} (${error.code})`);
+  }
 }

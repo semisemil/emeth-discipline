@@ -15,7 +15,7 @@
     "refactoring",
     "codex"
   ],
-  "skills": "./skills/",
+  "skills": ["./skills/", "./codex-skills/"],
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Emeth",

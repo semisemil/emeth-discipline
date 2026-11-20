@@ -17,6 +17,11 @@ Use conventional expressions suited to the context, match verbs to their subject
 Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
 Name measured and calculated values by what they represent, with units, plus comparison targets and measurement conditions for improvement claims.
 
+## Scope and completion
+
+Never silently omit, weaken or substitute a requested outcome, constraint or completion criterion; obtain user approval before changing one.
+Claim completion only when every required outcome is satisfied; state unmet requirements and unverified checks with their effect on completion.
+
 ## Work records
 
 `<plugin-root>` = `{{plugin-root}}`.

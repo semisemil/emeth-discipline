@@ -1,9 +1,4 @@
----
-name: code-map
-description: Map current code structure, dependencies, or execution flow when the user requests a graph.
----
-
-# Code Map
+# Code map
 
 ## Scope
 
@@ -53,9 +48,7 @@ When a contract has multiple implementations, label each connection with conditi
 Show execution order only where confirmed in a method's control flow.
 Distinguish connections confirmed in static code from results observed during execution.
 
-## Compose and present the map
-
-Apply [../../references/graph-presentation.md](../../references/graph-presentation.md).
+## Compose the map
 
 Represent projects, packages, or actual responsibility boundaries as groups, with nested groups when needed.
 Use node types and colors for roles meaningful in this map, such as ViewModel, Mediator, Processor, or file writing.
@@ -66,7 +59,5 @@ Put the information needed to understand each node in its details: responsibilit
 Place long method lists and supporting explanations in details.
 
 Break down complex areas with collapsible groups or separate detailed graphs for individual features.
-Create a new graph for a distinct viewpoint, and update the existing graph when revising the same viewpoint.
 
-Briefly explain the graph title, reading direction, and main node types to the user.
 Report unconfirmed relationships or excluded scope when they affect interpretation.

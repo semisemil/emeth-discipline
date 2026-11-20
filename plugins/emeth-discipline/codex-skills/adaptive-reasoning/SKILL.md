@@ -1,8 +1,6 @@
 ---
 name: adaptive-reasoning
 description: Adjust this Codex session's reasoning effort as the work changes.
-disable-model-invocation: true
-user-invocable: false
 ---
 
 # 추론 강도 조절

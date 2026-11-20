@@ -26,6 +26,7 @@ XDG_CONFIG_HOME="$task_config" npm test
 
 Codex CLI가 설치된 환경에서 native 검증을 실행한다.
 CLI 경로를 인자로 줄 수도 있다.
+Windows에서 인자가 없으면 PATH에 있는 `codex.cmd`가 실행하는 npm 패키지의 `bin/codex.js`를 현재 Node로 실행한다.
 
 ```bash
 node scripts/check-codex.mjs
