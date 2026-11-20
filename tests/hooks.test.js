@@ -198,6 +198,24 @@ test('project opt-in reaches fresh Codex workers and Claude sessions', t => {
   assert.match(claude.hookSpecificOutput.additionalContext, /automatic work records: enabled/);
 });
 
+test('record rules reach only projects with record roots or automatic records', t => {
+  const f = fixture(t);
+  fs.mkdirSync(path.join(f.root, '.git'));
+  fs.writeFileSync(path.join(f.plugin, 'skills/rules/SKILL.md'),
+    '# Shared fixture rules\n<!-- records-only -->\nRecord rules\n<!-- /records-only -->\nApply the rules for the host running this conversation: fixture');
+  const withRecords = '# Shared fixture rules\nRecord rules\nCodex fixture rules';
+  const rules = () => output(f.run({ hook_event_name: 'SessionStart', source: 'startup' })).hookSpecificOutput.additionalContext;
+  const setting = state => spawnSync(process.execPath, [path.join(f.plugin, 'skills/settings/scripts/settings.js'), 'work-records', state],
+    { encoding: 'utf8', windowsHide: true, env: f.env });
+  assert.equal(rules(), codexRules);
+  assert.equal(setting('on').status, 0);
+  assert.equal(rules(), withRecords, 'Enabled automatic records keep the record rules before any record exists');
+  assert.equal(setting('off').status, 0);
+  f.write('.emeth/issues/PL-0001.json', '{}');
+  assert.equal(rules(), withRecords);
+  assert.equal(output(f.run({ hook_event_name: 'SubagentStart', agent_id: 'worker' })).hookSpecificOutput.additionalContext, withRecords);
+});
+
 function claudeEnvironment(f) {
   return {
     PLUGIN_ROOT: '', PLUGIN_DATA: '',

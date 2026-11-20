@@ -4,13 +4,15 @@ const path = require('node:path');
 const { composeEmethPrompt, rulesFile } = require('./rules-prompt');
 const host = require('./host');
 const { logDiagnostic } = require('./rules-state');
+const { settingValue } = require('./settings');
 const S = require('../skills/architecture-memory/scripts/storage.js');
 
 function load(input) {
   if (input.hook_event_name === 'SessionStart' && input.source === 'resume') return '';
   const currentHost = host.name();
   const audience = input.hook_event_name === 'SubagentStart' ? 'subagent' : 'main';
-  const baseline = composeEmethPrompt({ host: currentHost, audience, model: input.model });
+  const baseline = composeEmethPrompt({ host: currentHost, audience, model: input.model,
+    records: recordRules(input.cwd), language: language(input) });
   // SubagentStart carries the parent's session id, so only the main session records its rules file.
   if (currentHost === 'codex' && input.hook_event_name === 'SessionStart') saveRulesFile(input);
   // Codex SessionStart has a separate callback; fresh workers and other hosts need the same policy.
@@ -31,10 +33,31 @@ function reload(input) {
   // Without a record the injected rules are unknown; record them without reinjecting.
   const context = previous ? [
     'The active model changed. These Emeth rules replace the Emeth rules injected earlier in this conversation.',
-    composeEmethPrompt({ host: 'codex', audience: 'main', model: input.model }),
+    composeEmethPrompt({ host: 'codex', audience: 'main', model: input.model,
+      records: recordRules(input.cwd), language: language(input) }),
   ].join('\n\n') : '';
   saveRules(statePath, current, input);
   return context;
+}
+
+// An unreadable policy keeps the record rules so record roots stay excluded from searches.
+function recordRules(cwd) {
+  try {
+    const policy = require('./work-records-policy').policyFor(cwd);
+    return policy.records || policy.enabled;
+  } catch {
+    return true;
+  }
+}
+
+// An unreadable settings file must not withhold the shared rules; they are sent without language rules.
+function language(input) {
+  try {
+    return settingValue('language');
+  } catch (error) {
+    logDiagnostic({ hook: 'language-setting', event: input.hook_event_name, filePath: error.path, error });
+    return null;
+  }
 }
 
 function saveRulesFile(input) {

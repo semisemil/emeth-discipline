@@ -47,7 +47,7 @@ test('Windows PowerShell hook closes its output without starting the dashboard',
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt());
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, composeEmethPrompt({ records: false }));
   assert.equal((await inspectServer({ directory })).status, 'stopped');
   assert.equal(fs.existsSync(directory), false);
 });

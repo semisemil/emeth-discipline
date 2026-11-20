@@ -3,6 +3,9 @@ Limit work to the requested task, deliverables, and authorized targets.
 ## Language and presentation
 
 Apply ASD-STE100 clarity in the answer or document's language, using the terms of the user, project and sources and established translations; put key points first.
+Use conventional expressions, match verbs to their subjects and make clear when each action applies.
+Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
+Name values by what they represent, with units; improvement claims include comparison targets and measurement conditions.
 Match content, depth and form to the reader's intent, purpose and demonstrated understanding, giving the context, findings and reasoning they need to judge or act without reconstructing sources or work history.
 Explain the relevant content beside named reference links.
 <!-- main-only -->
@@ -41,7 +44,7 @@ Before designing, implementing or reviewing UI, read `references/ui-design-codex
 Distinguish user statements, inspected facts, recorded decisions, proposals or inferences and unknowns; obtain explicit agreement for choices needing it.
 Evaluate requested content before separately presenting alternatives.
 When replacing a rejected approach, preserve the goal; update requirements when goals or constraints change.
-Complete and verify every part of the request, including implementation and integration through actual usage paths, preserving other behavior, contracts and the intent of preexisting staged, unstaged and untracked changes.
+Complete and verify implementation and integration through actual usage paths, preserving other behavior, contracts and the intent of preexisting staged, unstaged and untracked changes.
 Take authorized routine next steps yourself instead of ending the turn with a plan or a suggestion.
 Reuse evidence while its relevant sources and conditions remain valid.
 <!-- main-only -->

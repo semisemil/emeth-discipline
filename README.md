@@ -141,7 +141,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:verification-harness` | AI가 결과물을 스스로 검증할 환경을 만들거나, 그 환경이 있는 프로젝트에서 기능 추가·동작 변경·버그 수정을 할 때 | 사용자와 확정한 기준을 E2E 수용 테스트로 만들고, 결함을 넣어 실패하는지 확인한 뒤 기준 변경을 승인제로 관리 |
 | `/emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `/emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
-| `/emeth-discipline:settings` | 설정을 확인하거나 바꾸고, 통합 대시보드를 이용할 때 | 수신함 기록과 자동 작업 기록 설정, 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
+| `/emeth-discipline:settings` | 설정을 확인하거나 바꾸고, 통합 대시보드를 이용할 때 | 수신함 기록, 자동 작업 기록, 언어별 작성 지침 설정, 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
 | `/emeth-discipline:adaptive-reasoning` | Codex에서 작업 중 추론 강도를 조절하고 싶을 때 (Codex 전용) | 명시 호출 후 현재 모델을 유지하며 작업에 맞춰 추론 강도 조절 |
 
 ### Architecture
@@ -237,7 +237,7 @@ flowchart LR
 | Linux, macOS | `$XDG_CONFIG_HOME/emeth/settings.json`, 미설정 시 `~/.config/emeth/settings.json` |
 
 ```json
-{"schema_version": 1, "work_records": true, "inbox": false}
+{"schema_version": 1, "work_records": true, "inbox": false, "language": "ko"}
 ```
 
 이전 버전이 만든 `work-records.json`과 `inbox.enabled`는 `settings.json`에 해당 설정이 없을 때 읽습니다.
@@ -333,6 +333,8 @@ Codex와 Claude Code의 공통 수신함 기록은 기본적으로 꺼져 있습
 | `/emeth-discipline:settings inbox off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
 | `/emeth-discipline:settings work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
 | `/emeth-discipline:settings work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
+| `/emeth-discipline:settings language ko` | 한국어 작성 지침 추가. 뜻이 분명한 용어를 고르고, 앞에서 다룬 개념은 지시어 대신 이름으로 다시 가리킴 |
+| `/emeth-discipline:settings language off` | 언어별 작성 지침 제거 |
 | `/emeth-discipline:settings dashboard add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
 | `/emeth-discipline:settings dashboard open` | 필요하면 서버를 시작하고 대시보드 열기 |
 | `/emeth-discipline:settings dashboard status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |

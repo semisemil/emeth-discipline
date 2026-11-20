@@ -7,8 +7,25 @@ const { randomUUID } = require('node:crypto');
 const { getDashboardConfigDir } = require('../dashboard/registry');
 
 // Setting name used by commands → property stored in settings.json. Every setting defaults to off.
-const SETTINGS = Object.freeze({ 'work-records': 'work_records', inbox: 'inbox' });
+const SETTINGS = Object.freeze({ 'work-records': 'work_records', inbox: 'inbox', language: 'language' });
+// Command value → stored value. A null value removes the property and restores the default.
+const TOGGLE = Object.freeze({ on: true, off: false });
+const VALUES = Object.freeze({
+  'work-records': TOGGLE,
+  inbox: TOGGLE,
+  // Each language needs skills/rules/references/language-<value>.md.
+  language: Object.freeze({ ko: 'ko', off: null }),
+});
 const SCHEMA_VERSION = 1;
+
+function storedValueAllowed(key, value) {
+  const name = Object.keys(SETTINGS).find(settingName => SETTINGS[settingName] === key);
+  return name !== undefined && value !== null && Object.values(VALUES[name]).includes(value);
+}
+
+function entry(name, value, configured) {
+  return VALUES[name] === TOGGLE ? { enabled: value ?? false, configured } : { value: value ?? null, configured };
+}
 
 function settingsError(message, file) {
   return Object.assign(new Error(`${message}: ${file}`), { code: 'INVALID_SETTINGS', path: file });
@@ -33,10 +50,8 @@ function readJsonFile(file) {
 function readStored(file) {
   const value = readJsonFile(file);
   if (value === null) return {};
-  const properties = Object.values(SETTINGS);
   if (!value || Array.isArray(value) || value.schema_version !== SCHEMA_VERSION
-      || Object.entries(value).some(([key, setting]) => key !== 'schema_version'
-        && (!properties.includes(key) || typeof setting !== 'boolean'))) {
+      || Object.entries(value).some(([key, setting]) => key !== 'schema_version' && !storedValueAllowed(key, setting))) {
     throw settingsError('Invalid settings file', file);
   }
   const { schema_version: _version, ...stored } = value;
@@ -56,29 +71,43 @@ function readLegacy(options) {
 function readSettings(options = {}) {
   const file = settingsPath(options);
   const stored = readStored(file);
-  const legacy = Object.values(SETTINGS).some(key => !(key in stored)) ? readLegacy(options) : {};
+  const legacy = ['work_records', 'inbox'].some(key => !(key in stored)) ? readLegacy(options) : {};
   const settings = {};
   for (const [name, key] of Object.entries(SETTINGS)) {
-    const configured = key in stored || key in legacy;
-    settings[name] = { enabled: stored[key] ?? legacy[key] ?? false, configured };
+    settings[name] = entry(name, stored[key] ?? legacy[key], key in stored || key in legacy);
   }
   return { path: file, settings };
 }
 
+function unknownSetting(name) {
+  return Object.assign(new Error(`Unknown setting: ${name}`), { code: 'UNKNOWN_SETTING' });
+}
+
 function isEnabled(name, options = {}) {
-  if (!(name in SETTINGS)) throw Object.assign(new Error(`Unknown setting: ${name}`), { code: 'UNKNOWN_SETTING' });
+  if (VALUES[name] !== TOGGLE) throw unknownSetting(name);
   return readSettings(options).settings[name].enabled;
 }
 
-function writeSetting(name, enabled, options = {}) {
-  if (!(name in SETTINGS)) throw Object.assign(new Error(`Unknown setting: ${name}`), { code: 'UNKNOWN_SETTING' });
-  if (typeof enabled !== 'boolean') throw Object.assign(new Error('Expected on or off'), { code: 'INVALID_VALUE' });
+// Returns the configured value of a non-toggle setting, or null when it is not set.
+function settingValue(name, options = {}) {
+  if (!(name in SETTINGS) || VALUES[name] === TOGGLE) throw unknownSetting(name);
+  return readSettings(options).settings[name].value;
+}
+
+// `value` is a command word from VALUES, such as `on`, `off` or `ko`.
+function writeSetting(name, value, options = {}) {
+  if (!(name in SETTINGS)) throw unknownSetting(name);
+  if (!Object.hasOwn(VALUES[name], value)) {
+    throw Object.assign(new Error(`Expected ${Object.keys(VALUES[name]).join(' or ')}`), { code: 'INVALID_VALUE' });
+  }
   const current = readSettings(options);
   const next = { schema_version: SCHEMA_VERSION };
   for (const [settingName, key] of Object.entries(SETTINGS)) {
-    if (current.settings[settingName].configured) next[key] = current.settings[settingName].enabled;
+    const setting = current.settings[settingName];
+    if (setting.configured) next[key] = 'enabled' in setting ? setting.enabled : setting.value;
   }
-  next[SETTINGS[name]] = enabled;
+  if (VALUES[name][value] === null) delete next[SETTINGS[name]];
+  else next[SETTINGS[name]] = VALUES[name][value];
   fs.mkdirSync(path.dirname(current.path), { recursive: true });
   const temporary = `${current.path}.${randomUUID()}.tmp`;
   try {
@@ -90,4 +119,4 @@ function writeSetting(name, enabled, options = {}) {
   return readSettings(options);
 }
 
-module.exports = { SETTINGS, settingsPath, readSettings, isEnabled, writeSetting };
+module.exports = { SETTINGS, VALUES, settingsPath, readSettings, isEnabled, settingValue, writeSetting };

@@ -2,14 +2,15 @@
 'use strict';
 
 const path = require('node:path');
-const { SETTINGS, readSettings, writeSetting } = require(path.join(__dirname, '../../../lib/settings.js'));
+const { VALUES, readSettings, writeSetting } = require(path.join(__dirname, '../../../lib/settings.js'));
 
-const USAGE = `Usage: node settings.js status | <${Object.keys(SETTINGS).join('|')}> <on|off>`;
+const USAGE = ['Usage: node settings.js status',
+  ...Object.entries(VALUES).map(([name, values]) => `       node settings.js ${name} <${Object.keys(values).join('|')}>`)].join('\n');
 
 function runCli(argv, options = {}) {
   if (argv.length === 0 || (argv.length === 1 && argv[0] === 'status')) return { exitCode: 0, result: readSettings(options) };
-  if (argv.length === 2 && argv[0] in SETTINGS && ['on', 'off'].includes(argv[1])) {
-    return { exitCode: 0, result: writeSetting(argv[0], argv[1] === 'on', options) };
+  if (argv.length === 2 && Object.hasOwn(VALUES, argv[0]) && Object.hasOwn(VALUES[argv[0]], argv[1])) {
+    return { exitCode: 0, result: writeSetting(argv[0], argv[1], options) };
   }
   return { exitCode: 2, error: USAGE };
 }

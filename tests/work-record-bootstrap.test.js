@@ -94,7 +94,8 @@ test('settings commands report and toggle global automatic records through the r
   const records = result => output(result).settings['work-records'];
   const before = tree(f.root);
   const initial = output(f.settings('status'));
-  assert.deepEqual(initial.settings, { 'work-records': { enabled: false, configured: false }, inbox: { enabled: false, configured: false } });
+  assert.deepEqual(initial.settings, { 'work-records': { enabled: false, configured: false }, inbox: { enabled: false, configured: false },
+    language: { value: null, configured: false } });
   assert.deepEqual(tree(f.root), before, 'Reading status creates no state');
   assert.deepEqual(output(f.run()), {});
 
@@ -131,7 +132,8 @@ test('settings from earlier releases stay in effect until settings.json records 
   fs.writeFileSync(legacyRecords, '{"schema_version":1,"enabled":true}');
   fs.writeFileSync(legacyInbox, '');
   assert.deepEqual(output(f.settings('status')).settings,
-    { 'work-records': { enabled: true, configured: true }, inbox: { enabled: true, configured: true } });
+    { 'work-records': { enabled: true, configured: true }, inbox: { enabled: true, configured: true },
+      language: { value: null, configured: false } });
   context(f.run(), 'absent');
 
   const changed = output(f.settings('inbox', 'off'));

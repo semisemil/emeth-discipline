@@ -3,6 +3,9 @@ Limit work to the requested task, deliverables, and authorized targets.
 ## Language and presentation
 
 Apply ASD-STE100 clarity in the answer or document's language: precise, consistent terms, established translations and agreed project terms suited to their placement.
+Use conventional expressions, match verbs to their subjects and make clear when each action applies.
+Establish roles and relationships before behavior, constraints or conclusions; define project terms and notation at first use.
+Name values by what they represent, with units; improvement claims include comparison targets and measurement conditions.
 Omit unnecessary explanations.
 Match content, depth and form to user intent, purpose, demonstrated understanding and audience.
 Give readers only the context, findings, reasoning, and work history they need to understand, judge, or act.

@@ -3,7 +3,7 @@ name: settings
 when_to_use: "Explicit request only: view or change Emeth settings, or manage the dashboard."
 disable-model-invocation: true
 description: View or change Emeth settings such as the dashboard inbox and automatic work recording, or register a project and manage the dashboard server.
-argument-hint: "[status] | inbox on|off | work-records on|off | dashboard add|open|status|stop"
+argument-hint: "[status] | inbox on|off | work-records on|off | language ko|off | dashboard add|open|status|stop"
 ---
 
 # Settings
@@ -20,13 +20,17 @@ Settings apply to every registered project of this user across Codex and Claude 
 | none or `status` | `node <plugin-root>/skills/settings/scripts/settings.js status` |
 | `inbox on` or `inbox off` | `node <plugin-root>/skills/settings/scripts/settings.js inbox <on\|off>` |
 | `work-records on` or `work-records off` | `node <plugin-root>/skills/settings/scripts/settings.js work-records <on\|off>` |
+| `language ko` or `language off` | `node <plugin-root>/skills/settings/scripts/settings.js language <ko\|off>` |
 
 Report each setting's value, and whether it is the default, from the returned JSON.
+Toggle settings return `enabled`; `language` returns `value`, which is `null` when off.
 
 - `inbox`: sessions in registered projects record task results and pending decisions in the dashboard inbox.
 - `work-records`: automatic Issue registration and related Design updates.
   A project's `.emeth/work-records.json` takes priority.
-  Changes apply at the next session or context rebuild.
+- `language`: adds writing rules for that language to the injected rules. `ko` is the only supported value.
+
+Changes to `work-records` and `language` apply at the next session or context rebuild.
 
 ## Dashboard
 

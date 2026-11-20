@@ -28,7 +28,7 @@ function policyFor(cwd) {
   let recordRoot;
   while (true) {
     const local = readProjectSettings(path.join(root, '.emeth', 'work-records.json'));
-    if (local) return { root, enabled: local.enabled };
+    if (local) return { root, enabled: local.enabled, records: true };
     if (!recordRoot && (fs.existsSync(path.join(root, '.emeth')) || fs.existsSync(path.join(root, '.proofline')))) {
       recordRoot = root;
     }
@@ -37,7 +37,7 @@ function policyFor(cwd) {
     if (parent === root) { root = recordRoot || workingRoot; break; }
     root = parent;
   }
-  return { root, enabled: isEnabled('work-records') };
+  return { root, enabled: isEnabled('work-records'), records: Boolean(recordRoot) };
 }
 
 function notice(cwd) {

@@ -190,8 +190,9 @@ try {
   assert.equal(requests.length, 1);
   const sent = JSON.stringify(requests[0]);
   // Compare with the installed composer's output; codex.md alone carries audience markers the hook resolves.
+  // The fixture project has no record roots, so the hook omits the record rules.
   const { composeEmethPrompt } = createRequire(import.meta.url)(join(installedRoot, 'lib/rules-prompt.js'));
-  const sharedRules = composeEmethPrompt({ pluginRoot: installedRoot, host: 'codex', model: 'gpt-6.1-sol' });
+  const sharedRules = composeEmethPrompt({ pluginRoot: installedRoot, host: 'codex', model: 'gpt-6.1-sol', records: false });
   assert.ok(sent.includes(JSON.stringify(sharedRules).slice(1, -1)), 'the complete shared baseline reaches Codex');
   assert.ok(sent.includes('Next design number: DESIGN-0001'));
   assert.ok(sent.includes('# Development Design'));
