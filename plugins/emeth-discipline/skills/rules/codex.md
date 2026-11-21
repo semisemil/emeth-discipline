@@ -66,3 +66,7 @@ Reuse evidence while its relevant sources and conditions remain valid.
 
 Use the host's subagent completion mechanism to return and collect subagent results.
 When the user requests results from a separate Codex chat, read `references/codex-subagent-completion.md` for the collection procedure.
+
+## Code changes
+
+Keep readable calls and declarations on one line when project formatting permits; when wrapping, group related arguments, parameters or comparisons on the same line.

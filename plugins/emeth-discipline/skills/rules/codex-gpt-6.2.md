@@ -65,4 +65,5 @@ When the user requests results from a separate Codex chat, read `references/code
 ## Code changes
 
 Write readable code with clear names instead of fewer lines, short names, minified formatting or dense one-liners.
+Keep readable calls and declarations on one line when project formatting permits; when wrapping, group related arguments, parameters or comparisons on the same line.
 Add tests only when the user, the repository or the active workflow requires them, or when they catch a regression the existing suite would miss.

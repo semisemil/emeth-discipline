@@ -30,17 +30,12 @@ Apply the rules for the host running this conversation: [Codex with GPT-6.2 mode
 
 Reuse existing implementations that meet the requirements and add abstractions only as needed; keep straightforward steps of one operation together.
 Extract a helper only when its name and contract clarify the caller or multiple callers share the same rule.
-Keep readable calls and declarations on one line when project formatting permits; when wrapping, group related arguments, parameters or comparisons on the same line.
 Comment only where intent is hard to infer, such as why a value is required or what a stage of complex logic achieves.
-When adding or restructuring modules, make each a deep module with a small interface over substantial behavior so one call completes an operation; keep internal stages, types, storage and protocol details private; connect stages through a result type the producer emits, so each consumer depends only on that result.
+When adding or restructuring modules, give each a small interface where one call completes an operation, keep internals private, and connect stages through a result type the producer emits.
 
 ## Tests
 
-When writing tests:
-
-- Choose cases by requested observable outcomes or concrete defects, not parameter, branch or combination enumeration.
-- Derive expectations from requirements, contracts or worked examples, independently of implementation; assert required results or effects so incorrect behavior fails.
-- Exercise behavior through public interfaces, independently of private structure or incidental calls; mock external boundaries only where tested behavior or integration remains in real code.
+Before writing tests, read `references/tests.md`.
 
 <!-- claude-only -->
 ## UI design
