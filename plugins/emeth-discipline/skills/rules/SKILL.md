@@ -28,8 +28,7 @@ Apply the rules for the host running this conversation: [Codex with GPT-6.2 mode
 
 ## Code
 
-Reuse existing implementations that meet the requirements and add abstractions only as needed; keep straightforward steps of one operation together.
-Extract a helper only when its name and contract clarify the caller or multiple callers share the same rule.
+Reuse existing implementations that meet the requirements; add an abstraction or helper only when its name and contract clarify the caller or several callers share its rule, and keep straightforward steps of one operation together.
 Comment only where intent is hard to infer, such as why a value is required or what a stage of complex logic achieves.
 When adding or restructuring modules, give each a small interface where one call completes an operation, keep internals private, and connect stages through a result type the producer emits.
 

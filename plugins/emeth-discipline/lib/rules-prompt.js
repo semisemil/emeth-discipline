@@ -25,10 +25,16 @@ function removeFrontmatter(content) {
     .replace(/^\r?\n/, '');
 }
 
+// Reference paths share one absolute root, so the prompt defines it once after the title.
 function resolveReferences(content, skillPath) {
-  return content.replace(/`references\/([^`]+)`/g, (_match, reference) => (
-    `\`${path.join(path.dirname(skillPath), 'references', reference)}\``
-  ));
+  let referenced = false;
+  const resolved = content.replace(/`references\/([^`]+)`/g, (_match, reference) => {
+    referenced = true;
+    return `\`<rules-refs>/${reference}\``;
+  });
+  if (!referenced) return resolved;
+  const root = path.join(path.dirname(skillPath), 'references');
+  return resolved.replace(/^# [^\r\n]*\r?\n/, title => `${title}\n\`<rules-refs>\` = \`${root}\`.\n`);
 }
 
 function invalidPrompt(message, code, filePath) {
