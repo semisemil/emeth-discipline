@@ -1,7 +1,6 @@
 ---
 name: verification-harness
-when_to_use: "Build or extend a project's user-approved verification environment."
-description: Set up or repair a project environment for agent-run verification. Extend it for features, behavior changes, or bug fixes when project instructions name verification-harness.
+description: "Set up or repair a project's user-approved environment for agent-run verification; extend it for features, behavior changes or bug fixes when project instructions name verification-harness."
 ---
 
 # Verification Harness

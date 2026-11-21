@@ -1,7 +1,6 @@
 ---
 name: slop-check
-when_to_use: "Write code without slop, or audit code for slop: needless steps, parallel implementations, unread data, unreachable guards, speculative complexity, or drift from existing conventions."
-description: Follow existing code conventions when writing code, or audit code for duplication and needless complexity.
+description: "Write code that fits existing conventions, or audit code for slop: needless steps, parallel implementations, unread data, unreachable guards and speculative complexity."
 ---
 
 # Slop Check

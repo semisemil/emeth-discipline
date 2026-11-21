@@ -1,7 +1,6 @@
 ---
 name: architecture-memory-maintain
-when_to_use: "Reorganize connected architecture documents on a maintenance request."
-description: Reorganize connected architecture documents for easier retrieval on request.
+description: "Reorganize connected architecture documents for easier retrieval when the user asks for maintenance."
 ---
 
 # Architecture Memory Maintenance

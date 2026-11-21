@@ -1,7 +1,6 @@
 ---
 name: exact-port
-when_to_use: "Port or transplant code while preserving exact source behavior; no unapproved deviations."
-description: Port an implementation when the user requires exact behavior or forbids a rewrite.
+description: "Port or transplant code when the user requires exact source behavior or forbids a rewrite."
 ---
 
 # Exact Port

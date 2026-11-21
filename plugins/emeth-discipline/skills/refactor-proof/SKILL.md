@@ -1,7 +1,6 @@
 ---
 name: refactor-proof
-when_to_use: "Verify structural refactors of responsibilities, call paths, dependencies, or state flow."
-description: Verify structural refactors that move responsibilities, dependencies, call paths, or state ownership.
+description: "Verify structural refactors that move responsibilities, call paths, dependencies or state ownership."
 ---
 
 # Refactor Proof

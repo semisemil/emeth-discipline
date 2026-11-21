@@ -1,7 +1,6 @@
 ---
 name: scope-integrity
-when_to_use: "Preserve multiple requirements and completion criteria across paths or implementation stages."
-description: Preserve requirements and completion criteria across multiple entry points, workflows, or stages.
+description: "Preserve multiple requirements and completion criteria across entry points, workflows or implementation stages."
 ---
 
 # Scope Integrity
