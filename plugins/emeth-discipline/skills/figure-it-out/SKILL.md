@@ -9,6 +9,10 @@ Choose the workflow from the user's requested outcome and scope.
 Read only the workflows needed for that outcome, and combine them when the request spans several outcomes.
 The calling conversation coordinates the work and completes the requested deliverable.
 
+Group tool work up to the next decision that needs model judgment.
+When the host supports tool composition, issue independent reads or checks together; run dependent checks in the same call when their success conditions are known.
+Stop a dependent sequence on failure. Return the evidence needed for the decision, including each check's outcome and relevant failure details.
+
 | Requested outcome | Workflow and completion |
 | --- | --- |
 | Investigation or explanation | Use tools suited to the sources; use [code-exploration](../code-exploration/SKILL.md) for code behavior, rationale or teaching. Return evidence-based findings and material unknowns. |
