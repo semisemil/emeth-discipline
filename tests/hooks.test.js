@@ -78,7 +78,7 @@ test('numbering and memory notices compose independently, including a failed num
 
 test('Codex figure-it-out preserves the exact request without a Design number', (t) => {
   const f = fixture(t);
-  for (const [index, invocation] of ['/emeth-discipline:figure-it-out', '$emeth-discipline:figure-it-out'].entries()) {
+  for (const [index, invocation] of ['/emeth-discipline:figure-it-out', '$emeth-discipline:figure-it-out', '/emeth-discipline:figure-it-out-lite', '$emeth-discipline:figure-it-out-lite'].entries()) {
     const prompt = `${invocation}\r\n상태는 \`new\`, \`done\`, \`failed\`입니다.\r\n[계약](docs/contract.md)와 "원문"\\literal, 🧪을 유지하세요.  \n`;
     const input = { session_id: `session-${index}`, turn_id: 'turn-a', prompt };
     const response = output(f.run(input));
@@ -238,4 +238,50 @@ test('host-specific Memory state stays separate for the same project and session
     assert.equal(fs.readdirSync(path.join(directory, 'architecture-notices')).length, 1);
   }
   assert.equal(fs.existsSync(path.join(claudeEnv.CLAUDE_PLUGIN_DATA, 'rules-mode')), false);
+});
+
+test('Lite budget notices apply once to the invoking coordinator and its independent test author', (t) => {
+  const f = fixture(t);
+  const codexHome = path.join(f.root, 'codex-home');
+  const manifest = JSON.parse(fs.readFileSync(path.join(f.plugin, 'hooks/codex-hooks.json'), 'utf8'));
+  const callback = manifest.hooks.PostToolUse.flatMap(group => group.hooks).find(hook => hook.command.includes('/hooks/lite-budget.js'));
+  assert.ok(callback);
+
+  function capture(sessionId, prompt) {
+    return output(f.run({ session_id: sessionId, turn_id: 'root-turn', prompt }));
+  }
+  function usage(threadId, turnId, rootId, amount, agentPath) {
+    const parent = agentPath ? { parent_thread_id: rootId, agent_path: agentPath } : {};
+    const frames = [
+      { type: 'session_meta', payload: { id: threadId, ...parent } },
+      { type: 'token_usage_record', payload: {
+        thread_id: threadId, session_id: rootId, turn_id: turnId, root_turn_id: 'root-turn',
+        turn_token_usage: { output_tokens: amount }, thread_token_usage: { output_tokens: amount },
+      } },
+    ];
+    const file = path.join('codex-home', 'sessions', '2026', '11', '22', `rollout-${threadId}.jsonl`);
+    f.write(file, frames.map(frame => JSON.stringify(frame)).join('\n') + '\n');
+    return output(spawnSync(process.execPath, [path.join(f.plugin, 'hooks/lite-budget.js')], {
+      input: JSON.stringify({
+        hook_event_name: 'PostToolUse', session_id: threadId, turn_id: turnId,
+        transcript_path: path.join(f.root, file),
+      }),
+      encoding: 'utf8', windowsHide: true, env: { ...f.env, CODEX_HOME: codexHome },
+    }));
+  }
+
+  capture('normal', '$emeth-discipline:figure-it-out\n\nOriginal task.');
+  assert.deepEqual(usage('normal', 'root-turn', 'normal', 9000), {});
+  assert.deepEqual(usage('normal-test', 'test-turn', 'normal', 2000, '/root/lite_test_author'), {});
+
+  capture('lite', '$emeth-discipline:figure-it-out-lite\n\nOriginal task.');
+  assert.deepEqual(usage('lite', 'root-turn', 'lite', 2999), {});
+  const coordinator = usage('lite', 'root-turn', 'lite', 3000);
+  assert.match(coordinator.hookSpecificOutput.additionalContext, /Lite coordinator turn has generated 3000 tokens/);
+  assert.deepEqual(usage('lite', 'root-turn', 'lite', 4000), {});
+  assert.deepEqual(usage('judge', 'judge-turn', 'lite', 2000, '/root/judge'), {});
+  assert.deepEqual(usage('test-author', 'test-turn', 'lite', 999, '/root/lite_test_author'), {});
+  const author = usage('test-author', 'test-turn', 'lite', 1000, '/root/lite_test_author');
+  assert.match(author.hookSpecificOutput.additionalContext, /Lite test assignment has generated 1000 tokens/);
+  assert.deepEqual(usage('test-author', 'followup', 'lite', 2000, '/root/lite_test_author'), {});
 });

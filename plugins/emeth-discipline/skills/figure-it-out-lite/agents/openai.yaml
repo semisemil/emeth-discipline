@@ -1,0 +1,7 @@
+interface:
+  display_name: "Emeth: Figure It Out Lite"
+  short_description: "Complete a workflow with selective delegation"
+  default_prompt: "Use $figure-it-out-lite to complete the requested outcome with selective delegation."
+
+policy:
+  allow_implicit_invocation: false

@@ -34,7 +34,7 @@ function capture(directory, input) {
 function notice(input) {
   if (input.hook_event_name !== 'UserPromptSubmit' || host.name() !== 'codex' || typeof input.prompt !== 'string') return '';
   const invocation = input.prompt.trimStart().split(/\s/, 1)[0].replace(/^\$/, '/');
-  if (!['/emeth-discipline:figure-it-out', '/emeth-discipline:development-design', '/emeth-discipline:start-implementation'].includes(invocation)) return '';
+  if (!['/emeth-discipline:figure-it-out', '/emeth-discipline:figure-it-out-lite', '/emeth-discipline:development-design', '/emeth-discipline:start-implementation'].includes(invocation)) return '';
   const data = host.dataDir();
   if (!data || !input.session_id || !input.turn_id) return '';
   try {

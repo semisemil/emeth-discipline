@@ -50,6 +50,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks/lite-budget.js\"",
+            "commandWindows": "node \"$env:PLUGIN_ROOT\\hooks\\lite-budget.js\"",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
