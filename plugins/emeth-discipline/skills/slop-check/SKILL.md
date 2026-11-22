@@ -1,6 +1,6 @@
 ---
 name: slop-check
-description: "Write code that fits existing conventions, or audit code for slop: needless steps, parallel implementations, unread data, unreachable guards and speculative complexity."
+description: "Write code that fits existing conventions, or audit code for slop: needless steps, parallel implementations, unread data, unreachable guards and complexity beyond what current contracts need."
 ---
 
 # Slop Check

@@ -28,9 +28,22 @@ Apply the rules for the host running this conversation: [Codex with GPT-6.2 mode
 
 ## Code
 
-Reuse existing implementations that meet the requirements; add an abstraction or helper only when its name and contract clarify the caller or several callers share its rule, and keep straightforward steps of one operation together.
+Reuse existing implementations that meet the requirements.
+Use the plainest construct that meets an established need: for behavior, inline code, a function, a class, then an interface or factory; for data, built-in values and collections, a named type, then a class.
+Needs come from current code and callers, and in a new program also from stated requirements and agreed designs; expected reuse, extensibility or testability is not a need.
+Move up only when:
+
+- function: several places apply one rule that must change together; similar code with separate reasons to change stays separate.
+- named type: data crosses a module boundary or is stored, or positional fields become ambiguous.
+- class: mutable state persists across calls under an invariant its operations keep.
+- interface or factory: two implementations exist, or callers must not depend on the concrete one (published API, plugin point, enforced dependency direction).
+- parameter object: several parameters travel together across call sites.
+
+Make a value a parameter, option or generic type only when current callers vary it; constructs the language, framework or an existing API requires are exempt.
+In existing code, build on its structure and extension points; for testability, separate logic from I/O before adding mock interfaces.
+Follow project idiom for how to write a construct, not whether to add one.
+When adding or restructuring modules, give each a small interface where one call completes an operation, and keep internals private.
 Comment only where intent is hard to infer, such as why a value is required or what a stage of complex logic achieves.
-When adding or restructuring modules, give each a small interface where one call completes an operation, keep internals private, and connect stages through a result type the producer emits.
 
 ## Tests
 

@@ -5,7 +5,7 @@
 | Kind | Meaning |
 |---|---|
 | Defect | A required result or contract breaks under allowed input or state. |
-| Slop: excess | The code works, but a step, value, guard, branch, or wrapper has no role in this codebase. |
+| Slop: excess | The code works, but a step, value, guard, branch, or wrapper has no role in this codebase, or a form is more complex than its role needs. |
 | Slop: mismatch | The code works, but it does an existing job in a different place, form, or order than the codebase or its recorded conventions. |
 
 Slop is a reportable finding without a defect.
@@ -20,7 +20,7 @@ The patterns are search leads, not a quota. Shape alone does not confirm a findi
 | Parallel implementation | An existing path serves the same concept with the same input, synchrony, error, and lifetime contracts, and the caller can reach it. | The contracts differ in a way the case needs. Different behavior for one concept is still a finding; ask which behavior is intended. |
 | Unread data | No reader exists in code, tests, serialization, binding, reflection, or an extension point's implementers. | An external consumer, stored format, or public API must preserve it. "May be useful later" is not a reader. |
 | Unreachable guard | The guarded API's contract or every producer shows the condition cannot occur. | External input, a supported older version, or an extension can produce the state, or an assertion documents a contract. |
-| Speculative complexity | No current caller produces the case or the load, and a simpler form exists. | A caller produces it, or a measurement shows the need. |
+| Excess complexity | A construct sits higher than the shared rules' Code ladder allows, or a simpler form meets every contract, produced case, and measured need that the current code serves. When the simpler form drops a case that callers produce, ask whether that case is worth its complexity. | The simpler form breaks a required contract, a produced case, or a measured need. |
 | Convention drift | The operation differs from the current convention for the same responsibility and scope. | A specific reason, such as a different contract, local convention, language version, or framework, justifies the form. |
 
 ## Judging
@@ -28,9 +28,9 @@ The patterns are search leads, not a quota. Shape alone does not confirm a findi
 | Result | Condition | Report |
 |---|---|---|
 | Confirmed | The contract and role are established, and the defect or slop is explained. | Location, kind, evidence, cost to the reader, and the simpler or consistent form. |
-| Needs user | A fact only the user owns changes the result, such as an external consumer, a compatibility period, or the intended behavior of diverged duplicates. | A question with the target, the established facts, the missing fact, and the result for each answer. Exclude from the confirmed count. |
+| Needs user | A fact only the user owns changes the result, such as an external consumer, a compatibility period, the intended behavior of diverged duplicates, or whether a produced case is worth its complexity. | A question with the target, the established facts, the missing fact, and the result for each answer. Exclude from the confirmed count. |
 | Unverified | Missing environment or material leaves a needed relation unestablished. | What was not checked and how it limits the result. |
-| Not a finding | A role or a counterexample is established. | Omit, unless the user named it or a likely misreading needs correction. |
+| Not a finding | A role that needs the current form, or a counterexample, is established. | Omit, unless the user named it or a likely misreading needs correction. |
 
 State each claim at the strength of its evidence: a static structural finding is not a runtime failure, and a count of operations is not a measured gain. Drop a hypothesis that observation refutes.
 Judge existing code and prior additions by their current contracts and roles, including code labeled as needed for safety.
