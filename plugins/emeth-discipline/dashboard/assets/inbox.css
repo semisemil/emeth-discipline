@@ -4,6 +4,8 @@
 .queue-nav button[aria-pressed=true] { color:var(--accent-ink); font-weight:650; box-shadow:inset 0 -2px var(--accent-ink); }
 .queue-nav button span { font-size:.75rem; font-variant-numeric:tabular-nums; }
 .inbox-scope { max-width:100%; min-height:36px; }
+.inbox-list-heading { flex-wrap:wrap; }
+.inbox-bulk-actions { display:flex; flex-wrap:wrap; gap:8px; }
 .queue-paper { overflow:hidden; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
 .queue-empty { color:var(--secondary); font-size:.875rem; }
 .queue-empty { padding:24px; margin:0; }

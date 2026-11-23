@@ -98,7 +98,14 @@
           <button type="button" data-folder="later" aria-pressed="false">나중에 <span></span></button>
           <button type="button" data-folder="done" aria-pressed="false">완료 <span></span></button>
         </nav>
-        <div class="section-heading inbox-list-heading"><div class="section-heading-text"><h2>검토 대기</h2><p></p></div><select class="inbox-scope" aria-label="표시할 프로젝트"><option value="all">전체 프로젝트</option></select></div>
+        <div class="section-heading inbox-list-heading">
+          <div class="section-heading-text"><h2>검토 대기</h2><p></p></div>
+          <select class="inbox-scope" aria-label="표시할 프로젝트"><option value="all">전체 프로젝트</option></select>
+          <div class="inbox-bulk-actions">
+            <button type="button" data-bulk="read" title="현재 목록의 항목을 모두 읽음으로 표시">모두 읽음</button>
+            <button type="button" data-bulk="done" title="현재 목록의 항목을 모두 완료함으로 이동">모두 처리 완료</button>
+          </div>
+        </div>
       </div>
       <div id="inbox-status" role="status"></div>
       <div class="queue-paper">

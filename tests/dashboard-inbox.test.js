@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { openPage, project, index } = require('./helpers/dashboard-page');
+const { openPage, dashboard, project, index, deferred } = require('./helpers/dashboard-page');
 const { readInbox, setDisposition } = require('../plugins/emeth-discipline/dashboard/inbox');
 const { registerProject, getRegistryPath } = require('../plugins/emeth-discipline/dashboard/registry');
 
@@ -86,4 +86,82 @@ test('claude prompt hook follows the shared opt-in and supplies a usable task id
   assert.equal(readInbox([project],options).items[0].text,'Ready for review');
   run('skills/settings/scripts/settings.js',['inbox','off']);
   assert.doesNotMatch(submit(),/dashboard[\\/]inbox\.js/);
+});
+
+test('bulk read respects the project and folder, persists reads and flags later updates', async t => {
+  const items = [
+    { key:'a', project:'alpha', kind:'question', state:'open' },
+    { key:'b', project:'alpha', kind:'result', state:'open' },
+    { key:'c', project:'beta', kind:'result', state:'open' },
+    { key:'d', project:'alpha', kind:'active', state:'open' },
+    { key:'e', project:'alpha', kind:'result', state:'later' },
+    { key:'f', project:'alpha', kind:'result', state:'done' },
+  ].map(item => ({ ...item, id:item.key, projectName:item.project, title:item.key, text:'Review', updated:1 }));
+  const options = { page:'home', routes:{ '/api/v1/inbox':() => ({items}) } };
+  const page = await dashboard(t, options);
+  page.change('.inbox-scope', 'alpha');
+  page.click('[data-bulk="read"]');
+  assert.equal(page.get('#unread-count').textContent, '4');
+  assert.equal(page.get('[data-bulk="read"]').disabled, true);
+  assert.equal(page.get('[data-kind="question"] .entry-unread'), null);
+  assert.equal(page.get('[data-kind="result"] .entry-unread'), null);
+  assert.ok(page.get('[data-kind="active"] .entry-unread'));
+  assert.equal(page.calls.some(call => call.method === 'POST'), false);
+  const storage = Object.fromEntries(Object.entries(page.window.localStorage));
+  assert.equal(storage['emeth.inbox.read.a'], '1');
+  assert.equal(storage['emeth.inbox.read.b'], '1');
+  assert.equal(storage['emeth.inbox.read.c'], undefined);
+  const reopened = await dashboard(t, { ...options, storage });
+  assert.equal(reopened.get('#unread-count').textContent, '4');
+  items[0].updated = 2;
+  await reopened.window.EmethInbox.refresh();
+  assert.equal(reopened.get('#unread-count').textContent, '5');
+  reopened.change('.inbox-scope', 'alpha');
+  reopened.click('[data-folder="later"]');
+  reopened.click('[data-bulk="read"]');
+  assert.equal(reopened.window.localStorage.getItem('emeth.inbox.read.e'), '1');
+  assert.equal(reopened.window.localStorage.getItem('emeth.inbox.read.a'), '1');
+});
+
+test('bulk completion uses the current list and preserves failures for retry', async t => {
+  const items = [
+    { key:'a', project:'alpha', state:'open' },
+    { key:'b', project:'alpha', state:'open' },
+    { key:'c', project:'beta', state:'open' },
+    { key:'d', project:'alpha', state:'later' },
+  ].map(item => ({ ...item, id:item.key, projectName:item.project, kind:'result', title:item.key, text:'Review', updated:1 }));
+  const pending = deferred();
+  let fail = true;
+  const page = await dashboard(t, { page:'home', routes:{
+    '/api/v1/inbox':() => ({items}),
+    '/api/v1/inbox/a/done':async () => { await pending.promise; items[0].state = 'done'; return {}; },
+    '/api/v1/inbox/b/done':() => {
+      if (fail) return {error:true};
+      items[1].state = 'done';
+      return {};
+    },
+  } });
+  page.change('.inbox-scope', 'alpha');
+  page.click('[data-bulk="done"]');
+  assert.equal(page.get('[data-bulk="done"]').disabled, true);
+  assert.equal(page.get('[data-bulk="read"]').disabled, true);
+  assert.equal(page.get('.entry-actions button').disabled, true);
+  pending.resolve();
+  await page.settle();
+  assert.deepEqual(items.map(item => item.state), ['done', 'open', 'open', 'later']);
+  assert.equal(page.get('#unread-count').textContent, '3');
+  assert.match(page.get('#inbox-status').textContent, /1개 항목을 처리 완료.*1개 항목은 저장하지 못했습니다/);
+  assert.deepEqual(page.calls.filter(call => call.method === 'POST').map(call => call.url),
+    ['/api/v1/inbox/a/done', '/api/v1/inbox/b/done']);
+  fail = false;
+  page.click('[data-bulk="done"]');
+  await page.settle();
+  assert.equal(items[1].state, 'done');
+  assert.equal(page.get('[data-bulk="done"]').disabled, true);
+  page.click('[data-folder="done"]');
+  assert.equal(page.get('[data-bulk="done"]').disabled, true);
+  page.change('.inbox-scope', 'beta');
+  page.click('[data-folder="later"]');
+  assert.equal(page.get('[data-bulk="read"]').disabled, true);
+  assert.equal(page.get('[data-bulk="done"]').disabled, true);
 });

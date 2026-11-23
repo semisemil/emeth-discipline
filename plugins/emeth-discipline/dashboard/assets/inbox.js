@@ -4,7 +4,10 @@
   const board = document.querySelector('#inbox-template').content.firstElementChild;
   const scope = board.querySelector('select');
   const status = board.querySelector('[role="status"]');
+  const readAll = board.querySelector('[data-bulk="read"]');
+  const completeAll = board.querySelector('[data-bulk="done"]');
   let snapshot, busy = false, items = [];
+  let completing = false;
   let folder = 'open';
   const kindLabels = { question: '답변 요청', result: '결과 확인', active: '진행 중' };
   function element(tag, text) {
@@ -25,6 +28,15 @@
     try { version = localStorage.getItem(readPrefix + item.key) ?? version; } catch {}
     return version !== String(item.updated);
   }
+  function markRead(item) {
+    const version = String(item.updated);
+    sessionReads.set(item.key, version);
+    try { localStorage.setItem(readPrefix + item.key, version); } catch {}
+  }
+  function visibleItems() {
+    return items.filter(item => (scope.value === 'all' || item.project === scope.value) &&
+      (item.state === 'open' ? item.kind === 'active' ? 'active' : 'open' : item.state) === folder);
+  }
   function updateIndicator() {
     const count = items.filter(unread).length;
     const badge = document.getElementById('unread-count');
@@ -33,6 +45,9 @@
     const link = document.getElementById('inbox-link');
     link.title = count ? '작업 수신함, 읽지 않음 ' + count + '개' : '작업 수신함';
     link.setAttribute('aria-label', link.title);
+    const visible = visibleItems();
+    readAll.disabled = completing || !visible.some(unread);
+    completeAll.disabled = completing || folder === 'done' || !visible.length;
   }
   function render() {
     updateIndicator();
@@ -65,9 +80,7 @@
           meta.append(marker);
           row.addEventListener('toggle', () => {
             if (!row.open || !row.isConnected) return;
-            const version = String(item.updated);
-            sessionReads.set(item.key, version);
-            try { localStorage.setItem(readPrefix + item.key, version); } catch {}
+            markRead(item);
             marker.remove();
             updateIndicator();
           });
@@ -90,6 +103,7 @@
           if (item.state === state) continue;
           const button = element('button',label);
           button.dataset.action = state;
+          button.disabled = completing;
           button.onclick = async () => {
             button.disabled = true;
             try {
@@ -122,8 +136,31 @@
   for (const button of board.querySelectorAll('[data-folder]')) {
     button.onclick = () => { folder = button.dataset.folder; render(); };
   }
+  readAll.onclick = () => {
+    const targets = visibleItems().filter(unread);
+    targets.forEach(markRead);
+    render();
+    status.textContent = targets.length + '개 항목을 읽음으로 표시했습니다.';
+  };
+  completeAll.onclick = async () => {
+    const targets = visibleItems();
+    completing = true;
+    render();
+    const results = await Promise.allSettled(targets.map(async item => {
+      const response = await fetch('/api/v1/inbox/' + item.key + '/done', { method:'POST' });
+      if (!response.ok) throw Error();
+      markRead(item);
+      return item.key;
+    }));
+    const completed = new Set(results.filter(result => result.status === 'fulfilled').map(result => result.value));
+    for (const item of items) if (completed.has(item.key)) item.state = 'done';
+    completing = false;
+    render();
+    status.textContent = completed.size + '개 항목을 처리 완료로 옮겼습니다.' +
+      (completed.size < targets.length ? ' ' + (targets.length - completed.size) + '개 항목은 저장하지 못했습니다. 다시 시도하세요.' : '');
+  };
   async function refresh() {
-    if (busy || document.hidden) return;
+    if (busy || completing || document.hidden) return;
     busy = true;
     try {
       const response = await fetch('/api/v1/inbox');
