@@ -1,0 +1,4 @@
+interface:
+  display_name: "Emeth: Clarify Request"
+  short_description: "대화로 막연한 요청의 의도와 목표, 완료 기준을 구체화해 AI 작업 지시서 작성"
+  default_prompt: "$clarify-request 대화로 제가 원하는 작업과 그 이유, 목표와 완료 기준을 끌어내고 다른 AI에게 전달할 작업 지시서로 정리해 주세요."
