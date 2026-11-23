@@ -1,6 +1,7 @@
 ---
 name: clarify-request
-description: Turn a rough request into an AI task brief through an interview. Use when the user wants help clarifying the work, its purpose, and completion criteria.
+disable-model-invocation: true
+description: Turn a rough request into an AI task brief through an interview that clarifies the work, its purpose, goal, and completion criteria.
 ---
 
 # Clarify Request
