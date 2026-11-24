@@ -12,51 +12,37 @@ Emeth는 코딩 에이전트가 요청받은 작업 범위를 끝까지 지키�
 - **리팩터링과 코드 이식 검증**: 실제 구조가 바뀌었는지, 원본 동작이 보존됐는지 확인합니다.
 - **프로젝트 기록 관리**: 이슈, 기획서, 구현 명세를 파일로 남겨 다음 작업에서 참고합니다.
 - **아키텍처 관리**: 프로젝트 구조와 설계 결정, 운영 제약을 기록·갱신하고 설계·구현·검토에 활용합니다.
-- **통합 대시보드**: 여러 프로젝트의 작업 기록과 아키텍처 문서를 로컬 웹 화면에서 확인합니다.
+- **통합 대시보드**: 여러 프로젝트의 작업 현황과 문서를 한곳에서 확인합니다.
 
 ## 📊 벤치마크
 
 SuperJSON의 Error 스택 직렬화 작업을 같은 요구 사항으로 실행한 결과입니다.
 
 - **None**: 플러그인 미사용
-- **Core**: 플러그인 활성화
+- **Core**: 플러그인 활성화, 명시적인 스킬 호출 없음
 - **Workflow**: [`/emeth-discipline:figure-it-out`](plugins/emeth-discipline/skills/figure-it-out/SKILL.md) 호출
+- **Lite**: [`/emeth-discipline:figure-it-out-lite`](plugins/emeth-discipline/skills/figure-it-out-lite/SKILL.md) 호출
 
 | 모델 | 조건 | 공식 외부 검사 | 추가 진단 | 시간 | 비교용 추정 비용 |
 | --- | --- | ---: | ---: | ---: | ---: |
+| 6.2 Astra Light | None | 195.3/196 | 8.7/14 | 4분 29초 | $0.658 |
+| 6.2 Astra Light | Core | 194.3/196 | 9/14 | 3분 57초 | $0.737 |
+| 6.2 Astra Light | Workflow | 195/196 | 10.3/14 | 5분 22초 | $2.420 |
+| 6.2 Astra Light | Lite | 195/196 | 10/14 | 7분 19초 | $1.756 |
 | 6.2 Sol medium | None | 195.7/196 | 10.3/14 | 7분 42초 | $0.412 |
 | 6.2 Sol medium | Core | 195.3/196 | 10.7/14 | 7분 44초 | $0.396 |
-| 6.2 Sol medium | Workflow | 196/196 | 11.0/14 | 13분 56초 | $1.918 |
-| 6.2 Astra low | None | 195.3/196 | 8.7/14 | 4분 29초 | $0.658 |
-| 6.2 Astra low | Core | 194.3/196 | 9.0/14 | 3분 57초 | $0.737 |
-| 6.2 Astra low | Workflow | 195.0/196 | 10.3/14 | 5분 22초 | $2.420 |
-| 6 Astra low | None | 196/196 | 4.3/14 | 4분 38초 | $1.110 |
-| 6 Astra low | Core | 196/196 | 4.0/14 | 4분 56초 | $1.276 |
-| 6 Astra low | Workflow | 195.7/196 | 8.3/14 | 11분 14초 | $5.351 |
-| 6.1 Sol medium | None | 195.7/196 | 4.0/14 | 6분 20초 | $0.272 |
-| 6.1 Sol medium | Core | 195.0/196 | 7.7/14 | 6분 46초 | $0.364 |
-| 6.1 Sol medium | Workflow | 195.7/196 | 9.0/14 | 14분 56초 | $1.386 |
-| 6.1 Terra medium | None | 191.7/196 | 4.0/14 | 2분 41초 | $0.076 |
+| 6.2 Sol medium | Workflow | 196/196 | 11/14 | 13분 56초 | $1.918 |
+| 6.2 Sol medium | Lite | 195.3/196 | 10.7/14 | 10분 54초 | $0.819 |
+| 6.1 Terra medium | None | 191.7/196 | 4/14 | 2분 41초 | $0.076 |
 | 6.1 Terra medium | Core | 195.7/196 | 4.3/14 | 2분 56초 | $0.095 |
 | 6.1 Terra medium | Workflow | 195.7/196 | 6.3/14 | 6분 41초 | $0.383 |
-| 6.1 Terra high | None | 195.0/196 | 4.3/14 | 3분 43초 | $0.101 |
-| 6.1 Terra high | Core | 195.7/196 | 4.7/14 | 3분 19초 | $0.086 |
-| 6.1 Terra high | Workflow | 195.3/196 | 6.0/14 | 7분 31초 | $0.394 |
+| 6.1 Terra medium | Lite | 195/196 | 5/14 | 4분 39초 | $0.165 |
+| Opus 5.5 medium | None | 195/196 | 6.3/14 | 5분 39초 | $1.372 |
+| Opus 5.5 medium | Core | 194.3/196 | 6.7/14 | 6분 52초 | $1.684 |
+| Opus 5.5 medium | Workflow | 194.7/196 | 5.7/14 | 19분 15초 | $3.761 |
 | Sonnet 5.5 medium | None | 195.3/196 | 6.3/14 | 4분 0초 | $0.574 |
 | Sonnet 5.5 medium | Core | 195.7/196 | 6.3/14 | 4분 38초 | $0.639 |
 | Sonnet 5.5 medium | Workflow | 195.3/196 | 7.7/14 | 7분 13초 | $1.463 |
-| Opus 5.5 medium | None | 195.0/196 | 6.3/14 | 5분 39초 | $1.372 |
-| Opus 5.5 medium | Core | 194.3/196 | 6.7/14 | 6분 52초 | $1.684 |
-| Opus 5.5 medium | Workflow | 194.7/196 | 5.7/14 | 19분 15초 | $3.761 |
-| Fable 5.2 medium | None | 194.3/196 | 7.0/14 | 6분 47초 | $3.096 |
-| Fable 5.2 medium | Core | 194.7/196 | 7.3/14 | 6분 20초 | $2.889 |
-| Fable 5.2 medium | Workflow | 194.7/196 | 8.3/14 | 13분 31초 | $9.495 |
-
-모든 수치는 조건별 3회 평균이며 실패한 실행도 포함합니다.
-GPT-6.2 Sol과 Astra의 Core와 Workflow는 Emeth 0.25.10에서 측정했습니다.
-6.1 Sol과 6.1 Terra의 Workflow는 새 설계 후보 비교 지침으로 측정했습니다.
-6 Astra, Sonnet, Opus의 세 조건과 6.1 Sol, 6.1 Terra의 None과 Core는 Emeth 0.25.0에서 측정했습니다.
-비용은 상위 작업과 하위 작업을 합산한 API 환산 추정치입니다.
 
 [평가 항목과 회차별 결과](docs/benchmarks/README.md) / [원본 데이터](docs/benchmarks/superjson.json)
 
@@ -141,7 +127,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:verification-harness` | AI가 결과물을 스스로 검증할 환경을 만들거나, 그 환경이 있는 프로젝트에서 기능 추가·동작 변경·버그 수정을 할 때 | 사용자와 확정한 기준을 E2E 수용 테스트로 만들고, 결함을 넣어 실패하는지 확인한 뒤 기준 변경을 승인제로 관리 |
 | `/emeth-discipline:exact-port` | 원본 동작을 그대로 옮겨야 하는 코드 이식 | 원본과 대상 비교, 사용자에게 승인받은 차이와 미확인 부분 기록 |
 | `/emeth-discipline:issue-ledger` | 버그나 후속 작업을 프로젝트에 남길 때 | 현재 상태, 다음 조치, 완료 조건, 결정과 검증 근거 기록 |
-| `/emeth-discipline:settings` | 설정을 확인하거나 바꾸고, 통합 대시보드를 이용할 때 | 수신함 기록, 자동 작업 기록, 언어별 작성 지침 설정, 현재 프로젝트 등록, 대시보드 시작과 열기, 상태 확인과 종료 |
+| `/emeth-discipline:settings` | 설정을 바꾸거나 대시보드를 열 때 | 수신함·자동 기록·언어 설정과 대시보드 관리 |
 | `/emeth-discipline:adaptive-reasoning` | Codex에서 작업 중 추론 강도를 조절하고 싶을 때 (Codex 전용) | 명시 호출 후 현재 모델을 유지하며 작업에 맞춰 추론 강도 조절 |
 
 ### Architecture
@@ -312,55 +298,21 @@ Design의 상태만 바꿀 때는 Memory 연결 상태를 조회하며 초기화
 
 ## 🖥️ 통합 대시보드
 
-대시보드는 `http://127.0.0.1:43127`에서 실행되는 로컬 서버입니다.
-홈의 작업 수신함은 여러 프로젝트의 작업을 한곳에 모읍니다.
-Codex와 Claude Code의 공통 수신함 기록은 기본적으로 꺼져 있습니다.
-기록을 켜면 등록된 프로젝트의 다음 요청부터 에이전트가 진행 중인 작업, 사용자에게 묻는 질문, 검토할 결과를 기록하도록 안내받습니다.
-항목을 펼쳐 결과를 읽고 ‘나중에 하기’ 또는 ‘처리 완료’를 선택하세요.
-상태는 대시보드에 저장되며, 원래 채팅을 읽거나 보관한 뒤에도 남습니다.
-수신함 옆 숫자는 이 브라우저에서 아직 열지 않은 항목 수입니다.
-이미 읽은 항목도 내용이 바뀌면 다시 표시됩니다.
-현재 프로젝트 필터와 탭에 표시된 항목은 ‘모두 읽음’으로 읽지 않음 표시를 없애거나, ‘모두 처리 완료’로 완료함에 옮길 수 있습니다.
-왼쪽에서 프로젝트를 선택하면 작업 현황이 열립니다.
-문서 탭을 열면 아키텍처 문서 목록과 본문이 함께 표시됩니다.
-설계, 플랜, 스펙은 같은 탭의 개발 문서에서 확인합니다.
-아키텍처 화면은 문서와 마지막 확인 커밋, Mermaid 다이어그램을 읽기 전용으로 표시합니다.
+여러 프로젝트의 작업 현황, 검토할 결과와 프로젝트 문서를 한곳에서 확인합니다.
 
-이슈, Design 또는 기존 문서를 저장하거나 아키텍처 메모리를 초기화하면 해당 프로젝트를 등록합니다.
-서버는 사용자가 대시보드를 열어 달라고 요청하거나 `dashboard open`을 호출할 때 시작합니다.
+에이전트에게 “대시보드 열어 줘”라고 요청하거나 다음 명령을 실행하세요.
 
-| 명령 | 동작 |
-| --- | --- |
-| `/emeth-discipline:settings` 또는 `/emeth-discipline:settings status` | 모든 설정의 현재 값과 기본값 여부 확인 |
-| `/emeth-discipline:settings inbox on` | 등록된 모든 프로젝트에서 수신함 기록 켜기 |
-| `/emeth-discipline:settings inbox off` | 수신함 기록 끄기. 기존 항목과 처리 상태는 유지 |
-| `/emeth-discipline:settings work-records on` | 이슈 자동 등록과 관련 Design 자동 갱신을 전역으로 켜기 |
-| `/emeth-discipline:settings work-records off` | 전역 자동 기록 끄기. 프로젝트별 설정은 우선 적용 |
-| `/emeth-discipline:settings language ko` | 한국어 작성 지침 추가. 뜻이 여러 개인 짧은 순우리말 대신 뜻이 분명한 한자어, 전문용어, 외래어 사용 |
-| `/emeth-discipline:settings language off` | 언어별 작성 지침 제거 |
-| `/emeth-discipline:settings dashboard add` | 현재 폴더에 `.emeth/`이 있으면 프로젝트 등록 |
-| `/emeth-discipline:settings dashboard open` | 필요하면 서버를 시작하고 대시보드 열기 |
-| `/emeth-discipline:settings dashboard status` | 실행 주소, 서버 식별 정보, 버전 또는 중지 원인 확인 |
-| `/emeth-discipline:settings dashboard stop` | 실행 상태와 실제 서버가 일치하는지 확인한 뒤 종료. 프로젝트 등록은 유지 |
+```text
+/emeth-discipline:settings dashboard open
+```
 
-프로젝트가 목록에 없으면 해당 프로젝트 폴더에서 `dashboard add`를 호출하세요.
-이 명령은 프로젝트 파일을 새로 만들거나 다른 폴더를 검색하지 않습니다.
+작업 수신함 기록은 기본적으로 꺼져 있습니다. `/emeth-discipline:settings inbox on`으로 켤 수 있습니다.
+프로젝트가 목록에 없으면 해당 프로젝트에서 `/emeth-discipline:settings dashboard add`를 실행하세요.
 
 ### 대시보드 저장 위치와 권한 설정
 
-프로젝트 목록, 서버 상태, 수신함 기록은 사용자별 공용 폴더에 저장합니다.
-세 호스트는 같은 설정을 사용합니다.
-작업 제목, 본문, 종류와 처리 상태는 `work-items.sqlite`에 저장합니다.
-Windows에서는 `%APPDATA%\emeth\dashboard`를 사용합니다.
-다른 운영체제에서는 `$XDG_CONFIG_HOME/emeth/dashboard`를 사용하며, `XDG_CONFIG_HOME`이 없으면 `~/.config/emeth/dashboard`를 사용합니다.
-
-등록 코드는 필요한 저장소를 자동으로 만들고, 이미 등록된 프로젝트는 `no-op`으로 처리합니다.
-등록 결과가 `registered` 또는 `no-op`이면 추가 설정 확인 없이 완료합니다.
-실제 권한 오류가 발생하면 Codex가 쓰기 권한을 확인하고, 필요하면 안내 후 사용자 `config.toml` 또는 권한 프로필을 수정합니다.
-변경된 권한이 현재 작업에 반영되지 않으면 새 Codex 작업에서 등록을 재시도하세요.
-권한 설정이 끝나지 않아도 이미 저장한 프로젝트 문서는 유지됩니다.
-
-권한 오류(`EPERM`, `EACCES`)가 나거나 수동 설정이 필요하면 [상세 설정 절차](plugins/emeth-discipline/skills/settings/references/sandbox-setup.md)를 참고하세요.
+대시보드 데이터는 프로젝트 밖의 사용자별 공용 폴더에 저장합니다.
+프로젝트 등록 중 권한 오류가 나면 [상세 설정 절차](plugins/emeth-discipline/skills/settings/references/sandbox-setup.md)를 참고하세요.
 
 ## ✅ 개발 검증
 

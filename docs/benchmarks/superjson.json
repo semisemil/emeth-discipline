@@ -1,7 +1,7 @@
 {
   "task": "superjson-error-stack-serialization",
   "cost_kind": "api_equivalent_estimate_usd",
-  "aggregation": "Arithmetic mean of three selected runs per model and condition, including failed checks.",
+  "aggregation": "Arithmetic mean of the runs listed in each model and condition group, including failed checks; three runs per group except GPT-6.1 Terra medium Lite (one run).",
   "groups": [
     {
       "model": "gpt-6.2-sol",
@@ -2785,9 +2785,165 @@
           "source": "C:/Proofline/.local/claude-bench-fable-20261113/runs/fable-medium-workflow-3"
         }
       ]
+    },
+    {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "medium",
+      "condition": "Lite",
+      "skill": "figure-it-out-lite",
+      "host": "codex",
+      "measured_at": "2026-11-24",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195.33333333333334,
+        "additional_passed": 10.666666666666666,
+        "elapsed_ms": 653789,
+        "api_equivalent_usd": 0.8189181333333334
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 662004,
+          "api_equivalent_usd": 0.7888416,
+          "root_thread_id": "01a20916-3668-7843-9991-2513759369c6",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-sol-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 11,
+            "total": 14
+          },
+          "elapsed_ms": 688306,
+          "api_equivalent_usd": 0.7947876,
+          "root_thread_id": "01a20922-ac52-76f1-ae26-7c25a287ad04",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-sol-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 611057,
+          "api_equivalent_usd": 0.8731252,
+          "root_thread_id": "01a2092f-6b43-70a0-bc59-17445051e656",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-sol-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.2-astra",
+      "reasoning_effort": "low",
+      "condition": "Lite",
+      "skill": "figure-it-out-lite",
+      "host": "codex",
+      "measured_at": "2026-11-24",
+      "repetitions": 3,
+      "means": {
+        "original_passed": 195,
+        "additional_passed": 10,
+        "elapsed_ms": 438827.6666666667,
+        "api_equivalent_usd": 1.7555269333333332
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 194,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 502787,
+          "api_equivalent_usd": 2.058008,
+          "root_thread_id": "01a20916-3666-7cd0-83ce-d210a53d08f2",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-astra-1/result"
+        },
+        {
+          "repetition": 2,
+          "original": {
+            "passed": 196,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 400182,
+          "api_equivalent_usd": 1.6182256,
+          "root_thread_id": "01a20922-ac5b-7ec2-aff5-f5f567fdd46a",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-astra-2/result"
+        },
+        {
+          "repetition": 3,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 10,
+            "total": 14
+          },
+          "elapsed_ms": 413514,
+          "api_equivalent_usd": 1.5903472,
+          "root_thread_id": "01a2092f-6b4c-7da1-9728-615f96501531",
+          "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/workflow-astra-3/result"
+        }
+      ]
+    },
+    {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "medium",
+      "condition": "Lite",
+      "skill": "figure-it-out-lite",
+      "host": "codex",
+      "measured_at": "2026-11-22",
+      "repetitions": 1,
+      "means": {
+        "original_passed": 195,
+        "additional_passed": 5,
+        "elapsed_ms": 278975,
+        "api_equivalent_usd": 0.164603
+      },
+      "runs": [
+        {
+          "repetition": 1,
+          "original": {
+            "passed": 195,
+            "total": 196
+          },
+          "additional": {
+            "passed": 5,
+            "total": 14
+          },
+          "elapsed_ms": 278975,
+          "api_equivalent_usd": 0.164603,
+          "root_thread_id": "01a2019f-91fe-7913-bd74-ae774aee895c",
+          "source": "C:/Proofline/.local/benchmarks/lite-terra-three-1122/lite-superjson/result"
+        }
+      ]
     }
   ],
-  "role_settings": "Workflow roles are explicitly fixed through isolated Codex developer_instructions. None/Core evidence is reused because all observed roles already matched the planned model and effort.",
+  "role_settings": "Workflow and Lite roles are explicitly fixed through isolated Codex developer_instructions. None/Core evidence is reused because all observed roles already matched the planned model and effort.",
   "excluded_runs": [
     {
       "run": "workflow-astra-1",
@@ -3076,5 +3232,16 @@
     "completion": "The isolated native sessions do not expose the Codex app send_message_to_thread tool. The installed workflow explicitly handles unavailable delivery by reporting that limit. These runs do not validate app-tool notification delivery.",
     "fast_mode": "unverified; service tier not recorded",
     "source": "C:/Proofline/.local/design-required-20261103/results.json"
+  },
+  "lite_measurement": {
+    "source": "C:/Proofline/.local/benchmarks/readme-lite-62-1124",
+    "source_proof": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/source-proof.json",
+    "runtime": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/runtime.json",
+    "environment": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/environment.json",
+    "campaign": "C:/Proofline/.local/benchmarks/readme-lite-62-1124/campaign-state.json",
+    "windows_sandbox": "mxc",
+    "parallel_runs": 2,
+    "accounting": "Coordinator and all related child tasks; automatic approval review tokens recorded separately at zero cost.",
+    "terra_source": "C:/Proofline/.local/benchmarks/lite-terra-three-1122/lite-superjson/result"
   }
 }
