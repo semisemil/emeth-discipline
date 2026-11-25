@@ -126,7 +126,7 @@ Claude Code에서 마켓플레이스를 추가한 다음 플러그인을 설치�
 | `/emeth-discipline:scope-integrity` | 복잡하거나 위험한 작업 | 요구사항과 완료 조건의 누락 방지 |
 | `/emeth-discipline:slop-check` | 코드 정리와 검토 | 불필요한 코드와 관례 이탈 지적 |
 | `/emeth-discipline:refactor-proof` | 구조를 바꾸는 리팩터링 | 구조 변경과 기존 동작 보존 검증 |
-| `/emeth-discipline:verification-harness` | AI의 자체 검증 환경 구축과 보완 | 합의한 완료 기준을 확인하는 E2E 테스트 |
+| `/emeth-discipline:test-harness-builder` | 필요한 테스트 환경과 실제 테스트 구축 | E2E·속성 기반·차등 테스트를 선택해 재현 가능한 검증 환경 구성 |
 | `/emeth-discipline:exact-port` | 원본 동작을 유지하는 코드 이식 | 원본과의 일치 여부와 차이 확인 |
 | `/emeth-discipline:issue-ledger` | 버그와 후속 작업 기록 | 상태와 다음 조치를 담은 이슈 |
 | `/emeth-discipline:settings` | 설정 변경과 대시보드 이용 | 기록, 언어 설정과 대시보드 관리 |

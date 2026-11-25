@@ -1,0 +1,4 @@
+interface:
+  display_name: "Emeth: Test Harness Builder"
+  short_description: "Build missing test infrastructure and repeatable tests"
+  default_prompt: "Use $test-harness-builder to assess this project's test infrastructure and build the missing E2E, property-based or differential tests that it needs."

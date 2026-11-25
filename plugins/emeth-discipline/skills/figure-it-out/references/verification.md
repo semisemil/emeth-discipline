@@ -13,4 +13,4 @@ Retain the requested proof artifacts.
 
 ## Project harness
 
-When the project's instructions name a verification-harness environment, handle a new feature, behavior change or bug fix through [verification-harness](../../verification-harness/SKILL.md#extend), and include the full run result by criterion in the report.
+When the project's instructions name an existing harness, reuse its setup and commands, preserve agreed criteria, and include the required full run result in the report. Use [test-harness-builder](../../test-harness-builder/SKILL.md) when missing or unusable infrastructure prevents the requested verification.
