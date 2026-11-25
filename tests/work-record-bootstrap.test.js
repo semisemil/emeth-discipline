@@ -16,7 +16,7 @@ function fixture(t, enabled = true) {
   const project = path.join(root, 'project');
   fs.mkdirSync(project);
   const env = { ...process.env, HOME: root, USERPROFILE: root, CODEX_HOME: path.join(root, 'codex'),
-    APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'xdg'),
+    APPDATA: path.join(root, 'config'), XDG_CONFIG_HOME: path.join(root, 'config'),
     PLUGIN_ROOT: plugin, PLUGIN_DATA: path.join(root, 'plugin-data'),
     CLAUDE_PLUGIN_ROOT: '', CLAUDE_PLUGIN_DATA: '' };
   function write(name, text = '') {
